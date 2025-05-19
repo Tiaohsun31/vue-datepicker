@@ -17,17 +17,10 @@
         <template v-if="showTimeSelector">
             <hr class="my-2 border-gray-200" />
             <div class="time-selector-container pt-1">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-medium text-gray-700">時間選擇</h3>
-                    <div class="current-time text-sm text-gray-500">
-                        {{ formattedTimeValue }}
-                    </div>
-                </div>
-
                 <!-- 簡化版時間選擇器 -->
-                <div class="grid grid-cols-3 gap-1">
+                <div class="flex flex-row items-center gap-1">
                     <!-- 小時選擇器 -->
-                    <div class="col-span-1">
+                    <div class="flex-1">
                         <select v-model="selectedHour"
                             class="w-full py-1 px-2 border border-gray-300 rounded-sm text-sm">
                             <option v-for="hour in hourOptions" :key="hour" :value="hour">
@@ -37,7 +30,7 @@
                     </div>
 
                     <!-- 分鐘選擇器 -->
-                    <div class="col-span-1">
+                    <div class="flex-1">
                         <select v-model="selectedMinute"
                             class="w-full py-1 px-2 border border-gray-300 rounded-sm text-sm">
                             <option v-for="minute in minuteOptions" :key="minute" :value="minute">
@@ -47,7 +40,7 @@
                     </div>
 
                     <!-- 秒鐘選擇器 -->
-                    <div class="col-span-1" v-if="enableSeconds">
+                    <div class="flex-1" v-if="enableSeconds">
                         <select v-model="selectedSecond"
                             class="w-full py-1 px-2 border border-gray-300 rounded-sm text-sm">
                             <option v-for="second in secondOptions" :key="second" :value="second">
@@ -57,25 +50,25 @@
                     </div>
 
                     <!-- AM/PM 選擇器 (僅12小時制) -->
-                    <div class="col-span-1" v-if="!use24Hour && !enableSeconds">
-                        <button type="button"
-                            class="px-3 py-1 text-sm transition-colors text-gray-700 hover:bg-gray-100"
-                            @click.stop="togglePeriod">
+                    <div class="col-span-1" v-if="!use24Hour && enableSeconds">
+                        <button type="button" @click="togglePeriod"
+                            class="px-3 py-1 text-sm transition-colors rounded-sm bg-gray-500 text-white">
                             {{ selectedPeriod }}
                         </button>
                     </div>
                 </div>
 
                 <!-- AM/PM 選擇器 (僅12小時制，沒有秒鐘時顯示在同一行) -->
-                <div class="mt-2" v-if="!use24Hour && enableSeconds">
-                    <div class="flex justify-center">
-                        <div class="inline-flex rounded-md border border-gray-300 overflow-hidden">
-                            <button type="button"
-                                class="px-3 py-1 text-sm transition-colors text-gray-700 hover:bg-gray-100"
-                                @click.stop="togglePeriod">
-                                {{ selectedPeriod }}
-                            </button>
-                        </div>
+                <div class="mt-2" v-if="!use24Hour && !enableSeconds">
+                    <div class="isolate  inline-flex rounded-md border border-gray-300 overflow-hidden">
+                        <button type="button" @click="setPeriod('AM')" class="px-3 py-1 text-sm transition-colors"
+                            :class="selectedPeriod === 'AM' ? 'bg-vdt-primary-500 text-white ' : 'text-gray-700 hover:bg-gray-100'">
+                            AM
+                        </button>
+                        <button type="button" @click="setPeriod('PM')" class="px-3 py-1 text-sm transition-colors"
+                            :class="selectedPeriod === 'PM' ? 'bg-vdt-primary-500 text-white ' : 'text-gray-700 hover:bg-gray-100'">
+                            PM
+                        </button>
                     </div>
                 </div>
             </div>
@@ -204,6 +197,11 @@ const formatHour = (hour: number): string => {
     return formatNumber(hour);
 };
 
+// 設置時間段
+const setPeriod = (period: 'AM' | 'PM') => {
+    selectedPeriod.value = period;
+};
+
 const togglePeriod = () => {
     selectedPeriod.value = selectedPeriod.value === 'AM' ? 'PM' : 'AM';
 };
@@ -212,9 +210,13 @@ const togglePeriod = () => {
 const handleSelect = (date: CalendarDate) => {
     selectedDate.value = date;
 
-    // 如果不需要時間選擇器，則直接發送事件
-    if (!props.showTimeSelector) {
-        emit('select', date);
+    // 始終發送日期選擇事件
+    emit('select', date);
+
+    // 如果有時間選擇器，也發送時間選擇事件
+    if (props.showTimeSelector) {
+        const time = formattedTimeValue.value;
+        emit('time-select', time);
     }
 };
 
@@ -263,6 +265,17 @@ watch(() => props.timeValue, (newValue) => {
         setNowTime();
     }
 }, { immediate: true });
+
+// 監聽時間值的變化並發送事件
+watch(
+    [selectedHour, selectedMinute, selectedSecond, selectedPeriod],
+    () => {
+        if (props.showTimeSelector) {
+            // 當任何時間相關的值發生變化時，發送時間選擇事件
+            emit('time-select', formattedTimeValue.value);
+        }
+    }
+);
 // 初始化
 onMounted(() => {
     if (!props.timeValue && props.showTimeSelector) {

@@ -1,5 +1,5 @@
 <template>
-    <div class="container max-w-sm space-y-4 p-5">
+    <div class="container mx-auto max-w-sm space-y-4 p-5">
         <DatePickerV1></DatePickerV1>
         <div>
             {{ selectedDate }}
@@ -10,7 +10,7 @@
             <DatePickerV3 v-model="dateTime"></DatePickerV3>
         </div>
         <div>
-            {{ dateTime }}
+            {{ dateTime2 }}
             <DatePickerV4 v-model="dateTime2"></DatePickerV4>
         </div>
         <!-- <RouterView /> -->

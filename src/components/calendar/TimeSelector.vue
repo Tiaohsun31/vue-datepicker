@@ -57,19 +57,21 @@
 
         <!-- AM/PM 切換按鈕 (12小時制) -->
         <div v-if="!use24Hour" class="mt-3 flex justify-center">
-            <div class="flex rounded-md overflow-hidden border border-gray-300">
-                <button type="button" @click="setPeriod('AM')" class="px-4 py-2 transition-colors duration-150 " :class="[
-                    period === 'AM'
-                        ? 'bg-vdt-primary-500 text-white'
-                        : 'bg-white text-gray-700 hover:bg-vdt-primary-100'
-                ]">
+            <div class="flex rounded-md overflow-hidden border  text-sm border-gray-200">
+                <button type="button" @click="setPeriod('AM')"
+                    class="px-4 py-2 transition-colors duration-150 cursor-pointer" :class="[
+                        period === 'AM'
+                            ? 'bg-vdt-primary-500 text-white'
+                            : 'bg-white text-gray-700 hover:bg-vdt-primary-100'
+                    ]">
                     AM
                 </button>
-                <button type="button" @click="setPeriod('PM')" class="px-4 py-2 transition-colors duration-150" :class="[
-                    period === 'PM'
-                        ? 'bg-vdt-primary-500 text-white'
-                        : 'bg-white text-gray-700 hover:bg-vdt-primary-100'
-                ]">
+                <button type="button" @click="setPeriod('PM')"
+                    class="px-4 py-2 transition-colors duration-150 cursor-pointer" :class="[
+                        period === 'PM'
+                            ? 'bg-vdt-primary-500 text-white'
+                            : 'bg-white text-gray-700 hover:bg-vdt-primary-100'
+                    ]">
                     PM
                 </button>
             </div>

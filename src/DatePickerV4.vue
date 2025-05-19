@@ -1,5 +1,6 @@
 <template>
-    <div class="date-time-picker-wrapper relative w-full" ref="pickerRef">
+    <div class="date-time-picker-wrapper relative w-full" :class="[showTime ? 'min-w-[300px]' : 'min-w-[150px]']"
+        ref="pickerRef">
         <!-- 日期時間輸入容器 -->
         <DateContainer :errors="errors">
             <div class="flex w-full items-center justify-start gap-1">
@@ -44,8 +45,9 @@
             class="absolute mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10" @click.stop role="dialog"
             aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="ensureCalendarDate(selectedDate)" :min-date="minDate" :max-date="maxDate"
-                :showTimeSelector="showTime" :use24Hour="use24Hour" :enableSeconds="enableSeconds" :locale="locale"
-                @select="onCalendarSelect" />
+                :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
+                :enableSeconds="enableSeconds" :locale="locale" @select="onCalendarSelect"
+                @time-select="onTimeSelect" />
         </div>
     </div>
 </template>
@@ -105,8 +107,8 @@ const props = withDefaults(defineProps<Props>(), {
     hourPlaceholder: '時',
     minutePlaceholder: '分',
     secondPlaceholder: '秒',
-    enableSeconds: false,
-    use24Hour: false,
+    enableSeconds: true,
+    use24Hour: true,
     minuteStep: 5,
     timeSeparator: ' ',
     useLocalizedPeriod: false,
@@ -137,7 +139,6 @@ const inputDateValue = ref<string | null>(null);
 const inputTimeValue = ref<string | null>(null);
 const errors = ref<Record<string, string>>({});
 const selectedDate = ref<CalendarDate | null>(ensureCalendarDate(props.modelValue));
-const selectedTime = ref<string | null>(null);
 
 // 計算屬性 - 將CalendarDate轉換為字符串以供輸入組件使用
 const minDateStr = computed(() => {
@@ -202,12 +203,10 @@ watch(() => props.modelValue, (newValue) => {
         inputDateValue.value = formatCalendarDateToString(newValue);
 
         // 設置時間部分
-        selectedTime.value = getTimeFromDateTime(newValue);
-        inputTimeValue.value = selectedTime.value;
+        inputTimeValue.value = getTimeFromDateTime(newValue);
     } else {
         selectedDate.value = null;
         inputDateValue.value = null;
-        selectedTime.value = null;
         inputTimeValue.value = null;
     }
 }, { immediate: true });
@@ -252,6 +251,11 @@ const onDateInputComplete = (dateStr: string) => {
     updateDateTimeValue();
 };
 
+const onTimeSelect = (timeStr: string) => {
+    inputTimeValue.value = timeStr;
+    updateDateTimeValue();
+};
+
 // 時間完成事件處理
 const onTimeInputComplete = (timeStr: string) => {
     inputTimeValue.value = timeStr;
@@ -260,6 +264,17 @@ const onTimeInputComplete = (timeStr: string) => {
 
 // 更新完整的日期時間值
 const updateDateTimeValue = () => {
+    if (!inputDateValue.value) {
+        emit('update:modelValue', null);
+        emit('change', null);
+        return;
+    }
+
+    // 如果沒有時間值，自動生成一個默認的 00:00:00
+    if (!inputTimeValue.value) {
+        inputTimeValue.value = '00:00:00';
+    }
+
     const dateTime = createCalendarDateTime(inputDateValue.value, inputTimeValue.value);
 
     if (dateTime) {

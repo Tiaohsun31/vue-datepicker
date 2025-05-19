@@ -315,8 +315,65 @@
     background-color: var(--vdt-theme-400);
 }
 
+.focus\:bg-vdt-primary-500:focus {
+    background-color: var(--vdt-theme-500);
+}
+
+.focus\:bg-vdt-primary-600:focus {
+    background-color: var(--vdt-theme-600);
+}
+
+.focus\:bg-vdt-primary-700:focus {
+    background-color: var(--vdt-theme-700);
+}
+
+.focus\:bg-vdt-primary-800:focus {
+    background-color: var(--vdt-theme-800);
+}
+
+.focus\:bg-vdt-primary-900:focus {
+    background-color: var(--vdt-theme-900);
+}
+
+/* focus:ring */
+.focus\:ring-vdt-primary-50:focus {
+    --tw-ring-color: var(--vdt-theme-50);
+}
+
+.focus\:ring-vdt-primary-100:focus {
+    --tw-ring-color: var(--vdt-theme-100);
+}
+
+.focus\:ring-vdt-primary-200:focus {
+    --tw-ring-color: var(--vdt-theme-200);
+}
+
+.focus\:ring-vdt-primary-300:focus {
+    --tw-ring-color: var(--vdt-theme-300);
+}
+
+.focus\:ring-vdt-primary-400:focus {
+    --tw-ring-color: var(--vdt-theme-400);
+}
+
 .focus\:ring-vdt-primary-500:focus {
     --tw-ring-color: var(--vdt-theme-500);
+}
+
+.focus\:ring-vdt-primary-600:focus {
+    --tw-ring-color: var(--vdt-theme-600);
+}
+
+.focus\:ring-vdt-primary-700:focus {
+    --tw-ring-color: var(--vdt-theme-700);
+}
+
+.focus\:ring-vdt-primary-800:focus {
+    --tw-ring-color: var(--vdt-theme-800);
+}
+
+.focus\:ring-vdt-primary-900:focus {
+    --tw-ring-color: var(--vdt-theme-900);
 }
 
 .focus\:border-vdt-primary-500:focus {

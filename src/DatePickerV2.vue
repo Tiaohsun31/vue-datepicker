@@ -38,7 +38,7 @@ import dayjs from 'dayjs';
 
 // 組件導入
 import DateContainer from './components/calendar/DateContainer.vue';
-import DateInput from './components/calendar/DateInput.vue';
+import DateInput from './components/inputs/DateInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
 import CalendarGrid from './components/calendar/CalendarGrid.vue';

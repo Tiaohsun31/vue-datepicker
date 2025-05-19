@@ -1,8 +1,8 @@
 <template>
     <div class="relative w-full date-input-container">
         <!-- 輸入框容器 -->
-        <div class="flex w-full items-center px-2 py-1 border border-gray-200 rounded-sm focus-within:ring-2 ring-vdt-primary-200 focus-within:ring-vdt-primary-500 focus-within:border-transparent transition-all duration-200"
-            :class="{ 'border-red-400 ring-2 ring-red-200': hasErrors }">
+        <div class="flex w-full items-center px-2 py-1 border border-gray-200 rounded-sm focus-within:ring-2 focus-within:border-transparent transition-all duration-200"
+            :class="[hasErrors ? 'border-red-400 ring-2 ring-red-200 ' : 'ring-vdt-primary-200 focus-within:ring-vdt-primary-500']">
             <slot></slot>
         </div>
 

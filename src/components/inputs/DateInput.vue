@@ -1,24 +1,24 @@
 <template>
     <!-- 年份輸入 -->
-    <div class="flex items-center justify-center">
-        <input ref="yearRef" v-model="yearValue" type="text" inputmode="numeric" :placeholder="yearPlaceholder"
-            :maxlength="4" class="date-input year-input text-sm" @input="handleYearInput"
-            @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')" @blur="handleBlur('year')"
-            aria-label="year" :aria-invalid="!!errors.year"
+    <div class="flex items-center justify-start">
+        <input ref="yearRef" v-model="yearValue" v-autowidth="20" type="text" inputmode="numeric"
+            :placeholder="yearPlaceholder" :maxlength="4" class="date-input  text-sm text-center"
+            @input="handleYearInput" @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')"
+            @blur="handleBlur('year')" aria-label="year" :aria-invalid="!!errors.year"
             :aria-errormessage="errors.year ? 'year-error' : undefined" />
         <span class="text-gray-400 mx-1">{{ separator }}</span>
 
         <!-- 月份輸入 -->
-        <input ref="monthRef" v-model="monthValue" type="text" inputmode="numeric" :placeholder="monthPlaceholder"
-            :maxlength="2" class="date-input month-input  text-sm" @input="handleMonthInput"
-            @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')" @blur="handleBlur('month')"
-            aria-label="month" :aria-invalid="!!errors.month"
+        <input ref="monthRef" v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric"
+            :placeholder="monthPlaceholder" :maxlength="2" class="date-input  text-sm text-center"
+            @input="handleMonthInput" @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')"
+            @blur="handleBlur('month')" aria-label="month" :aria-invalid="!!errors.month"
             :aria-errormessage="errors.month ? 'month-error' : undefined" />
         <span class="text-gray-400 mx-1">{{ separator }}</span>
 
         <!-- 日期輸入 -->
-        <input ref="dayRef" v-model="dayValue" type="text" inputmode="numeric" :placeholder="dayPlaceholder"
-            :maxlength="2" class="date-input day-input  text-sm" @input="handleDayInput"
+        <input ref="dayRef" v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric"
+            :placeholder="dayPlaceholder" :maxlength="2" class="date-input  text-sm text-center" @input="handleDayInput"
             @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
             aria-label="day" :aria-invalid="!!errors.day" :aria-errormessage="errors.day ? 'day-error' : undefined" />
     </div>
@@ -28,7 +28,13 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
+import vAutowidthDirective from '@/directives/v-autowidth'
 
+const vAutowidth = {
+    mounted: vAutowidthDirective.mounted,
+    updated: vAutowidthDirective.updated,
+    beforeUnmount: vAutowidthDirective.beforeUnmount
+};
 interface Props {
     modelValue?: string | null;
     yearPlaceholder?: string;
@@ -115,7 +121,7 @@ const validateField = (field: string, value: string) => {
         case 'year':
             if (value.length < 4) return true;
             const maxYear = props.maxDate ? dayjs(props.maxDate).year() : new Date().getFullYear() + 10;
-            const minYear = props.minDate ? dayjs(props.minDate).year() : 1900;
+            const minYear = props.minDate ? dayjs(props.minDate).year() : 1;
             if (!isNumeric(value) || numValue < minYear || numValue > maxYear) {
                 errors.value[field] = `年份必須是 ${minYear}-${maxYear} 之間的數字`;
                 return false;
@@ -409,6 +415,7 @@ defineExpose({
     box-shadow: none !important;
     /* 增加一些自定義樣式 */
     transition: background-color 0.2s ease;
+
 }
 
 .date-input:focus {

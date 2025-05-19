@@ -9,7 +9,7 @@
         <div class="grow grid grid-cols-2 gap-2">
             <!-- 月份選擇器 -->
             <select v-model="selectedMonthLocal" @change="onMonthChange"
-                class="form-select py-1 pl-2 w-full border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-vdt-primary-500"
+                class="form-select appearance-none bg-none  py-1 pl-2 w-full border border-gray-300 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-vdt-primary-500"
                 aria-label="選擇月份" role="combobox">
                 <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
                     {{ month }}

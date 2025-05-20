@@ -9,9 +9,9 @@
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" />
 
         <!-- 日期網格 -->
-        <DateGridView :year="currentYear" :month="currentMonth" :selected-date="ensureCalendarDate(selectedDate)"
-            :min-date="minDate" :max-date="maxDate" :locale="locale" :week-starts-on="weekStartsOn"
-            @select="handleSelect" />
+        <DateGridView :year="currentYear" :month="currentMonth"
+            :selected-date="ensureCalendarDate(selectedDate as DateTimeValue)" :min-date="minDate" :max-date="maxDate"
+            :locale="locale" :week-starts-on="weekStartsOn" @select="handleSelect" />
 
         <!-- 時間選擇區域 -->
         <template v-if="showTimeSelector">
@@ -82,12 +82,12 @@ import { CalendarDate } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import DateGridView from './DateGridView.vue';
-import { ensureCalendarDate, getTodaysDate } from '@/utils/dateUtils';
+import { ensureCalendarDate, getTodaysDate, type DateTimeValue } from '@/utils/dateUtils';
 
 interface Props {
     value: CalendarDate | null;
-    minDate?: CalendarDate;
-    maxDate?: CalendarDate;
+    minDate?: CalendarDate | null;
+    maxDate?: CalendarDate | null;
     locale?: string;
     weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, etc.
 
@@ -123,7 +123,7 @@ const currentMonth = ref<number>(
 );
 
 // 選擇的日期
-const selectedDate = ref<CalendarDate | null>(props.value);
+const selectedDate = ref<CalendarDate | null>(ensureCalendarDate(props.value));
 
 // 時間相關
 const selectedHour = ref<number>(0);

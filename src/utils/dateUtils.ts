@@ -68,71 +68,178 @@
 // };
 import { CalendarDate, CalendarDateTime } from '@internationalized/date';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+// 擴展 dayjs 功能
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 /**
- * 確保輸入值是 CalendarDate 類型
+ * 支持的日期時間格式
  */
-// export function ensureCalendarDate(date: CalendarDate | CalendarDateTime | null): CalendarDate | null {
-//     if (!date) return null;
-
-
-//     // 如果是 CalendarDateTime，轉換為 CalendarDate
-//     if ('hour' in date) {
-//         return new CalendarDate(date.year, date.month, date.day);
-//     }
-
-//     return date;
-// }
-export const ensureCalendarDate = (date: CalendarDate | CalendarDateTime | null | unknown): CalendarDate | null => {
-    if (!date) return null;
-
-    if (date instanceof CalendarDate) {
-        return date;
-    }
-
-    // 如果是 CalendarDateTime，轉換為 CalendarDate
-    if (date instanceof CalendarDateTime) {
-        return new CalendarDate(date.year, date.month, date.day);
-    }
-
-    // 使用類型斷言
-    const dateObj = date as { year: number; month: number; day: number };
-    if (typeof dateObj === 'object' && 'year' in dateObj && 'month' in dateObj && 'day' in dateObj) {
-        return new CalendarDate(dateObj.year, dateObj.month, dateObj.day);
-    }
-
-    return null;
-};
+export type DateTimeValue =
+    | string          // ISO 字符串: '2025-05-22', '2025-05-22T09:23:20', '2025-05-22T09:23:20Z'
+    | Date            // JavaScript Date
+    | CalendarDate    // @internationalized/date CalendarDate
+    | CalendarDateTime // @internationalized/date CalendarDateTime
+    | null;
 
 /**
- * 獲取今天的日期（CalendarDate對象）
+ * CalendarDateTime 對象的格式化選項
  */
-export function getTodaysDate(): CalendarDate {
-    const today = new Date();
-    return new CalendarDate(
-        today.getFullYear(),
-        today.getMonth() + 1, // JavaScript 月份從 0 開始
-        today.getDate()
-    );
+export type OutputFormat = 'iso' | 'date' | 'calendar';
+
+/**
+ * 將日期字符串或 Date 對象轉換為 CalendarDateTime 對象
+ * 支持多種常見日期時間格式
+ */
+export function parseToCalendarDateTime(
+    value: DateTimeValue | undefined
+): CalendarDateTime | null {
+    if (!value) return null;
+
+    try {
+        // 已經是 CalendarDateTime 對象
+        if (value instanceof CalendarDateTime) {
+            return value;
+        }
+
+        // 是 CalendarDate 對象
+        if (value instanceof CalendarDate) {
+            return new CalendarDateTime(value.year, value.month, value.day, 0, 0, 0);
+        }
+
+        // 是 Date 對象
+        if (value instanceof Date) {
+            return new CalendarDateTime(
+                value.getFullYear(),
+                value.getMonth() + 1,
+                value.getDate(),
+                value.getHours(),
+                value.getMinutes(),
+                value.getSeconds()
+            );
+        }
+
+        // 是字符串
+        // 使用 dayjs 解析各種格式
+        const date = dayjs(value);
+        if (date.isValid()) {
+            return new CalendarDateTime(
+                date.year(),
+                date.month() + 1,
+                date.date(),
+                date.hour(),
+                date.minute(),
+                date.second()
+            );
+        }
+
+        console.warn(`無法解析日期時間: ${value}`);
+        return null;
+    } catch (error) {
+        console.error('轉換日期時間出錯:', error);
+        return null;
+    }
 }
 
 /**
- * 將 CalendarDate 格式化為字符串
+ * 將 CalendarDate 對象轉換為字符串
  */
-export function formatCalendarDateToString(date: CalendarDate | CalendarDateTime): string {
-    // 確保是 CalendarDate
-    const calendarDate = ensureCalendarDate(date);
-    if (!calendarDate) return '';
+export function formatCalendarDateToString(
+    date: CalendarDate | CalendarDateTime | null | undefined,
+    format: string = 'YYYY-MM-DD'
+): string | null {
+    if (!date) return null;
 
-    return dayjs(new Date(calendarDate.year, calendarDate.month - 1, calendarDate.day))
-        .format('YYYY-MM-DD');
+    try {
+        // 使用 dayjs 處理格式化
+        const dayjsDate = dayjs(`${date.year}-${date.month}-${date.day}`);
+        return dayjsDate.format(format);
+    } catch (error) {
+        console.error('格式化日期出錯:', error);
+        return null;
+    }
+}
+
+/**
+ * 將 CalendarDateTime 對象轉換為指定格式的字符串
+ */
+export function formatFromCalendarDateTime(
+    dateTime: CalendarDateTime | null | undefined,
+    format: string = 'YYYY-MM-DD HH:mm:ss'
+): string | null {
+    if (!dateTime) return null;
+
+    try {
+        const date = new Date(
+            dateTime.year,
+            dateTime.month - 1,
+            dateTime.day,
+            dateTime.hour,
+            dateTime.minute,
+            dateTime.second
+        );
+
+        return dayjs(date).format(format);
+    } catch (error) {
+        console.error('格式化日期時間出錯:', error);
+        return null;
+    }
+}
+
+/**
+ * 確保值是 CalendarDate 對象
+ */
+export function ensureCalendarDate(
+    value: DateTimeValue | undefined
+): CalendarDate | null {
+    if (!value) return null;
+
+    try {
+        // 已經是 CalendarDate 對象
+        if (value instanceof CalendarDate) {
+            return value;
+        }
+
+        // 是 CalendarDateTime 對象
+        if (value instanceof CalendarDateTime) {
+            return new CalendarDate(value.year, value.month, value.day);
+        }
+
+        // 處理「看起來像 CalendarDate」的對象 (duck typing)
+        if (typeof value === 'object' && value !== null &&
+            'year' in value && 'month' in value && 'day' in value &&
+            typeof value.year === 'number' &&
+            typeof value.month === 'number' &&
+            typeof value.day === 'number') {
+            // 重新創建一個真正的 CalendarDate 實例
+            return new CalendarDate(value.year, value.month, value.day);
+        }
+
+        // 使用 parseToCalendarDateTime 函數處理字符串和 Date 對象
+        const dateTime = parseToCalendarDateTime(value);
+        if (dateTime) {
+            return new CalendarDate(dateTime.year, dateTime.month, dateTime.day);
+        }
+
+        return null;
+    } catch (error) {
+        console.error('確保 CalendarDate 出錯:', error);
+        return null;
+    }
 }
 
 /**
  * 將 CalendarDateTime 格式化為完整日期時間字符串
  */
-export function formatCalendarDateTimeToString(dateTime: CalendarDateTime, timeFormat: string = 'HH:mm:ss'): string {
+export function formatCalendarDateTimeToString(dateTime: CalendarDateTime | null | undefined, timeFormat: string = 'HH:mm:ss'): string | null {
+    if (!dateTime) return null;
     const dateStr = formatCalendarDateToString(dateTime);
+    if (!dateStr) return null;
 
     const hour = dateTime.hour.toString().padStart(2, '0');
     const minute = dateTime.minute.toString().padStart(2, '0');
@@ -151,7 +258,8 @@ export function formatCalendarDateTimeToString(dateTime: CalendarDateTime, timeF
  * 將標準字符串格式轉換為 CalendarDateTime
  * 支援 ISO 日期時間格式 (YYYY-MM-DDTHH:mm:ss)
  */
-export function parseStringToCalendarDateTime(dateTimeStr: string): CalendarDateTime | null {
+export function parseStringToCalendarDateTime(dateTimeStr: string | null | undefined): CalendarDateTime | null {
+    if (!dateTimeStr) return null;
     try {
         const date = dayjs(dateTimeStr);
         if (!date.isValid()) return null;
@@ -169,3 +277,80 @@ export function parseStringToCalendarDateTime(dateTimeStr: string): CalendarDate
         return null;
     }
 }
+
+/**
+ * 獲取今天的日期（CalendarDate對象）
+ */
+export function getTodaysDate(): CalendarDate {
+    const today = new Date();
+    return new CalendarDate(
+        today.getFullYear(),
+        today.getMonth() + 1, // JavaScript 月份從 0 開始
+        today.getDate()
+    );
+}
+
+/**
+ * 檢查日期是否在指定範圍內
+ */
+export function isDateInRange(
+    date: CalendarDate,
+    minDate?: CalendarDate | null,
+    maxDate?: CalendarDate | null
+): boolean {
+    if (minDate && date.compare(minDate) < 0) return false;
+    if (maxDate && date.compare(maxDate) > 0) return false;
+    return true;
+}
+
+/**
+ * 將 CalendarDateTime 格式化為指定的輸出格式
+ * @param dateTime CalendarDateTime 對象
+ * @param outputFormat 輸出格式 ('iso', 'date', 'calendar')
+ * @param dateFormat 日期格式 (預設為 'YYYY-MM-DD HH:mm:ss')
+ * @returns 格式化後的日期時間值
+ */
+export function formatOutput(
+    dateTime: CalendarDateTime | null,
+    outputFormat: OutputFormat = 'iso',
+    dateFormat: string = 'YYYY-MM-DD HH:mm:ss'
+): DateTimeValue {
+    if (!dateTime) return null;
+
+    switch (outputFormat) {
+        case 'iso':
+            return formatFromCalendarDateTime(dateTime, dateFormat);
+
+        case 'date':
+            return new Date(
+                dateTime.year,
+                dateTime.month - 1,
+                dateTime.day,
+                dateTime.hour,
+                dateTime.minute,
+                dateTime.second
+            );
+
+        case 'calendar':
+            return dateTime;
+
+        default:
+            return formatFromCalendarDateTime(dateTime, dateFormat);
+    }
+}
+
+/**
+ * 獲取當前時間的 CalendarDateTime 對象
+ * @returns 當前時間的 CalendarDateTime 對象
+ */
+export const getNow = (): CalendarDateTime => {
+    const now = new Date();
+    return new CalendarDateTime(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        now.getDate(),
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds()
+    );
+};

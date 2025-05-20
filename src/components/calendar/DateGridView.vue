@@ -13,7 +13,7 @@
         <CalendarCell v-for="state in cellStates" :key="`${state.date.year}-${state.date.month}-${state.date.day}`"
             v-memo="[state.isSelected, state.isToday, state.isDisabled, state.isOutsideMonth]" :date="state.date"
             :current-month="props.month" :selected="state.isSelected" :is-today="state.isToday"
-            :disabled="state.isDisabled" :focusable="state.date.day === 1 && state.date.month === props.month"
+            :disabled="state.isDisabled === true" :focusable="state.date.day === 1 && state.date.month === props.month"
             @select="handleSelect" />
     </div>
 </template>
@@ -27,8 +27,8 @@ interface Props {
     year: number;
     month: number;
     selectedDate: CalendarDate | null;
-    minDate?: CalendarDate;
-    maxDate?: CalendarDate;
+    minDate?: CalendarDate | null;
+    maxDate?: CalendarDate | null;
     locale?: string;
     weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, etc.
 }

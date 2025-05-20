@@ -306,10 +306,12 @@ const emitUpdate = (dateTime: CalendarDateTime | null) => {
 };
 
 // 日曆選擇處理
-const onCalendarSelect = (date: CalendarDate) => {
+const onCalendarSelect = (date: CalendarDate, closeCalendar: boolean = true) => {
     inputDateValue.value = formatCalendarDateToString(date);
     updateDateTimeValue();
-    hideCalendar();
+    if (closeCalendar) {
+        hideCalendar();
+    }
 };
 
 // 切換日曆顯示

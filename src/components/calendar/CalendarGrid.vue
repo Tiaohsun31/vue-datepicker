@@ -16,7 +16,21 @@
         <!-- 時間選擇區域 -->
         <template v-if="showTimeSelector">
             <hr class="my-2 border-gray-200" />
-            <div class="time-selector-container pt-1">
+            <div class="flex flex-row items-center justify-between">
+                <label class="text-sm font-medium text-gray-700 uppercase">Time:</label>
+                <div class="flex flex-row items-center gap-1">
+                    <button type="button" @click="setNowTime"
+                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer">
+                        Now
+                    </button>
+                    <button type="button" @click="setTodaysDate"
+                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer">
+                        Today
+                    </button>
+                </div>
+
+            </div>
+            <div v-if="showTimeSelector" class="time-selector-container pt-1">
                 <!-- 簡化版時間選擇器 -->
                 <div class="flex flex-row items-center gap-1">
                     <!-- 小時選擇器 -->
@@ -110,7 +124,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    select: [date: CalendarDate],
+    select: [date: CalendarDate, closeCalendar: boolean],
     'time-select': [time: string]
 }>();
 
@@ -211,13 +225,23 @@ const handleSelect = (date: CalendarDate) => {
     selectedDate.value = date;
 
     // 始終發送日期選擇事件
-    emit('select', date);
+    emit('select', date, true);
 
     // 如果有時間選擇器，也發送時間選擇事件
     if (props.showTimeSelector) {
         const time = formattedTimeValue.value;
         emit('time-select', time);
     }
+};
+
+const setTodaysDate = () => {
+    const today = getTodaysDate();
+    selectedDate.value = today;
+    currentYear.value = today.year;
+    currentMonth.value = today.month;
+
+    selectedDate.value = ensureCalendarDate(today);
+    emit('select', today, false);
 };
 
 // 設置為當前時間

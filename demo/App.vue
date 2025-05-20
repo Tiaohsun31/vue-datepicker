@@ -10,8 +10,8 @@
             <!-- <DatePickerV3 v-model="dateTime"></DatePickerV3> -->
         </div>
         <div>
-            {{ dateTime2 }}
-            <DatePickerV5 v-model="dateTimeutc"></DatePickerV5>
+            {{ dateTimeutc }}
+            <DatePickerV5 v-model="dateTimeutc" date-format="MM/DD/YYYY"></DatePickerV5>
         </div>
         <!-- <RouterView /> -->
     </div>

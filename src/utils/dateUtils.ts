@@ -290,3 +290,86 @@ export const getNow = (): CalendarDateTime => {
         now.getSeconds()
     );
 };
+
+/**
+ * 檢查日期格式是否有效
+ * @param format 日期格式字符串
+ * @returns 是否有效
+ */
+export function isValidDateFormat(format: string): boolean {
+    const validTokens = ['YYYY', 'YY', 'MM', 'M', 'DD', 'D'];
+    const formatClean = format.replace(/[^\w]/g, ' ');
+
+    // 檢查最基本的要求：年、月、日必須都存在 (考慮區分大小寫)
+    const hasYear = formatClean.includes('YYYY') || formatClean.includes('YY');
+    const hasMonth = formatClean.includes('MM') || formatClean.includes('M');
+    const hasDay = formatClean.includes('DD') || formatClean.includes('D');
+
+    // 檢查是否包含無效的格式標記 (例如小寫的 yyyy 或 mm)
+    const tokens = formatClean.split(/\s+/).filter(Boolean);
+    const hasInvalidToken = tokens.some(token => {
+        // 檢查是否有類似但不完全符合的標記 (如 yyyy, mm, dd)
+        if (/^[yY]{1,4}$/.test(token) && !validTokens.includes(token)) return true;
+        if (/^[mM]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
+        if (/^[dD]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
+        return false;
+    });
+
+    return hasYear && hasMonth && hasDay && !hasInvalidToken;
+}
+
+/**
+ * 檢查時間格式是否有效
+ * @param format 時間格式字符串
+ * @returns 是否有效
+ */
+export function isValidTimeFormat(format: string): boolean {
+    const validTokens = ['HH', 'H', 'mm', 'm', 'ss', 's', 'a', 'A'];
+    const formatClean = format.replace(/[^\w]/g, ' ');
+
+    // 檢查最基本的要求：小時、分鐘至少要存在
+    const hasHour = formatClean.includes('HH') || formatClean.includes('H');
+    const hasMinute = formatClean.includes('mm') || formatClean.includes('m');
+
+    // 檢查是否包含無效的格式標記
+    const tokens = formatClean.split(/\s+/).filter(Boolean);
+    const hasInvalidToken = tokens.some(token => {
+        if (/^[hH]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
+        if (/^[mM]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
+        if (/^[sS]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
+        return false;
+    });
+
+    return hasHour && hasMinute && !hasInvalidToken;
+}
+
+/**
+ * 修正日期格式字符串中的常見錯誤
+ * @param format 日期格式字符串
+ * @returns 修正後的日期格式字符串
+ */
+export const fixDateFormat = (format: string): string => {
+    // 替換常見的小寫錯誤
+    let fixed = format;
+    fixed = fixed.replace(/yyyy/g, 'YYYY');
+    fixed = fixed.replace(/yy/g, 'YY');
+    fixed = fixed.replace(/mm/g, 'MM');
+    fixed = fixed.replace(/dd/g, 'DD');
+
+    return fixed;
+};
+
+/**
+ * 修正時間格式字符串中的常見錯誤
+ * @param format 時間格式字符串
+ * @returns 修正後的時間格式字符串
+ */
+export const fixTimeFormat = (format: string): string => {
+    // 替換常見的小寫錯誤
+    let fixed = format;
+    fixed = fixed.replace(/hh/g, 'HH');
+    fixed = fixed.replace(/mm/g, 'mm'); // 分鐘小寫保持不變
+    fixed = fixed.replace(/ss/g, 'ss'); // 秒數小寫保持不變
+
+    return fixed;
+};

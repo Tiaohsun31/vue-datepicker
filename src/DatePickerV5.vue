@@ -9,7 +9,7 @@
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="yearPlaceholder"
                         :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder" :min-date="minDateStr"
                         :max-date="maxDateStr" :required="required" :auto-focus="autoFocus" :separator="separator"
-                        :date-format="displayFormat" @validation="onDateInputValidation"
+                        :date-format="dateInputFormat" @validation="onDateInputValidation"
                         @complete="onDateInputComplete" />
                 </div>
 
@@ -38,7 +38,7 @@
         </DateContainer>
 
         <!-- 錯誤訊息 -->
-        <DateErrorMessage :errors="errors" />
+        <DateErrorMessage :errors="mergedErrors" />
 
         <!-- 日曆彈出層 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
@@ -70,6 +70,10 @@ import {
     ensureCalendarDate,
     formatOutput,
     getNow,
+    isValidDateFormat,
+    isValidTimeFormat,
+    fixDateFormat,
+    fixTimeFormat,
     type DateTimeValue,
     type OutputFormat
 } from './utils/dateUtils';
@@ -100,7 +104,7 @@ interface Props {
     maxDate?: DateTimeValue;
     locale?: string;
     separator?: string;
-    displayFormat?: string;
+    dateFormat?: string;
     timeFormat?: string;
     autoFocus?: boolean;
     // 輸出格式
@@ -127,11 +131,10 @@ const props = withDefaults(defineProps<Props>(), {
     required: true,
     locale: 'zh-TW',
     separator: '/',
-    displayFormat: 'YYYY-MM-DD',
+    dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     autoFocus: false,
     outputFormat: 'iso',
-    outputDateFormat: 'YYYY-MM-DD HH:mm:ss',
 });
 
 const emit = defineEmits<{
@@ -151,7 +154,12 @@ const showCalendar = ref(false);
 const inputDateValue = ref<string | null>(null);
 const inputTimeValue = ref<string | null>(null);
 const errors = ref<Record<string, string>>({});
+const formatErrors = ref<Record<string, string>>({});
+
+// 內部格式變量
 const internalDateTime = ref<CalendarDateTime | null>(null);
+const internalDateFormat = ref(props.dateFormat);
+const internalTimeFormat = ref(props.timeFormat);
 
 // 計算屬性
 const selectedCalendarDate = computed<CalendarDate | null>(() => {
@@ -167,6 +175,23 @@ const maxDate = computed(() => props.maxDate !== undefined ? ensureCalendarDate(
 // 計算屬性 - 將CalendarDate轉換為字符串以供輸入組件使用
 const minDateStr = computed(() => formatCalendarDateToString(minDate.value));
 const maxDateStr = computed(() => formatCalendarDateToString(maxDate.value));
+
+// 說明格式轉換流程
+// 1. 使用者輸入格式由 dateFormat 控制 (如 MM/DD/YYYY)
+// 2. 內部存儲為標準格式
+// 3. 輸出時會根據 outputDateFormat 或 dateFormat+timeFormat 進行格式化
+const outputFormat = computed(() => {
+    return props.outputDateFormat || (props.showTime
+        ? `${internalDateFormat.value} ${internalTimeFormat.value}`
+        : internalDateFormat.value);
+});
+
+const dateInputFormat = computed(() => internalDateFormat.value);
+
+// 合併常規錯誤和格式錯誤的計算屬性
+const mergedErrors = computed(() => {
+    return { ...errors.value, ...formatErrors.value };
+});
 
 // 從CalendarDateTime獲取時間部分
 const getTimeFromDateTime = (dateTime: CalendarDateTime | null): string | null => {
@@ -215,7 +240,7 @@ watch(() => props.modelValue, (newValue) => {
 
     if (dateTime) {
         // 設置日期部分
-        inputDateValue.value = formatCalendarDateToString(dateTime);
+        inputDateValue.value = formatCalendarDateToString(dateTime, props.dateFormat);
 
         // 設置時間部分
         inputTimeValue.value = getTimeFromDateTime(dateTime);
@@ -299,7 +324,7 @@ const updateDateTimeValue = () => {
 
 // 發送更新事件
 const emitUpdate = (dateTime: CalendarDateTime | null) => {
-    const formattedOutput = formatOutput(dateTime, props.outputFormat, props.outputDateFormat);
+    const formattedOutput = formatOutput(dateTime, props.outputFormat, outputFormat.value);
 
     emit('update:modelValue', formattedOutput);
     emit('change', formattedOutput);
@@ -307,7 +332,7 @@ const emitUpdate = (dateTime: CalendarDateTime | null) => {
 
 // 日曆選擇處理
 const onCalendarSelect = (date: CalendarDate, closeCalendar: boolean = true) => {
-    inputDateValue.value = formatCalendarDateToString(date);
+    inputDateValue.value = formatCalendarDateToString(date, props.dateFormat);
     updateDateTimeValue();
     if (closeCalendar) {
         hideCalendar();
@@ -385,8 +410,36 @@ onBeforeUnmount(() => {
     window.removeEventListener('scroll', handleScroll);
 });
 
-// 設置主題
+
 onBeforeMount(() => {
+    // 驗證日期和時間格式
+    if (!isValidDateFormat(props.dateFormat)) {
+        const originalFormat = props.dateFormat;
+        const fixedFormat = fixDateFormat(props.dateFormat);
+
+        // 將錯誤添加到 formatErrors
+        formatErrors.value.dateFormat = `日期格式不正確: "${originalFormat}" 已自動修復為 "${fixedFormat}"`;
+        console.warn(`日期格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
+
+        internalDateFormat.value = fixedFormat;
+    } else {
+        internalDateFormat.value = props.dateFormat;
+    }
+
+    // 驗證並自動修復時間格式
+    if (props.showTime && !isValidTimeFormat(props.timeFormat)) {
+        const originalFormat = props.timeFormat;
+        const fixedFormat = fixTimeFormat(props.timeFormat);
+
+        // 將錯誤添加到 formatErrors
+        formatErrors.value.timeFormat = `時間格式不正確: "${originalFormat}" 已自動修復為 "${fixedFormat}"`;
+        console.warn(`時間格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
+
+        internalTimeFormat.value = fixedFormat;
+    } else {
+        internalTimeFormat.value = props.timeFormat;
+    }
+    // 設置主題
     if (props.theme) {
         setTheme(props.theme);
     }

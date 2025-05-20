@@ -1,22 +1,13 @@
 <template>
-    <!-- <div class="grid grid-cols-7 gap-1">
-        <CalendarCell v-for="date in calendarDays" :key="`${date.year}-${date.month}-${date.day}`" :date="date"
-            :current-month="currentMonth" :selected="isSelected(date)" :is-today="isToday(date)" v-memo="[
-                date.month !== currentMonth,
-                isSelected(date),
-                isToday(date),
-                isDateDisabled(date)
-            ]" :disabled="isDateDisabled(date)" :focusable="date.day === 1 && date.month === currentMonth"
-            @select="handleSelect" />
-    </div> -->
     <div class="grid grid-cols-7 gap-1">
         <CalendarCell v-for="state in cellStates" :key="`${state.date.year}-${state.date.month}-${state.date.day}`"
             v-memo="[state.isSelected, state.isToday, state.isDisabled, state.isOutsideMonth]" :date="state.date"
             :current-month="props.month" :selected="state.isSelected" :is-today="state.isToday"
             :disabled="state.isDisabled === true" :focusable="state.date.day === 1 && state.date.month === props.month"
-            @select="handleSelect" />
+            @select="handleSelect" @nav="handleNavigation" />
     </div>
 </template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { CalendarDate, getWeeksInMonth, startOfWeek } from '@internationalized/date';
@@ -41,14 +32,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    'select': [date: CalendarDate]
+    'select': [date: CalendarDate];
+    'navigate': [direction: 'prev-month' | 'next-month' | 'prev-year' | 'next-year'];
 }>();
-
-// // 今天的日期
-// const today = computed(() => getTodaysDate());
-
-// // 當前月份（用於區分當月和非當月日期）
-// const currentMonth = computed(() => props.month);
 
 // 生成當月的日曆數據
 const calendarDays = computed(() => {
@@ -80,12 +66,13 @@ const selectedDateKey = computed(() => {
     return `${props.selectedDate.year}-${props.selectedDate.month}-${props.selectedDate.day}`;
 });
 
+// 獲取今天的日期索引
 const todayKey = computed(() => {
     const today = getTodaysDate();
     return `${today.year}-${today.month}-${today.day}`;
 });
 
-// 預計算每個日期的狀態
+// 預計算每個日期的狀態 - 提高渲染性能
 const cellStates = computed(() => {
     const todayK = todayKey.value;
     const selectedK = selectedDateKey.value;
@@ -105,25 +92,23 @@ const cellStates = computed(() => {
     });
 });
 
-// // 檢查日期是否可選
-// const isDateDisabled = (date: CalendarDate) => {
-//     if (props.minDate && date.compare(props.minDate) < 0) return true;
-//     if (props.maxDate && date.compare(props.maxDate) > 0) return true;
-//     return false;
-// };
-
-// // 檢查日期是否是今天
-// const isToday = (date: CalendarDate) => {
-//     return date.compare(today.value) === 0;
-// };
-
-// // 檢查日期是否被選中
-// const isSelected = (date: CalendarDate) => {
-//     return props.selectedDate?.compare(date) === 0;
-// };
-
 // 處理日期選擇
 const handleSelect = (date: CalendarDate) => {
     emit('select', date);
+};
+
+// 處理鍵盤導航
+const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
+    // 這裡可以實現方向鍵導航邏輯
+    // 例如根據方向計算新的日期並選中
+
+    // 還可以處理月份和年份的翻頁
+    if (direction === 'left' && cellStates.value[0].date.day < 15) {
+        emit('navigate', 'prev-month');
+    } else if (direction === 'right' &&
+        cellStates.value[cellStates.value.length - 1].date.day > 15 &&
+        cellStates.value[cellStates.value.length - 1].date.month !== props.month) {
+        emit('navigate', 'next-month');
+    }
 };
 </script>

@@ -9,6 +9,7 @@
         </button>
     </div>
 </template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { CalendarDate } from '@internationalized/date';
@@ -37,6 +38,7 @@ const isOutsideMonth = computed(() => {
     return props.date.month !== props.currentMonth;
 });
 
+// 計算單元格樣式，使用 Tailwind CSS 類別
 const cellClasses = computed(() => {
     return {
         'flex justify-center items-center w-8 h-8 rounded-md mx-auto': true,
@@ -48,6 +50,9 @@ const cellClasses = computed(() => {
     };
 });
 
+/**
+ * 處理日期選擇事件
+ */
 const handleSelect = () => {
     if (!props.disabled) {
         emit('select', props.date);

@@ -1,8 +1,9 @@
 <template>
-    <!-- 年份輸入 -->
+    <!-- 年份/月份/日期輸入組 -->
     <div class="flex items-center justify-start">
+        <!-- 年份輸入 -->
         <input ref="yearRef" v-model="yearValue" v-autowidth="20" type="text" inputmode="numeric"
-            :placeholder="yearPlaceholder" :maxlength="4" class="date-input  text-sm text-center"
+            :placeholder="yearPlaceholder" :maxlength="4" class="date-input text-sm text-center"
             @input="handleYearInput" @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')"
             @blur="handleBlur('year')" aria-label="year" :aria-invalid="!!errors.year"
             :aria-errormessage="errors.year ? 'year-error' : undefined" />
@@ -10,7 +11,7 @@
 
         <!-- 月份輸入 -->
         <input ref="monthRef" v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric"
-            :placeholder="monthPlaceholder" :maxlength="2" class="date-input  text-sm text-center"
+            :placeholder="monthPlaceholder" :maxlength="2" class="date-input text-sm text-center"
             @input="handleMonthInput" @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')"
             @blur="handleBlur('month')" aria-label="month" :aria-invalid="!!errors.month"
             :aria-errormessage="errors.month ? 'month-error' : undefined" />
@@ -18,7 +19,7 @@
 
         <!-- 日期輸入 -->
         <input ref="dayRef" v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric"
-            :placeholder="dayPlaceholder" :maxlength="2" class="date-input  text-sm text-center" @input="handleDayInput"
+            :placeholder="dayPlaceholder" :maxlength="2" class="date-input text-sm text-center" @input="handleDayInput"
             @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
             aria-label="day" :aria-invalid="!!errors.day" :aria-errormessage="errors.day ? 'day-error' : undefined" />
     </div>
@@ -28,13 +29,17 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
-import vAutowidthDirective from '@/directives/v-autowidth'
+import vAutowidthDirective from '@/directives/v-autowidth';
 
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
     updated: vAutowidthDirective.updated,
     beforeUnmount: vAutowidthDirective.beforeUnmount
 };
+
+type DateFieldType = 'year' | 'month' | 'day';
+type DateField = Record<string, string>;
+
 interface Props {
     modelValue?: string | null;
     yearPlaceholder?: string;
@@ -63,7 +68,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     'update:modelValue': [value: string | null];
-    'validation': [isValid: boolean, errors: Record<string, string>];
+    'validation': [isValid: boolean, errors: DateField];
     'complete': [date: string];
 }>();
 
@@ -71,11 +76,11 @@ const emit = defineEmits<{
 const yearValue = ref<string>('');
 const monthValue = ref<string>('');
 const dayValue = ref<string>('');
-const errors = ref<Record<string, string>>({});
-const focused = ref<string | null>(null);
+const errors = ref<DateField>({});
+const focused = ref<DateFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
-// 引用
+// DOM 引用
 const yearRef = ref<HTMLInputElement>();
 const monthRef = ref<HTMLInputElement>();
 const dayRef = ref<HTMLInputElement>();
@@ -83,6 +88,29 @@ const dayRef = ref<HTMLInputElement>();
 // 計算屬性
 const hasErrors = computed(() => Object.keys(errors.value).length > 0);
 const errorMessages = computed(() => Object.values(errors.value));
+
+// 組合的日期字符串 (YYYY-MM-DD 格式)
+const dateString = computed(() => {
+    if (!yearValue.value || !monthValue.value || !dayValue.value) {
+        return null;
+    }
+
+    const year = yearValue.value.padStart(4, '0');
+    const month = monthValue.value.padStart(2, '0');
+    const day = dayValue.value.padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+});
+
+// 格式化的日期字符串 (根據 dateFormat 屬性)
+const formattedDateString = computed(() => {
+    if (!dateString.value) return null;
+
+    const date = dayjs(dateString.value);
+    if (!date.isValid()) return null;
+
+    return date.format(props.dateFormat);
+});
 
 // 監聽外部 modelValue 變化
 watch(() => props.modelValue, (newValue) => {
@@ -111,8 +139,25 @@ onMounted(() => {
     }
 });
 
-// 驗證單個字段
-const validateField = (field: string, value: string) => {
+/**
+ * 獲取指定年月的天數
+ */
+const getDaysInMonth = (year: number, month: number): number => {
+    // 月份對應的天數 (非閏年)
+    const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    // 檢查閏年 (2月為29天)
+    if (month === 2) {
+        return isLeapYear(year) ? 29 : 28;
+    }
+
+    return daysInMonth[month];
+};
+
+/**
+ * 驗證單個字段
+ */
+const validateField = (field: DateFieldType, value: string): boolean => {
     if (!value) return true; // 空值在必填檢查中處理
 
     const numValue = parseInt(value);
@@ -144,8 +189,10 @@ const validateField = (field: string, value: string) => {
 
             // 更智能的日期驗證: 當月份改變時，驗證日期是否合理
             if (dayValue.value && yearValue.value) {
-                const daysInSelectedMonth = getDaysInMonth(parseInt(yearValue.value), numValue);
+                const yearNum = parseInt(yearValue.value);
+                const daysInSelectedMonth = getDaysInMonth(yearNum, numValue);
                 const currentDay = parseInt(dayValue.value);
+
                 if (currentDay > daysInSelectedMonth) {
                     errors.value.day = `${value}月最多只有${daysInSelectedMonth}天`;
                     return false;
@@ -185,19 +232,10 @@ const validateField = (field: string, value: string) => {
 
     return true;
 };
-// 輔助函數: 獲取指定年月的天數
-const getDaysInMonth = (year: number, month: number): number => {
-    // 月份對應的天數 (非閏年)
-    const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-    // 檢查閏年 (2月為29天)
-    if (month === 2) {
-        return isLeapYear(year) ? 29 : 28;
-    }
-
-    return daysInMonth[month];
-};
-// 驗證並發送事件
+/**
+ * 驗證並發送事件
+ */
 const validateAndEmit = () => {
     // 如果還沒初始化，不進行驗證
     if (!isInitialized.value) return;
@@ -218,9 +256,8 @@ const validateAndEmit = () => {
     }
 
     // 組合並驗證完整日期
-    if (yearValue.value && monthValue.value && dayValue.value) {
-        const dateStr = `${yearValue.value}-${monthValue.value.padStart(2, '0')}-${dayValue.value.padStart(2, '0')}`;
-        const date = dayjs(dateStr);
+    if (dateString.value) {
+        const date = dayjs(dateString.value);
 
         if (!date.isValid()) {
             errors.value.day = '無效的日期';
@@ -230,22 +267,29 @@ const validateAndEmit = () => {
                 errors.value.day = `日期不能早於 ${dayjs(props.minDate).format('YYYY-MM-DD')}`;
             } else if (props.maxDate && date.isAfter(dayjs(props.maxDate))) {
                 errors.value.day = `日期不能晚於 ${dayjs(props.maxDate).format('YYYY-MM-DD')}`;
-            } else {
+            } else if (formattedDateString.value) {
                 // 日期有效，發送完成事件
-                const formattedDate = date.format(props.dateFormat);
-                emit('update:modelValue', date.format('YYYY-MM-DD')); // 保持內部格式為標準格式
-                emit('complete', formattedDate);
+                emit('update:modelValue', dateString.value);
+                emit('complete', formattedDateString.value);
             }
         }
-    } else {
+    } else if (isInitialized.value && !yearValue.value && !monthValue.value && !dayValue.value) {
         // 只有在已初始化且三個字段都為空時，才設置為 null
-        if (isInitialized.value && !yearValue.value && !monthValue.value && !dayValue.value) {
-            emit('update:modelValue', null);
-        }
+        emit('update:modelValue', null);
     }
 
     // 發送驗證結果
     emit('validation', !hasErrors.value, errors.value);
+};
+
+/**
+ * 重置所有輸入欄位
+ */
+const resetFields = () => {
+    yearValue.value = '';
+    monthValue.value = '';
+    dayValue.value = '';
+    errors.value = {};
 };
 
 // 輸入處理函數
@@ -255,7 +299,7 @@ const handleYearInput = (event: Event) => {
 
     if (value.length <= 4) {
         yearValue.value = value;
-        const isValid = validateField('year', value)
+        const isValid = validateField('year', value);
         if (!isValid) return;
 
         // 自動跳轉到月份
@@ -282,7 +326,7 @@ const handleMonthInput = (event: Event) => {
             monthValue.value = value;
         }
 
-        const isValid = validateField('month', value)
+        const isValid = validateField('month', value);
         if (!isValid) return;
 
         // 自動跳轉到日期
@@ -307,7 +351,7 @@ const handleDayInput = (event: Event) => {
             dayValue.value = value;
         }
 
-        const isValid = validateField('day', value)
+        const isValid = validateField('day', value);
         if (!isValid) return;
 
         // 當輸入完成時驗證並發送
@@ -318,7 +362,7 @@ const handleDayInput = (event: Event) => {
 };
 
 // 鍵盤事件處理
-const handleKeydown = (event: KeyboardEvent, field: string) => {
+const handleKeydown = (event: KeyboardEvent, field: DateFieldType) => {
     const target = event.target as HTMLInputElement;
 
     // 退格鍵處理
@@ -375,11 +419,11 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
 };
 
 // 聚焦處理
-const handleFocus = (field: string) => {
+const handleFocus = (field: DateFieldType) => {
     focused.value = field;
 };
 
-const handleBlur = (field: string) => {
+const handleBlur = (field: DateFieldType) => {
     focused.value = null;
     // 失焦時驗證
     validateAndEmit();
@@ -389,15 +433,29 @@ const handleBlur = (field: string) => {
 defineExpose({
     validate: validateAndEmit,
     reset: () => {
-        yearValue.value = '';
-        monthValue.value = '';
-        dayValue.value = '';
-        errors.value = {};
+        resetFields();
         emit('update:modelValue', null);
     },
     getErrors: () => errors.value,
     hasErrors,
-    errorMessages
+    errorMessages,
+    focus: () => {
+        yearRef.value?.focus();
+    },
+    setDate: (dateStr: string) => {
+        if (dateStr) {
+            const date = dayjs(dateStr);
+            if (date.isValid()) {
+                yearValue.value = date.format('YYYY');
+                monthValue.value = date.format('MM');
+                dayValue.value = date.format('DD');
+                validateAndEmit();
+            }
+        } else {
+            resetFields();
+            emit('update:modelValue', null);
+        }
+    }
 });
 </script>
 
@@ -415,7 +473,6 @@ defineExpose({
     box-shadow: none !important;
     /* 增加一些自定義樣式 */
     transition: background-color 0.2s ease;
-
 }
 
 .date-input:focus {
@@ -423,19 +480,6 @@ defineExpose({
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
-}
-
-/* 設置特定的寬度 */
-.year-input {
-    width: 2.8rem !important;
-    text-align: center;
-}
-
-.month-input,
-.day-input {
-    width: 2rem !important;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
 }
 
 /* 隱藏數字輸入框的箭頭 */

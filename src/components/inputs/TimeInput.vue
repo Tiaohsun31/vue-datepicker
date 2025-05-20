@@ -40,6 +40,11 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { isNumeric } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
 
+type TimePeriod = 'AM' | 'PM';
+type TimeFieldType = 'hour' | 'minute' | 'second';
+type TimeField = Record<string, string>;
+
+// 導入自定義指令
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
     updated: vAutowidthDirective.updated,
@@ -57,6 +62,7 @@ interface Props {
     autoFocus?: boolean;
     locale?: string;
     useLocalizedPeriod?: boolean;
+    minuteStep?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -69,12 +75,13 @@ const props = withDefaults(defineProps<Props>(), {
     required: true,
     autoFocus: false,
     locale: 'zh-TW',
-    useLocalizedPeriod: false
+    useLocalizedPeriod: false,
+    minuteStep: 1
 });
 
 const emit = defineEmits<{
     'update:modelValue': [value: string | null];
-    'validation': [isValid: boolean, errors: Record<string, string>];
+    'validation': [isValid: boolean, errors: TimeField];
     'complete': [time: string];
 }>();
 
@@ -82,12 +89,12 @@ const emit = defineEmits<{
 const hourValue = ref<string>('');
 const minuteValue = ref<string>('');
 const secondValue = ref<string>('');
-const periodValue = ref<'AM' | 'PM'>('AM');
-const errors = ref<Record<string, string>>({});
-const focused = ref<string | null>(null);
+const periodValue = ref<TimePeriod>('AM');
+const errors = ref<TimeField>({});
+const focused = ref<TimeFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
-// 引用
+// DOM 引用
 const hourRef = ref<HTMLInputElement>();
 const minuteRef = ref<HTMLInputElement>();
 const secondRef = ref<HTMLInputElement>();
@@ -96,8 +103,18 @@ const secondRef = ref<HTMLInputElement>();
 const hasErrors = computed(() => Object.keys(errors.value).length > 0);
 const errorMessages = computed(() => Object.values(errors.value));
 
+// 重置所有輸入欄位
+const resetFields = () => {
+    hourValue.value = '';
+    minuteValue.value = '';
+    secondValue.value = '';
+    periodValue.value = 'AM';
+};
+
 // 本地化的AM/PM顯示
 const localizedPeriod = computed(() => {
+    if (!props.useLocalizedPeriod) return periodValue.value;
+
     try {
         // 建立一個日期對象，分別用於上午和下午的情況
         const amDate = new Date();
@@ -129,11 +146,39 @@ const localizedPeriod = computed(() => {
 });
 
 // 顯示的時間段標記
-const displayPeriod = computed(() => {
-    if (props.useLocalizedPeriod) {
-        return localizedPeriod.value;
+const displayPeriod = computed(() => localizedPeriod.value);
+
+/**
+ * 格式化最終輸出的時間值
+ */
+const formattedTimeValue = computed(() => {
+    // 如果任何必要欄位為空，返回null
+    if (
+        hourValue.value === '' ||
+        minuteValue.value === '' ||
+        (props.enableSeconds && secondValue.value === '')
+    ) {
+        return null;
+    }
+
+    // 取得小時值並處理12/24小時制轉換
+    let hour = parseInt(hourValue.value, 10);
+    if (!props.use24Hour) {
+        if (periodValue.value === 'PM' && hour < 12) {
+            hour += 12;
+        } else if (periodValue.value === 'AM' && hour === 12) {
+            hour = 0;
+        }
+    }
+
+    const hourStr = hour.toString().padStart(2, '0'); // 確保小時總是兩位數
+    const minuteStr = minuteValue.value.padStart(2, '0');
+
+    if (props.enableSeconds) {
+        const secondStr = secondValue.value.padStart(2, '0');
+        return `${hourStr}:${minuteStr}:${secondStr}`;
     } else {
-        return periodValue.value; // 直接使用 'AM' 或 'PM'
+        return `${hourStr}:${minuteStr}`;
     }
 });
 
@@ -161,17 +206,15 @@ watch(() => props.modelValue, (newValue) => {
             }
         }
 
-        hourValue.value = hours.toString();
+        // 確保小時總是有正確的格式 - 解決小時前的0被去掉的問題
+        hourValue.value = hours.toString().padStart(2, '0');
         minuteValue.value = minutes;
 
         if (props.enableSeconds) {
             secondValue.value = seconds;
         }
     } else {
-        hourValue.value = '';
-        minuteValue.value = '';
-        secondValue.value = '';
-        periodValue.value = 'AM';
+        resetFields();
     }
 }, { immediate: true });
 
@@ -182,8 +225,13 @@ onMounted(() => {
     }
 });
 
-// 驗證單個字段
-const validateField = (field: string, value: string) => {
+/**
+ * 驗證單個欄位
+ * @param field 欄位名稱 ('hour', 'minute', 'second')
+ * @param value 欄位值
+ * @returns 驗證是否通過
+ */
+const validateField = (field: TimeFieldType, value: string): boolean => {
     if (!value) return true; // 空值在必填檢查中處理
 
     const numValue = parseInt(value);
@@ -203,6 +251,12 @@ const validateField = (field: string, value: string) => {
         case 'minute':
             if (!isNumeric(value) || numValue < 0 || numValue > 59) {
                 errors.value[field] = '分鐘必須是 0-59 之間的數字';
+                return false;
+            }
+
+            // 如果設定了minuteStep，檢查是否符合步進值
+            if (props.minuteStep > 1 && numValue % props.minuteStep !== 0) {
+                errors.value[field] = `分鐘必須是 ${props.minuteStep} 的倍數`;
                 return false;
             }
             break;
@@ -251,38 +305,17 @@ const validateAndEmit = () => {
         if (props.enableSeconds && !secondValue.value) errors.value.second = '請輸入秒鐘';
     }
 
-    // 組合並發送時間
-    if (hourValue.value && minuteValue.value && (!props.enableSeconds || secondValue.value)) {
-        // 轉換小時為24小時制 (如果使用12小時制)
-        let hours = parseInt(hourValue.value, 10);
-        if (!props.use24Hour) {
-            if (periodValue.value === 'PM' && hours < 12) {
-                hours += 12;
-            } else if (periodValue.value === 'AM' && hours === 12) {
-                hours = 0;
-            }
-        }
-
-        const hoursStr = hours.toString().padStart(2, '0');
-        const minutes = minuteValue.value.padStart(2, '0');
-        const seconds = props.enableSeconds ? secondValue.value.padStart(2, '0') : '00';
-
-        const timeStr = props.enableSeconds
-            ? `${hoursStr}:${minutes}:${seconds}`
-            : `${hoursStr}:${minutes}`;
-
-        emit('update:modelValue', timeStr);
-        emit('complete', timeStr);
-    } else {
-        // 如果有必填欄位未填，則發送 null
-        if (isInitialized.value &&
-            (!hourValue.value || !minuteValue.value || (props.enableSeconds && !secondValue.value))) {
-            emit('update:modelValue', null);
-        }
-    }
-
     // 發送驗證結果
     emit('validation', !hasErrors.value, errors.value);
+
+    // 如果所有欄位都有值且有效，發送完整時間
+    if (formattedTimeValue.value) {
+        emit('update:modelValue', formattedTimeValue.value);
+        emit('complete', formattedTimeValue.value);
+    } else if (isInitialized.value) {
+        // 如果沒有完整的時間值，發送 null
+        emit('update:modelValue', null);
+    }
 };
 
 // 輸入處理函數
@@ -363,7 +396,7 @@ const handleSecondInput = (event: Event) => {
 };
 
 // 鍵盤事件處理
-const handleKeydown = (event: KeyboardEvent, field: string) => {
+const handleKeydown = (event: KeyboardEvent, field: TimeFieldType) => {
     const target = event.target as HTMLInputElement;
 
     // 退格鍵處理
@@ -422,30 +455,58 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
 };
 
 // 聚焦處理
-const handleFocus = (field: string) => {
+const handleFocus = (field: TimeFieldType) => {
     focused.value = field;
 };
 
-const handleBlur = (field: string) => {
+const handleBlur = (field: TimeFieldType) => {
     focused.value = null;
     // 失焦時驗證
     validateAndEmit();
 };
 
-// 提供方法給父組件
+// 公開方法
 defineExpose({
     validate: validateAndEmit,
     reset: () => {
-        hourValue.value = '';
-        minuteValue.value = '';
-        secondValue.value = '';
-        periodValue.value = 'AM';
+        resetFields();
         errors.value = {};
         emit('update:modelValue', null);
     },
     getErrors: () => errors.value,
     hasErrors,
-    errorMessages
+    errorMessages,
+    setTime: (timeStr: string) => {
+        if (timeStr) {
+            const [hoursStr, minutes, seconds] = timeStr.split(':');
+            let hours = parseInt(hoursStr);
+
+            if (!props.use24Hour) {
+                if (hours >= 12) {
+                    periodValue.value = 'PM';
+                    hours = hours === 12 ? 12 : hours - 12;
+                } else {
+                    periodValue.value = 'AM';
+                    hours = hours === 0 ? 12 : hours;
+                }
+            }
+
+            // 確保小時總是兩位數
+            hourValue.value = hours.toString().padStart(2, '0');
+            minuteValue.value = minutes;
+            if (props.enableSeconds && seconds) {
+                secondValue.value = seconds;
+            }
+
+            validateAndEmit();
+        } else {
+            resetFields();
+            emit('update:modelValue', null);
+        }
+    },
+    focus: () => {
+        hourRef.value?.focus();
+    }
 });
 </script>
 

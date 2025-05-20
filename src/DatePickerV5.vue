@@ -11,8 +11,8 @@
                         :max-date="maxDateStr" :required="required" :auto-focus="autoFocus" :separator="separator"
                         :date-format="displayFormat" @validation="onDateInputValidation"
                         @complete="onDateInputComplete" />
-
                 </div>
+
                 <!-- 分隔符 -->
                 <div v-if="showTime" class="text-gray-400 mx-1">
                     <span>{{ timeSeparator }}</span>
@@ -69,6 +69,7 @@ import {
     formatCalendarDateToString,
     ensureCalendarDate,
     formatOutput,
+    getNow,
     type DateTimeValue,
     type OutputFormat
 } from './utils/dateUtils';
@@ -152,8 +153,11 @@ const inputTimeValue = ref<string | null>(null);
 const errors = ref<Record<string, string>>({});
 const internalDateTime = ref<CalendarDateTime | null>(null);
 
+// 計算屬性
 const selectedCalendarDate = computed<CalendarDate | null>(() => {
-    return internalDateTime.value ? new CalendarDate(internalDateTime.value.year, internalDateTime.value.month, internalDateTime.value.day) : null;
+    return internalDateTime.value
+        ? new CalendarDate(internalDateTime.value.year, internalDateTime.value.month, internalDateTime.value.day)
+        : null;
 });
 
 // 轉換 minDate 和 maxDate 為 CalendarDate
@@ -161,26 +165,8 @@ const minDate = computed(() => props.minDate !== undefined ? ensureCalendarDate(
 const maxDate = computed(() => props.maxDate !== undefined ? ensureCalendarDate(props.maxDate) : null);
 
 // 計算屬性 - 將CalendarDate轉換為字符串以供輸入組件使用
-const minDateStr = computed(() => {
-    return formatCalendarDateToString(minDate.value);
-});
-
-const maxDateStr = computed(() => {
-    return formatCalendarDateToString(maxDate.value);
-});
-
-// const selectedDate = ref<CalendarDate | null>(ensureCalendarDate(props.modelValue));
-
-// // 計算屬性 - 將CalendarDate轉換為字符串以供輸入組件使用
-// const minDateStr = computed(() => {
-//     if (!props.minDate) return null;
-//     return formatCalendarDateToString(props.minDate);
-// });
-
-// const maxDateStr = computed(() => {
-//     if (!props.maxDate) return null;
-//     return formatCalendarDateToString(props.maxDate);
-// });
+const minDateStr = computed(() => formatCalendarDateToString(minDate.value));
+const maxDateStr = computed(() => formatCalendarDateToString(maxDate.value));
 
 // 從CalendarDateTime獲取時間部分
 const getTimeFromDateTime = (dateTime: CalendarDateTime | null): string | null => {
@@ -238,24 +224,6 @@ watch(() => props.modelValue, (newValue) => {
         inputTimeValue.value = null;
     }
 }, { immediate: true });
-// watch(() => props.modelValue, (newValue) => {
-//     if (newValue) {
-//         // 設置日期部分
-//         selectedDate.value = new CalendarDate(
-//             newValue.year,
-//             newValue.month,
-//             newValue.day
-//         );
-//         inputDateValue.value = formatCalendarDateToString(newValue);
-
-//         // 設置時間部分
-//         inputTimeValue.value = getTimeFromDateTime(newValue);
-//     } else {
-//         selectedDate.value = null;
-//         inputDateValue.value = null;
-//         inputTimeValue.value = null;
-//     }
-// }, { immediate: true });
 
 // 驗證事件處理 - 日期部分
 const onDateInputValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
@@ -297,6 +265,7 @@ const onDateInputComplete = (dateStr: string) => {
     updateDateTimeValue();
 };
 
+// 時間選擇處理
 const onTimeSelect = (timeStr: string) => {
     inputTimeValue.value = timeStr;
     updateDateTimeValue();
@@ -328,6 +297,7 @@ const updateDateTimeValue = () => {
     }
 };
 
+// 發送更新事件
 const emitUpdate = (dateTime: CalendarDateTime | null) => {
     const formattedOutput = formatOutput(dateTime, props.outputFormat, props.outputDateFormat);
 
@@ -413,75 +383,51 @@ onBeforeUnmount(() => {
     window.removeEventListener('scroll', handleScroll);
 });
 
-// 獲取當前日期和時間
-// const getNow = (): CalendarDateTime => {
-//     const now = new Date();
-//     return new CalendarDateTime(
-//         now.getFullYear(),
-//         now.getMonth() + 1,
-//         now.getDate(),
-//         now.getHours(),
-//         now.getMinutes(),
-//         now.getSeconds()
-//     );
-// };
-
-// 公開方法
-// defineExpose({
-//     focus: () => dateInputRef.value?.focus,
-//     reset: () => {
-//         selectedDate.value = null;
-//         selectedTime.value = null;
-//         inputDateValue.value = null;
-//         inputTimeValue.value = null;
-//         errors.value = {};
-//         emit('update:modelValue', null);
-//     },
-//     validate: () => {
-//         dateInputRef.value?.validate();
-//         if (props.showTime && timeInputRef.value) {
-//             timeInputRef.value.validate();
-//         }
-//     },
-//     getDateTime: () => createCalendarDateTime(inputDateValue.value, inputTimeValue.value),
-//     setDateTime: (dateTime: CalendarDateTime | null) => {
-//         if (dateTime) {
-//             selectedDate.value = new CalendarDate(
-//                 dateTime.year,
-//                 dateTime.month,
-//                 dateTime.day
-//             );
-//             inputDateValue.value = formatCalendarDateToString(selectedDate.value);
-
-//             selectedTime.value = getTimeFromDateTime(dateTime);
-//             inputTimeValue.value = selectedTime.value;
-//         } else {
-//             selectedDate.value = null;
-//             selectedTime.value = null;
-//             inputDateValue.value = null;
-//             inputTimeValue.value = null;
-//         }
-
-//         emit('update:modelValue', dateTime);
-//     },
-//     getNow,
-//     selectNow: () => {
-//         const now = getNow();
-//         selectedDate.value = new CalendarDate(now.year, now.month, now.day);
-//         inputDateValue.value = formatCalendarDateToString(selectedDate.value);
-
-//         const timeStr = getTimeFromDateTime(now);
-//         selectedTime.value = timeStr;
-//         inputTimeValue.value = timeStr;
-
-//         emit('update:modelValue', now);
-//         emit('change', now);
-//     }
-// });
-
+// 設置主題
 onBeforeMount(() => {
     if (props.theme) {
         setTheme(props.theme);
+    }
+});
+
+// 公開方法
+defineExpose({
+    focus: () => dateInputRef.value?.focus(),
+    reset: () => {
+        internalDateTime.value = null;
+        inputDateValue.value = null;
+        inputTimeValue.value = null;
+        errors.value = {};
+        emit('update:modelValue', null);
+    },
+    validate: () => {
+        dateInputRef.value?.validate();
+        if (props.showTime && timeInputRef.value) {
+            timeInputRef.value.validate();
+        }
+    },
+    getDateTime: () => createCalendarDateTime(inputDateValue.value, inputTimeValue.value),
+    setDateTime: (dateTime: CalendarDateTime | null) => {
+        internalDateTime.value = dateTime;
+
+        if (dateTime) {
+            inputDateValue.value = formatCalendarDateToString(dateTime);
+            inputTimeValue.value = getTimeFromDateTime(dateTime);
+        } else {
+            inputDateValue.value = null;
+            inputTimeValue.value = null;
+        }
+
+        emitUpdate(dateTime);
+    },
+    getNow,
+    selectNow: () => {
+        const now = getNow();
+        internalDateTime.value = now;
+        inputDateValue.value = formatCalendarDateToString(now);
+        inputTimeValue.value = getTimeFromDateTime(now);
+
+        emitUpdate(now);
     }
 });
 </script>

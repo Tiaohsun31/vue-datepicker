@@ -28,5 +28,5 @@ const selectedDate = ref(null);
 const dateTime = ref('2025-05-22 09:23:20');
 const dateTime2 = ref('2025-05-22T21:23:20');
 const dateTime3 = ref('2025-05-22T09:23:20+08:00');
-const dateTimeutc = ref('2025-05-22T09:23:20Z');
+const dateTimeutc = ref('');
 </script>

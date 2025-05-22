@@ -1,9 +1,21 @@
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import { themeManager, type ThemeMode, type ThemeConfig, type ThemeState } from '../utils/tailwind4ThemeManager';
+/**
+ * useTheme.ts
+ * 針對 DatePicker 公開專案的簡化主題 Composable
+ * 配合 Tailwind CSS 4 使用
+ */
+
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { themeManager, type ThemeMode, type ThemeState } from '../utils/tailwind4ThemeManager';
 import type { TailwindColor } from '../types/main';
 
-export function useTheme(initialConfig?: Partial<ThemeConfig>) {
-    const themeState = ref<ThemeState>(themeManager.getThemeState());
+interface UseThemeOptions {
+    defaultColor?: TailwindColor | string;
+    defaultMode?: ThemeMode;
+}
+
+export function useTheme(options: UseThemeOptions = {}) {
+    // 響應式狀態
+    const themeState = ref<ThemeState>(themeManager.getState());
     let unsubscribe: (() => void) | null = null;
 
     // 響應式計算屬性
@@ -15,45 +27,23 @@ export function useTheme(initialConfig?: Partial<ThemeConfig>) {
     const systemPreference = computed(() => themeState.value.systemPreference);
     const currentColor = computed(() => themeState.value.color);
 
-    // 主題相關的 CSS 類別
-    const themeClasses = computed(() => ({
-        'dark': isDark.value,
-        'light': isLight.value,
-        [`theme-${currentColor.value}`]: true
-    }));
-
-    // 設置主題模式
-    const setMode = (mode: ThemeMode): void => {
-        themeManager.setThemeMode(mode);
-    };
+    // 主題類別（用於組件根元素的 :class 綁定）
+    const themeClasses = computed(() => themeManager.getThemeClasses());
 
     // 設置主題顏色
     const setColor = (color: TailwindColor | string): void => {
-        themeManager.setThemeColor(color);
+        themeManager.setColor(color);
     };
 
-    // 設置完整主題配置
-    const setTheme = (config: Partial<ThemeConfig>): void => {
-        themeManager.setTheme(config);
+    // 設置主題模式
+    const setMode = (mode: ThemeMode): void => {
+        themeManager.setMode(mode);
     };
 
-    // 切換主題（在 light 和 dark 之間）
+    // 切換深淺模式
     const toggle = (): void => {
-        themeManager.toggleTheme();
-    };
-
-    // 重置到默認設置
-    const reset = (): void => {
-        themeManager.reset();
-    };
-
-    // 監聽主題變化
-    const watchTheme = (callback: (state: ThemeState) => void, immediate = false) => {
-        if (immediate) {
-            callback(themeState.value);
-        }
-
-        return watch(themeState, callback, { deep: true });
+        const newMode = currentMode.value === 'light' ? 'dark' : 'light';
+        setMode(newMode);
     };
 
     // 獲取當前主題的 CSS 變數值
@@ -68,17 +58,39 @@ export function useTheme(initialConfig?: Partial<ThemeConfig>) {
     };
 
     // 獲取主題相關的 CSS 變數
-    const getThemeVariables = () => ({
-        bgPrimary: getCSSVariable('--vdt-bg-primary'),
-        bgSecondary: getCSSVariable('--vdt-bg-secondary'),
-        bgElevated: getCSSVariable('--vdt-bg-elevated'),
-        textPrimary: getCSSVariable('--vdt-text-primary'),
-        textSecondary: getCSSVariable('--vdt-text-secondary'),
-        textMuted: getCSSVariable('--vdt-text-muted'),
-        borderLight: getCSSVariable('--vdt-border-light'),
-        borderMedium: getCSSVariable('--vdt-border-medium'),
-        borderStrong: getCSSVariable('--vdt-border-strong'),
-        themePrimary: getCSSVariable('--vdt-theme-500'),
+    const getThemeVariables = () => {
+        const variables: Record<string, string> = {};
+
+        // 主題色變數
+        const shades = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
+        shades.forEach(shade => {
+            variables[`theme-${shade}`] = getCSSVariable(`--color-vdt-theme-${shade}`);
+        });
+
+        // 語義化變數
+        variables['surface'] = getCSSVariable('--color-vdt-surface');
+        variables['surface-secondary'] = getCSSVariable('--color-vdt-surface-secondary');
+        variables['surface-elevated'] = getCSSVariable('--color-vdt-surface-elevated');
+        variables['content'] = getCSSVariable('--color-vdt-content');
+        variables['content-secondary'] = getCSSVariable('--color-vdt-content-secondary');
+        variables['content-muted'] = getCSSVariable('--color-vdt-content-muted');
+        variables['outline'] = getCSSVariable('--color-vdt-outline');
+        variables['outline-strong'] = getCSSVariable('--color-vdt-outline-strong');
+        variables['outline-stronger'] = getCSSVariable('--color-vdt-outline-stronger');
+        variables['interactive-hover'] = getCSSVariable('--color-vdt-interactive-hover');
+        variables['interactive-active'] = getCSSVariable('--color-vdt-interactive-active');
+        variables['error'] = getCSSVariable('--color-vdt-error');
+        variables['error-surface'] = getCSSVariable('--color-vdt-error-surface');
+        variables['success'] = getCSSVariable('--color-vdt-success');
+        variables['warning'] = getCSSVariable('--color-vdt-warning');
+
+        return variables;
+    };
+
+    // 檢查瀏覽器是否支援顏色方案偵測
+    const supportsColorScheme = computed(() => {
+        if (typeof window === 'undefined') return false;
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches !== undefined;
     });
 
     // 組件掛載時初始化
@@ -88,9 +100,13 @@ export function useTheme(initialConfig?: Partial<ThemeConfig>) {
             themeState.value = state;
         });
 
-        // 如果提供了初始配置，應用它
-        if (initialConfig) {
-            themeManager.setTheme(initialConfig);
+        // 應用初始設置
+        if (options.defaultColor) {
+            setColor(options.defaultColor);
+        }
+
+        if (options.defaultMode) {
+            setMode(options.defaultMode);
         }
     });
 
@@ -102,8 +118,8 @@ export function useTheme(initialConfig?: Partial<ThemeConfig>) {
     });
 
     return {
-        // 狀態
-        themeState: themeState,
+        // 響應式狀態
+        themeState,
         isDark,
         isLight,
         isAuto,
@@ -112,31 +128,68 @@ export function useTheme(initialConfig?: Partial<ThemeConfig>) {
         systemPreference,
         currentColor,
         themeClasses,
+        supportsColorScheme,
 
-        // 方法
-        setMode,
+        // 主要方法
         setColor,
-        setTheme,
+        setMode,
         toggle,
-        reset,
-        watchTheme,
-        getCSSVariable,
-        getThemeVariables,
 
-        // 便利方法
+        // 便利方法 - 模式設置
         setLightMode: () => setMode('light'),
         setDarkMode: () => setMode('dark'),
         setAutoMode: () => setMode('auto'),
+
+        // 便利方法 - 常用顏色設置
+        setRedTheme: () => setColor('red'),
+        setBlueTheme: () => setColor('blue'),
+        setGreenTheme: () => setColor('green'),
+        setVioletTheme: () => setColor('violet'),
+        setPurpleTheme: () => setColor('purple'),
+        setIndigoTheme: () => setColor('indigo'),
+        setTealTheme: () => setColor('teal'),
+        setCyanTheme: () => setColor('cyan'),
+        setSkyTheme: () => setColor('sky'),
+        setEmeraldTheme: () => setColor('emerald'),
+        setLimeTheme: () => setColor('lime'),
+        setYellowTheme: () => setColor('yellow'),
+        setAmberTheme: () => setColor('amber'),
+        setOrangeTheme: () => setColor('orange'),
+        setPinkTheme: () => setColor('pink'),
+        setRoseTheme: () => setColor('rose'),
+        setFuchsiaTheme: () => setColor('fuchsia'),
+
+        // 工具方法
+        getCSSVariable,
+        getThemeVariables,
     };
 }
 
-// 創建一個可在多個組件間共享的全局主題狀態
-export function createGlobalTheme(config?: Partial<ThemeConfig>) {
+// 創建全局主題 Hook（用於跨組件共享主題狀態）
+export function createGlobalTheme(config?: UseThemeOptions) {
     if (config) {
-        themeManager.setTheme(config);
+        if (config.defaultColor) {
+            themeManager.setColor(config.defaultColor);
+        }
+        if (config.defaultMode) {
+            themeManager.setMode(config.defaultMode);
+        }
     }
 
     return useTheme();
 }
+
+// 用於組件外部使用的工具函數
+export const useThemeUtils = () => ({
+    setThemeMode: (mode: ThemeMode) => themeManager.setMode(mode),
+    setThemeColor: (color: TailwindColor | string) => themeManager.setColor(color),
+    toggleTheme: () => {
+        const currentState = themeManager.getState();
+        const newMode = currentState.currentMode === 'light' ? 'dark' : 'light';
+        themeManager.setMode(newMode);
+    },
+    getThemeState: () => themeManager.getState(),
+    getThemeClasses: () => themeManager.getThemeClasses(),
+});
 
 export default useTheme;

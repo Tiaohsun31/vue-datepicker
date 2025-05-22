@@ -1,26 +1,39 @@
 /**
- * colorUtils.ts
- * 職責：顏色相關的純工具函數
- * - 顏色轉換 (OKLCH, HEX, RGB)
- * - 顏色應用到 CSS 變數
- * - 尋找最接近的 Tailwind 顏色
- * - 無狀態，純函數
+ * colorUtils.ts - 重構版
+ * 職責：純顏色轉換工具函數，不涉及 DOM 操作
  */
 import type { TailwindColor } from '../types/main';
-import { tailwindColors, getAllShades } from './tailwind4-color';
+import { tailwindColors } from './tailwind4-color';
 
-// 用於簡單返回的主題信息
-export interface ThemeInfo {
-    color: TailwindColor;
-    mainColor: string; // 主顏色值
+// 顏色解析和轉換相關的介面
+export interface OklchColor {
+    lightness: number;
+    chroma: number;
+    hue: number;
+}
+
+export interface RgbColor {
+    r: number;
+    g: number;
+    b: number;
+}
+
+export interface LabColor {
+    l: number;
+    a: number;
+    b: number;
+}
+
+export interface LchColor {
+    l: number;
+    c: number;
+    h: number;
 }
 
 /**
- * 解析OKLCH顏色格式
- * @param color OKLCH顏色字符串
- * @returns 包含亮度、彩度和色相的對象，若無效則返回null
+ * 解析 OKLCH 顏色格式
  */
-function parseOklch(color: string): { lightness: number, chroma: number, hue: number } | null {
+export function parseOklch(color: string): OklchColor | null {
     const match = color.match(/oklch\(\s*([0-9.]+)%?\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+))?\s*\)/);
     if (!match) return null;
 
@@ -29,9 +42,9 @@ function parseOklch(color: string): { lightness: number, chroma: number, hue: nu
 }
 
 /**
- * 將十六進制顏色轉換為RGB值
+ * 將十六進制顏色轉換為 RGB
  */
-function hexToRgb(hex: string): { r: number, g: number, b: number } {
+export function hexToRgb(hex: string): RgbColor {
     hex = hex.replace(/^#/, '');
 
     if (hex.length === 3) {
@@ -46,17 +59,17 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } {
 }
 
 /**
- * 將RGB轉換為近似的Lab顏色空間
+ * RGB 轉 Lab 顏色空間
  */
-function rgbToLab(rgb: { r: number, g: number, b: number }): { l: number, a: number, b: number } {
-    const { r, g, b: bValue } = rgb;
+export function rgbToLab(rgb: RgbColor): LabColor {
+    const { r, g, b: rgbB } = rgb;
 
-    // 轉換為線性RGB（伽瑪校正）
+    // 伽瑪校正
     const linearR = r <= 0.04045 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
     const linearG = g <= 0.04045 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
-    const linearB = bValue <= 0.04045 ? bValue / 12.92 : Math.pow((bValue + 0.055) / 1.055, 2.4);
+    const linearB = rgbB <= 0.04045 ? rgbB / 12.92 : Math.pow((rgbB + 0.055) / 1.055, 2.4);
 
-    // 轉換為XYZ
+    // 轉換為 XYZ
     const x = 0.4124 * linearR + 0.3576 * linearG + 0.1805 * linearB;
     const y = 0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB;
     const z = 0.0193 * linearR + 0.1192 * linearG + 0.9505 * linearB;
@@ -66,7 +79,7 @@ function rgbToLab(rgb: { r: number, g: number, b: number }): { l: number, a: num
     const yn = 1.0;
     const zn = 1.08883;
 
-    // XYZ轉Lab
+    // XYZ 轉 Lab
     const fx = x > 0.008856 ? Math.pow(x / xn, 1 / 3) : (7.787 * x / xn) + 16 / 116;
     const fy = y > 0.008856 ? Math.pow(y / yn, 1 / 3) : (7.787 * y / yn) + 16 / 116;
     const fz = z > 0.008856 ? Math.pow(z / zn, 1 / 3) : (7.787 * z / zn) + 16 / 116;
@@ -79,62 +92,42 @@ function rgbToLab(rgb: { r: number, g: number, b: number }): { l: number, a: num
 }
 
 /**
- * 將Lab轉換為LCH（Lab的極坐標形式）
+ * Lab 轉 LCH（極坐標形式）
  */
-function labToLch(lab: { l: number, a: number, b: number }): { l: number, c: number, h: number } {
+export function labToLch(lab: LabColor): LchColor {
     const { l, a, b } = lab;
-
     const c = Math.sqrt(a * a + b * b);
     let h = Math.atan2(b, a) * 180 / Math.PI;
     if (h < 0) h += 360;
-
     return { l, c, h };
 }
 
 /**
- * 將十六進制顏色轉換為近似的Oklch值
+ * 十六進制轉 OKLCH（近似）
  */
-function hexToOklch(hex: string): { lightness: number, chroma: number, hue: number } {
+export function hexToOklch(hex: string): OklchColor {
     const rgb = hexToRgb(hex);
     const lab = rgbToLab(rgb);
     const lch = labToLch(lab);
 
     return {
         lightness: lch.l,
-        chroma: Math.min(lch.c / 150, 0.4), // 限制在合理範圍內
+        chroma: Math.min(lch.c / 150, 0.4),
         hue: lch.h
     };
 }
 
 /**
- * 判斷是否為有效的OKLCH顏色格式
+ * 計算顏色距離
  */
-function isOklch(color: string): boolean {
-    return color.startsWith('oklch(');
-}
-
-/**
- * 判斷是否為十六進制顏色
- */
-function isHex(color: string): boolean {
-    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
-}
-
-/**
- * 計算Oklch空間中兩種顏色的感知距離
- */
-function calculateColorDistance(color1: { lightness: number, chroma: number, hue: number },
-    color2: { lightness: number, chroma: number, hue: number }): number {
-    // 計算色相差異（考慮色相的循環性質）
+export function calculateColorDistance(color1: OklchColor, color2: OklchColor): number {
     const hueDiff = Math.min(
         Math.abs(color1.hue - color2.hue),
         360 - Math.abs(color1.hue - color2.hue)
     );
 
-    // 對於差異很大的色相，我們希望強調這種差異
     const hueFactor = hueDiff > 60 ? 30 : 5;
 
-    // 計算加權距離，強調色相
     return Math.sqrt(
         Math.pow((color1.lightness - color2.lightness) * 1.5, 2) +
         Math.pow((color1.chroma - color2.chroma) * 2, 2) +
@@ -143,131 +136,77 @@ function calculateColorDistance(color1: { lightness: number, chroma: number, hue
 }
 
 /**
- * 查找Tailwind顏色表中最接近的顏色
+ * 顏色格式檢測
  */
-function findClosestColor(targetColor: { lightness: number, chroma: number, hue: number },
-    colorMap: Record<string, Record<string, string>>): { color: string, shade: string, distance: number } {
-    let closestColor = 'indigo';
-    let closestShade = '500';
+export function isOklch(color: string): boolean {
+    return color.startsWith('oklch(');
+}
+
+export function isHex(color: string): boolean {
+    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
+}
+
+export function isTailwindColor(color: string): boolean {
+    return color in tailwindColors;
+}
+
+/**
+ * 查找最接近的 Tailwind 顏色
+ */
+export function findClosestTailwindColor(inputColor: string): TailwindColor {
+    const defaultColor: TailwindColor = 'violet';
+
+    // 如果已經是 Tailwind 顏色名稱
+    if (isTailwindColor(inputColor)) {
+        return inputColor as TailwindColor;
+    }
+
+    let targetOklch: OklchColor | null = null;
+
+    // 解析輸入顏色
+    if (isOklch(inputColor)) {
+        targetOklch = parseOklch(inputColor);
+    } else if (isHex(inputColor)) {
+        targetOklch = hexToOklch(inputColor);
+    }
+
+    if (!targetOklch) return defaultColor;
+
+    // 查找最接近的顏色
+    let closestColor: TailwindColor = defaultColor;
     let minDistance = Infinity;
 
-    // 遍歷所有Tailwind顏色
-    for (const [colorName, shades] of Object.entries(colorMap)) {
-        for (const [shade, colorValue] of Object.entries(shades)) {
-            // 只考慮300-700這幾個主要色階
-            if (!['300', '400', '500', '600', '700'].includes(shade)) continue;
+    for (const [colorName, shades] of Object.entries(tailwindColors)) {
+        // 只檢查主要色階
+        for (const shade of ['300', '400', '500', '600', '700']) {
+            const colorValue = shades[shade];
+            if (!colorValue) continue;
 
             const parsedColor = parseOklch(colorValue);
             if (!parsedColor) continue;
 
-            const distance = calculateColorDistance(targetColor, parsedColor);
-
+            const distance = calculateColorDistance(targetOklch, parsedColor);
             if (distance < minDistance) {
                 minDistance = distance;
-                closestColor = colorName;
-                closestShade = shade;
+                closestColor = colorName as TailwindColor;
             }
         }
     }
 
-    return { color: closestColor, shade: closestShade, distance: minDistance };
+    return closestColor;
 }
 
 /**
- * 查找最接近輸入顏色的Tailwind顏色
+ * 獲取顏色的所有色階
  */
-export function findClosestTailwindColor(color: string): TailwindColor {
-    // 預設顏色
-    const defaultColor: TailwindColor = 'indigo';
-
-    // 處理OKLCH輸入
-    if (isOklch(color)) {
-        const parsedOklch = parseOklch(color);
-        if (!parsedOklch) return defaultColor;
-
-        const result = findClosestColor(parsedOklch, tailwindColors);
-        return result.color as TailwindColor;
-    }
-
-    // 處理十六進制輸入
-    if (isHex(color)) {
-        const oklchValues = hexToOklch(color);
-        const result = findClosestColor(oklchValues, tailwindColors);
-        return result.color as TailwindColor;
-    }
-
-    // 如果不是OKLCH或十六進制，假設已經是Tailwind顏色名稱
-    return color as TailwindColor;
-}
-
-/**
- * 生成所有色階的CSS變數
- */
-export function generateThemeVariables(color: TailwindColor): Record<string, string> {
-    const colorShades = getAllShades(color);
-    const variables: Record<string, string> = {};
-
-    // 設置所有主題色階變數
-    Object.entries(colorShades).forEach(([shade, value]) => {
-        variables[`--vdt-theme-${shade}`] = value;
-    });
-
-    return variables;
-}
-
-/**
- * 將主題變數應用到CSS
- */
-export function applyThemeToCSS(color: TailwindColor | string): void {
-    // 如果是字符串且不是Tailwind顏色名，查找最接近的Tailwind顏色
-    const tailwindColor = typeof color === 'string' && (isHex(color) || isOklch(color))
-        ? findClosestTailwindColor(color)
-        : color as TailwindColor;
-
-    const variables = generateThemeVariables(tailwindColor);
-    const root = document.documentElement;
-
-    // 應用每個變數到:root
-    Object.entries(variables).forEach(([name, value]) => {
-        root.style.setProperty(name, value);
-    });
-}
-
-/**
- * 設置主題顏色並返回主題信息
- */
-export function setTheme(color: TailwindColor | string): ThemeInfo {
-    // 確保我們有一個有效的Tailwind顏色
-    const tailwindColor = typeof color === 'string' && (isHex(color) || isOklch(color))
-        ? findClosestTailwindColor(color)
-        : color as TailwindColor;
-
-    // 應用到CSS變數
-    applyThemeToCSS(tailwindColor);
-
-    // 返回基本主題信息
-    return {
-        color: tailwindColor,
-        mainColor: getAllShades(tailwindColor)['500'] || getAllShades(tailwindColor)['400']
-    };
+export function getColorShades(color: TailwindColor): Record<string, string> {
+    return tailwindColors[color] || {};
 }
 
 /**
  * 獲取特定色階的顏色值
  */
 export function getColorValue(color: TailwindColor, shade: string = '500'): string {
-    const shades = getAllShades(color);
-    return shades[shade] || shades['500'] || shades['400'];
-}
-
-/**
- * 獲取顏色的所有色階
- */
-export function getColorShades(color: TailwindColor | string): Record<string, string> {
-    // 如果不是Tailwind顏色，找到最接近的
-    const tailwindColor = typeof color === 'string' && (isHex(color) || isOklch(color))
-        ? findClosestTailwindColor(color)
-        : color as TailwindColor;
-
-    return getAllShades(tailwindColor);
+    const shades = getColorShades(color);
+    return shades[shade] || shades['500'] || shades['400'] || '';
 }

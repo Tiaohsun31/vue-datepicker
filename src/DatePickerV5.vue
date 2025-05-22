@@ -1,7 +1,15 @@
 <template>
-    <div class="date-time-picker-wrapper relative w-full"
-        :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" ref="pickerRef">
+
+    <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
+        沒有變化454
+    </div>
+    <div class="date-time-picker-wrapper relative w-full" :class="[showTime ? 'min-w-[300px]' : 'min-w-[150px]']"
+        v-bind="containerAttributes" ref="pickerRef">
         <!-- 日期時間輸入容器 -->
+        <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
+            沒有變化454
+        </div>
+
         <DateContainer :errors="errors">
             <div class="flex w-full items-center justify-start gap-1">
                 <!-- 日期輸入部分 -->
@@ -79,7 +87,7 @@ import {
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { useTheme } from './composables/useTheme';
+import { useScopedTheme } from './composables/useThemeV2';
 
 interface Props {
     modelValue?: DateTimeValue;
@@ -415,10 +423,14 @@ onBeforeUnmount(() => {
 
 //#region: 設置主題
 const {
+    themeClasses,
+    containerAttributes,
     setColor,
     setMode,
-    themeClasses
-} = useTheme();
+    currentMode,
+    isDark,
+    isLight
+} = useScopedTheme();
 
 // 監聽 props 變化
 watch(() => props.theme, (newTheme) => {
@@ -502,6 +514,15 @@ defineExpose({
         inputTimeValue.value = getTimeFromDateTime(now);
 
         emitUpdate(now);
-    }
+    },
+
+    // 主題控制方法
+    setTheme: setColor,
+    setDarkMode: () => setMode('dark'),
+    setLightMode: () => setMode('light'),
+    setAutoMode: () => setMode('auto'),
+    getCurrentMode: () => currentMode.value,
+    isDarkMode: () => isDark.value,
+    isLightMode: () => isLight.value,
 });
 </script>

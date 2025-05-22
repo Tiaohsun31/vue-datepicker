@@ -1,6 +1,6 @@
 <template>
-    <div class="date-time-picker-wrapper relative w-full" :class="[showTime ? 'min-w-[300px]' : 'min-w-[150px]']"
-        ref="pickerRef">
+    <div class="date-time-picker-wrapper relative w-full"
+        :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" ref="pickerRef">
         <!-- 日期時間輸入容器 -->
         <DateContainer :errors="errors">
             <div class="flex w-full items-center justify-start gap-1">
@@ -56,6 +56,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onBeforeMount } from 'vue';
 import { CalendarDate, CalendarDateTime } from '@internationalized/date';
 import dayjs from 'dayjs';
+import "./styles/themeT4.css";
 
 // 組件導入
 import DateContainer from './components/calendar/DateContainer.vue';
@@ -78,10 +79,11 @@ import {
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { setTheme } from './utils/tailwind4Theme';
+import { useTheme } from './composables/useTheme';
 
 interface Props {
     modelValue?: DateTimeValue;
+    darkMode?: boolean | 'auto';
     theme?: TailwindColor | string;
     // 日期選項
     yearPlaceholder?: string;
@@ -114,6 +116,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     modelValue: null,
+    darkMode: true,
     theme: () => 'violet',
     yearPlaceholder: '年',
     monthPlaceholder: '月',
@@ -410,6 +413,26 @@ onBeforeUnmount(() => {
     window.removeEventListener('scroll', handleScroll);
 });
 
+//#region: 設置主題
+const {
+    setColor,
+    setMode,
+    themeClasses
+} = useTheme();
+
+// 監聽 props 變化
+watch(() => props.theme, (newTheme) => {
+    if (newTheme) {
+        setColor(newTheme);  // 設置顏色主題
+    }
+}, { immediate: true });
+
+watch(() => props.darkMode, (newMode) => {
+    if (newMode === true) setMode('dark');
+    else if (newMode === false) setMode('light');
+    else setMode('auto');  // 跟隨系統
+}, { immediate: true });
+//#endregion
 
 onBeforeMount(() => {
     // 驗證日期和時間格式
@@ -438,10 +461,6 @@ onBeforeMount(() => {
         internalTimeFormat.value = fixedFormat;
     } else {
         internalTimeFormat.value = props.timeFormat;
-    }
-    // 設置主題
-    if (props.theme) {
-        setTheme(props.theme);
     }
 });
 

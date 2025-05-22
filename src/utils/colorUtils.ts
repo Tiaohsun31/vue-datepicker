@@ -1,3 +1,11 @@
+/**
+ * colorUtils.ts
+ * 職責：顏色相關的純工具函數
+ * - 顏色轉換 (OKLCH, HEX, RGB)
+ * - 顏色應用到 CSS 變數
+ * - 尋找最接近的 Tailwind 顏色
+ * - 無狀態，純函數
+ */
 import type { TailwindColor } from '../types/main';
 import { tailwindColors, getAllShades } from './tailwind4-color';
 

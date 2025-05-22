@@ -78,7 +78,7 @@ import CalendarGrid from './components/calendar/CalendarGrid.vue';
 import TimeGrid from './components/calendar/TimeSelector.vue';
 import { ensureCalendarDate, formatCalendarDateToString } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { setTheme } from './utils/tailwind4Theme';
+import { setTheme } from './utils/colorUtils';
 
 interface Props {
     modelValue?: CalendarDateTime | null;

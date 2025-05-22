@@ -11,7 +11,9 @@
         </div>
         <div>
             {{ dateTimeutc }}
-            <DatePickerV5 v-model="dateTimeutc" date-format="MM/DD/YYYY"></DatePickerV5>
+            <DatePickerV5 v-model="dateTimeutc" date-format="MM/DD/YYYY" theme="oklch(89.7% 0.196 126.665)"
+                :dark-mode="false">
+            </DatePickerV5>
         </div>
         <!-- <RouterView /> -->
     </div>

@@ -44,7 +44,7 @@ import CalendarIcon from './components/icons/CalendarIcon.vue';
 import CalendarGrid from './components/calendar/CalendarGrid.vue';
 import { ensureCalendarDate, formatCalendarDateToString, getTodaysDate } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { setTheme } from './utils/tailwind4Theme';
+import { setTheme } from './utils/colorUtils';
 interface Props {
     modelValue?: CalendarDate | null;
     theme?: TailwindColor | string;

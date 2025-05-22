@@ -1,0 +1,87 @@
+/**
+ * 語義化變數定義
+ * 定義有意義的顏色名稱，會根據 light/dark 模式自動切換
+ */
+
+:root {
+    /* Light Mode - 語義化顏色 */
+    --vdt-bg-primary: white;
+    --vdt-bg-secondary: var(--gray-50);
+    --vdt-bg-elevated: white;
+
+    --vdt-text-primary: var(--gray-900);
+    --vdt-text-secondary: var(--gray-600);
+    --vdt-text-muted: var(--gray-400);
+
+    --vdt-border-light: var(--gray-200);
+    --vdt-border-medium: var(--gray-300);
+    --vdt-border-strong: var(--gray-400);
+
+    --vdt-surface-hover: var(--gray-50);
+    --vdt-surface-active: var(--gray-100);
+    --vdt-surface-disabled: var(--gray-100);
+
+    /* 狀態顏色 */
+    --vdt-error: var(--red-500);
+    --vdt-error-bg: var(--red-50);
+    --vdt-success: var(--green-500);
+    --vdt-warning: var(--yellow-500);
+
+    /* 陰影 */
+    --vdt-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --vdt-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --vdt-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Dark Mode - 語義化顏色自動切換 */
+.dark {
+    --vdt-bg-primary: var(--gray-900);
+    --vdt-bg-secondary: var(--gray-800);
+    --vdt-bg-elevated: var(--gray-800);
+
+    --vdt-text-primary: var(--gray-100);
+    --vdt-text-secondary: var(--gray-300);
+    --vdt-text-muted: var(--gray-500);
+
+    --vdt-border-light: var(--gray-700);
+    --vdt-border-medium: var(--gray-600);
+    --vdt-border-strong: var(--gray-500);
+
+    --vdt-surface-hover: var(--gray-700);
+    --vdt-surface-active: var(--gray-600);
+    --vdt-surface-disabled: var(--gray-800);
+
+    --vdt-error-bg: var(--red-950);
+
+    /* 深色模式的陰影更深 */
+    --vdt-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --vdt-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --vdt-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
+
+/* 自動跟隨系統偏好設定 */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+        --vdt-bg-primary: var(--gray-900);
+        --vdt-bg-secondary: var(--gray-800);
+        --vdt-bg-elevated: var(--gray-800);
+
+        --vdt-text-primary: var(--gray-100);
+        --vdt-text-secondary: var(--gray-300);
+        --vdt-text-muted: var(--gray-500);
+
+        --vdt-border-light: var(--gray-700);
+        --vdt-border-medium: var(--gray-600);
+        --vdt-border-strong: var(--gray-500);
+
+        --vdt-surface-hover: var(--gray-700);
+        --vdt-surface-active: var(--gray-600);
+        --vdt-surface-disabled: var(--gray-800);
+
+        --vdt-error-bg: var(--red-950);
+
+        --vdt-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+        --vdt-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+        --vdt-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    }
+}

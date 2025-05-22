@@ -73,7 +73,7 @@ import {
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { setTheme } from './utils/tailwind4Theme';
+import { setTheme } from './utils/colorUtils';
 
 interface Props {
     modelValue?: DateTimeValue;

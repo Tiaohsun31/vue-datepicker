@@ -1,6 +1,6 @@
 <!-- CalendarGrid 整合時間選擇 -->
 <template>
-    <div class="calendar-grid w-full max-w-xs bg-white rounded-lg shadow p-2">
+    <div class="vdt-date-picker calendar-grid w-full max-w-xs  rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
             :max-year="maxYear" />

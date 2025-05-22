@@ -1,0 +1,258 @@
+/**
+ * 顏色變數定義
+ * 基於 Tailwind CSS 的顏色系統，支援動態主題切換
+ */
+
+:root {
+    /* 動態主題顏色 - 預設 violet */
+    --vdt-theme-50: var(--color-violet-50);
+    --vdt-theme-100: var(--color-violet-100);
+    --vdt-theme-200: var(--color-violet-200);
+    --vdt-theme-300: var(--color-violet-300);
+    --vdt-theme-400: var(--color-violet-400);
+    --vdt-theme-500: var(--color-violet-500);
+    --vdt-theme-600: var(--color-violet-600);
+    --vdt-theme-700: var(--color-violet-700);
+    --vdt-theme-800: var(--color-violet-800);
+    --vdt-theme-900: var(--color-violet-900);
+    --vdt-theme-950: var(--color-violet-950);
+}
+
+/* 動態主題切換 - 透過 data-theme-color 屬性 */
+[data-theme-color="red"] {
+    --vdt-theme-50: var(--red-50);
+    --vdt-theme-100: var(--red-100);
+    --vdt-theme-200: var(--red-200);
+    --vdt-theme-300: var(--red-300);
+    --vdt-theme-400: var(--red-400);
+    --vdt-theme-500: var(--red-500);
+    --vdt-theme-600: var(--red-600);
+    --vdt-theme-700: var(--red-700);
+    --vdt-theme-800: var(--red-800);
+    --vdt-theme-900: var(--red-900);
+    --vdt-theme-950: var(--red-950);
+}
+
+[data-theme-color="orange"] {
+    --vdt-theme-50: var(--orange-50);
+    --vdt-theme-100: var(--orange-100);
+    --vdt-theme-200: var(--orange-200);
+    --vdt-theme-300: var(--orange-300);
+    --vdt-theme-400: var(--orange-400);
+    --vdt-theme-500: var(--orange-500);
+    --vdt-theme-600: var(--orange-600);
+    --vdt-theme-700: var(--orange-700);
+    --vdt-theme-800: var(--orange-800);
+    --vdt-theme-900: var(--orange-900);
+    --vdt-theme-950: var(--orange-950);
+}
+
+[data-theme-color="amber"] {
+    --vdt-theme-50: var(--amber-50);
+    --vdt-theme-100: var(--amber-100);
+    --vdt-theme-200: var(--amber-200);
+    --vdt-theme-300: var(--amber-300);
+    --vdt-theme-400: var(--amber-400);
+    --vdt-theme-500: var(--amber-500);
+    --vdt-theme-600: var(--amber-600);
+    --vdt-theme-700: var(--amber-700);
+    --vdt-theme-800: var(--amber-800);
+    --vdt-theme-900: var(--amber-900);
+    --vdt-theme-950: var(--amber-950);
+}
+
+[data-theme-color="yellow"] {
+    --vdt-theme-50: var(--yellow-50);
+    --vdt-theme-100: var(--yellow-100);
+    --vdt-theme-200: var(--yellow-200);
+    --vdt-theme-300: var(--yellow-300);
+    --vdt-theme-400: var(--yellow-400);
+    --vdt-theme-500: var(--yellow-500);
+    --vdt-theme-600: var(--yellow-600);
+    --vdt-theme-700: var(--yellow-700);
+    --vdt-theme-800: var(--yellow-800);
+    --vdt-theme-900: var(--yellow-900);
+    --vdt-theme-950: var(--yellow-950);
+}
+
+[data-theme-color="lime"] {
+    --vdt-theme-50: var(--lime-50);
+    --vdt-theme-100: var(--lime-100);
+    --vdt-theme-200: var(--lime-200);
+    --vdt-theme-300: var(--lime-300);
+    --vdt-theme-400: var(--lime-400);
+    --vdt-theme-500: var(--lime-500);
+    --vdt-theme-600: var(--lime-600);
+    --vdt-theme-700: var(--lime-700);
+    --vdt-theme-800: var(--lime-800);
+    --vdt-theme-900: var(--lime-900);
+    --vdt-theme-950: var(--lime-950);
+}
+
+[data-theme-color="green"] {
+    --vdt-theme-50: var(--green-50);
+    --vdt-theme-100: var(--green-100);
+    --vdt-theme-200: var(--green-200);
+    --vdt-theme-300: var(--green-300);
+    --vdt-theme-400: var(--green-400);
+    --vdt-theme-500: var(--green-500);
+    --vdt-theme-600: var(--green-600);
+    --vdt-theme-700: var(--green-700);
+    --vdt-theme-800: var(--green-800);
+    --vdt-theme-900: var(--green-900);
+    --vdt-theme-950: var(--green-950);
+}
+
+[data-theme-color="emerald"] {
+    --vdt-theme-50: var(--emerald-50);
+    --vdt-theme-100: var(--emerald-100);
+    --vdt-theme-200: var(--emerald-200);
+    --vdt-theme-300: var(--emerald-300);
+    --vdt-theme-400: var(--emerald-400);
+    --vdt-theme-500: var(--emerald-500);
+    --vdt-theme-600: var(--emerald-600);
+    --vdt-theme-700: var(--emerald-700);
+    --vdt-theme-800: var(--emerald-800);
+    --vdt-theme-900: var(--emerald-900);
+    --vdt-theme-950: var(--emerald-950);
+}
+
+[data-theme-color="teal"] {
+    --vdt-theme-50: var(--teal-50);
+    --vdt-theme-100: var(--teal-100);
+    --vdt-theme-200: var(--teal-200);
+    --vdt-theme-300: var(--teal-300);
+    --vdt-theme-400: var(--teal-400);
+    --vdt-theme-500: var(--teal-500);
+    --vdt-theme-600: var(--teal-600);
+    --vdt-theme-700: var(--teal-700);
+    --vdt-theme-800: var(--teal-800);
+    --vdt-theme-900: var(--teal-900);
+    --vdt-theme-950: var(--teal-950);
+}
+
+[data-theme-color="cyan"] {
+    --vdt-theme-50: var(--cyan-50);
+    --vdt-theme-100: var(--cyan-100);
+    --vdt-theme-200: var(--cyan-200);
+    --vdt-theme-300: var(--cyan-300);
+    --vdt-theme-400: var(--cyan-400);
+    --vdt-theme-500: var(--cyan-500);
+    --vdt-theme-600: var(--cyan-600);
+    --vdt-theme-700: var(--cyan-700);
+    --vdt-theme-800: var(--cyan-800);
+    --vdt-theme-900: var(--cyan-900);
+    --vdt-theme-950: var(--cyan-950);
+}
+
+[data-theme-color="sky"] {
+    --vdt-theme-50: var(--sky-50);
+    --vdt-theme-100: var(--sky-100);
+    --vdt-theme-200: var(--sky-200);
+    --vdt-theme-300: var(--sky-300);
+    --vdt-theme-400: var(--sky-400);
+    --vdt-theme-500: var(--sky-500);
+    --vdt-theme-600: var(--sky-600);
+    --vdt-theme-700: var(--sky-700);
+    --vdt-theme-800: var(--sky-800);
+    --vdt-theme-900: var(--sky-900);
+    --vdt-theme-950: var(--sky-950);
+}
+
+[data-theme-color="blue"] {
+    --vdt-theme-50: var(--blue-50);
+    --vdt-theme-100: var(--blue-100);
+    --vdt-theme-200: var(--blue-200);
+    --vdt-theme-300: var(--blue-300);
+    --vdt-theme-400: var(--blue-400);
+    --vdt-theme-500: var(--blue-500);
+    --vdt-theme-600: var(--blue-600);
+    --vdt-theme-700: var(--blue-700);
+    --vdt-theme-800: var(--blue-800);
+    --vdt-theme-900: var(--blue-900);
+    --vdt-theme-950: var(--blue-950);
+}
+
+[data-theme-color="indigo"] {
+    --vdt-theme-50: var(--indigo-50);
+    --vdt-theme-100: var(--indigo-100);
+    --vdt-theme-200: var(--indigo-200);
+    --vdt-theme-300: var(--indigo-300);
+    --vdt-theme-400: var(--indigo-400);
+    --vdt-theme-500: var(--indigo-500);
+    --vdt-theme-600: var(--indigo-600);
+    --vdt-theme-700: var(--indigo-700);
+    --vdt-theme-800: var(--indigo-800);
+    --vdt-theme-900: var(--indigo-900);
+    --vdt-theme-950: var(--indigo-950);
+}
+
+[data-theme-color="violet"] {
+    --vdt-theme-50: var(--violet-50);
+    --vdt-theme-100: var(--violet-100);
+    --vdt-theme-200: var(--violet-200);
+    --vdt-theme-300: var(--violet-300);
+    --vdt-theme-400: var(--violet-400);
+    --vdt-theme-500: var(--violet-500);
+    --vdt-theme-600: var(--violet-600);
+    --vdt-theme-700: var(--violet-700);
+    --vdt-theme-800: var(--violet-800);
+    --vdt-theme-900: var(--violet-900);
+    --vdt-theme-950: var(--violet-950);
+}
+
+[data-theme-color="purple"] {
+    --vdt-theme-50: var(--purple-50);
+    --vdt-theme-100: var(--purple-100);
+    --vdt-theme-200: var(--purple-200);
+    --vdt-theme-300: var(--purple-300);
+    --vdt-theme-400: var(--purple-400);
+    --vdt-theme-500: var(--purple-500);
+    --vdt-theme-600: var(--purple-600);
+    --vdt-theme-700: var(--purple-700);
+    --vdt-theme-800: var(--purple-800);
+    --vdt-theme-900: var(--purple-900);
+    --vdt-theme-950: var(--purple-950);
+}
+
+[data-theme-color="fuchsia"] {
+    --vdt-theme-50: var(--fuchsia-50);
+    --vdt-theme-100: var(--fuchsia-100);
+    --vdt-theme-200: var(--fuchsia-200);
+    --vdt-theme-300: var(--fuchsia-300);
+    --vdt-theme-400: var(--fuchsia-400);
+    --vdt-theme-500: var(--fuchsia-500);
+    --vdt-theme-600: var(--fuchsia-600);
+    --vdt-theme-700: var(--fuchsia-700);
+    --vdt-theme-800: var(--fuchsia-800);
+    --vdt-theme-900: var(--fuchsia-900);
+    --vdt-theme-950: var(--fuchsia-950);
+}
+
+[data-theme-color="pink"] {
+    --vdt-theme-50: var(--pink-50);
+    --vdt-theme-100: var(--pink-100);
+    --vdt-theme-200: var(--pink-200);
+    --vdt-theme-300: var(--pink-300);
+    --vdt-theme-400: var(--pink-400);
+    --vdt-theme-500: var(--pink-500);
+    --vdt-theme-600: var(--pink-600);
+    --vdt-theme-700: var(--pink-700);
+    --vdt-theme-800: var(--pink-800);
+    --vdt-theme-900: var(--pink-900);
+    --vdt-theme-950: var(--pink-950);
+}
+
+[data-theme-color="rose"] {
+    --vdt-theme-50: var(--rose-50);
+    --vdt-theme-100: var(--rose-100);
+    --vdt-theme-200: var(--rose-200);
+    --vdt-theme-300: var(--rose-300);
+    --vdt-theme-400: var(--rose-400);
+    --vdt-theme-500: var(--rose-500);
+    --vdt-theme-600: var(--rose-600);
+    --vdt-theme-700: var(--rose-700);
+    --vdt-theme-800: var(--rose-800);
+    --vdt-theme-900: var(--rose-900);
+    --vdt-theme-950: var(--rose-950);
+}

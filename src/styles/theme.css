@@ -1,15 +1,176 @@
 @import './tailwind.utilities.css';
 
 :root {
-    --vdt-theme-50: oklch(96.2% 0.018 272.314);
-    --vdt-theme-100: oklch(93% 0.034 272.788);
-    --vdt-theme-200: oklch(87% 0.065 274.039);
-    --vdt-theme-300: oklch(78.5% 0.115 274.713);
-    --vdt-theme-400: oklch(67.3% 0.182 276.935);
-    --vdt-theme-500: oklch(58.5% 0.233 277.117);
-    --vdt-theme-600: oklch(51.1% 0.262 276.966);
-    --vdt-theme-700: oklch(45.7% 0.24 277.023);
-    --vdt-theme-800: oklch(39.8% 0.195 277.366);
-    --vdt-theme-900: oklch(35.9% 0.144 278.697);
-    --vdt-theme-950: oklch(25.7% 0.09 281.288);
+    /* 主題顏色變數 - 預設為 violet */
+    --vdt-theme-50: var(--color-violet-50);
+    --vdt-theme-100: var(--color-violet-100);
+    --vdt-theme-200: var(--color-violet-200);
+    --vdt-theme-300: var(--color-violet-300);
+    --vdt-theme-400: var(--color-violet-400);
+    --vdt-theme-500: var(--color-violet-500);
+    --vdt-theme-600: var(--color-violet-600);
+    --vdt-theme-700: var(--color-violet-700);
+    --vdt-theme-800: var(--color-violet-800);
+    --vdt-theme-900: var(--color-violet-900);
+    --vdt-theme-950: var(--color-violet-950);
+
+    /* 語義化顏色變數 - Light Mode */
+    --vdt-bg-primary: var(--color-white);
+    /* 純白背景 */
+    --vdt-bg-secondary: var(--color-gray-50);
+    /* 淺灰背景 */
+    --vdt-bg-elevated: var(--color-white);
+    /* 彈出層背景 */
+
+    --vdt-text-primary: var(--color-gray-900);
+    /* 主要文字 */
+    --vdt-text-secondary: var(--color-gray-600);
+    /* 次要文字 */
+    --vdt-text-muted: var(--color-gray-400);
+    /* 弱化文字 */
+
+    --vdt-border-light: var(--color-gray-200);
+    /* 淺邊框 */
+    --vdt-border-medium: var(--color-gray-300);
+    /* 中等邊框 */
+    --vdt-border-strong: var(--color-gray-400);
+    /* 強邊框 */
+
+    --vdt-surface-hover: var(--color-gray-50);
+    /* 懸停背景 */
+    --vdt-surface-active: var(--color-gray-100);
+    /* 激活背景 */
+    --vdt-surface-disabled: var(--color-gray-100);
+    /* 禁用背景 */
+
+    /* 狀態顏色 */
+    --vdt-error: var(--color-red-500);
+    /* 錯誤色 */
+    --vdt-error-bg: var(--color-red-50);
+    /* 錯誤背景 */
+    --vdt-success: var(--color-green-500);
+    /* 成功色 */
+    --vdt-warning: var(--color-yellow-500);
+    /* 警告色 */
+
+    /* 陰影 - 使用 Tailwind 的陰影系統 */
+    --vdt-shadow-sm: var(--tw-shadow-sm, 0 1px 2px 0 rgb(0 0 0 / 0.05));
+    --vdt-shadow-md: var(--tw-shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+    --vdt-shadow-lg: var(--tw-shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+}
+
+/* Dark Mode 變數 */
+:root.dark,
+[data-theme="dark"] {
+    /* 背景色 - 深色模式 */
+    --vdt-bg-primary: var(--color-gray-900);
+    /* 深色主背景 */
+    --vdt-bg-secondary: var(--color-gray-800);
+    /* 深色次背景 */
+    --vdt-bg-elevated: var(--color-gray-800);
+    /* 深色彈出層背景 */
+
+    /* 文字色 - 深色模式 */
+    --vdt-text-primary: var(--color-gray-100);
+    /* 主要文字 - 接近白色 */
+    --vdt-text-secondary: var(--color-gray-300);
+    /* 次要文字 */
+    --vdt-text-muted: var(--color-gray-500);
+    /* 弱化文字 */
+
+    /* 邊框色 - 深色模式 */
+    --vdt-border-light: var(--color-gray-700);
+    /* 淺邊框 */
+    --vdt-border-medium: var(--color-gray-600);
+    /* 中等邊框 */
+    --vdt-border-strong: var(--color-gray-500);
+    /* 強邊框 */
+
+    /* 表面色 - 深色模式 */
+    --vdt-surface-hover: var(--color-gray-700);
+    /* 懸停背景 */
+    --vdt-surface-active: var(--color-gray-600);
+    /* 激活背景 */
+    --vdt-surface-disabled: var(--color-gray-800);
+    /* 禁用背景 */
+
+    /* 狀態顏色背景調整 */
+    --vdt-error-bg: var(--color-red-950);
+    /* 深色錯誤背景 */
+
+    /* 陰影 - 深色模式需要更深的陰影 */
+    --vdt-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --vdt-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --vdt-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
+
+/* 自動檢測系統偏好設定 */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light):not([data-theme="light"]) {
+        /* 當系統為深色模式且未強制設定為淺色時，套用深色變數 */
+        --vdt-bg-primary: var(--color-gray-900);
+        --vdt-bg-secondary: var(--color-gray-800);
+        --vdt-bg-elevated: var(--color-gray-800);
+
+        --vdt-text-primary: var(--color-gray-100);
+        --vdt-text-secondary: var(--color-gray-300);
+        --vdt-text-muted: var(--color-gray-500);
+
+        --vdt-border-light: var(--color-gray-700);
+        --vdt-border-medium: var(--color-gray-600);
+        --vdt-border-strong: var(--color-gray-500);
+
+        --vdt-surface-hover: var(--color-gray-700);
+        --vdt-surface-active: var(--color-gray-600);
+        --vdt-surface-disabled: var(--color-gray-800);
+
+        --vdt-error-bg: var(--color-red-950);
+
+        --vdt-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+        --vdt-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+        --vdt-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    }
+}
+
+/* 基礎組件樣式 */
+.vdt-date-picker {
+    background-color: var(--vdt-bg-primary);
+    color: var(--vdt-text-primary);
+    border-color: var(--vdt-border-light);
+}
+
+.vdt-calendar-popup {
+    background-color: var(--vdt-bg-elevated);
+    border-color: var(--vdt-border-light);
+    box-shadow: var(--vdt-shadow-lg);
+}
+
+.vdt-input {
+    background-color: var(--vdt-bg-primary);
+    color: var(--vdt-text-primary);
+    border-color: var(--vdt-border-medium);
+}
+
+.vdt-input:hover {
+    background-color: var(--vdt-surface-hover);
+    border-color: var(--vdt-border-strong);
+}
+
+.vdt-input:focus {
+    background-color: var(--vdt-bg-primary);
+    border-color: var(--vdt-theme-500);
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--vdt-theme-500) 15%, transparent);
+}
+
+/* 過渡效果 */
+.vdt-date-picker,
+.vdt-input,
+.vdt-button,
+.vdt-calendar-popup {
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
 }

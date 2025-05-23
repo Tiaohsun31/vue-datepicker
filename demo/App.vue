@@ -1,6 +1,6 @@
 <template>
     <div class="container mx-auto max-w-sm space-y-4 p-5">
-        <div class="bg-red-500 text-black dark:bg-black dark:text-white">1234</div>
+
         <!-- <DatePickerV1></DatePickerV1> -->
         <div>
             {{ selectedDate }}
@@ -16,11 +16,11 @@
             </DatePickerV5>
         </div>
         <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">1234</div>
-        <div>
-            <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
-                aaaaa
-            </div>
+
+        <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
+            aaaaa
         </div>
+
         <div data-vdt-mode="dark">
             <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
                 bbb

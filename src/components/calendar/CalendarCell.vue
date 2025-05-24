@@ -42,8 +42,9 @@ const isOutsideMonth = computed(() => {
 const cellClasses = computed(() => {
     return {
         'flex justify-center items-center w-8 h-8 rounded-md mx-auto bg-vdt-surface text-vdt-content': true,
-        'hover:bg-vdt-theme-100 hover:text-vdt-theme-700 cursor-pointer': !props.disabled,
-        'bg-vdt-theme-500 text-white hover:bg-vdt-theme-300': props.selected,
+        'bg-vdt-theme-500 text-white': props.selected,
+        'hover:bg-vdt-interactive-hover  cursor-pointer': !props.disabled,
+
         'ring-2 ring-vdt-theme-500 -ring-offset-1': props.isToday && !props.selected,
         'text-vdt-content-muted': isOutsideMonth.value && !props.selected,
         'opacity-40 cursor-not-allowed': props.disabled,

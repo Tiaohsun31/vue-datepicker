@@ -22,7 +22,7 @@
     --color-vdt-light-outline: oklch(92.8% 0.006 264.531);
     --color-vdt-light-outline-strong: oklch(75.2% 0.01 258.338);
     --color-vdt-light-outline-stronger: oklch(65.7% 0.022 261.325);
-    --color-vdt-light-interactive-hover: var(--color-gray-100);
+    --color-vdt-light-interactive-hover: var(--color-gray-200);
     --color-vdt-light-interactive-active: oklch(96.7% 0.003 264.542);
 
     /* 語義化顏色 - 深色模式 */
@@ -32,10 +32,10 @@
     --color-vdt-dark-content: oklch(96.7% 0.003 264.542);
     --color-vdt-dark-content-secondary: oklch(87.2% 0.01 258.338);
     --color-vdt-dark-content-muted: oklch(55.1% 0.027 264.364);
-    --color-vdt-dark-outline: oklch(38.3% 0.034 259.733);
-    --color-vdt-dark-outline-strong: oklch(45.6% 0.03 256.802);
+    --color-vdt-dark-outline: oklch(40.3% 0.034 259.733);
+    --color-vdt-dark-outline-strong: oklch(52.6% 0.03 256.802);
     --color-vdt-dark-outline-stronger: oklch(66.1% 0.027 264.364);
-    --color-vdt-dark-interactive-hover: oklch(37.3% 0.034 259.733);
+    --color-vdt-dark-interactive-hover: oklch(39.3% 0.034 259.733);
     --color-vdt-dark-interactive-active: oklch(44.6% 0.03 256.802);
 
     /* 語義化顏色 - 淺色模式（預設） */
@@ -87,3 +87,6 @@
     --color-vdt-interactive-hover: var(--color-vdt-light-interactive-hover);
     --color-vdt-interactive-active: var(--color-vdt-light-interactive-active);
 }
+
+
+/* [data-vdt-mode="dark"][data-vdt-theme="violet"] */

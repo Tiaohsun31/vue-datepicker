@@ -15,16 +15,16 @@
 
         <!-- 時間選擇區域 -->
         <template v-if="showTimeSelector">
-            <hr class="my-2 border-gray-200" />
+            <hr class="my-2 border-vdt-outline" />
             <div class="flex flex-row items-center justify-between">
-                <label class="text-sm font-medium text-gray-700 uppercase">Time:</label>
+                <label class="text-sm font-medium text-vdt-content uppercase">Time:</label>
                 <div class="flex flex-row items-center gap-1">
                     <button type="button" @click="setNowTime"
-                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer">
+                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover  cursor-pointer">
                         Now
                     </button>
                     <button type="button" @click="setTodaysDate"
-                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer">
+                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
                         Today
                     </button>
                 </div>
@@ -36,7 +36,7 @@
                     <!-- 小時選擇器 -->
                     <div class="flex-1">
                         <select v-model="selectedHour"
-                            class="w-full py-1 px-2 border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-vdt-primary-200 focus-within:ring-vdt-primary-500">
+                            class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
                             <option v-for="hour in hourOptions" :key="hour" :value="hour">
                                 {{ formatHour(hour) }}
                             </option>
@@ -46,7 +46,7 @@
                     <!-- 分鐘選擇器 -->
                     <div class="flex-1">
                         <select v-model="selectedMinute"
-                            class="w-full py-1 px-2 border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-vdt-primary-200 focus-within:ring-vdt-primary-500">
+                            class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
                             <option v-for="minute in minuteOptions" :key="minute" :value="minute">
                                 {{ formatNumber(minute) }}
                             </option>
@@ -56,7 +56,7 @@
                     <!-- 秒鐘選擇器 -->
                     <div class="flex-1" v-if="enableSeconds">
                         <select v-model="selectedSecond"
-                            class="w-full py-1 px-2 border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-vdt-primary-200 focus-within:ring-vdt-primary-500">
+                            class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
                             <option v-for="second in secondOptions" :key="second" :value="second">
                                 {{ formatNumber(second) }}
                             </option>
@@ -76,11 +76,11 @@
                 <div class="mt-2" v-if="!use24Hour && !enableSeconds">
                     <div class="isolate  inline-flex rounded-md border border-gray-300 overflow-hidden">
                         <button type="button" @click="setPeriod('AM')" class="px-3 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'AM' ? 'bg-vdt-primary-500 text-white ' : 'text-gray-700 hover:bg-gray-100'">
+                            :class="selectedPeriod === 'AM' ? 'bg-vdt-theme-500 text-vdt-content ' : 'text-gray-700 hover:bg-gray-100'">
                             AM
                         </button>
                         <button type="button" @click="setPeriod('PM')" class="px-3 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'PM' ? 'bg-vdt-primary-500 text-white ' : 'text-gray-700 hover:bg-gray-100'">
+                            :class="selectedPeriod === 'PM' ? 'bg-vdt-theme-500 text-vdt-content ' : 'text-gray-700 hover:bg-gray-100'">
                             PM
                         </button>
                     </div>

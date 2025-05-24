@@ -1,7 +1,7 @@
 <template>
     <div class="flex justify-between items-center mb-4 gap-2">
         <button type="button" @click="previousMonth"
-            class="p-2 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-primary-500"
+            class="p-2 hover:bg-gray-100  text-vdt-content-secondary  hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500"
             aria-label="上個月">
             <DatePickerPrev class="h-5 w-5" />
         </button>
@@ -9,7 +9,7 @@
         <div class="grow grid grid-cols-2 gap-2">
             <!-- 月份選擇器 -->
             <select v-model="selectedMonthLocal" @change="onMonthChange"
-                class="form-select appearance-none bg-none  py-1 pl-2 w-full border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-vdt-primary-200 focus-within:ring-vdt-primary-500"
+                class="form-select appearance-none bg-none bg-vdt-surface text-vdt-content py-1 pl-2 w-full border border-vdt-outline rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
                 aria-label="選擇月份" role="combobox">
                 <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
                     {{ month }}
@@ -20,7 +20,7 @@
             <div class="relative">
                 <!-- 顯示年份的按鈕 -->
                 <button type="button" @click="toggleYearSelector" data-year-selector-button
-                    class="inline-flex items-center px-2 py-1 w-full border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-vdt-primary-200 focus-within:ring-vdt-primary-500"
+                    class="inline-flex items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200"
                     aria-label="選擇年份">
                     {{ selectedYearLocal }}
                 </button>
@@ -32,7 +32,7 @@
         </div>
 
         <button type="button" @click="nextMonth"
-            class="p-2 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-primary-500"
+            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500"
             aria-label="下個月">
             <DatePickerNext class="h-5 w-5" />
         </button>

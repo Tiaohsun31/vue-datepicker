@@ -4,87 +4,79 @@
  * 配合 Tailwind CSS 4 使用
  */
 
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { themeManager, type ThemeMode, type ThemeState } from '../utils/tailwind4ThemeManager';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { themeManager, type ThemeMode, type ThemeState } from '../utils/themeManager';
 import type { TailwindColor } from '../types/main';
 
 interface UseThemeOptions {
     defaultColor?: TailwindColor | string;
     defaultMode?: ThemeMode;
+    instanceId?: string;
 }
 
 export function useTheme(options: UseThemeOptions = {}) {
-    // 響應式狀態
-    const themeState = ref<ThemeState>(themeManager.getState());
+    // 立即創建主題實例，並傳入默認選項
+    const instanceId = ref<string>(
+        themeManager.createInstance(options.instanceId, {
+            defaultColor: options.defaultColor,
+            defaultMode: options.defaultMode
+        })
+    );
+
+    const themeState = ref<ThemeState | null>(
+        themeManager.getState(instanceId.value)
+    );
+
     let unsubscribe: (() => void) | null = null;
 
     // 響應式計算屬性
-    const isDark = computed(() => themeState.value.currentMode === 'dark');
-    const isLight = computed(() => themeState.value.currentMode === 'light');
-    const isAuto = computed(() => themeState.value.userPreference === 'auto');
-    const currentMode = computed(() => themeState.value.currentMode);
-    const userPreference = computed(() => themeState.value.userPreference);
-    const systemPreference = computed(() => themeState.value.systemPreference);
-    const currentColor = computed(() => themeState.value.color);
+    const isDark = computed(() => themeState.value?.currentMode === 'dark');
+    const isLight = computed(() => themeState.value?.currentMode === 'light');
+    const isAuto = computed(() => themeState.value?.userPreference === 'auto');
+    const currentMode = computed(() => themeState.value?.currentMode || 'light');
+    const userPreference = computed(() => themeState.value?.userPreference || 'auto');
+    const systemPreference = computed(() => themeState.value?.systemPreference || 'light');
+    const currentColor = computed(() => themeState.value?.color || 'violet');
 
     // 主題類別（用於組件根元素的 :class 綁定）
-    const themeClasses = computed(() => themeManager.getThemeClasses());
+    const themeClasses = computed(() => {
+        if (!instanceId.value) return {};
+        return themeManager.getThemeClasses(instanceId.value);
+    });
+
+    // 容器屬性（用於組件根元素）
+    const containerAttributes = computed(() => {
+        if (!instanceId.value) return {};
+        return themeManager.getContainerAttributes(instanceId.value);
+    });
 
     // 設置主題顏色
     const setColor = (color: TailwindColor | string): void => {
-        themeManager.setColor(color);
+        if (instanceId.value) {
+            themeManager.setColor(instanceId.value, color);
+        }
     };
 
     // 設置主題模式
     const setMode = (mode: ThemeMode): void => {
-        themeManager.setMode(mode);
+        if (instanceId.value) {
+            themeManager.setMode(instanceId.value, mode);
+        }
     };
 
     // 切換深淺模式
     const toggle = (): void => {
-        const newMode = currentMode.value === 'light' ? 'dark' : 'light';
-        setMode(newMode);
-    };
+        if (!themeState.value) return;
 
-    // 獲取當前主題的 CSS 變數值
-    const getCSSVariable = (variableName: string): string => {
-        if (typeof getComputedStyle === 'undefined') return '';
-
-        const value = getComputedStyle(document.documentElement)
-            .getPropertyValue(variableName)
-            .trim();
-
-        return value;
-    };
-
-    // 獲取主題相關的 CSS 變數
-    const getThemeVariables = () => {
-        const variables: Record<string, string> = {};
-
-        // 主題色變數
-        const shades = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
-        shades.forEach(shade => {
-            variables[`theme-${shade}`] = getCSSVariable(`--color-vdt-theme-${shade}`);
-        });
-
-        // 語義化變數
-        variables['surface'] = getCSSVariable('--color-vdt-surface');
-        variables['surface-secondary'] = getCSSVariable('--color-vdt-surface-secondary');
-        variables['surface-elevated'] = getCSSVariable('--color-vdt-surface-elevated');
-        variables['content'] = getCSSVariable('--color-vdt-content');
-        variables['content-secondary'] = getCSSVariable('--color-vdt-content-secondary');
-        variables['content-muted'] = getCSSVariable('--color-vdt-content-muted');
-        variables['outline'] = getCSSVariable('--color-vdt-outline');
-        variables['outline-strong'] = getCSSVariable('--color-vdt-outline-strong');
-        variables['outline-stronger'] = getCSSVariable('--color-vdt-outline-stronger');
-        variables['interactive-hover'] = getCSSVariable('--color-vdt-interactive-hover');
-        variables['interactive-active'] = getCSSVariable('--color-vdt-interactive-active');
-        variables['error'] = getCSSVariable('--color-vdt-error');
-        variables['error-surface'] = getCSSVariable('--color-vdt-error-surface');
-        variables['success'] = getCSSVariable('--color-vdt-success');
-        variables['warning'] = getCSSVariable('--color-vdt-warning');
-
-        return variables;
+        // 如果當前是 auto 模式，先切換到相反的固定模式
+        if (themeState.value.userPreference === 'auto') {
+            const newMode = themeState.value.currentMode === 'light' ? 'dark' : 'light';
+            setMode(newMode);
+        } else {
+            // 如果已經是固定模式，切換到相反模式
+            const newMode = themeState.value.currentMode === 'light' ? 'dark' : 'light';
+            setMode(newMode);
+        }
     };
 
     // 檢查瀏覽器是否支援顏色方案偵測
@@ -93,21 +85,23 @@ export function useTheme(options: UseThemeOptions = {}) {
         return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches !== undefined;
     });
 
-    // 組件掛載時初始化
-    onMounted(() => {
+    // 組件掛載時設置監聽器
+    onMounted(async () => {
+        // 等待 DOM 更新
+        await nextTick();
+
+        // 獲取最新狀態
+        themeState.value = themeManager.getState(instanceId.value);
+
         // 訂閱主題變化
-        unsubscribe = themeManager.addListener((state) => {
+        unsubscribe = themeManager.addListener(instanceId.value, (state) => {
             themeState.value = state;
         });
 
-        // 應用初始設置
-        if (options.defaultColor) {
-            setColor(options.defaultColor);
-        }
-
-        if (options.defaultMode) {
-            setMode(options.defaultMode);
-        }
+        // 強制重新應用主題（確保 DOM 元素存在後再應用）
+        setTimeout(() => {
+            themeManager.reapplyTheme(instanceId.value);
+        }, 10);
     });
 
     // 組件卸載時清理
@@ -115,10 +109,15 @@ export function useTheme(options: UseThemeOptions = {}) {
         if (unsubscribe) {
             unsubscribe();
         }
+
+        if (instanceId.value) {
+            themeManager.destroyInstance(instanceId.value);
+        }
     });
 
     return {
         // 響應式狀態
+        instanceId,
         themeState,
         isDark,
         isLight,
@@ -128,6 +127,7 @@ export function useTheme(options: UseThemeOptions = {}) {
         systemPreference,
         currentColor,
         themeClasses,
+        containerAttributes,
         supportsColorScheme,
 
         // 主要方法
@@ -151,45 +151,7 @@ export function useTheme(options: UseThemeOptions = {}) {
         setCyanTheme: () => setColor('cyan'),
         setSkyTheme: () => setColor('sky'),
         setEmeraldTheme: () => setColor('emerald'),
-        setLimeTheme: () => setColor('lime'),
-        setYellowTheme: () => setColor('yellow'),
-        setAmberTheme: () => setColor('amber'),
-        setOrangeTheme: () => setColor('orange'),
-        setPinkTheme: () => setColor('pink'),
-        setRoseTheme: () => setColor('rose'),
-        setFuchsiaTheme: () => setColor('fuchsia'),
-
-        // 工具方法
-        getCSSVariable,
-        getThemeVariables,
     };
 }
-
-// 創建全局主題 Hook（用於跨組件共享主題狀態）
-export function createGlobalTheme(config?: UseThemeOptions) {
-    if (config) {
-        if (config.defaultColor) {
-            themeManager.setColor(config.defaultColor);
-        }
-        if (config.defaultMode) {
-            themeManager.setMode(config.defaultMode);
-        }
-    }
-
-    return useTheme();
-}
-
-// 用於組件外部使用的工具函數
-export const useThemeUtils = () => ({
-    setThemeMode: (mode: ThemeMode) => themeManager.setMode(mode),
-    setThemeColor: (color: TailwindColor | string) => themeManager.setColor(color),
-    toggleTheme: () => {
-        const currentState = themeManager.getState();
-        const newMode = currentState.currentMode === 'light' ? 'dark' : 'light';
-        themeManager.setMode(newMode);
-    },
-    getThemeState: () => themeManager.getState(),
-    getThemeClasses: () => themeManager.getThemeClasses(),
-});
 
 export default useTheme;

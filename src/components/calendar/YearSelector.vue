@@ -1,34 +1,34 @@
 <template>
 
     <div v-if="showSelector" ref="yearSelectorRef"
-        class="absolute top-full mt-1  right-0 w-56 max-h-72 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg z-20 overflow-hidden">
+        class="absolute top-full mt-1  right-0 w-56 max-h-72 overflow-y-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20 overflow-hidden">
         <!-- 年份選擇器頂部導航 -->
-        <div class="p-2 flex items-center justify-between border-b border-gray-200">
-            <button @click="previousYearRange" class="p-1 hover:bg-gray-100 rounded focus:outline-none"
-                aria-label="previous year">
+        <div class="p-2 flex items-center justify-between border-b border-vdt-outline">
+            <button type="button" @click="previousYearRange"
+                class="p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none" aria-label="previous year">
                 <DatePickerPrev class="h-4 w-4" />
             </button>
             <span class="text-sm font-medium">
                 {{ yearRangeStart }} - {{ yearRangeStart + 19 }}
             </span>
-            <button @click="nextYearRange" class="p-1 hover:bg-gray-100 rounded focus:outline-none"
-                aria-label="next year">
+            <button type="button" @click="nextYearRange"
+                class="p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none" aria-label="next year">
                 <DatePickerNext class="h-4 w-4" />
             </button>
         </div>
         <!-- 年份網格 -->
         <div class="grid grid-cols-4 gap-1 p-2">
             <button v-for="year in visibleYearRange" :key="year" @click="selectYear(year)" :class="[
-                'p-1 text-sm rounded focus:outline-none focus:ring-1 focus:ring-vdt-primary-500',
-                selectedYear === year ? 'bg-vdt-primary-500 text-white' : 'hover:bg-gray-100'
+                'p-1 text-sm rounded focus:outline-none focus:ring-1 focus:ring-vdt-theme-500',
+                selectedYear === year ? 'bg-vdt-theme-500 text-white' : 'hover:bg-vdt-interactive-hover text-vdt-content'
             ]">
                 {{ year }}
             </button>
         </div>
         <!-- 年份跳轉輸入 -->
-        <div class="p-2 border-t border-gray-200">
+        <div class="p-2 border-t border-vdt-outline">
             <input type="number" v-model="yearInput" @keydown.enter="goToSpecificYear" placeholder="跳至年份..."
-                class="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-vdt-primary-500" />
+                class="w-full p-1 text-sm border border-vdt-outline bg-vdt-surface text-vdt-content rounded focus:outline-none focus:ring-2 focus:ring-vdt-theme-200 focus-within:ring-vdt-theme-500" />
         </div>
     </div>
 

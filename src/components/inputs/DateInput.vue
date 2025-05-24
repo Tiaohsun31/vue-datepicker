@@ -5,9 +5,10 @@
         <template v-for="(segment, index) in dateSegments" :key="segment">
             <!-- 渲染對應的輸入框 -->
             <input v-if="segment === 'year'" ref="yearRef" v-model="yearValue" v-autowidth="20" type="text"
-                inputmode="numeric" :placeholder="yearPlaceholder" :maxlength="4" class="date-input text-sm text-center"
-                @input="handleYearInput" @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')"
-                @blur="handleBlur('year')" aria-label="year" :aria-invalid="!!errors.year"
+                inputmode="numeric" :placeholder="yearPlaceholder" :maxlength="4"
+                class="date-input text-sm text-center active:bg-vdt-theme-100" @input="handleYearInput"
+                @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')" @blur="handleBlur('year')"
+                aria-label="year" :aria-invalid="!!errors.year"
                 :aria-errormessage="errors.year ? 'year-error' : undefined" />
 
             <input v-else-if="segment === 'month'" ref="monthRef" v-model="monthValue" v-autowidth="20" type="text"

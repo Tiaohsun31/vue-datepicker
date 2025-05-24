@@ -41,11 +41,11 @@ const isOutsideMonth = computed(() => {
 // 計算單元格樣式，使用 Tailwind CSS 類別
 const cellClasses = computed(() => {
     return {
-        'flex justify-center items-center w-8 h-8 rounded-md mx-auto': true,
-        'hover:bg-vdt-primary-100 cursor-pointer': !props.disabled,
-        'bg-vdt-primary-500 text-white hover:bg-vdt-primary-600': props.selected,
-        'ring-2 ring-vdt-primary-500 -ring-offset-1': props.isToday && !props.selected,
-        'text-gray-400': isOutsideMonth.value && !props.selected,
+        'flex justify-center items-center w-8 h-8 rounded-md mx-auto bg-vdt-surface text-vdt-content': true,
+        'hover:bg-vdt-theme-100 hover:text-vdt-theme-700 cursor-pointer': !props.disabled,
+        'bg-vdt-theme-500 text-white hover:bg-vdt-theme-300': props.selected,
+        'ring-2 ring-vdt-theme-500 -ring-offset-1': props.isToday && !props.selected,
+        'text-vdt-content-muted': isOutsideMonth.value && !props.selected,
         'opacity-40 cursor-not-allowed': props.disabled,
     };
 });

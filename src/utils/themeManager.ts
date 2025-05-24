@@ -1,18 +1,22 @@
 /**
- * scopedThemeManager.ts
- * 局部作用域的主題管理器，只影響特定組件，不影響全域網頁
+ * Tailwind4 ThemeManager.ts
+ * 主題管理器，動態更新主題色的 CSS 變數，只影響特定組件，不影響全域網頁
+ * - 偵測系統偏好 (prefers-color-scheme)
+ * - 管理 light/dark 狀態
+ * - 持久化到 localStorage
+ * - 應用到 DOM (添加/移除 dark class)
  */
 
 import type { TailwindColor } from '../types/main';
 import { findClosestTailwindColor, getColorShades } from './colorUtils';
 
-export type ScopedThemeMode = 'light' | 'dark' | 'auto';
+export type ThemeMode = 'light' | 'dark' | 'auto';
 
-export interface ScopedThemeState {
+export interface ThemeState {
     // 當前實際應用的模式
     currentMode: 'light' | 'dark';
     // 用戶設定的偏好（auto = 跟隨系統）
-    userPreference: ScopedThemeMode;
+    userPreference: ThemeMode;
     // 系統偏好
     systemPreference: 'light' | 'dark';
     // 主題顏色
@@ -21,10 +25,15 @@ export interface ScopedThemeState {
     instanceId: string;
 }
 
-class ScopedThemeManager {
-    private instances: Map<string, ScopedThemeState> = new Map();
+interface CreateInstanceOptions {
+    defaultColor?: TailwindColor | string;
+    defaultMode?: ThemeMode;
+}
+
+class ThemeManager {
+    private instances: Map<string, ThemeState> = new Map();
     private mediaQuery: MediaQueryList | null = null;
-    private listeners: Map<string, Array<(state: ScopedThemeState) => void>> = new Map();
+    private listeners: Map<string, Array<(state: ThemeState) => void>> = new Map();
 
     constructor() {
         this.initializeSystemPreference();
@@ -70,14 +79,14 @@ class ScopedThemeManager {
     /**
      * 創建新的主題實例
      */
-    createInstance(instanceId?: string): string {
+    createInstance(instanceId?: string, options: CreateInstanceOptions = {}): string {
         const id = instanceId || this.generateInstanceId();
 
-        const initialState: ScopedThemeState = {
+        const initialState: ThemeState = {
             currentMode: 'light',
-            userPreference: 'auto',
+            userPreference: options.defaultMode || 'auto',
             systemPreference: this.getSystemPreference(),
-            color: 'violet',
+            color: findClosestTailwindColor(options.defaultColor || 'violet'),
             instanceId: id
         };
 
@@ -86,6 +95,15 @@ class ScopedThemeManager {
 
         // 初始化當前模式
         this.updateCurrentMode(id);
+
+        // 立即應用顏色（如果瀏覽器環境存在）
+        if (typeof document !== 'undefined') {
+            // 使用 setTimeout 確保 DOM 元素已經存在
+            setTimeout(() => {
+                this.applyColorToDOM(id);
+                this.applyModeToDOM(id);
+            }, 0);
+        }
 
         return id;
     }
@@ -134,12 +152,15 @@ class ScopedThemeManager {
         if (typeof document === 'undefined') return;
 
         const state = this.instances.get(instanceId);
-        console.log('applyModeToDOM', state);
         if (!state) return;
 
         // 找到對應的組件容器
         const container = document.querySelector(`[data-vdt-instance="${instanceId}"]`);
-        if (!container) return;
+        if (!container) {
+            // 如果 DOM 元素還不存在，稍後重試
+            setTimeout(() => this.applyModeToDOM(instanceId), 10);
+            return;
+        }
 
         // 設置局部的 data-vdt-mode 屬性
         if (state.userPreference === 'auto') {
@@ -161,7 +182,11 @@ class ScopedThemeManager {
         if (!state) return;
 
         const container = document.querySelector(`[data-vdt-instance="${instanceId}"]`) as HTMLElement;
-        if (!container) return;
+        if (!container) {
+            // 如果 DOM 元素還不存在，稍後重試
+            setTimeout(() => this.applyColorToDOM(instanceId), 10);
+            return;
+        }
 
         // 動態更新主題色變數（僅在該容器內）
         const colorShades = getColorShades(state.color);
@@ -185,7 +210,7 @@ class ScopedThemeManager {
     /**
      * 設置主題模式
      */
-    setMode(instanceId: string, mode: ScopedThemeMode): void {
+    setMode(instanceId: string, mode: ThemeMode): void {
         const state = this.instances.get(instanceId);
         if (!state) return;
 
@@ -209,7 +234,7 @@ class ScopedThemeManager {
     /**
      * 獲取實例狀態
      */
-    getState(instanceId: string): ScopedThemeState | null {
+    getState(instanceId: string): ThemeState | null {
         const state = this.instances.get(instanceId);
         return state ? { ...state } : null;
     }
@@ -222,7 +247,18 @@ class ScopedThemeManager {
         if (!state) return {};
 
         return {
-            // 添加實例標識
+            // 穩定的通用類名
+            'vdt-datepicker': true,
+            'vdt-themed': true,
+
+            // 主題色相關類名
+            [`vdt-theme-${state.color}`]: true,
+
+            // 模式相關類名
+            [`vdt-mode-${state.currentMode}`]: true,
+            'vdt-mode-auto': state.userPreference === 'auto',
+
+            // 實例相關（用於調試，但不應用於 CSS）
             [`vdt-instance-${instanceId}`]: true,
         };
     }
@@ -236,6 +272,8 @@ class ScopedThemeManager {
 
         const attributes: Record<string, string> = {
             'data-vdt-instance': instanceId,
+            'data-vdt-theme': state.color,
+            'data-vdt-mode-preference': state.userPreference,
         };
 
         // 只有在非 auto 模式時才設置 data-vdt-mode
@@ -247,9 +285,17 @@ class ScopedThemeManager {
     }
 
     /**
+     * 強制重新應用主題（用於調試或強制刷新）
+     */
+    reapplyTheme(instanceId: string): void {
+        this.applyColorToDOM(instanceId);
+        this.applyModeToDOM(instanceId);
+    }
+
+    /**
      * 添加監聽器
      */
-    addListener(instanceId: string, listener: (state: ScopedThemeState) => void): () => void {
+    addListener(instanceId: string, listener: (state: ThemeState) => void): () => void {
         const listeners = this.listeners.get(instanceId);
         if (!listeners) return () => { };
 
@@ -276,5 +322,5 @@ class ScopedThemeManager {
 }
 
 // 創建全局實例
-export const scopedThemeManager = new ScopedThemeManager();
-export default scopedThemeManager;
+export const themeManager = new ThemeManager();
+export default themeManager;

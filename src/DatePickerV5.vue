@@ -1,15 +1,8 @@
 <template>
-
-    <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
-        沒有變化454
-    </div>
-    <div class="date-time-picker-wrapper relative w-full" :class="[showTime ? 'min-w-[300px]' : 'min-w-[150px]']"
-        v-bind="containerAttributes" ref="pickerRef">
+    <div class="date-time-picker-wrapper relative w-full"
+        :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
+        ref="pickerRef">
         <!-- 日期時間輸入容器 -->
-        <div class="bg-vdt-surface text-vdt-content border-vdt-outline ">
-            沒有變化454
-        </div>
-
         <DateContainer :errors="errors">
             <div class="flex w-full items-center justify-start gap-1">
                 <!-- 日期輸入部分 -->
@@ -50,8 +43,8 @@
 
         <!-- 日曆彈出層 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10" @click.stop role="dialog"
-            aria-modal="true" aria-label="date-picker">
+            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
+            @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="selectedCalendarDate" :min-date="minDate" :max-date="maxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :enableSeconds="enableSeconds" :locale="locale" @select="onCalendarSelect"
@@ -64,7 +57,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onBeforeMount } from 'vue';
 import { CalendarDate, CalendarDateTime } from '@internationalized/date';
 import dayjs from 'dayjs';
-import "./styles/themeT4.css";
+import "./styles/theme.css";
 
 // 組件導入
 import DateContainer from './components/calendar/DateContainer.vue';
@@ -87,11 +80,11 @@ import {
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { useScopedTheme } from './composables/useThemeV2';
+import { useTheme } from './composables/useTheme';
 
 interface Props {
     modelValue?: DateTimeValue;
-    darkMode?: boolean | 'auto';
+    mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
     // 日期選項
     yearPlaceholder?: string;
@@ -124,7 +117,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     modelValue: null,
-    darkMode: true,
+    mode: 'auto',
     theme: () => 'violet',
     yearPlaceholder: '年',
     monthPlaceholder: '月',
@@ -430,7 +423,7 @@ const {
     currentMode,
     isDark,
     isLight
-} = useScopedTheme();
+} = useTheme();
 
 // 監聽 props 變化
 watch(() => props.theme, (newTheme) => {
@@ -439,10 +432,8 @@ watch(() => props.theme, (newTheme) => {
     }
 }, { immediate: true });
 
-watch(() => props.darkMode, (newMode) => {
-    if (newMode === true) setMode('dark');
-    else if (newMode === false) setMode('light');
-    else setMode('auto');  // 跟隨系統
+watch(() => props.mode, (newMode) => {
+    setMode(newMode);  // 設置主題模式
 }, { immediate: true });
 //#endregion
 

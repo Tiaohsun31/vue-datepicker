@@ -1,5 +1,5 @@
 @import "tailwindcss";
 /* @custom-variant dark (&:where(.dark, .dark *)); */
-@import "@/styles/themeT4.css";
+@import "@/styles/theme.css";
 @custom-variant dark (&:where([data-vdt-mode="dark"], [data-vdt-mode="dark"] *, .dark, .dark *));
 @plugin '@tailwindcss/forms';

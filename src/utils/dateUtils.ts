@@ -84,7 +84,6 @@ export function createSimpleDate(
     if (hour !== undefined) result.hour = hour;
     if (minute !== undefined) result.minute = minute;
     if (second !== undefined) result.second = second;
-    console.log('Created SimpleDateValue:', result);
     return result;
 }
 
@@ -250,14 +249,14 @@ export function formatSimpleDate(
     if (!date) return null;
 
     try {
-        const dayjsDate = dayjs()
+
+        const dayjsDate = dayjs('2000-01-01 00:00:00')
             .year(date.year)
             .month(date.month - 1)
-            .date(date.day);
-
-        if (date.hour !== undefined) dayjsDate.hour(date.hour);
-        if (date.minute !== undefined) dayjsDate.minute(date.minute);
-        if (date.second !== undefined) dayjsDate.second(date.second);
+            .date(date.day)
+            .hour(date.hour || 0)
+            .minute(date.minute || 0)
+            .second(date.second || 0);
 
         return dayjsDate.format(format);
     } catch (error) {

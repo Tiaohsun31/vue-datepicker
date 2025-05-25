@@ -136,7 +136,7 @@ const props = withDefaults(defineProps<Props>(), {
     minuteStep: 5,
     timeSeparator: ' ',
     useLocalizedPeriod: false,
-    customDefaultTime: '00:00:00',
+    customDefaultTime: '09:00:00',
     autoFocusTimeAfterDate: true,
 
     disabled: false,

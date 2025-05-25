@@ -84,6 +84,7 @@ export function createSimpleDate(
     if (hour !== undefined) result.hour = hour;
     if (minute !== undefined) result.minute = minute;
     if (second !== undefined) result.second = second;
+    console.log('Created SimpleDateValue:', result);
     return result;
 }
 

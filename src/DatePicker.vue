@@ -4,7 +4,8 @@
         ref="pickerRef">
         <!-- 日期時間輸入容器 -->
         <DateContainer :errors="errors">
-            <div class="flex w-full items-center justify-start gap-1">
+            <div class="flex w-full items-center justify-start gap-1" @click="handleContainerClick"
+                @mousedown="handleContainerMouseDown">
                 <!-- 日期輸入部分 -->
                 <div>
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="yearPlaceholder"
@@ -30,16 +31,11 @@
             </div>
 
             <!-- 日曆圖標 -->
-            <div class="ml-auto flex gap-2">
-                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                    :disabled="disabled" @click="toggleCalendar">
-                    <CalendarIcon class="h-5 w-5 cursor-pointer" />
-                </button>
-            </div>
+            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                :disabled="disabled" @click="toggleCalendar">
+                <CalendarIcon class="h-5 w-5 cursor-pointer" />
+            </button>
         </DateContainer>
-
-        <!-- 錯誤訊息 -->
-        <DateErrorMessage :errors="mergedErrors" />
 
         <!-- 日曆彈出層 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
@@ -47,10 +43,12 @@
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
-                :enableSeconds="enableSeconds" :locale="locale" @select="onCalendarSelect"
-                @time-select="onTimeSelect" />
+                :default-time="getValidDefaultTime()" :enableSeconds="enableSeconds" :locale="locale"
+                @select="onCalendarSelect" @time-select="onTimeSelect" />
         </div>
     </div>
+    <!-- 錯誤訊息 -->
+    <DateErrorMessage :errors="mergedErrors" />
 </template>
 
 <script setup lang="ts">
@@ -105,6 +103,8 @@ interface Props {
     minuteStep?: number;
     timeSeparator?: string;
     useLocalizedPeriod?: boolean;
+    customDefaultTime?: string; // 自定義預設時間，格式為 HH:mm:ss
+    autoFocusTimeAfterDate?: boolean; // 日期完成後是否自動聚焦到時間
     // 一般選項
     disabled?: boolean;
     required?: boolean;
@@ -136,10 +136,13 @@ const props = withDefaults(defineProps<Props>(), {
     minuteStep: 5,
     timeSeparator: ' ',
     useLocalizedPeriod: false,
+    customDefaultTime: '00:00:00',
+    autoFocusTimeAfterDate: true,
+
     disabled: false,
     required: true,
     locale: 'zh-TW',
-    separator: '/',
+    separator: '-',
     dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     autoFocus: false,
@@ -204,6 +207,50 @@ const dateInputFormat = computed(() => internalDateFormat.value);
 const mergedErrors = computed(() => {
     return { ...errors.value, ...formatErrors.value };
 });
+
+// 驗證自定義預設時間格式
+const validateCustomDefaultTime = (timeStr: string): boolean => {
+    if (!timeStr) return false;
+
+    // 檢查基本格式 HH:mm:ss 或 HH:mm
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])(?::([0-5]?[0-9]))?$/;
+    if (!timeRegex.test(timeStr)) {
+        console.warn(`customDefaultTime 格式不正確: ${timeStr}，應為 HH:mm:ss 或 HH:mm 格式`);
+        return false;
+    }
+
+    const parts = timeStr.split(':');
+    const hours = parseInt(parts[0]);
+    const minutes = parseInt(parts[1]);
+    const seconds = parts[2] ? parseInt(parts[2]) : 0;
+
+    // 驗證範圍
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+        console.warn(`customDefaultTime 時間值超出範圍: ${timeStr}`);
+        return false;
+    }
+
+    return true;
+};
+
+// 獲取有效的預設時間
+const getValidDefaultTime = (): string => {
+    const defaultTime = props.customDefaultTime || '00:00:00';
+
+    if (validateCustomDefaultTime(defaultTime)) {
+        // 確保格式完整 (HH:mm:ss)
+        const parts = defaultTime.split(':');
+        const hours = parts[0].padStart(2, '0');
+        const minutes = parts[1].padStart(2, '0');
+        const seconds = parts[2] ? parts[2].padStart(2, '0') : '00';
+
+        return `${hours}:${minutes}:${seconds}`;
+    } else {
+        // 如果自定義時間無效，使用 00:00:00
+        console.warn('customDefaultTime 無效，使用預設值 00:00:00');
+        return '00:00:00';
+    }
+};
 
 // 從SimpleDateValue獲取時間部分
 const getTimeFromDateTime = (dateTime: SimpleDateValue | null): string | null => {
@@ -297,6 +344,20 @@ const onTimeInputValidation = (isValid: boolean, validationErrors: Record<string
 // 日期完成事件處理
 const onDateInputComplete = (dateStr: string) => {
     inputDateValue.value = dateStr;
+    // 如果啟用時間且沒有時間值，自動聚焦到時間輸入
+    if (props.showTime && !inputTimeValue.value) {
+        const defaultTime = getValidDefaultTime();
+        inputTimeValue.value = defaultTime;
+
+        // 根據配置決定是否自動聚焦到時間輸入
+        if (props.autoFocusTimeAfterDate) {
+            nextTick(() => {
+                if (timeInputRef.value?.focus) {
+                    timeInputRef.value.focus();
+                }
+            });
+        }
+    }
     updateDateTimeValue();
 };
 
@@ -321,7 +382,8 @@ const updateDateTimeValue = () => {
 
     // 如果沒有時間值，自動生成一個默認的 00:00:00
     if (!inputTimeValue.value && props.showTime) {
-        inputTimeValue.value = '00:00:00';
+        const defaultTime = getValidDefaultTime();
+        inputTimeValue.value = defaultTime;
     }
 
     const dateTime = createDateTimeFromInputs(inputDateValue.value, inputTimeValue.value);
@@ -394,6 +456,50 @@ const handleClickOutside = (event: MouseEvent) => {
         picker && !picker.contains(target)) {
         hideCalendar();
     }
+};
+
+const handleContainerClick = (event: MouseEvent) => {
+    // 如果組件被禁用，則不處理
+    if (props.disabled) return;
+
+    const target = event.target as HTMLElement;
+
+    // 檢查是否點擊到了輸入框或按鈕
+    const isInputElement = target.classList.contains('date-input') ||
+        target.classList.contains('time-input') ||
+        target.closest('input') ||
+        target.closest('button');
+
+    // 如果點擊的不是輸入框或按鈕，則聚焦到第一個輸入框
+    if (!isInputElement) {
+        event.preventDefault(); // 防止默認行為
+        focusFirstInput();
+    }
+};
+
+const handleContainerMouseDown = (event: MouseEvent) => {
+    if (props.disabled) return;
+
+    const target = event.target as HTMLElement;
+
+    // 如果點擊的不是輸入框，防止失去焦點
+    const isInputElement = target.classList.contains('date-input') ||
+        target.classList.contains('time-input') ||
+        target.closest('input') ||
+        target.closest('button');
+
+    if (!isInputElement) {
+        event.preventDefault();
+    }
+};
+// 聚焦到第一個輸入框的邏輯
+const focusFirstInput = () => {
+    // 使用 nextTick 確保 DOM 更新完成
+    nextTick(() => {
+        if (dateInputRef.value?.focus) {
+            dateInputRef.value.focus();
+        }
+    });
 };
 
 // 處理窗口大小變化
@@ -478,7 +584,7 @@ onBeforeMount(() => {
 
 // 公開方法
 defineExpose({
-    focus: () => dateInputRef.value?.focus(),
+    focus: focusFirstInput,
     reset: () => {
         internalDateTime.value = null;
         inputDateValue.value = null;

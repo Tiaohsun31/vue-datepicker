@@ -12,6 +12,9 @@
         <div>
             <DateRange v-model="selectedDate"></DateRange>
         </div>
+        <div>
+            <DateRange v-model="selectedDate" mode="dark"></DateRange>
+        </div>
         <!-- <RouterView /> -->
     </div>
     <!-- <ScopeTheme></ScopeTheme> -->

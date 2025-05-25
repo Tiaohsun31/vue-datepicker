@@ -129,6 +129,8 @@ interface Props {
     timeValue?: string | null;
     enableSeconds?: boolean;
     use24Hour?: boolean;
+
+    defaultTime?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -145,7 +147,8 @@ const props = withDefaults(defineProps<Props>(), {
     showTimeSelector: false,
     timeValue: null,
     enableSeconds: true,
-    use24Hour: false
+    use24Hour: false,
+    defaultTime: '00:00:00'
 });
 
 const emit = defineEmits<{
@@ -153,7 +156,7 @@ const emit = defineEmits<{
     select: [date: CalendarDate, closeCalendar: boolean];
     'time-select': [time: string];
 
-    // 範圍選擇事件（簡化版）
+    // 範圍選擇事件
     'range-select': [startDate: CalendarDate | null, endDate: CalendarDate | null];
 }>();
 
@@ -179,6 +182,9 @@ const selectedHour = ref<number>(0);
 const selectedMinute = ref<number>(0);
 const selectedSecond = ref<number>(0);
 const selectedPeriod = ref<'AM' | 'PM'>('AM');
+
+// 時間是否已初始化的標誌
+const timeInitialized = ref<boolean>(false);
 
 // 可選的年份範圍
 const minYear = computed(() => props.minDate?.year || 1900);
@@ -223,6 +229,46 @@ const formattedTimeValue = computed(() => {
         return `${hourStr}:${minuteStr}`;
     }
 });
+
+const parseAndSetTime = (timeStr: string) => {
+    console.log('🔧 CalendarGrid 解析時間:', timeStr);
+
+    if (!timeStr) return;
+
+    const [hoursStr, minutes, seconds] = timeStr.split(':');
+    let hours = parseInt(hoursStr) || 0;
+
+    if (!props.use24Hour) {
+        if (hours >= 12) {
+            selectedPeriod.value = 'PM';
+            hours = hours === 12 ? 12 : hours - 12;
+        } else {
+            selectedPeriod.value = 'AM';
+            hours = hours === 0 ? 12 : hours;
+        }
+    }
+
+    selectedHour.value = hours;
+    selectedMinute.value = parseInt(minutes) || 0;
+
+    if (props.enableSeconds && seconds) {
+        selectedSecond.value = parseInt(seconds) || 0;
+    }
+
+    timeInitialized.value = true;
+    console.log('✅ CalendarGrid 時間設置完成:', {
+        hour: selectedHour.value,
+        minute: selectedMinute.value,
+        second: selectedSecond.value,
+        period: selectedPeriod.value
+    });
+};
+
+// 使用預設時間初始化
+const initializeWithDefaultTime = () => {
+    console.log('🏁 CalendarGrid 使用預設時間初始化:', props.defaultTime);
+    parseAndSetTime(props.defaultTime);
+};
 
 // 監聽外部傳入的年月變化
 watch(() => [props.year, props.month], ([newYear, newMonth]) => {
@@ -284,7 +330,7 @@ const handleSelect = (date: CalendarDate) => {
     }
 };
 
-// 處理範圍選擇（簡化版）
+// 處理範圍選擇
 const handleRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate | null) => {
     if (props.selectionMode === 'range') {
         emit('range-select', startDate, endDate);
@@ -306,6 +352,8 @@ const setTodaysDate = () => {
 
 // 設置為當前時間
 const setNowTime = () => {
+    console.log('🕐 CalendarGrid 手動設置當前時間');
+
     const now = new Date();
 
     if (props.use24Hour) {
@@ -321,32 +369,21 @@ const setNowTime = () => {
     if (props.enableSeconds) {
         selectedSecond.value = now.getSeconds();
     }
+
+    timeInitialized.value = true;
 };
 
 // 監聽外部傳入的時間值
 watch(() => props.timeValue, (newValue) => {
+    console.log('👁️ CalendarGrid 監聽到 timeValue 變化:', newValue);
+
     if (newValue) {
-        const [hoursStr, minutes, seconds] = newValue.split(':');
-        let hours = parseInt(hoursStr);
-
-        if (!props.use24Hour) {
-            if (hours >= 12) {
-                selectedPeriod.value = 'PM';
-                hours = hours === 12 ? 12 : hours - 12;
-            } else {
-                selectedPeriod.value = 'AM';
-                hours = hours === 0 ? 12 : hours;
-            }
-        }
-
-        selectedHour.value = hours;
-        selectedMinute.value = parseInt(minutes) || 0;
-
-        if (props.enableSeconds && seconds) {
-            selectedSecond.value = parseInt(seconds) || 0;
-        }
-    } else {
-        setNowTime();
+        // 如果有外部時間值，使用它
+        parseAndSetTime(newValue);
+    } else if (!timeInitialized.value && props.showTimeSelector && props.selectionMode === 'single') {
+        // 只有在時間尚未初始化且沒有外部時間值時，才使用預設時間
+        console.log('🔧 CalendarGrid 首次初始化，使用預設時間');
+        initializeWithDefaultTime();
     }
 }, { immediate: true });
 
@@ -354,18 +391,12 @@ watch(() => props.timeValue, (newValue) => {
 watch(
     [selectedHour, selectedMinute, selectedSecond, selectedPeriod],
     () => {
-        if (props.showTimeSelector && props.selectionMode === 'single') {
+        if (props.showTimeSelector && props.selectionMode === 'single' && timeInitialized.value) {
+            console.log('📤 CalendarGrid 發送時間選擇事件:', formattedTimeValue.value);
             emit('time-select', formattedTimeValue.value);
         }
     }
 );
-
-// 初始化
-onMounted(() => {
-    if (!props.timeValue && props.showTimeSelector && props.selectionMode === 'single') {
-        setNowTime();
-    }
-});
 
 // 公開方法
 defineExpose({

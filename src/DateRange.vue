@@ -1,99 +1,82 @@
-<!-- DateRange.vue - 混合使用版本 -->
+<!-- DateRange.vue  -->
 <template>
-    <div class="date-range-wrapper relative w-full"
+    <div class="date-range-wrapper md:min-w-auto relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[280px]' : 'min-w-[200px]']" v-bind="containerAttributes"
         ref="rangeRef">
-
         <!-- 日期範圍顯示容器 -->
         <DateContainer :errors="errors">
-            <div class="flex w-full items-center justify-between">
-                <!-- 日期範圍顯示 -->
-                <div class="flex items-center gap-2 flex-1">
-                    <!-- 開始日期 -->
-                    <div class="flex-1 text-center py-1">
-                        <span v-if="displayStartDate" class="text-vdt-content text-sm">
-                            {{ displayStartDate }}
-                        </span>
-                        <span v-else class="text-vdt-content-muted text-sm">
-                            {{ startPlaceholder }}
-                        </span>
-                    </div>
-
-                    <!-- 分隔符 -->
-                    <div class="text-vdt-content-muted text-sm px-1">
-                        {{ separator }}
-                    </div>
-
-                    <!-- 結束日期 -->
-                    <div class="flex-1 text-center py-1">
-                        <span v-if="displayEndDate" class="text-vdt-content text-sm">
-                            {{ displayEndDate }}
-                        </span>
-                        <span v-else class="text-vdt-content-muted text-sm">
-                            {{ endPlaceholder }}
-                        </span>
-                    </div>
+            <button type="button" class="flex items-center gap-2 flex-1 cursor-pointer transition-colors duration-200"
+                :disabled="disabled" @click="toggleCalendar">
+                <!-- 開始日期 -->
+                <div class="flex-1 text-center">
+                    <span v-if="displayStartDate" class="text-vdt-content text-sm">
+                        {{ displayStartDate }}
+                    </span>
+                    <span v-else class="text-vdt-content-muted text-sm">
+                        {{ startPlaceholder }}
+                    </span>
                 </div>
 
+                <!-- 分隔符 -->
+                <div class="text-vdt-content-muted text-sm px-1">
+                    {{ separator }}
+                </div>
+
+                <!-- 結束日期 -->
+                <div class="flex-1 text-center ">
+                    <span v-if="displayEndDate" class="text-vdt-content text-sm">
+                        {{ displayEndDate }}
+                    </span>
+                    <span v-else class="text-vdt-content-muted text-sm">
+                        {{ endPlaceholder }}
+                    </span>
+                </div>
                 <!-- 日曆圖標 -->
-                <div class="ml-2">
-                    <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                        :disabled="disabled" @click="toggleCalendar">
-                        <CalendarIcon class="h-5 w-5 cursor-pointer" />
-                    </button>
-                </div>
-            </div>
+                <span class="text-gray-400 hover:text-gray-600">
+                    <CalendarIcon class="h-5 w-5" />
+                </span>
+            </button>
         </DateContainer>
-
-        <!-- 錯誤訊息 -->
-        <DateErrorMessage :errors="mergedErrors" />
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 min-w-[640px]"
+            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto md:min-w-[640px]"
             @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
 
             <!-- 範圍選擇器內容 -->
-            <div class="p-4">
+            <div class="p-2">
                 <!-- 輸入區域 -->
-                <div class="mb-4 space-y-3">
+                <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2 mb-2">
                     <!-- 開始日期輸入 -->
-                    <div class="flex items-center gap-3">
-                        <label class="text-sm font-medium text-vdt-content w-16">開始：</label>
-                        <div class="flex items-center gap-2">
-                            <DateInput ref="startDateInputRef" v-model="inputStartDate"
-                                :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
-                                :day-placeholder="dayPlaceholder" :max-date="inputEndDate" :min-date="minDateStr"
-                                :date-format="dateInputFormat" @validation="onStartDateValidation"
-                                @complete="onStartDateComplete" />
-                            <TimeInput v-if="showTime" ref="startTimeInputRef" v-model="inputStartTime"
-                                :hour-placeholder="hourPlaceholder" :minute-placeholder="minutePlaceholder"
-                                :second-placeholder="secondPlaceholder" :enable-seconds="enableSeconds"
-                                :use24Hour="use24Hour" :locale="locale" @validation="onStartTimeValidation"
-                                @complete="onStartTimeComplete" />
-                        </div>
+                    <div
+                        class="flex-1 flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        <DateInput ref="startDateInputRef" v-model="inputStartDate" :year-placeholder="yearPlaceholder"
+                            :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder"
+                            :max-date="inputEndDate" :min-date="minDateStr" :date-format="dateInputFormat"
+                            @validation="onStartDateValidation" @complete="onStartDateComplete" />
+                        <TimeInput v-if="showTime" ref="startTimeInputRef" v-model="inputStartTime"
+                            :hour-placeholder="hourPlaceholder" :minute-placeholder="minutePlaceholder"
+                            :second-placeholder="secondPlaceholder" :enable-seconds="enableSeconds"
+                            :use24Hour="use24Hour" :locale="locale" @validation="onStartTimeValidation"
+                            @complete="onStartTimeComplete" />
                     </div>
-
                     <!-- 結束日期輸入 -->
-                    <div class="flex items-center gap-3">
-                        <label class="text-sm font-medium text-vdt-content w-16">結束：</label>
-                        <div class="flex items-center gap-2">
-                            <DateInput ref="endDateInputRef" v-model="inputEndDate" :year-placeholder="yearPlaceholder"
-                                :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder"
-                                :min-date="inputStartDate" :max-date="maxDateStr" :date-format="dateInputFormat"
-                                @validation="onEndDateValidation" @complete="onEndDateComplete" />
-                            <TimeInput v-if="showTime" ref="endTimeInputRef" v-model="inputEndTime"
-                                :hour-placeholder="hourPlaceholder" :minute-placeholder="minutePlaceholder"
-                                :second-placeholder="secondPlaceholder" :enable-seconds="enableSeconds"
-                                :use24Hour="use24Hour" :locale="locale" @validation="onEndTimeValidation"
-                                @complete="onEndTimeComplete" />
-                        </div>
+                    <div
+                        class="flex-1 flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        <DateInput ref="endDateInputRef" v-model="inputEndDate" :year-placeholder="yearPlaceholder"
+                            :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder"
+                            :min-date="inputStartDate" :max-date="maxDateStr" :date-format="dateInputFormat"
+                            @validation="onEndDateValidation" @complete="onEndDateComplete" />
+                        <TimeInput v-if="showTime" ref="endTimeInputRef" v-model="inputEndTime"
+                            :hour-placeholder="hourPlaceholder" :minute-placeholder="minutePlaceholder"
+                            :second-placeholder="secondPlaceholder" :enable-seconds="enableSeconds"
+                            :use24Hour="use24Hour" :locale="locale" @validation="onEndTimeValidation"
+                            @complete="onEndTimeComplete" />
                     </div>
                 </div>
 
                 <!-- 快捷選項 -->
-                <div v-if="shortcuts.length > 0" class="mb-4">
-                    <div class="text-xs text-vdt-content-muted mb-2">快速選擇：</div>
+                <div v-if="shortcuts.length > 0 && showShortcuts" class="mb-2">
                     <div class="flex flex-wrap gap-2">
                         <button v-for="shortcut in shortcuts" :key="shortcut.label" type="button"
                             class="px-3 py-1 text-xs bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm transition-colors"
@@ -104,26 +87,26 @@
                 </div>
 
                 <!-- 雙月日曆 -->
-                <div class="calendar-container">
+                <div class="calendar-container flex flex-col md:flex-row gap-2 overflow-auto">
                     <DualMonthCalendar :range-start="calendarStartDate" :range-end="calendarEndDate"
                         :min-date="calendarMinDate" :max-date="calendarMaxDate" :locale="locale" :week-starts-on="0"
                         @range-select="onCalendarRangeSelect" />
                 </div>
 
                 <!-- 操作按鈕 -->
-                <div class="flex justify-between mt-4 pt-3 border-t border-vdt-outline">
-                    <button type="button" class="px-4 py-2 text-sm text-vdt-content-secondary hover:text-vdt-content"
+                <div class="flex justify-between mt-3 pt-2 border-t border-vdt-outline">
+                    <button type="button" class="px-4 py-1 text-sm text-vdt-content-secondary hover:text-vdt-content"
                         @click="clearRange">
                         清除
                     </button>
                     <div class="flex gap-2">
                         <button type="button"
-                            class="px-4 py-2 text-sm border border-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm"
+                            class="px-4 py-1 text-sm border border-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm"
                             @click="hideCalendar">
                             取消
                         </button>
                         <button type="button"
-                            class="px-4 py-2 text-sm bg-vdt-theme-500 text-white hover:bg-vdt-theme-600 rounded-sm"
+                            class="px-4 py-1 text-sm bg-vdt-theme-500 text-white hover:bg-vdt-theme-600 rounded-sm"
                             :disabled="!isValidRange" @click="confirmRange">
                             確定
                         </button>
@@ -132,6 +115,8 @@
             </div>
         </div>
     </div>
+    <!-- 錯誤訊息 -->
+    <DateErrorMessage :errors="mergedErrors" />
 </template>
 
 <script setup lang="ts">
@@ -205,6 +190,7 @@ interface Props {
     separator?: string;
     dateFormat?: string;
     timeFormat?: string;
+    showShortcuts?: boolean; // 是否顯示快捷選項
 
     // 範圍特定選項
     maxRange?: number; // 最大天數限制
@@ -233,6 +219,7 @@ const props = withDefaults(defineProps<Props>(), {
     required: false,
     locale: 'zh-TW',
     separator: ' ~ ',
+    showShortcuts: true,
     dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     outputFormat: 'iso',
@@ -667,7 +654,7 @@ watch(() => props.mode, (newMode) => {
 
 // 公開方法
 defineExpose({
-    focus: () => startDateInputRef.value?.focus(),
+    // focus: () => startDateInputRef.value?.focus(),
     reset: () => {
         clearRange();
         emit('update:modelValue', null);
@@ -711,21 +698,12 @@ defineExpose({
     setAutoMode: () => setMode('auto'),
 });
 </script>
-
 <style scoped>
-.calendar-container {
-    display: flex;
-    justify-content: center;
-}
-
 /* 響應式設計 */
 @media (max-width: 768px) {
     .date-range-wrapper {
         min-width: auto !important;
     }
 
-    .calendar-container {
-        overflow-x: auto;
-    }
 }
 </style>

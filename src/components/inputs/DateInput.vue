@@ -1,27 +1,29 @@
+<!-- DateInput.vue 修復版本 -->
 <template>
     <!-- 年份/月份/日期輸入組 -->
     <div class="flex items-center justify-start">
         <!-- 根據格式順序動態排序輸入字段 -->
         <template v-for="(segment, index) in dateSegments" :key="segment">
             <!-- 渲染對應的輸入框 -->
-            <input v-if="segment === 'year'" ref="yearRef" v-model="yearValue" v-autowidth="20" type="text"
-                inputmode="numeric" :placeholder="yearPlaceholder" :maxlength="4"
-                class="date-input text-sm text-center active:bg-vdt-theme-100" @input="handleYearInput"
+            <input v-if="segment === 'year'" :ref="(el) => setInputRef(el as HTMLInputElement, 'year')"
+                v-model="yearValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="yearPlaceholder"
+                :maxlength="4" class="date-input text-sm text-center active:bg-vdt-theme-100" @input="handleYearInput"
                 @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')" @blur="handleBlur('year')"
                 aria-label="year" :aria-invalid="!!errors.year"
                 :aria-errormessage="errors.year ? 'year-error' : undefined" />
 
-            <input v-else-if="segment === 'month'" ref="monthRef" v-model="monthValue" v-autowidth="20" type="text"
-                inputmode="numeric" :placeholder="monthPlaceholder" :maxlength="2"
-                class="date-input text-sm text-center" @input="handleMonthInput"
+            <input v-else-if="segment === 'month'" :ref="(el) => setInputRef(el as HTMLInputElement, 'month')"
+                v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="monthPlaceholder"
+                :maxlength="2" class="date-input text-sm text-center" @input="handleMonthInput"
                 @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')" @blur="handleBlur('month')"
                 aria-label="month" :aria-invalid="!!errors.month"
                 :aria-errormessage="errors.month ? 'month-error' : undefined" />
 
-            <input v-else-if="segment === 'day'" ref="dayRef" v-model="dayValue" type="text" v-autowidth="20"
-                inputmode="numeric" :placeholder="dayPlaceholder" :maxlength="2" class="date-input text-sm text-center"
-                @input="handleDayInput" @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')"
-                @blur="handleBlur('day')" aria-label="day" :aria-invalid="!!errors.day"
+            <input v-else-if="segment === 'day'" :ref="(el) => setInputRef(el as HTMLInputElement, 'day')"
+                v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric" :placeholder="dayPlaceholder"
+                :maxlength="2" class="date-input text-sm text-center" @input="handleDayInput"
+                @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
+                aria-label="day" :aria-invalid="!!errors.day"
                 :aria-errormessage="errors.day ? 'day-error' : undefined" />
 
             <!-- 分隔符，除非是最後一個段 -->
@@ -85,10 +87,22 @@ const errors = ref<DateField>({});
 const focused = ref<DateFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
-// DOM 引用
-const yearRef = ref<HTMLInputElement>();
-const monthRef = ref<HTMLInputElement>();
-const dayRef = ref<HTMLInputElement>();
+// 使用 Map 來存儲 DOM 引用 - 修復重點
+const inputRefs = ref<Map<DateFieldType, HTMLInputElement>>(new Map());
+
+// 設置輸入框引用的函數
+const setInputRef = (el: HTMLInputElement | null, fieldType: DateFieldType) => {
+    if (el && el instanceof HTMLInputElement) {
+        inputRefs.value.set(fieldType, el);
+    } else {
+        inputRefs.value.delete(fieldType);
+    }
+};
+
+// 獲取輸入框引用的輔助函數
+const getInputRef = (fieldType: DateFieldType): HTMLInputElement | undefined => {
+    return inputRefs.value.get(fieldType);
+};
 
 // 計算屬性
 const hasErrors = computed(() => Object.keys(errors.value).length > 0);
@@ -97,11 +111,8 @@ const errorMessages = computed(() => Object.values(errors.value));
 // 根據日期格式順序計算段排序
 const dateSegments = computed(() => {
     const format = props.dateFormat.toUpperCase();
-
-    // 使用正則表達式找出所有的格式標記 (YYYY、MM、DD)
     const formatMatches = format.match(/(YYYY|MM|DD)/g) || [];
 
-    // 將格式標記轉換為對應的欄位名稱，並過濾掉 undefined
     return formatMatches.map(segment => {
         if (segment === 'YYYY') return 'year';
         if (segment === 'MM') return 'month';
@@ -153,21 +164,81 @@ watch(() => props.modelValue, (newValue) => {
     }
 }, { immediate: true });
 
-// 自動聚焦
+// 自動聚焦 - 修復版本
 onMounted(() => {
-    if (props.autoFocus && yearRef.value) {
-        yearRef.value.focus();
+    if (props.autoFocus) {
+        nextTick(() => {
+            focusFirstInput();
+        });
     }
 });
 
-/**
- * 獲取指定年月的天數
- */
+// 聚焦到第一個輸入框 - 修復版本
+const focusFirstInput = () => {
+    if (dateSegments.value.length === 0) return;
+
+    const firstSegment = dateSegments.value[0] as DateFieldType;
+    const inputElement = getInputRef(firstSegment);
+
+    if (inputElement && typeof inputElement.focus === 'function') {
+        try {
+            inputElement.focus();
+        } catch (error) {
+            console.warn('無法聚焦到輸入框:', error);
+        }
+    } else {
+        // 如果第一個輸入框不可用，嘗試其他輸入框
+        for (const segment of dateSegments.value) {
+            const element = getInputRef(segment as DateFieldType);
+            if (element && typeof element.focus === 'function') {
+                try {
+                    element.focus();
+                    break;
+                } catch (error) {
+                    console.warn('無法聚焦到輸入框:', error);
+                }
+            }
+        }
+    }
+};
+
+// 安全地聚焦到元素 - 修復版本
+const safelyFocus = (fieldType: DateFieldType) => {
+    const element = getInputRef(fieldType);
+    if (element && typeof element.focus === 'function') {
+        try {
+            element.focus();
+        } catch (error) {
+            console.warn(`無法聚焦到 ${fieldType} 輸入框:`, error);
+        }
+    }
+};
+
+// 安全地聚焦到元素並設定游標位置 - 修復版本
+const safelyFocusAndSetCursor = (fieldType: DateFieldType, position: 'start' | 'end') => {
+    const element = getInputRef(fieldType);
+    if (!element) return;
+
+    try {
+        // 先聚焦
+        if (typeof element.focus === 'function') {
+            element.focus();
+        }
+
+        // 設定游標位置
+        if (typeof element.setSelectionRange === 'function') {
+            const length = position === 'end' ? element.value.length : 0;
+            element.setSelectionRange(length, length);
+        }
+    } catch (error) {
+        console.warn(`無法聚焦或設置游標位置到 ${fieldType} 輸入框:`, error);
+    }
+};
+
+// 獲取指定年月的天數
 const getDaysInMonth = (year: number, month: number): number => {
-    // 月份對應的天數 (非閏年)
     const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-    // 檢查閏年 (2月為29天)
     if (month === 2) {
         return isLeapYear(year) ? 29 : 28;
     }
@@ -175,11 +246,9 @@ const getDaysInMonth = (year: number, month: number): number => {
     return daysInMonth[month];
 };
 
-/**
- * 驗證單個字段
- */
+// 驗證單個字段
 const validateField = (field: DateFieldType, value: string): boolean => {
-    if (!value) return true; // 空值在必填檢查中處理
+    if (!value) return true;
 
     const numValue = parseInt(value);
 
@@ -193,7 +262,6 @@ const validateField = (field: DateFieldType, value: string): boolean => {
                 return false;
             }
 
-            // 如果月日已填，檢查閏年情況
             if (monthValue.value === '02' && dayValue.value === '29') {
                 if (!isLeapYear(numValue)) {
                     errors.value.day = `${numValue}年2月沒有29日，不是閏年`;
@@ -208,7 +276,6 @@ const validateField = (field: DateFieldType, value: string): boolean => {
                 return false;
             }
 
-            // 更智能的日期驗證: 當月份改變時，驗證日期是否合理
             if (dayValue.value && yearValue.value) {
                 const yearNum = parseInt(yearValue.value);
                 const daysInSelectedMonth = getDaysInMonth(yearNum, numValue);
@@ -222,13 +289,11 @@ const validateField = (field: DateFieldType, value: string): boolean => {
             break;
 
         case 'day':
-            // 基本日期範圍檢查
             if (!isNumeric(value) || numValue < 1 || numValue > 31) {
                 errors.value[field] = '日期必須是 1-31 之間的數字';
                 return false;
             }
 
-            // 詳細的日期驗證，考慮月份和閏年
             if (yearValue.value && monthValue.value) {
                 const year = parseInt(yearValue.value);
                 const month = parseInt(monthValue.value);
@@ -246,7 +311,6 @@ const validateField = (field: DateFieldType, value: string): boolean => {
             break;
     }
 
-    // 如果該字段沒有錯誤，刪除對應的錯誤信息
     if (errors.value[field]) {
         delete errors.value[field];
     }
@@ -254,58 +318,45 @@ const validateField = (field: DateFieldType, value: string): boolean => {
     return true;
 };
 
-/**
- * 驗證並發送事件
- */
+// 驗證並發送事件
 const validateAndEmit = () => {
-    // 如果還沒初始化，不進行驗證
     if (!isInitialized.value) return;
 
-    // 清除所有錯誤
     errors.value = {};
 
-    // 驗證個別字段
     validateField('year', yearValue.value);
     validateField('month', monthValue.value);
     validateField('day', dayValue.value);
 
-    // 檢查必填項
     if (props.required && (!yearValue.value || !monthValue.value || !dayValue.value)) {
         if (!yearValue.value) errors.value.year = '請輸入年份';
         if (!monthValue.value) errors.value.month = '請輸入月份';
         if (!dayValue.value) errors.value.day = '請輸入日期';
     }
 
-    // 組合並驗證完整日期
     if (dateString.value) {
         const date = dayjs(dateString.value);
 
         if (!date.isValid()) {
             errors.value.day = '無效的日期';
         } else {
-            // 檢查日期範圍
             if (props.minDate && date.isBefore(dayjs(props.minDate))) {
                 errors.value.day = `日期不能早於 ${dayjs(props.minDate).format(props.dateFormat)}`;
             } else if (props.maxDate && date.isAfter(dayjs(props.maxDate))) {
                 errors.value.day = `日期不能晚於 ${dayjs(props.maxDate).format(props.dateFormat)}`;
             } else if (formattedDateString.value) {
-                // 日期有效，發送完成事件
                 emit('update:modelValue', dateString.value);
                 emit('complete', formattedDateString.value);
             }
         }
     } else if (isInitialized.value && !yearValue.value && !monthValue.value && !dayValue.value) {
-        // 只有在已初始化且三個字段都為空時，才設置為 null
         emit('update:modelValue', null);
     }
 
-    // 發送驗證結果
     emit('validation', !hasErrors.value, errors.value);
 };
 
-/**
- * 重置所有輸入欄位
- */
+// 重置所有輸入欄位
 const resetFields = () => {
     yearValue.value = '';
     monthValue.value = '';
@@ -313,55 +364,45 @@ const resetFields = () => {
     errors.value = {};
 };
 
-// 輸入處理函數
-const handleInputBase = (field: DateFieldType, value: string, maxLength: number, autoFillThreshold?: number) => {
-    // 只保留數字
-    const cleanValue = value.replace(/\D/g, '');
-
-    if (cleanValue.length <= maxLength) {
-        // 自動補零處理
-        if (autoFillThreshold && cleanValue.length === 1 && parseInt(cleanValue) > autoFillThreshold) {
-            const paddedValue = cleanValue.padStart(2, '0');
-
-            // 設置值
-            if (field === 'year') yearValue.value = paddedValue;
-            else if (field === 'month') monthValue.value = paddedValue;
-            else if (field === 'day') dayValue.value = paddedValue;
-
-            // 自動跳轉到下一個字段
-            handleFieldCompletion(field);
-        } else {
-            // 設置值
-            if (field === 'year') yearValue.value = cleanValue;
-            else if (field === 'month') monthValue.value = cleanValue;
-            else if (field === 'day') dayValue.value = cleanValue;
-        }
-
-        // 驗證
-        const isValid = validateField(field, cleanValue);
-        if (!isValid) return;
-
-        // 如果達到最大長度，處理字段完成
-        if (cleanValue.length === maxLength) {
-            handleFieldCompletion(field);
-        }
-    }
-};
-
-// 處理字段填寫完成後的邏輯
+// 處理字段填寫完成後的邏輯 - 修復版本
 const handleFieldCompletion = (field: DateFieldType) => {
     const fieldIndex = dateSegments.value.findIndex(segment => segment === field);
     const nextSegment = fieldIndex < dateSegments.value.length - 1 ? dateSegments.value[fieldIndex + 1] : null;
 
     if (nextSegment) {
         nextTick(() => {
-            if (nextSegment === 'year') safelyFocus(yearRef.value!);
-            else if (nextSegment === 'month') safelyFocus(monthRef.value!);
-            else if (nextSegment === 'day') safelyFocus(dayRef.value!);
+            safelyFocus(nextSegment as DateFieldType);
         });
     } else {
-        // 如果沒有下一個字段，則驗證並發送
         validateAndEmit();
+    }
+};
+
+// 輸入處理函數
+const handleInputBase = (field: DateFieldType, value: string, maxLength: number, autoFillThreshold?: number) => {
+    const cleanValue = value.replace(/\D/g, '');
+
+    if (cleanValue.length <= maxLength) {
+        if (autoFillThreshold && cleanValue.length === 1 && parseInt(cleanValue) > autoFillThreshold) {
+            const paddedValue = cleanValue.padStart(2, '0');
+
+            if (field === 'year') yearValue.value = paddedValue;
+            else if (field === 'month') monthValue.value = paddedValue;
+            else if (field === 'day') dayValue.value = paddedValue;
+
+            handleFieldCompletion(field);
+        } else {
+            if (field === 'year') yearValue.value = cleanValue;
+            else if (field === 'month') monthValue.value = cleanValue;
+            else if (field === 'day') dayValue.value = cleanValue;
+        }
+
+        const isValid = validateField(field, cleanValue);
+        if (!isValid) return;
+
+        if (cleanValue.length === maxLength) {
+            handleFieldCompletion(field);
+        }
     }
 };
 
@@ -382,33 +423,21 @@ const handleDayInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     handleInputBase('day', target.value, 2, 3);
 };
-// 輔助函數：安全地聚焦到元素
-const safelyFocus = (refValue: HTMLInputElement | HTMLInputElement[]) => {
-    if (Array.isArray(refValue)) {
-        const element = refValue[0];
-        if (element && typeof element.focus === 'function') {
-            element.focus();
-        }
-    } else if (refValue && typeof refValue.focus === 'function') {
-        refValue.focus();
-    }
-};
-// 鍵盤事件處理
+
+// 鍵盤事件處理 - 修復版本
 const handleKeydown = (event: KeyboardEvent, field: string) => {
     const target = event.target as HTMLInputElement;
+    const fieldType = field as DateFieldType;
 
-    // 確定當前字段在序列中的位置
     const currentIndex = dateSegments.value.findIndex(segment => segment === field);
-    const prevSegment = currentIndex > 0 ? dateSegments.value[currentIndex - 1] : null;
-    const nextSegment = currentIndex < dateSegments.value.length - 1 ? dateSegments.value[currentIndex + 1] : null;
+    const prevSegment = currentIndex > 0 ? dateSegments.value[currentIndex - 1] as DateFieldType : null;
+    const nextSegment = currentIndex < dateSegments.value.length - 1 ? dateSegments.value[currentIndex + 1] as DateFieldType : null;
 
     // 退格鍵處理
     if (event.key === 'Backspace' && target.value === '') {
         if (prevSegment) {
             event.preventDefault();
-            const prevRef = prevSegment === 'year' ? yearRef.value :
-                prevSegment === 'month' ? monthRef.value : dayRef.value;
-            safelyFocusAndSetCursor(prevRef!, 'end');
+            safelyFocusAndSetCursor(prevSegment, 'end');
         }
     }
 
@@ -416,9 +445,7 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
     if (event.key === 'ArrowLeft' && target.selectionStart === 0) {
         if (prevSegment) {
             event.preventDefault();
-            const prevRef = prevSegment === 'year' ? yearRef.value :
-                prevSegment === 'month' ? monthRef.value : dayRef.value;
-            safelyFocusAndSetCursor(prevRef!, 'end');
+            safelyFocusAndSetCursor(prevSegment, 'end');
         }
     }
 
@@ -426,33 +453,13 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
     if (event.key === 'ArrowRight' && target.selectionStart === target.value.length) {
         if (nextSegment) {
             event.preventDefault();
-            const nextRef = nextSegment === 'year' ? yearRef.value :
-                nextSegment === 'month' ? monthRef.value : dayRef.value;
-            safelyFocusAndSetCursor(nextRef!, 'start');
+            safelyFocusAndSetCursor(nextSegment, 'start');
         }
     }
 
     // Enter 鍵完成輸入
     if (event.key === 'Enter') {
         validateAndEmit();
-    }
-};
-
-// 輔助函數：安全地聚焦到元素並設定游標位置
-const safelyFocusAndSetCursor = (refValue: HTMLInputElement | HTMLInputElement[], position: 'start' | 'end') => {
-    // 先聚焦
-    safelyFocus(refValue);
-
-    // 設定游標位置
-    if (Array.isArray(refValue)) {
-        const element = refValue[0];
-        if (element && typeof element.setSelectionRange === 'function') {
-            const length = position === 'end' ? element.value.length : 0;
-            element.setSelectionRange(length, length);
-        }
-    } else if (refValue && typeof refValue.setSelectionRange === 'function') {
-        const length = position === 'end' ? refValue.value.length : 0;
-        refValue.setSelectionRange(length, length);
     }
 };
 
@@ -463,11 +470,10 @@ const handleFocus = (field: DateFieldType) => {
 
 const handleBlur = (field: DateFieldType) => {
     focused.value = null;
-    // 失焦時驗證
     validateAndEmit();
 };
 
-// 提供方法給父組件
+// 提供方法給父組件 - 修復版本
 defineExpose({
     validate: validateAndEmit,
     reset: () => {
@@ -477,9 +483,7 @@ defineExpose({
     getErrors: () => errors.value,
     hasErrors,
     errorMessages,
-    focus: () => {
-        yearRef.value?.focus();
-    },
+    focus: focusFirstInput, // 使用修復後的聚焦方法
     setDate: (dateStr: string) => {
         if (dateStr) {
             const date = dayjs(dateStr);
@@ -500,7 +504,6 @@ defineExpose({
 <style scoped>
 /* 處理輸入框樣式覆蓋 @tailwindcss/forms */
 .date-input {
-    /* 重置所有可能被 @tailwindcss/forms 覆蓋的樣式 */
     appearance: none !important;
     background-color: transparent !important;
     border-width: 0 !important;
@@ -509,7 +512,6 @@ defineExpose({
     padding: 0 !important;
     outline: none !important;
     box-shadow: none !important;
-    /* 增加一些自定義樣式 */
     transition: background-color 0.2s ease;
 }
 

@@ -2,27 +2,28 @@
     <!-- 時間輸入 -->
     <div class="flex items-center justify-center">
         <!-- 小時輸入 -->
-        <input ref="hourRef" v-model="hourValue" v-autowidth="20" type="text" inputmode="numeric"
-            :placeholder="hourPlaceholder" :maxlength="2" class="time-input text-sm text-center"
-            @input="handleHourInput" @keydown="handleKeydown($event, 'hour')" @focus="handleFocus('hour')"
-            @blur="handleBlur('hour')" aria-label="hour" :aria-invalid="!!errors.hour"
+        <input :ref="(el) => setTimeInputRef(el as HTMLInputElement, 'hour')" v-model="hourValue" v-autowidth="20"
+            type="text" inputmode="numeric" :placeholder="hourPlaceholder" :maxlength="2"
+            class="time-input text-sm text-center" @input="handleHourInput" @keydown="handleKeydown($event, 'hour')"
+            @focus="handleFocus('hour')" @blur="handleBlur('hour')" aria-label="hour" :aria-invalid="!!errors.hour"
             :aria-errormessage="errors.hour ? 'hour-error' : undefined" />
         <span class="text-gray-400 mx-1">:</span>
 
         <!-- 分鐘輸入 -->
-        <input ref="minuteRef" v-model="minuteValue" v-autowidth="20" type="text" inputmode="numeric"
-            :placeholder="minutePlaceholder" :maxlength="2" class="time-input text-sm text-center"
-            @input="handleMinuteInput" @keydown="handleKeydown($event, 'minute')" @focus="handleFocus('minute')"
-            @blur="handleBlur('minute')" aria-label="minute" :aria-invalid="!!errors.minute"
-            :aria-errormessage="errors.minute ? 'minute-error' : undefined" />
+        <input :ref="(el) => setTimeInputRef(el as HTMLInputElement, 'minute')" v-model="minuteValue" v-autowidth="20"
+            type="text" inputmode="numeric" :placeholder="minutePlaceholder" :maxlength="2"
+            class="time-input text-sm text-center" @input="handleMinuteInput" @keydown="handleKeydown($event, 'minute')"
+            @focus="handleFocus('minute')" @blur="handleBlur('minute')" aria-label="minute"
+            :aria-invalid="!!errors.minute" :aria-errormessage="errors.minute ? 'minute-error' : undefined" />
 
         <!-- 秒鐘輸入（如果啟用） -->
         <template v-if="enableSeconds">
             <span class="text-gray-400 mx-1">:</span>
-            <input ref="secondRef" v-model="secondValue" v-autowidth="20" type="text" inputmode="numeric"
-                :placeholder="secondPlaceholder" :maxlength="2" class="time-input text-sm text-center"
-                @input="handleSecondInput" @keydown="handleKeydown($event, 'second')" @focus="handleFocus('second')"
-                @blur="handleBlur('second')" aria-label="second" :aria-invalid="!!errors.second"
+            <input :ref="(el) => setTimeInputRef(el as HTMLInputElement, 'second')" v-model="secondValue"
+                v-autowidth="20" type="text" inputmode="numeric" :placeholder="secondPlaceholder" :maxlength="2"
+                class="time-input text-sm text-center" @input="handleSecondInput"
+                @keydown="handleKeydown($event, 'second')" @focus="handleFocus('second')" @blur="handleBlur('second')"
+                aria-label="second" :aria-invalid="!!errors.second"
                 :aria-errormessage="errors.second ? 'second-error' : undefined" />
         </template>
 
@@ -93,11 +94,10 @@ const periodValue = ref<TimePeriod>('AM');
 const errors = ref<TimeField>({});
 const focused = ref<TimeFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
+const timeSetExternally = ref<boolean>(false); // 新增：追蹤時間是否從外部設置
 
 // DOM 引用
-const hourRef = ref<HTMLInputElement>();
-const minuteRef = ref<HTMLInputElement>();
-const secondRef = ref<HTMLInputElement>();
+const inputRefs = ref<Map<TimeFieldType, HTMLInputElement>>(new Map());
 
 // 計算屬性
 const hasErrors = computed(() => Object.keys(errors.value).length > 0);
@@ -109,6 +109,59 @@ const resetFields = () => {
     minuteValue.value = '';
     secondValue.value = '';
     periodValue.value = 'AM';
+    timeSetExternally.value = false;
+};
+
+// 設置輸入框引用的函數
+const setTimeInputRef = (el: Element | null, fieldType: TimeFieldType) => {
+    if (el && el instanceof HTMLInputElement) {
+        inputRefs.value.set(fieldType, el);
+    } else {
+        inputRefs.value.delete(fieldType);
+    }
+};
+
+// 獲取輸入框引用的輔助函數
+const getTimeInputRef = (fieldType: TimeFieldType): HTMLInputElement | undefined => {
+    return inputRefs.value.get(fieldType);
+};
+
+// 安全地聚焦到元素
+const safelyFocus = (fieldType: TimeFieldType) => {
+    const element = getTimeInputRef(fieldType);
+    if (element && typeof element.focus === 'function') {
+        try {
+            element.focus();
+            console.log(`✅ TimeInput 成功聚焦到 ${fieldType} 輸入框`);
+        } catch (error) {
+            console.warn(`❌ TimeInput 無法聚焦到 ${fieldType} 輸入框:`, error);
+        }
+    } else {
+        console.warn(`❌ TimeInput ${fieldType} 輸入框不可用`);
+    }
+};
+
+// 聚焦到第一個時間輸入框
+const focusFirstTimeInput = () => {
+    console.log('🎯 TimeInput focusFirstTimeInput 被調用');
+
+    // 按順序嘗試聚焦：hour -> minute -> second
+    const timeFields: TimeFieldType[] = ['hour', 'minute', 'second'];
+
+    for (const field of timeFields) {
+        const element = getTimeInputRef(field);
+        if (element && typeof element.focus === 'function') {
+            try {
+                element.focus();
+                console.log(`✅ TimeInput 成功聚焦到第一個可用的時間輸入框: ${field}`);
+                return;
+            } catch (error) {
+                console.warn(`❌ TimeInput 無法聚焦到 ${field} 輸入框:`, error);
+            }
+        }
+    }
+
+    console.warn('❌ TimeInput 沒有找到可用的時間輸入框');
 };
 
 // 本地化的AM/PM顯示
@@ -116,31 +169,26 @@ const localizedPeriod = computed(() => {
     if (!props.useLocalizedPeriod) return periodValue.value;
 
     try {
-        // 建立一個日期對象，分別用於上午和下午的情況
         const amDate = new Date();
-        amDate.setHours(9, 0, 0); // 上午9點
+        amDate.setHours(9, 0, 0);
 
         const pmDate = new Date();
-        pmDate.setHours(15, 0, 0); // 下午3點
+        pmDate.setHours(15, 0, 0);
 
-        // 使用 Intl API 只格式化時間段部分
         const dtf = new Intl.DateTimeFormat(props.locale, {
             hour: 'numeric',
             hour12: true
         });
 
-        // 獲取完整的格式化字符串
         const amString = dtf.formatToParts(amDate);
         const pmString = dtf.formatToParts(pmDate);
 
-        // 從格式化部分中提取 dayPeriod (時間段標記)
         const amPeriod = amString.find(part => part.type === 'dayPeriod')?.value || 'AM';
         const pmPeriod = pmString.find(part => part.type === 'dayPeriod')?.value || 'PM';
 
         return periodValue.value === 'AM' ? amPeriod : pmPeriod;
     } catch (error) {
         console.error('Error getting localized period:', error);
-        // 如果出現錯誤，回退到英文AM/PM
         return periodValue.value;
     }
 });
@@ -171,7 +219,7 @@ const formattedTimeValue = computed(() => {
         }
     }
 
-    const hourStr = hour.toString().padStart(2, '0'); // 確保小時總是兩位數
+    const hourStr = hour.toString().padStart(2, '0');
     const minuteStr = minuteValue.value.padStart(2, '0');
 
     if (props.enableSeconds) {
@@ -182,13 +230,19 @@ const formattedTimeValue = computed(() => {
     }
 });
 
-// 監聽外部 modelValue 變化
+// 修復：監聽外部 modelValue 變化 - 防止自動設置當前時間
 watch(() => props.modelValue, (newValue) => {
+    console.log('👁️ TimeInput 監聽到 modelValue 變化:', newValue);
+
     if (!isInitialized.value) {
         isInitialized.value = true;
+        console.log('🏁 TimeInput 初始化完成');
     }
 
     if (newValue) {
+        console.log('🔧 TimeInput 從外部設置時間值:', newValue);
+        timeSetExternally.value = true; // 標記為外部設置
+
         // 分割時間字符串
         const timeParts = newValue.split(':');
         let hours = parseInt(timeParts[0] || '0', 10);
@@ -206,33 +260,42 @@ watch(() => props.modelValue, (newValue) => {
             }
         }
 
-        // 確保小時總是有正確的格式 - 解決小時前的0被去掉的問題
+        // 設置時間值
         hourValue.value = hours.toString().padStart(2, '0');
         minuteValue.value = minutes;
 
         if (props.enableSeconds) {
             secondValue.value = seconds;
         }
-    } else {
+
+        console.log('✅ TimeInput 時間值設置完成:', {
+            hour: hourValue.value,
+            minute: minuteValue.value,
+            second: secondValue.value,
+            period: periodValue.value
+        });
+    } else if (!timeSetExternally.value) {
+        // 只有在不是外部設置時才重置字段
+        console.log('🧹 TimeInput 重置字段');
         resetFields();
     }
 }, { immediate: true });
 
-// 自動聚焦
+// 自動聚焦 - 修復版本
 onMounted(() => {
-    if (props.autoFocus && hourRef.value) {
-        hourRef.value.focus();
+    // 移除自動設置當前時間的邏輯
+    if (props.autoFocus) {
+        nextTick(() => {
+            focusFirstTimeInput();
+        });
     }
 });
 
 /**
  * 驗證單個欄位
- * @param field 欄位名稱 ('hour', 'minute', 'second')
- * @param value 欄位值
- * @returns 驗證是否通過
  */
 const validateField = (field: TimeFieldType, value: string): boolean => {
-    if (!value) return true; // 空值在必填檢查中處理
+    if (!value) return true;
 
     const numValue = parseInt(value);
 
@@ -254,7 +317,6 @@ const validateField = (field: TimeFieldType, value: string): boolean => {
                 return false;
             }
 
-            // 如果設定了minuteStep，檢查是否符合步進值
             if (props.minuteStep > 1 && numValue % props.minuteStep !== 0) {
                 errors.value[field] = `分鐘必須是 ${props.minuteStep} 的倍數`;
                 return false;
@@ -269,7 +331,6 @@ const validateField = (field: TimeFieldType, value: string): boolean => {
             break;
     }
 
-    // 如果該字段沒有錯誤，刪除對應的錯誤信息
     if (errors.value[field]) {
         delete errors.value[field];
     }
@@ -283,10 +344,20 @@ const togglePeriod = () => {
     validateAndEmit();
 };
 
-// 驗證並發送事件
+// 修復：驗證並發送事件 - 防止覆蓋外部設置的時間
 const validateAndEmit = () => {
-    // 如果還沒初始化，不進行驗證
-    if (!isInitialized.value) return;
+    console.log('🔍 TimeInput validateAndEmit 開始:', {
+        initialized: isInitialized.value,
+        timeSetExternally: timeSetExternally.value,
+        hour: hourValue.value,
+        minute: minuteValue.value,
+        second: secondValue.value
+    });
+
+    if (!isInitialized.value) {
+        console.log('⏸️ TimeInput 尚未初始化，跳過驗證');
+        return;
+    }
 
     // 清除所有錯誤
     errors.value = {};
@@ -306,14 +377,17 @@ const validateAndEmit = () => {
     }
 
     // 發送驗證結果
-    emit('validation', !hasErrors.value, errors.value);
+    const hasValidationErrors = Object.keys(errors.value).length > 0;
+    emit('validation', !hasValidationErrors, errors.value);
 
-    // 如果所有欄位都有值且有效，發送完整時間
-    if (formattedTimeValue.value) {
+    // 只有在有完整時間值且驗證通過時才發送事件
+    if (formattedTimeValue.value && !hasValidationErrors) {
+        console.log('✅ TimeInput 發送更新事件:', formattedTimeValue.value);
         emit('update:modelValue', formattedTimeValue.value);
         emit('complete', formattedTimeValue.value);
-    } else if (isInitialized.value) {
-        // 如果沒有完整的時間值，發送 null
+    } else if (isInitialized.value && !formattedTimeValue.value && !timeSetExternally.value) {
+        // 只有在不是外部設置時才發送 null
+        console.log('📤 TimeInput 發送 null 更新');
         emit('update:modelValue', null);
     }
 };
@@ -321,17 +395,18 @@ const validateAndEmit = () => {
 // 輸入處理函數
 const handleHourInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    const value = target.value.replace(/\D/g, ''); // 只保留數字
+    const value = target.value.replace(/\D/g, '');
 
     if (value.length <= 2) {
         hourValue.value = value;
+        timeSetExternally.value = false; // 標記為用戶輸入
+
         const isValid = validateField('hour', value);
         if (!isValid) return;
 
-        // 自動跳轉到分鐘
         if (value.length === 2 || (props.use24Hour && parseInt(value) > 2) || (!props.use24Hour && parseInt(value) > 1)) {
             nextTick(() => {
-                minuteRef.value?.focus();
+                safelyFocus('minute');
             });
         }
     }
@@ -342,12 +417,13 @@ const handleMinuteInput = (event: Event) => {
     const value = target.value.replace(/\D/g, '');
 
     if (value.length <= 2) {
-        // 自動補零處理
+        timeSetExternally.value = false; // 標記為用戶輸入
+
         if (value.length === 1 && parseInt(value) > 5) {
             minuteValue.value = value.padStart(2, '0');
             nextTick(() => {
-                if (props.enableSeconds && secondRef.value) {
-                    secondRef.value.focus();
+                if (props.enableSeconds) {
+                    safelyFocus('second');
                 } else {
                     validateAndEmit();
                 }
@@ -359,11 +435,10 @@ const handleMinuteInput = (event: Event) => {
         const isValid = validateField('minute', value);
         if (!isValid) return;
 
-        // 自動跳轉到秒鐘或完成
         if (value.length === 2) {
             nextTick(() => {
-                if (props.enableSeconds && secondRef.value) {
-                    secondRef.value.focus();
+                if (props.enableSeconds) {
+                    safelyFocus('second');
                 } else {
                     validateAndEmit();
                 }
@@ -377,7 +452,8 @@ const handleSecondInput = (event: Event) => {
     const value = target.value.replace(/\D/g, '');
 
     if (value.length <= 2) {
-        // 自動補零處理
+        timeSetExternally.value = false; // 標記為用戶輸入
+
         if (value.length === 1 && parseInt(value) > 5) {
             secondValue.value = value.padStart(2, '0');
             validateAndEmit();
@@ -388,7 +464,6 @@ const handleSecondInput = (event: Event) => {
         const isValid = validateField('second', value);
         if (!isValid) return;
 
-        // 當輸入完成時驗證並發送
         if (value.length === 2) {
             validateAndEmit();
         }
@@ -404,13 +479,15 @@ const handleKeydown = (event: KeyboardEvent, field: TimeFieldType) => {
         switch (field) {
             case 'minute':
                 event.preventDefault();
-                hourRef.value?.focus();
-                hourRef.value?.setSelectionRange(-1, -1);
+                safelyFocus('hour');
+                const hourElement = getTimeInputRef('hour');
+                if (hourElement) hourElement.setSelectionRange(-1, -1);
                 break;
             case 'second':
                 event.preventDefault();
-                minuteRef.value?.focus();
-                minuteRef.value?.setSelectionRange(-1, -1);
+                safelyFocus('minute');
+                const minuteElement = getTimeInputRef('minute');
+                if (minuteElement) minuteElement.setSelectionRange(-1, -1);
                 break;
         }
     }
@@ -420,13 +497,15 @@ const handleKeydown = (event: KeyboardEvent, field: TimeFieldType) => {
         switch (field) {
             case 'minute':
                 event.preventDefault();
-                hourRef.value?.focus();
-                hourRef.value?.setSelectionRange(-1, -1);
+                safelyFocus('hour');
+                const hourElement = getTimeInputRef('hour');
+                if (hourElement) hourElement.setSelectionRange(-1, -1);
                 break;
             case 'second':
                 event.preventDefault();
-                minuteRef.value?.focus();
-                minuteRef.value?.setSelectionRange(-1, -1);
+                safelyFocus('minute');
+                const minuteElement = getTimeInputRef('minute');
+                if (minuteElement) minuteElement.setSelectionRange(-1, -1);
                 break;
         }
     }
@@ -435,14 +514,16 @@ const handleKeydown = (event: KeyboardEvent, field: TimeFieldType) => {
         switch (field) {
             case 'hour':
                 event.preventDefault();
-                minuteRef.value?.focus();
-                minuteRef.value?.setSelectionRange(0, 0);
+                safelyFocus('minute');
+                const minuteElement = getTimeInputRef('minute');
+                if (minuteElement) minuteElement.setSelectionRange(0, 0);
                 break;
             case 'minute':
                 if (props.enableSeconds) {
                     event.preventDefault();
-                    secondRef.value?.focus();
-                    secondRef.value?.setSelectionRange(0, 0);
+                    safelyFocus('second');
+                    const secondElement = getTimeInputRef('second');
+                    if (secondElement) secondElement.setSelectionRange(0, 0);
                 }
                 break;
         }
@@ -459,10 +540,21 @@ const handleFocus = (field: TimeFieldType) => {
     focused.value = field;
 };
 
+// 修復：失焦處理 - 不要自動設置當前時間
 const handleBlur = (field: TimeFieldType) => {
+    console.log('👋 TimeInput 失焦:', field, 'timeSetExternally:', timeSetExternally.value);
+
     focused.value = null;
-    // 失焦時驗證
-    validateAndEmit();
+
+    // 失焦時只進行驗證，不改變值，也不觸發完整的 validateAndEmit
+    validateField(field,
+        field === 'hour' ? hourValue.value :
+            field === 'minute' ? minuteValue.value : secondValue.value
+    );
+
+    // 只發送驗證結果，不觸發值的更新
+    const hasValidationErrors = Object.keys(errors.value).length > 0;
+    emit('validation', !hasValidationErrors, errors.value);
 };
 
 // 公開方法
@@ -478,6 +570,8 @@ defineExpose({
     errorMessages,
     setTime: (timeStr: string) => {
         if (timeStr) {
+            timeSetExternally.value = true; // 標記為外部設置
+
             const [hoursStr, minutes, seconds] = timeStr.split(':');
             let hours = parseInt(hoursStr);
 
@@ -491,7 +585,6 @@ defineExpose({
                 }
             }
 
-            // 確保小時總是兩位數
             hourValue.value = hours.toString().padStart(2, '0');
             minuteValue.value = minutes;
             if (props.enableSeconds && seconds) {
@@ -504,9 +597,10 @@ defineExpose({
             emit('update:modelValue', null);
         }
     },
-    focus: () => {
-        hourRef.value?.focus();
-    }
+    focus: focusFirstTimeInput,
+    focusHour: () => safelyFocus('hour'),
+    focusMinute: () => safelyFocus('minute'),
+    focusSecond: () => safelyFocus('second'),
 });
 </script>
 

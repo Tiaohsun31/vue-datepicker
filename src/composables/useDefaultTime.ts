@@ -1,0 +1,152 @@
+/**
+ * useDefaultTime.ts
+ * 管理預設時間的驗證和格式化
+ */
+
+import { computed } from 'vue';
+
+interface DefaultTimeOptions {
+    customDefaultTime?: string;
+    enableSeconds?: boolean;
+    fallbackTime?: string;
+}
+
+export function useDefaultTime(options: DefaultTimeOptions = {}) {
+    const {
+        customDefaultTime = '00:00:00',
+        enableSeconds = true,
+        fallbackTime = '00:00:00'
+    } = options;
+
+    /**
+     * 驗證時間字符串格式
+     */
+    const validateTimeFormat = (timeStr: string): boolean => {
+        if (!timeStr) return false;
+
+        // 檢查基本格式 HH:mm:ss 或 HH:mm
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])(?::([0-5]?[0-9]))?$/;
+        if (!timeRegex.test(timeStr)) {
+            console.warn(`時間格式不正確: ${timeStr}，應為 HH:mm:ss 或 HH:mm 格式`);
+            return false;
+        }
+
+        const parts = timeStr.split(':');
+        const hours = parseInt(parts[0]);
+        const minutes = parseInt(parts[1]);
+        const seconds = parts[2] ? parseInt(parts[2]) : 0;
+
+        // 驗證範圍
+        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+            console.warn(`時間值超出範圍: ${timeStr}`);
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * 格式化時間字符串，確保完整格式
+     */
+    const formatTimeString = (timeStr: string, needSeconds: boolean = enableSeconds): string => {
+        const parts = timeStr.split(':');
+        const hours = parts[0].padStart(2, '0');
+        const minutes = parts[1].padStart(2, '0');
+        const seconds = parts[2] ? parts[2].padStart(2, '0') : '00';
+
+        if (needSeconds) {
+            return `${hours}:${minutes}:${seconds}`;
+        } else {
+            return `${hours}:${minutes}`;
+        }
+    };
+
+    /**
+     * 獲取有效的預設時間
+     */
+    const getValidDefaultTime = computed(() => {
+        const timeToValidate = customDefaultTime || fallbackTime;
+
+        if (validateTimeFormat(timeToValidate)) {
+            return formatTimeString(timeToValidate, enableSeconds);
+        } else {
+            console.warn(`預設時間無效: ${timeToValidate}，使用回退值: ${fallbackTime}`);
+            return formatTimeString(fallbackTime, enableSeconds);
+        }
+    });
+
+    /**
+     * 獲取當前時間字符串
+     */
+    const getCurrentTimeString = (): string => {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+
+        if (enableSeconds) {
+            return `${hours}:${minutes}:${seconds}`;
+        } else {
+            return `${hours}:${minutes}`;
+        }
+    };
+
+    /**
+     * 創建預設的時間選項
+     */
+    const createTimePresets = () => {
+        const presets = [
+            { label: '00:00', value: enableSeconds ? '00:00:00' : '00:00' },
+            { label: '09:00', value: enableSeconds ? '09:00:00' : '09:00' },
+            { label: '12:00', value: enableSeconds ? '12:00:00' : '12:00' },
+            { label: '18:00', value: enableSeconds ? '18:00:00' : '18:00' },
+            { label: '23:59', value: enableSeconds ? '23:59:59' : '23:59' },
+        ];
+
+        return presets;
+    };
+
+    /**
+     * 解析時間字符串為組件
+     */
+    const parseTimeString = (timeStr: string) => {
+        const parts = timeStr.split(':');
+        return {
+            hours: parseInt(parts[0]) || 0,
+            minutes: parseInt(parts[1]) || 0,
+            seconds: parseInt(parts[2]) || 0,
+        };
+    };
+
+    /**
+     * 從組件構建時間字符串
+     */
+    const buildTimeString = (hours: number, minutes: number, seconds: number = 0) => {
+        const h = hours.toString().padStart(2, '0');
+        const m = minutes.toString().padStart(2, '0');
+        const s = seconds.toString().padStart(2, '0');
+
+        if (enableSeconds) {
+            return `${h}:${m}:${s}`;
+        } else {
+            return `${h}:${m}`;
+        }
+    };
+
+    return {
+        // 計算屬性
+        getValidDefaultTime,
+
+        // 驗證方法
+        validateTimeFormat,
+
+        // 格式化方法
+        formatTimeString,
+        getCurrentTimeString,
+        parseTimeString,
+        buildTimeString,
+
+        // 預設選項
+        createTimePresets,
+    };
+}

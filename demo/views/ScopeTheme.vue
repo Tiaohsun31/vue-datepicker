@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import DatePickerV5 from '@/DatePickerV5.vue'; // 假設這是你的日期選擇器組件
+import DatePickerV5 from '@/DatePicker.vue'; // 假設這是你的日期選擇器組件
 import type { TailwindColor } from '@/types/main';
 
 // 日期值

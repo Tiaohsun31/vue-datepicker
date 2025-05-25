@@ -1,10 +1,12 @@
+<!-- SimplifiedDateGridView.vue - 簡化版日期網格 -->
 <template>
     <div class="grid grid-cols-7 gap-1">
         <CalendarCell v-for="state in cellStates" :key="`${state.date.year}-${state.date.month}-${state.date.day}`"
-            v-memo="[state.isSelected, state.isToday, state.isDisabled, state.isOutsideMonth]" :date="state.date"
-            :current-month="props.month" :selected="state.isSelected" :is-today="state.isToday"
+            v-memo="[state.isSelected, state.isToday, state.isDisabled, state.isOutsideMonth, state.isRangeStart, state.isRangeEnd, state.isInRange]"
+            :date="state.date" :current-month="props.month" :selected="!!state.isSelected" :is-today="state.isToday"
             :disabled="state.isDisabled === true" :focusable="state.date.day === 1 && state.date.month === props.month"
-            @select="handleSelect" @nav="handleNavigation" />
+            :is-range-start="!!state.isRangeStart" :is-range-end="!!state.isRangeEnd" :is-in-range="!!state.isInRange"
+            :selection-mode="selectionMode" @select="handleSelect" @nav="handleNavigation" />
     </div>
 </template>
 
@@ -14,17 +16,29 @@ import { CalendarDate, getWeeksInMonth, startOfWeek } from '@internationalized/d
 import CalendarCell from './CalendarCell.vue';
 import { getTodaysDate } from '@/utils/dateUtils';
 
+type SelectionMode = 'single' | 'range';
+
 interface Props {
     year: number;
     month: number;
-    selectedDate: CalendarDate | null;
+    selectedDate?: CalendarDate | null;
+
+    // 範圍選擇屬性
+    rangeStart?: CalendarDate | null;
+    rangeEnd?: CalendarDate | null;
+    selectionMode?: SelectionMode;
+
     minDate?: CalendarDate | null;
     maxDate?: CalendarDate | null;
     locale?: string;
-    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, etc.
+    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+    selectedDate: null,
+    rangeStart: null,
+    rangeEnd: null,
+    selectionMode: 'single',
     locale: 'en-US',
     weekStartsOn: 0,
     minDate: undefined,
@@ -33,25 +47,19 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     'select': [date: CalendarDate];
+    'range-select': [startDate: CalendarDate | null, endDate: CalendarDate | null];
     'navigate': [direction: 'prev-month' | 'next-month' | 'prev-year' | 'next-year'];
 }>();
 
 // 生成當月的日曆數據
 const calendarDays = computed(() => {
-    // 該月第一天
     const firstDayOfMonth = new CalendarDate(props.year, props.month, 1);
-
-    // 該月有幾周
     const weeksInMonth = getWeeksInMonth(firstDayOfMonth, props.locale);
-
-    // 日曆顯示的第一天 (該週的第一天)
     const startDay = startOfWeek(firstDayOfMonth, props.locale);
 
-    // 生成日曆網格
     const days: CalendarDate[] = [];
     let currentDate = startDay;
 
-    // 通常需要 6 周 x 7 天 = 42 天來顯示一個月的日曆
     for (let i = 0; i < weeksInMonth * 7; i++) {
         days.push(currentDate);
         currentDate = currentDate.add({ days: 1 });
@@ -60,49 +68,65 @@ const calendarDays = computed(() => {
     return days;
 });
 
-// 將日期索引儲存在 Map 中以實現 O(1) 查找
-const selectedDateKey = computed(() => {
-    if (!props.selectedDate) return null;
-    return `${props.selectedDate.year}-${props.selectedDate.month}-${props.selectedDate.day}`;
-});
-
-// 獲取今天的日期索引
+// 今天的日期索引
 const todayKey = computed(() => {
     const today = getTodaysDate();
     return `${today.year}-${today.month}-${today.day}`;
 });
 
-// 預計算每個日期的狀態 - 提高渲染性能
+// 檢查日期是否在範圍內（簡化版）
+const isDateInRange = (date: CalendarDate): boolean => {
+    if (!props.rangeStart || !props.rangeEnd) return false;
+
+    return date.compare(props.rangeStart) >= 0 && date.compare(props.rangeEnd) <= 0;
+};
+
+// 預計算每個日期的狀態
 const cellStates = computed(() => {
     const todayK = todayKey.value;
-    const selectedK = selectedDateKey.value;
 
     return calendarDays.value.map(date => {
         const dateKey = `${date.year}-${date.month}-${date.day}`;
         const isOutsideMonth = date.month !== props.month;
+        const isDisabled = (props.minDate && date.compare(props.minDate) < 0) ||
+            (props.maxDate && date.compare(props.maxDate) > 0);
+
+        // 範圍選擇狀態判斷
+        const isRangeStart = props.selectionMode === 'range' && props.rangeStart &&
+            date.compare(props.rangeStart) === 0;
+        const isRangeEnd = props.selectionMode === 'range' && props.rangeEnd &&
+            date.compare(props.rangeEnd) === 0;
+        const isInRange = props.selectionMode === 'range' &&
+            isDateInRange(date) && !isRangeStart && !isRangeEnd && !isDisabled;
 
         return {
             date,
             isToday: dateKey === todayK,
-            isSelected: dateKey === selectedK,
-            isDisabled: (props.minDate && date.compare(props.minDate) < 0) ||
-                (props.maxDate && date.compare(props.maxDate) > 0),
-            isOutsideMonth
+            isSelected: props.selectionMode === 'single' && props.selectedDate &&
+                date.compare(props.selectedDate) === 0,
+            isDisabled,
+            isOutsideMonth,
+            isRangeStart,
+            isRangeEnd,
+            isInRange
         };
     });
 });
 
-// 處理日期選擇
+// 處理日期選擇 - 簡化邏輯
 const handleSelect = (date: CalendarDate) => {
-    emit('select', date);
+    if (props.selectionMode === 'single') {
+        emit('select', date);
+    } else if (props.selectionMode === 'range') {
+        // 在範圍模式下，直接發送點擊的日期
+        // 讓父組件決定這是開始還是結束日期
+        emit('range-select', date, null);
+    }
 };
 
 // 處理鍵盤導航
 const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
-    // 這裡可以實現方向鍵導航邏輯
-    // 例如根據方向計算新的日期並選中
-
-    // 還可以處理月份和年份的翻頁
+    // 簡化的導航邏輯
     if (direction === 'left' && cellStates.value[0].date.day < 15) {
         emit('navigate', 'prev-month');
     } else if (direction === 'right' &&
@@ -111,4 +135,13 @@ const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
         emit('navigate', 'next-month');
     }
 };
+
+// 公開方法
+defineExpose({
+    // 獲取當月所有日期
+    getCalendarDays: () => calendarDays.value,
+
+    // 獲取當前狀態
+    getCellStates: () => cellStates.value
+});
 </script>

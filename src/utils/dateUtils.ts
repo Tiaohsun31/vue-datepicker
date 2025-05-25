@@ -37,6 +37,57 @@ export function getTodaysDate(): CalendarDate {
     );
 }
 
+
+/**
+ * 安全地創建 CalendarDate 對象
+ * 解決 @internationalized/date 的類型問題
+ */
+export function safeCreateCalendarDate(year: number, month: number, day: number): CalendarDate {
+    return new CalendarDate(year, month, day) as CalendarDate;
+}
+
+/**
+ * 安全地創建 CalendarDateTime 對象
+ * 解決 @internationalized/date 的類型問題
+ */
+export function safeCreateCalendarDateTime(
+    year: number,
+    month: number,
+    day: number,
+    hour: number = 0,
+    minute: number = 0,
+    second: number = 0
+): CalendarDateTime {
+    return new CalendarDateTime(year, month, day, hour, minute, second) as CalendarDateTime;
+}
+
+/**
+ * 安全地從 CalendarDateTime 轉換為 CalendarDate
+ */
+export function safeCalendarDateTimeToDate(dateTime: CalendarDateTime): CalendarDate {
+    return new CalendarDate(dateTime.year, dateTime.month, dateTime.day) as CalendarDate;
+}
+
+/**
+ * 安全地克隆 CalendarDate
+ */
+export function safeCloneCalendarDate(date: CalendarDate): CalendarDate {
+    return new CalendarDate(date.year, date.month, date.day) as CalendarDate;
+}
+
+/**
+ * 安全地克隆 CalendarDateTime
+ */
+export function safeCloneCalendarDateTime(dateTime: CalendarDateTime): CalendarDateTime {
+    return new CalendarDateTime(
+        dateTime.year,
+        dateTime.month,
+        dateTime.day,
+        dateTime.hour,
+        dateTime.minute,
+        dateTime.second
+    ) as CalendarDateTime;
+}
 /**
  * 將日期字符串或 Date 對象轉換為 CalendarDateTime 對象
  * 支持多種常見日期時間格式

@@ -1,25 +1,17 @@
 <template>
     <div class="container mx-auto max-w-sm space-y-4 p-5">
-
-        <!-- <DatePickerV1></DatePickerV1> -->
-        <div>
-            {{ selectedDate }}
-            <!-- <DatePickerV2 v-model="selectedDate" /> -->
-        </div>
-        <div>
-            {{ dateTime }}
-            <!-- <DatePickerV3 v-model="dateTime"></DatePickerV3> -->
-        </div>
         <div>
             {{ dateTimeutc }}
-            <DatePickerV5 v-model="dateTimeutc" date-format="MM/DD/YYYY">
-            </DatePickerV5>
+            <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
+            </DatePicker>
         </div>
         <div>
-            <DatePickerV5 v-model="dateTime3" mode="dark">
-            </DatePickerV5>
+            <DatePicker v-model="dateTime3" mode="dark">
+            </DatePicker>
         </div>
-
+        <div>
+            <DateRange></DateRange>
+        </div>
         <!-- <RouterView /> -->
     </div>
     <!-- <ScopeTheme></ScopeTheme> -->
@@ -30,7 +22,8 @@ import { ref } from 'vue';
 // import DatePickerV1 from '@/DatePickerV1.vue';
 // import DatePickerV2 from '@/DatePickerV2.vue';
 // import DatePickerV4 from '@/DatePickerV4.vue';
-import DatePickerV5 from '@/DatePickerV5.vue';
+import DatePicker from '@/DatePicker.vue';
+import DateRange from '@/DateRange.vue';
 
 const selectedDate = ref(null);
 

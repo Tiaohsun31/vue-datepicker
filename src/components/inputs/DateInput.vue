@@ -424,6 +424,27 @@ const handleDayInput = (event: Event) => {
     handleInputBase('day', target.value, 2, 3);
 };
 
+// 聚焦到最後一個輸入框的方法 - 用於從 TimeInput 導航回來
+const focusLastInput = () => {
+    nextTick(() => {
+        if (dateSegments.value.length === 0) return;
+
+        const lastSegment = dateSegments.value[dateSegments.value.length - 1] as DateFieldType;
+        const inputElement = getInputRef(lastSegment);
+
+        if (inputElement && typeof inputElement.focus === 'function') {
+            try {
+                inputElement.focus();
+                // 將游標設置到末尾
+                const length = inputElement.value.length;
+                inputElement.setSelectionRange(length, length);
+            } catch (error) {
+                console.warn('無法聚焦到最後一個輸入框:', error);
+            }
+        }
+    });
+};
+
 // 鍵盤事件處理 - 修復版本
 const handleKeydown = (event: KeyboardEvent, field: string) => {
     const target = event.target as HTMLInputElement;
@@ -484,6 +505,7 @@ defineExpose({
     hasErrors,
     errorMessages,
     focus: focusFirstInput, // 使用修復後的聚焦方法
+    focusLast: focusLastInput, // 新增：聚焦到最後一個輸入框
     setDate: (dateStr: string) => {
         if (dateStr) {
             const date = dayjs(dateStr);

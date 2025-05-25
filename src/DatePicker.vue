@@ -1,3 +1,4 @@
+<!-- DatePicker.vue - 增加處理 TimeInput 導航的功能 -->
 <template>
     <div class="date-time-picker-wrapper relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
@@ -26,7 +27,7 @@
                         :minute-placeholder="minutePlaceholder" :second-placeholder="secondPlaceholder"
                         :enable-seconds="enableSeconds" :use24Hour="use24Hour" :required="required" :locale="locale"
                         :useLocalizedPeriod="useLocalizedPeriod" @validation="onTimeInputValidation"
-                        @complete="onTimeInputComplete" />
+                        @complete="onTimeInputComplete" @navigate-to-date="handleNavigateToDate" />
                 </div>
             </div>
 
@@ -373,6 +374,19 @@ const onTimeInputComplete = (timeStr: string) => {
     updateDateTimeValue();
 };
 
+// 新增：處理從 TimeInput 回到 DateInput 的導航
+const handleNavigateToDate = () => {
+    nextTick(() => {
+        if (dateInputRef.value?.focusLast) {
+            // 使用 DateInput 組件的 focusLast 方法聚焦到最後一個輸入框
+            dateInputRef.value.focusLast();
+        } else if (dateInputRef.value?.focus) {
+            // 如果沒有 focusLast 方法，回退到聚焦第一個輸入框
+            dateInputRef.value.focus();
+        }
+    });
+};
+
 // 更新完整的日期時間值
 const updateDateTimeValue = () => {
     if (!inputDateValue.value) {
@@ -492,6 +506,7 @@ const handleContainerMouseDown = (event: MouseEvent) => {
         event.preventDefault();
     }
 };
+
 // 聚焦到第一個輸入框的邏輯
 const focusFirstInput = () => {
     // 使用 nextTick 確保 DOM 更新完成

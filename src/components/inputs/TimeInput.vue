@@ -1,3 +1,4 @@
+<!-- TimeInput.vue - 增加導航到DateInput的功能 -->
 <template>
     <!-- 時間輸入 -->
     <div class="flex items-center justify-center">
@@ -83,6 +84,7 @@ const emit = defineEmits<{
     'update:modelValue': [value: string | null];
     'validation': [isValid: boolean, errors: TimeField];
     'complete': [time: string];
+    'navigate-to-date': []; // 新增：導航到日期輸入的事件
 }>();
 
 // 內部狀態
@@ -395,29 +397,41 @@ const handleSecondInput = (event: Event) => {
     }
 };
 
-// 鍵盤事件處理
+// 鍵盤事件處理 - 增強版本，支援回到 DateInput
 const handleKeydown = (event: KeyboardEvent, field: TimeFieldType) => {
     const target = event.target as HTMLInputElement;
 
     // 退格鍵處理
-    if (event.key === 'Backspace' && target.value === '') {
-        switch (field) {
-            case 'minute':
-                event.preventDefault();
-                hourRef.value?.focus();
-                hourRef.value?.setSelectionRange(-1, -1);
-                break;
-            case 'second':
-                event.preventDefault();
-                minuteRef.value?.focus();
-                minuteRef.value?.setSelectionRange(-1, -1);
-                break;
+    if (event.key === 'Backspace') {
+        if (target.value === '') {
+            switch (field) {
+                case 'hour':
+                    // 如果小時輸入框為空且按下退格鍵，回到日期輸入
+                    event.preventDefault();
+                    emit('navigate-to-date');
+                    break;
+                case 'minute':
+                    event.preventDefault();
+                    hourRef.value?.focus();
+                    hourRef.value?.setSelectionRange(-1, -1);
+                    break;
+                case 'second':
+                    event.preventDefault();
+                    minuteRef.value?.focus();
+                    minuteRef.value?.setSelectionRange(-1, -1);
+                    break;
+            }
         }
     }
 
-    // 箭頭鍵處理
+    // 左箭頭鍵處理
     if (event.key === 'ArrowLeft' && target.selectionStart === 0) {
         switch (field) {
+            case 'hour':
+                // 如果在小時輸入框的最左邊按左箭頭，回到日期輸入
+                event.preventDefault();
+                emit('navigate-to-date');
+                break;
             case 'minute':
                 event.preventDefault();
                 hourRef.value?.focus();
@@ -431,6 +445,7 @@ const handleKeydown = (event: KeyboardEvent, field: TimeFieldType) => {
         }
     }
 
+    // 右箭頭鍵處理
     if (event.key === 'ArrowRight' && target.selectionStart === target.value.length) {
         switch (field) {
             case 'hour':
@@ -506,6 +521,19 @@ defineExpose({
     },
     focus: () => {
         hourRef.value?.focus();
+    },
+    // 新增：聚焦到最後一個輸入框（用於從 DateInput 導航過來時）
+    focusLast: () => {
+        if (props.enableSeconds && secondRef.value) {
+            secondRef.value.focus();
+            secondRef.value.setSelectionRange(0, 0);
+        } else if (minuteRef.value) {
+            minuteRef.value.focus();
+            minuteRef.value.setSelectionRange(0, 0);
+        } else if (hourRef.value) {
+            hourRef.value.focus();
+            hourRef.value.setSelectionRange(0, 0);
+        }
     }
 });
 </script>

@@ -1,18 +1,18 @@
-<!-- SimplifiedDualMonthCalendar.vue - 簡化版雙月日曆 -->
+<!-- DualMonthCalendar.vue - 混合使用版本（最終版） -->
 <template>
     <div class="dual-month-calendar flex gap-4">
         <!-- 左側月份 -->
         <div class="month-container">
-            <CalendarGrid :range-start="(actualStart as CalendarDate)" :range-end="(actualEnd as CalendarDate)"
-                :selection-mode="'range'" :year="leftYear" :month="leftMonth" :min-date="minDate" :max-date="maxDate"
-                :locale="locale" :week-starts-on="weekStartsOn" @range-select="handleRangeSelect" />
+            <CalendarGrid :range-start="actualStart" :range-end="actualEnd" :selection-mode="'range'" :year="leftYear"
+                :month="leftMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
+                :week-starts-on="weekStartsOn" @range-select="handleRangeSelect" />
         </div>
 
         <!-- 右側月份 -->
         <div class="month-container">
-            <CalendarGrid :range-start="(actualStart as CalendarDate)" :range-end="(actualEnd as CalendarDate)"
-                :selection-mode="'range'" :year="rightYear" :month="rightMonth" :min-date="minDate" :max-date="maxDate"
-                :locale="locale" :week-starts-on="weekStartsOn" @range-select="handleRangeSelect" />
+            <CalendarGrid :range-start="actualStart" :range-end="actualEnd" :selection-mode="'range'" :year="rightYear"
+                :month="rightMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
+                :week-starts-on="weekStartsOn" @range-select="handleRangeSelect" />
         </div>
     </div>
 </template>
@@ -21,7 +21,7 @@
 import { ref, computed, watch } from 'vue';
 import { CalendarDate } from '@internationalized/date';
 import CalendarGrid from './CalendarGrid.vue';
-import { getTodaysDate } from '@/utils/dateUtils';
+import { getTodaysDate, toCalendarDate, fromCalendarDate, type SimpleDateValue } from '@/utils/dateUtils';
 
 interface Props {
     rangeStart?: CalendarDate | null;
@@ -70,17 +70,25 @@ const rightMonth = computed(() => {
     return leftMonth.value + 1;
 });
 
-// 簡化的範圍選擇狀態 - 使用陣列來追蹤點擊
-const selectedDates = ref<CalendarDate[]>([]);
+// 簡化的範圍選擇狀態 - 內部使用 SimpleDateValue 陣列來追蹤點擊
+const selectedDates = ref<SimpleDateValue[]>([]);
 
-// 計算實際的 start 和 end（自動排序）
+// 計算實際的 start 和 end（自動排序）- 轉換為 CalendarDate 供子組件使用
 const actualStart = computed(() => {
+    // 優先使用外部傳入的範圍
     if (selectedDates.value.length === 0) return props.rangeStart;
-    if (selectedDates.value.length === 1) return selectedDates.value[0];
+    if (selectedDates.value.length === 1) {
+        return toCalendarDate(selectedDates.value[0]);
+    }
 
     // 有兩個日期時，自動排序
     const [first, second] = selectedDates.value;
-    return first.compare(second) <= 0 ? first : second;
+    const firstDate = toCalendarDate(first);
+    const secondDate = toCalendarDate(second);
+
+    if (!firstDate || !secondDate) return null;
+
+    return firstDate.compare(secondDate) <= 0 ? firstDate : secondDate;
 });
 
 const actualEnd = computed(() => {
@@ -88,7 +96,12 @@ const actualEnd = computed(() => {
 
     // 有兩個日期時，自動排序
     const [first, second] = selectedDates.value;
-    return first.compare(second) <= 0 ? second : first;
+    const firstDate = toCalendarDate(first);
+    const secondDate = toCalendarDate(second);
+
+    if (!firstDate || !secondDate) return null;
+
+    return firstDate.compare(secondDate) <= 0 ? secondDate : firstDate;
 });
 
 // 監聽外部傳入的範圍變化
@@ -97,8 +110,9 @@ watch(() => [props.rangeStart, props.rangeEnd], ([newStart, newEnd]) => {
         // 外部有完整範圍，清空內部選擇
         selectedDates.value = [];
     } else if (newStart && !newEnd) {
-        // 外部只有開始日期
-        selectedDates.value = [newStart];
+        // 外部只有開始日期，轉換為 SimpleDateValue
+        const simpleStart = fromCalendarDate(newStart);
+        selectedDates.value = [simpleStart];
     } else {
         // 外部沒有範圍，清空內部選擇
         selectedDates.value = [];
@@ -111,7 +125,7 @@ watch(() => [props.rangeStart, props.rangeEnd], ([newStart, newEnd]) => {
     }
 }, { immediate: true });
 
-// 處理範圍選擇 - 簡化邏輯
+// 處理範圍選擇 - 接收 CalendarDate 並轉換為 SimpleDateValue 進行內部管理
 const handleRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate | null) => {
     if (!startDate) {
         // 清空選擇
@@ -120,38 +134,45 @@ const handleRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate
         return;
     }
 
+    // 將 CalendarDate 轉換為 SimpleDateValue 進行內部處理
+    const simpleStartDate = fromCalendarDate(startDate);
+
     if (selectedDates.value.length === 0) {
         // 第一次點擊 - 設置開始日期
-        selectedDates.value = [startDate];
+        selectedDates.value = [simpleStartDate];
         emit('range-select', startDate, null);
     } else if (selectedDates.value.length === 1) {
-        const existingDate = selectedDates.value[0];
+        const existingSimple = selectedDates.value[0];
+        const existingDate = toCalendarDate(existingSimple);
 
         // 檢查是否點擊了同一個日期
-        if (startDate.compare(existingDate) === 0) {
+        if (existingDate && startDate.compare(existingDate) === 0) {
             // 點擊同一個日期，保持單日選擇狀態
             return;
         }
 
         // 第二次點擊不同日期 - 完成範圍選擇
-        selectedDates.value = [existingDate, startDate];
+        selectedDates.value = [existingSimple, simpleStartDate];
 
         // 自動排序並發送事件
         const sortedStart = actualStart.value;
         const sortedEnd = actualEnd.value;
-        emit('range-select', sortedStart as CalendarDate, sortedEnd as CalendarDate);
+        emit('range-select', sortedStart, sortedEnd);
     } else {
         // 已有完整範圍 - 檢查點擊的日期
-        const [currentStart, currentEnd] = selectedDates.value;
+        const [currentFirst, currentSecond] = selectedDates.value;
+        const currentFirstDate = toCalendarDate(currentFirst);
+        const currentSecondDate = toCalendarDate(currentSecond);
 
         // 如果點擊的是範圍內的日期，重新開始選擇
-        if (startDate.compare(currentStart) === 0 || startDate.compare(currentEnd) === 0) {
+        if ((currentFirstDate && startDate.compare(currentFirstDate) === 0) ||
+            (currentSecondDate && startDate.compare(currentSecondDate) === 0)) {
             // 如果點擊的是起始或結束日期，重新開始選擇
-            selectedDates.value = [startDate];
+            selectedDates.value = [simpleStartDate];
             emit('range-select', startDate, null);
         } else {
             // 如果點擊的是其他日期，重新開始選擇
-            selectedDates.value = [startDate];
+            selectedDates.value = [simpleStartDate];
             emit('range-select', startDate, null);
         }
     }
@@ -176,12 +197,15 @@ defineExpose({
         leftMonth.value = month;
     },
 
-    // 手動設置範圍
+    // 手動設置範圍 - 接收 CalendarDate 並轉換為內部格式
     setRange: (start: CalendarDate | null, end: CalendarDate | null) => {
         if (start && end) {
-            selectedDates.value = [start, end];
+            const simpleStart = fromCalendarDate(start);
+            const simpleEnd = fromCalendarDate(end);
+            selectedDates.value = [simpleStart, simpleEnd];
         } else if (start) {
-            selectedDates.value = [start];
+            const simpleStart = fromCalendarDate(start);
+            selectedDates.value = [simpleStart];
         } else {
             selectedDates.value = [];
         }

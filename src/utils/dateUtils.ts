@@ -1,279 +1,303 @@
-// dateUtils.ts
+// dateUtils.ts - 簡化版，限縮 @internationalized/date 使用範圍
 import { CalendarDate, CalendarDateTime } from '@internationalized/date';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import localeData from 'dayjs/plugin/localeData';
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(customParseFormat);
+dayjs.extend(weekOfYear);
+dayjs.extend(localeData);
 
 /**
- * 支持的日期時間格式
+ * 內部使用的簡單日期介面，避免 @internationalized/date 的型別問題
+ */
+export interface SimpleDateValue {
+    year: number;
+    month: number;
+    day: number;
+    hour?: number;
+    minute?: number;
+    second?: number;
+}
+
+/**
+ * 支持的日期時間格式 - 限縮 @internationalized/date 的使用
  */
 export type DateTimeValue =
-    | string          // ISO 字符串: '2025-05-22', '2025-05-22T09:23:20', '2025-05-22T09:23:20Z'
+    | string          // ISO 字符串
     | Date            // JavaScript Date
-    | CalendarDate    // @internationalized/date CalendarDate
-    | CalendarDateTime // @internationalized/date CalendarDateTime
+    | SimpleDateValue // 簡單物件（主要使用）
+    | CalendarDate    // 只在必要時使用
+    | CalendarDateTime // 只在必要時使用
     | null;
 
 /**
- * CalendarDateTime 對象的格式化選項
+ * 輸出格式選項
  */
-export type OutputFormat = 'iso' | 'date' | 'calendar';
+export type OutputFormat = 'iso' | 'date' | 'simple';
 
 /**
- * 獲取今天的日期（CalendarDate對象）
+ * 獲取今天的日期（SimpleDateValue）
  */
-export function getTodaysDate(): CalendarDate {
+export function getTodaysDate(): SimpleDateValue {
     const today = new Date();
-    return new CalendarDate(
-        today.getFullYear(),
-        today.getMonth() + 1, // JavaScript 月份從 0 開始
-        today.getDate()
-    );
-}
-
-
-/**
- * 安全地創建 CalendarDate 對象
- * 解決 @internationalized/date 的類型問題
- */
-export function safeCreateCalendarDate(year: number, month: number, day: number): CalendarDate {
-    return new CalendarDate(year, month, day) as CalendarDate;
+    return {
+        year: today.getFullYear(),
+        month: today.getMonth() + 1,
+        day: today.getDate()
+    };
 }
 
 /**
- * 安全地創建 CalendarDateTime 對象
- * 解決 @internationalized/date 的類型問題
+ * 獲取當前時間（SimpleDateValue with time）
  */
-export function safeCreateCalendarDateTime(
+export function getNow(): SimpleDateValue {
+    const now = new Date();
+    return {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+        hour: now.getHours(),
+        minute: now.getMinutes(),
+        second: now.getSeconds()
+    };
+}
+
+/**
+ * 創建簡單日期物件
+ */
+export function createSimpleDate(
     year: number,
     month: number,
     day: number,
-    hour: number = 0,
-    minute: number = 0,
-    second: number = 0
-): CalendarDateTime {
-    return new CalendarDateTime(year, month, day, hour, minute, second) as CalendarDateTime;
+    hour?: number,
+    minute?: number,
+    second?: number
+): SimpleDateValue {
+    const result: SimpleDateValue = { year, month, day };
+    if (hour !== undefined) result.hour = hour;
+    if (minute !== undefined) result.minute = minute;
+    if (second !== undefined) result.second = second;
+    return result;
 }
 
 /**
- * 安全地從 CalendarDateTime 轉換為 CalendarDate
+ * 型別守衛：檢查是否為 SimpleDateValue
  */
-export function safeCalendarDateTimeToDate(dateTime: CalendarDateTime): CalendarDate {
-    return new CalendarDate(dateTime.year, dateTime.month, dateTime.day) as CalendarDate;
+export function isSimpleDateValue(value: any): value is SimpleDateValue {
+    return value &&
+        typeof value === 'object' &&
+        typeof value.year === 'number' &&
+        typeof value.month === 'number' &&
+        typeof value.day === 'number';
 }
 
 /**
- * 安全地克隆 CalendarDate
+ * 型別守衛：檢查是否為 CalendarDate
  */
-export function safeCloneCalendarDate(date: CalendarDate): CalendarDate {
-    return new CalendarDate(date.year, date.month, date.day) as CalendarDate;
+export function isCalendarDate(value: any): value is CalendarDate {
+    return value instanceof CalendarDate;
 }
 
 /**
- * 安全地克隆 CalendarDateTime
+ * 型別守衛：檢查是否為 CalendarDateTime
  */
-export function safeCloneCalendarDateTime(dateTime: CalendarDateTime): CalendarDateTime {
-    return new CalendarDateTime(
-        dateTime.year,
-        dateTime.month,
-        dateTime.day,
-        dateTime.hour,
-        dateTime.minute,
-        dateTime.second
-    ) as CalendarDateTime;
+export function isCalendarDateTime(value: any): value is CalendarDateTime {
+    return value instanceof CalendarDateTime;
 }
+
 /**
- * 將日期字符串或 Date 對象轉換為 CalendarDateTime 對象
- * 支持多種常見日期時間格式
+ * 安全地將 SimpleDateValue 轉換為 CalendarDate（只在必要時使用）
  */
-export function parseToCalendarDateTime(
-    value: DateTimeValue | undefined
-): CalendarDateTime | null {
+export function toCalendarDate(value: SimpleDateValue): CalendarDate | null {
+    try {
+        return new CalendarDate(value.year, value.month, value.day);
+    } catch (error) {
+        console.error('Failed to create CalendarDate:', error);
+        return null;
+    }
+}
+
+/**
+ * 安全地將 SimpleDateValue 轉換為 CalendarDateTime（只在必要時使用）
+ */
+export function toCalendarDateTime(value: SimpleDateValue): CalendarDateTime | null {
+    try {
+        return new CalendarDateTime(
+            value.year,
+            value.month,
+            value.day,
+            value.hour || 0,
+            value.minute || 0,
+            value.second || 0
+        );
+    } catch (error) {
+        console.error('Failed to create CalendarDateTime:', error);
+        return null;
+    }
+}
+
+/**
+ * 從 CalendarDate 轉換為 SimpleDateValue
+ */
+export function fromCalendarDate(date: CalendarDate): SimpleDateValue {
+    return {
+        year: date.year,
+        month: date.month,
+        day: date.day
+    };
+}
+
+/**
+ * 從 CalendarDateTime 轉換為 SimpleDateValue
+ */
+export function fromCalendarDateTime(dateTime: CalendarDateTime): SimpleDateValue {
+    return {
+        year: dateTime.year,
+        month: dateTime.month,
+        day: dateTime.day,
+        hour: dateTime.hour,
+        minute: dateTime.minute,
+        second: dateTime.second
+    };
+}
+
+/**
+ * 統一的日期解析函數 - 主要返回 SimpleDateValue
+ */
+export function parseToSimpleDate(value: DateTimeValue | undefined): SimpleDateValue | null {
     if (!value) return null;
 
     try {
-        // 已經是 CalendarDateTime 對象
-        if (value instanceof CalendarDateTime) {
+        // 已經是 SimpleDateValue
+        if (isSimpleDateValue(value)) {
             return value;
         }
 
-        // 是 CalendarDate 對象
-        if (value instanceof CalendarDate) {
-            return new CalendarDateTime(value.year, value.month, value.day, 0, 0, 0);
+        // 是 CalendarDate
+        if (isCalendarDate(value)) {
+            return fromCalendarDate(value);
+        }
+
+        // 是 CalendarDateTime
+        if (isCalendarDateTime(value)) {
+            return fromCalendarDateTime(value);
         }
 
         // 是 Date 對象
         if (value instanceof Date) {
-            return new CalendarDateTime(
-                value.getFullYear(),
-                value.getMonth() + 1,
-                value.getDate(),
-                value.getHours(),
-                value.getMinutes(),
-                value.getSeconds()
-            );
+            return {
+                year: value.getFullYear(),
+                month: value.getMonth() + 1,
+                day: value.getDate(),
+                hour: value.getHours(),
+                minute: value.getMinutes(),
+                second: value.getSeconds()
+            };
         }
 
         // 是字符串
-        const date = dayjs(value);
-        if (date.isValid()) {
-            return new CalendarDateTime(
-                date.year(),
-                date.month() + 1,
-                date.date(),
-                date.hour(),
-                date.minute(),
-                date.second()
-            );
+        if (typeof value === 'string') {
+            const date = dayjs(value);
+            if (date.isValid()) {
+                return {
+                    year: date.year(),
+                    month: date.month() + 1,
+                    day: date.date(),
+                    hour: date.hour(),
+                    minute: date.minute(),
+                    second: date.second()
+                };
+            }
         }
 
-        console.warn(`無法解析日期時間: ${value}`);
         return null;
     } catch (error) {
-        console.error('轉換日期時間出錯:', error);
+        console.error('Failed to parse date:', error);
         return null;
     }
 }
 
 /**
- * 確保值是 CalendarDate 對象
+ * 確保值是 SimpleDateValue（只包含日期部分）
  */
-export function ensureCalendarDate(
-    value: DateTimeValue | undefined
-): CalendarDate | null {
-    if (!value) return null;
+export function ensureSimpleDate(value: DateTimeValue | undefined): SimpleDateValue | null {
+    const parsed = parseToSimpleDate(value);
+    if (!parsed) return null;
 
-    try {
-        // 已經是 CalendarDate 對象
-        if (value instanceof CalendarDate) {
-            return value;
-        }
-
-        // 是 CalendarDateTime 對象
-        if (value instanceof CalendarDateTime) {
-            return new CalendarDate(value.year, value.month, value.day);
-        }
-
-        // 處理「看起來像 CalendarDate」的對象 (duck typing)
-        if (typeof value === 'object' && value !== null &&
-            'year' in value && 'month' in value && 'day' in value &&
-            typeof value.year === 'number' &&
-            typeof value.month === 'number' &&
-            typeof value.day === 'number') {
-            return new CalendarDate(value.year, value.month, value.day);
-        }
-
-        // 使用 parseToCalendarDateTime 函數處理字符串和 Date 對象
-        const dateTime = parseToCalendarDateTime(value);
-        if (dateTime) {
-            return new CalendarDate(dateTime.year, dateTime.month, dateTime.day);
-        }
-
-        return null;
-    } catch (error) {
-        console.error('確保 CalendarDate 出錯:', error);
-        return null;
-    }
+    // 只返回日期部分
+    return {
+        year: parsed.year,
+        month: parsed.month,
+        day: parsed.day
+    };
 }
 
 /**
- * 將 CalendarDate 對象轉換為字符串
+ * 將 SimpleDateValue 轉換為字符串
  */
-export function formatCalendarDateToString(
-    date: CalendarDate | CalendarDateTime | null | undefined,
+export function formatSimpleDate(
+    date: SimpleDateValue | null | undefined,
     format: string = 'YYYY-MM-DD'
 ): string | null {
     if (!date) return null;
 
     try {
-        // 使用 dayjs 處理格式化
-        const dayjsDate = dayjs(`${date.year}-${date.month}-${date.day}`);
+        const dayjsDate = dayjs()
+            .year(date.year)
+            .month(date.month - 1)
+            .date(date.day);
+
+        if (date.hour !== undefined) dayjsDate.hour(date.hour);
+        if (date.minute !== undefined) dayjsDate.minute(date.minute);
+        if (date.second !== undefined) dayjsDate.second(date.second);
+
         return dayjsDate.format(format);
     } catch (error) {
-        console.error('格式化日期出錯:', error);
+        console.error('Failed to format date:', error);
         return null;
     }
 }
 
 /**
- * 將 CalendarDateTime 對象轉換為指定格式的字符串
+ * 將 SimpleDateValue 轉換為指定的輸出格式
  */
-export function formatFromCalendarDateTime(
-    dateTime: CalendarDateTime | null | undefined,
-    format: string = 'YYYY-MM-DD HH:mm:ss'
-): string | null {
-    if (!dateTime) return null;
+export function formatOutput(
+    date: SimpleDateValue | null,
+    outputFormat: OutputFormat = 'iso',
+    customFormat?: string
+): DateTimeValue {
+    if (!date) return null;
 
-    try {
-        const date = new Date(
-            dateTime.year,
-            dateTime.month - 1,
-            dateTime.day,
-            dateTime.hour,
-            dateTime.minute,
-            dateTime.second
-        );
+    switch (outputFormat) {
+        case 'iso':
+            const format = customFormat || (
+                date.hour !== undefined ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD'
+            );
+            return formatSimpleDate(date, format);
 
-        return dayjs(date).format(format);
-    } catch (error) {
-        console.error('格式化日期時間出錯:', error);
-        return null;
-    }
-}
+        case 'date':
+            const jsDate = new Date(
+                date.year,
+                date.month - 1,
+                date.day,
+                date.hour || 0,
+                date.minute || 0,
+                date.second || 0
+            );
+            return jsDate;
 
-/**
- * 將 CalendarDateTime 格式化為完整日期時間字符串
- */
-export function formatCalendarDateTimeToString(
-    dateTime: CalendarDateTime | null | undefined,
-    timeFormat: string = 'HH:mm:ss'
-): string | null {
-    if (!dateTime) return null;
-    const dateStr = formatCalendarDateToString(dateTime);
-    if (!dateStr) return null;
+        case 'simple':
+            return date;
 
-    const hour = dateTime.hour.toString().padStart(2, '0');
-    const minute = dateTime.minute.toString().padStart(2, '0');
-    const second = dateTime.second.toString().padStart(2, '0');
-
-    // 根據指定的時間格式
-    const timeStr = timeFormat
-        .replace('HH', hour)
-        .replace('mm', minute)
-        .replace('ss', second);
-
-    return `${dateStr} ${timeStr}`;
-}
-
-/**
- * 將標準字符串格式轉換為 CalendarDateTime
- * 支援 ISO 日期時間格式 (YYYY-MM-DDTHH:mm:ss)
- */
-export function parseStringToCalendarDateTime(
-    dateTimeStr: string | null | undefined
-): CalendarDateTime | null {
-    if (!dateTimeStr) return null;
-    try {
-        const date = dayjs(dateTimeStr);
-        if (!date.isValid()) return null;
-
-        return new CalendarDateTime(
-            date.year(),
-            date.month() + 1,
-            date.date(),
-            date.hour(),
-            date.minute(),
-            date.second()
-        );
-    } catch (e) {
-        console.error('Error parsing date time string:', e);
-        return null;
+        default:
+            return formatSimpleDate(date, customFormat || 'YYYY-MM-DD HH:mm:ss');
     }
 }
 
@@ -281,85 +305,70 @@ export function parseStringToCalendarDateTime(
  * 檢查日期是否在指定範圍內
  */
 export function isDateInRange(
-    date: CalendarDate,
-    minDate?: CalendarDate | null,
-    maxDate?: CalendarDate | null
+    date: SimpleDateValue,
+    minDate?: SimpleDateValue | null,
+    maxDate?: SimpleDateValue | null
 ): boolean {
-    if (minDate && date.compare(minDate) < 0) return false;
-    if (maxDate && date.compare(maxDate) > 0) return false;
+    if (!date) return false;
+
+    const dateNum = date.year * 10000 + date.month * 100 + date.day;
+
+    if (minDate) {
+        const minNum = minDate.year * 10000 + minDate.month * 100 + minDate.day;
+        if (dateNum < minNum) return false;
+    }
+
+    if (maxDate) {
+        const maxNum = maxDate.year * 10000 + maxDate.month * 100 + maxDate.day;
+        if (dateNum > maxNum) return false;
+    }
+
     return true;
 }
 
 /**
- * 將 CalendarDateTime 格式化為指定的輸出格式
- * @param dateTime CalendarDateTime 對象
- * @param outputFormat 輸出格式 ('iso', 'date', 'calendar')
- * @param dateFormat 日期格式 (預設為 'YYYY-MM-DD HH:mm:ss')
- * @returns 格式化後的日期時間值
+ * 比較兩個日期
+ * @returns -1 if a < b, 0 if a === b, 1 if a > b
  */
-export function formatOutput(
-    dateTime: CalendarDateTime | null,
-    outputFormat: OutputFormat = 'iso',
-    dateFormat: string = 'YYYY-MM-DD HH:mm:ss'
-): DateTimeValue {
-    if (!dateTime) return null;
+export function compareDates(a: SimpleDateValue, b: SimpleDateValue): number {
+    const aNum = a.year * 10000 + a.month * 100 + a.day;
+    const bNum = b.year * 10000 + b.month * 100 + b.day;
 
-    switch (outputFormat) {
-        case 'iso':
-            return formatFromCalendarDateTime(dateTime, dateFormat);
-
-        case 'date':
-            return new Date(
-                dateTime.year,
-                dateTime.month - 1,
-                dateTime.day,
-                dateTime.hour,
-                dateTime.minute,
-                dateTime.second
-            );
-
-        case 'calendar':
-            return dateTime;
-
-        default:
-            return formatFromCalendarDateTime(dateTime, dateFormat);
-    }
+    if (aNum < bNum) return -1;
+    if (aNum > bNum) return 1;
+    return 0;
 }
 
 /**
- * 獲取當前時間的 CalendarDateTime 對象
- * @returns 當前時間的 CalendarDateTime 對象
+ * 添加天數
  */
-export const getNow = (): CalendarDateTime => {
-    const now = new Date();
-    return new CalendarDateTime(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        now.getDate(),
-        now.getHours(),
-        now.getMinutes(),
-        now.getSeconds()
-    );
-};
+export function addDays(date: SimpleDateValue, days: number): SimpleDateValue {
+    const jsDate = new Date(date.year, date.month - 1, date.day);
+    jsDate.setDate(jsDate.getDate() + days);
+
+    return {
+        year: jsDate.getFullYear(),
+        month: jsDate.getMonth() + 1,
+        day: jsDate.getDate(),
+        hour: date.hour,
+        minute: date.minute,
+        second: date.second
+    };
+}
 
 /**
- * 檢查日期格式是否有效
- * @param format 日期格式字符串
- * @returns 是否有效
+ * 驗證日期格式
  */
 export function isValidDateFormat(format: string): boolean {
     const validTokens = ['YYYY', 'YY', 'MM', 'M', 'DD', 'D'];
     const formatClean = format.replace(/[^\w]/g, ' ');
 
-    // 檢查最基本的要求：年、月、日必須都存在 (考慮區分大小寫)
     const hasYear = formatClean.includes('YYYY') || formatClean.includes('YY');
     const hasMonth = formatClean.includes('MM') || formatClean.includes('M');
     const hasDay = formatClean.includes('DD') || formatClean.includes('D');
 
-    // 檢查是否包含無效的格式標記 (例如小寫的 yyyy 或 mm)
     const tokens = formatClean.split(/\s+/).filter(Boolean);
     const hasInvalidToken = tokens.some(token => {
-        // 檢查是否有類似但不完全符合的標記 (如 yyyy, mm, dd)
         if (/^[yY]{1,4}$/.test(token) && !validTokens.includes(token)) return true;
         if (/^[mM]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
         if (/^[dD]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
@@ -370,19 +379,15 @@ export function isValidDateFormat(format: string): boolean {
 }
 
 /**
- * 檢查時間格式是否有效
- * @param format 時間格式字符串
- * @returns 是否有效
+ * 驗證時間格式
  */
 export function isValidTimeFormat(format: string): boolean {
     const validTokens = ['HH', 'H', 'mm', 'm', 'ss', 's', 'a', 'A'];
     const formatClean = format.replace(/[^\w]/g, ' ');
 
-    // 檢查最基本的要求：小時、分鐘至少要存在
     const hasHour = formatClean.includes('HH') || formatClean.includes('H');
     const hasMinute = formatClean.includes('mm') || formatClean.includes('m');
 
-    // 檢查是否包含無效的格式標記
     const tokens = formatClean.split(/\s+/).filter(Boolean);
     const hasInvalidToken = tokens.some(token => {
         if (/^[hH]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
@@ -395,32 +400,29 @@ export function isValidTimeFormat(format: string): boolean {
 }
 
 /**
- * 修正日期格式字符串中的常見錯誤
- * @param format 日期格式字符串
- * @returns 修正後的日期格式字符串
+ * 修正日期格式
  */
-export const fixDateFormat = (format: string): string => {
-    // 替換常見的小寫錯誤
+export function fixDateFormat(format: string): string {
     let fixed = format;
     fixed = fixed.replace(/yyyy/g, 'YYYY');
     fixed = fixed.replace(/yy/g, 'YY');
     fixed = fixed.replace(/mm/g, 'MM');
     fixed = fixed.replace(/dd/g, 'DD');
-
     return fixed;
-};
+}
 
 /**
- * 修正時間格式字符串中的常見錯誤
- * @param format 時間格式字符串
- * @returns 修正後的時間格式字符串
+ * 修正時間格式
  */
-export const fixTimeFormat = (format: string): string => {
-    // 替換常見的小寫錯誤
+export function fixTimeFormat(format: string): string {
     let fixed = format;
     fixed = fixed.replace(/hh/g, 'HH');
-    fixed = fixed.replace(/mm/g, 'mm'); // 分鐘小寫保持不變
-    fixed = fixed.replace(/ss/g, 'ss'); // 秒數小寫保持不變
-
+    fixed = fixed.replace(/mm/g, 'mm');
+    fixed = fixed.replace(/ss/g, 'ss');
     return fixed;
-};
+}
+
+// 為了向後兼容，保留一些舊的函數名稱
+export { parseToSimpleDate as parseToCalendarDateTime };
+export { ensureSimpleDate as ensureCalendarDate };
+export { formatSimpleDate as formatCalendarDateToString };

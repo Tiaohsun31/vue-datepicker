@@ -1,4 +1,4 @@
-<!-- DateRange.vue - 最終修正版 -->
+<!-- DateRange.vue - 混合使用版本 -->
 <template>
     <div class="date-range-wrapper relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[280px]' : 'min-w-[200px]']" v-bind="containerAttributes"
@@ -105,8 +105,8 @@
 
                 <!-- 雙月日曆 -->
                 <div class="calendar-container">
-                    <DualMonthCalendar :range-start="selectedStartDate" :range-end="selectedEndDate" :min-date="minDate"
-                        :max-date="maxDate" :locale="locale" :week-starts-on="0"
+                    <DualMonthCalendar :range-start="calendarStartDate" :range-end="calendarEndDate"
+                        :min-date="calendarMinDate" :max-date="calendarMaxDate" :locale="locale" :week-starts-on="0"
                         @range-select="onCalendarRangeSelect" />
                 </div>
 
@@ -136,7 +136,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { CalendarDate, CalendarDateTime } from '@internationalized/date';
 import dayjs from 'dayjs';
 
 // 組件導入
@@ -147,33 +146,38 @@ import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
 import DualMonthCalendar from './components/calendar/DualMonthCalendar.vue';
 
+// 使用簡化的 dateUtils
 import {
-    parseToCalendarDateTime,
-    formatCalendarDateToString,
-    ensureCalendarDate,
+    parseToSimpleDate,
+    formatSimpleDate,
+    ensureSimpleDate,
     formatOutput,
     getNow,
-    safeCreateCalendarDateTime,
-    safeCalendarDateTimeToDate,
+    createSimpleDate,
+    toCalendarDate,
+    fromCalendarDate,
+    compareDates,
+    addDays,
+    type SimpleDateValue,
     type DateTimeValue,
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
 import { useTheme } from './composables/useTheme';
 
-// 日期範圍類型
-interface DateRange {
-    start: DateTimeValue;
-    end: DateTimeValue;
+// 日期範圍類型 - 使用 SimpleDateValue
+interface SimpleDateRange {
+    start: SimpleDateValue;
+    end: SimpleDateValue;
 }
 
 interface DateRangeShortcut {
     label: string;
-    getValue: () => DateRange;
+    getValue: () => SimpleDateRange;
 }
 
 interface Props {
-    modelValue?: DateRange | null;
+    modelValue?: { start: DateTimeValue; end: DateTimeValue } | null;
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
 
@@ -235,8 +239,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    'update:modelValue': [range: DateRange | null];
-    'change': [range: DateRange | null];
+    'update:modelValue': [range: { start: DateTimeValue; end: DateTimeValue } | null];
+    'change': [range: { start: DateTimeValue; end: DateTimeValue } | null];
     'validation': [isValid: boolean, errors: Record<string, string>];
 }>();
 
@@ -248,7 +252,7 @@ const endDateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
 const startTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 
-// 狀態
+// 狀態 - 使用 SimpleDateValue
 const showCalendar = ref(false);
 const errors = ref<Record<string, string>>({});
 const formatErrors = ref<Record<string, string>>({});
@@ -259,19 +263,19 @@ const inputEndDate = ref<string | null>(null);
 const inputStartTime = ref<string | null>(null);
 const inputEndTime = ref<string | null>(null);
 
-// 內部日期時間
-const internalStartDateTime = ref<CalendarDateTime | null>(null);
-const internalEndDateTime = ref<CalendarDateTime | null>(null);
+// 內部日期時間 - 使用 SimpleDateValue
+const internalStartDateTime = ref<SimpleDateValue | null>(null);
+const internalEndDateTime = ref<SimpleDateValue | null>(null);
 
-// 輔助函數 - 定義在最前面
-const getTimeFromDateTime = (dateTime: CalendarDateTime | null): string | null => {
-    if (!dateTime) return null;
+// 輔助函數
+const getTimeFromDateTime = (dateTime: SimpleDateValue | null): string | null => {
+    if (!dateTime || dateTime.hour === undefined) return null;
 
     const hour = dateTime.hour.toString().padStart(2, '0');
-    const minute = dateTime.minute.toString().padStart(2, '0');
+    const minute = (dateTime.minute || 0).toString().padStart(2, '0');
 
     if (props.enableSeconds) {
-        const second = dateTime.second.toString().padStart(2, '0');
+        const second = (dateTime.second || 0).toString().padStart(2, '0');
         return `${hour}:${minute}:${second}`;
     } else {
         return `${hour}:${minute}`;
@@ -287,7 +291,7 @@ const clearInternalState = () => {
     inputEndTime.value = null;
 };
 
-const createCalendarDateTime = (dateStr: string | null, timeStr: string | null): CalendarDateTime | null => {
+const createDateTimeFromInputs = (dateStr: string | null, timeStr: string | null): SimpleDateValue | null => {
     if (!dateStr) return null;
 
     const date = dayjs(dateStr);
@@ -298,7 +302,7 @@ const createCalendarDateTime = (dateStr: string | null, timeStr: string | null):
     const minute = timeParts[1] || 0;
     const second = timeParts[2] || 0;
 
-    return safeCreateCalendarDateTime(
+    return createSimpleDate(
         date.year(),
         date.month() + 1,
         date.date(),
@@ -308,37 +312,43 @@ const createCalendarDateTime = (dateStr: string | null, timeStr: string | null):
     );
 };
 
-// 計算屬性
-const selectedStartDate = computed<CalendarDate | null>(() => {
-    return internalStartDateTime.value
-        ? safeCalendarDateTimeToDate(internalStartDateTime.value as CalendarDateTime)
-        : null;
+// 計算屬性 - 只在需要傳遞給日曆組件時才轉換
+const calendarStartDate = computed(() => {
+    if (!internalStartDateTime.value) return null;
+    return toCalendarDate(internalStartDateTime.value);
 });
 
-const selectedEndDate = computed<CalendarDate | null>(() => {
-    return internalEndDateTime.value
-        ? safeCalendarDateTimeToDate(internalEndDateTime.value as CalendarDateTime)
-        : null;
+const calendarEndDate = computed(() => {
+    if (!internalEndDateTime.value) return null;
+    return toCalendarDate(internalEndDateTime.value);
 });
 
 // 轉換 minDate 和 maxDate
-const minDate = computed(() => props.minDate !== undefined ? ensureCalendarDate(props.minDate) : null);
-const maxDate = computed(() => props.maxDate !== undefined ? ensureCalendarDate(props.maxDate) : null);
-const minDateStr = computed(() => formatCalendarDateToString(minDate.value));
-const maxDateStr = computed(() => formatCalendarDateToString(maxDate.value));
+const calendarMinDate = computed(() => {
+    const minDateValue = ensureSimpleDate(props.minDate);
+    return minDateValue ? toCalendarDate(minDateValue) : null;
+});
+
+const calendarMaxDate = computed(() => {
+    const maxDateValue = ensureSimpleDate(props.maxDate);
+    return maxDateValue ? toCalendarDate(maxDateValue) : null;
+});
+
+const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
+const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
 
 const dateInputFormat = computed(() => props.dateFormat);
 
 // 顯示的日期範圍
 const displayStartDate = computed(() => {
     if (!internalStartDateTime.value) return null;
-    return formatCalendarDateToString(internalStartDateTime.value as CalendarDateTime, props.dateFormat) +
+    return formatSimpleDate(internalStartDateTime.value, props.dateFormat) +
         (props.showTime && inputStartTime.value ? ` ${inputStartTime.value}` : '');
 });
 
 const displayEndDate = computed(() => {
     if (!internalEndDateTime.value) return null;
-    return formatCalendarDateToString(internalEndDateTime.value as CalendarDateTime, props.dateFormat) +
+    return formatSimpleDate(internalEndDateTime.value, props.dateFormat) +
         (props.showTime && inputEndTime.value ? ` ${inputEndTime.value}` : '');
 });
 
@@ -352,7 +362,7 @@ const isValidRange = computed(() => {
     if (!internalStartDateTime.value || !internalEndDateTime.value) return false;
 
     // 基本順序檢查
-    if (internalStartDateTime.value.compare(internalEndDateTime.value as CalendarDateTime) > 0) return false;
+    if (compareDates(internalStartDateTime.value, internalEndDateTime.value) > 0) return false;
 
     // 範圍限制檢查
     if (props.maxRange || props.minRange) {
@@ -379,7 +389,7 @@ const shortcuts = computed<DateRangeShortcut[]>(() => [
     {
         label: '昨天',
         getValue: () => {
-            const yesterday = getNow().subtract({ days: 1 });
+            const yesterday = addDays(getNow(), -1);
             return { start: yesterday, end: yesterday };
         }
     },
@@ -387,7 +397,7 @@ const shortcuts = computed<DateRangeShortcut[]>(() => [
         label: '最近7天',
         getValue: () => {
             const end = getNow();
-            const start = end.subtract({ days: 6 });
+            const start = addDays(end, -6);
             return { start, end };
         }
     },
@@ -395,7 +405,7 @@ const shortcuts = computed<DateRangeShortcut[]>(() => [
         label: '最近30天',
         getValue: () => {
             const end = getNow();
-            const start = end.subtract({ days: 29 });
+            const start = addDays(end, -29);
             return { start, end };
         }
     },
@@ -403,29 +413,33 @@ const shortcuts = computed<DateRangeShortcut[]>(() => [
         label: '本月',
         getValue: () => {
             const now = getNow();
-            const start = safeCreateCalendarDateTime(now.year, now.month, 1, 0, 0, 0);
-            const end = start.add({ months: 1 }).subtract({ days: 1 }) as CalendarDateTime;
+            const start = createSimpleDate(now.year, now.month, 1, 0, 0, 0);
+            // 計算月末
+            const nextMonth = now.month === 12 ? 1 : now.month + 1;
+            const nextYear = now.month === 12 ? now.year + 1 : now.year;
+            const firstDayNextMonth = createSimpleDate(nextYear, nextMonth, 1);
+            const end = addDays(firstDayNextMonth, -1);
             return { start, end };
         }
     }
 ]);
 
-// 監聽外部值變化 - 現在放在輔助函數之後
+// 監聽外部值變化
 watch(() => props.modelValue, (newValue) => {
     if (newValue) {
-        const startDateTime = parseToCalendarDateTime(newValue.start);
-        const endDateTime = parseToCalendarDateTime(newValue.end);
+        const startDateTime = parseToSimpleDate(newValue.start);
+        const endDateTime = parseToSimpleDate(newValue.end);
 
         internalStartDateTime.value = startDateTime;
         internalEndDateTime.value = endDateTime;
 
         if (startDateTime) {
-            inputStartDate.value = formatCalendarDateToString(startDateTime, props.dateFormat);
+            inputStartDate.value = formatSimpleDate(startDateTime, props.dateFormat);
             inputStartTime.value = getTimeFromDateTime(startDateTime);
         }
 
         if (endDateTime) {
-            inputEndDate.value = formatCalendarDateToString(endDateTime, props.dateFormat);
+            inputEndDate.value = formatSimpleDate(endDateTime, props.dateFormat);
             inputEndTime.value = getTimeFromDateTime(endDateTime);
         }
     } else {
@@ -472,7 +486,7 @@ const onEndTimeValidation = (isValid: boolean, validationErrors: Record<string, 
 const updateStartDateTime = () => {
     if (!inputStartDate.value) return;
 
-    const dateTime = createCalendarDateTime(inputStartDate.value, inputStartTime.value);
+    const dateTime = createDateTimeFromInputs(inputStartDate.value, inputStartTime.value);
     if (dateTime) {
         internalStartDateTime.value = dateTime;
     }
@@ -481,7 +495,7 @@ const updateStartDateTime = () => {
 const updateEndDateTime = () => {
     if (!inputEndDate.value) return;
 
-    const dateTime = createCalendarDateTime(inputEndDate.value, inputEndTime.value);
+    const dateTime = createDateTimeFromInputs(inputEndDate.value, inputEndTime.value);
     if (dateTime) {
         internalEndDateTime.value = dateTime;
     }
@@ -508,31 +522,38 @@ const onEndTimeComplete = (timeStr: string) => {
     updateEndDateTime();
 };
 
-// 日曆範圍選擇處理
-const onCalendarRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate | null) => {
+// 日曆範圍選擇處理 - 接收 CalendarDate 並轉換
+const onCalendarRangeSelect = (startDate: any, endDate: any) => {
     if (startDate && !endDate) {
         // 只有開始日期 - 清除結束日期
-        inputStartDate.value = formatCalendarDateToString(startDate, props.dateFormat);
+        const simpleStart = fromCalendarDate(startDate);
+        inputStartDate.value = formatSimpleDate(simpleStart, props.dateFormat);
         inputEndDate.value = null;
-        updateStartDateTime();
+        internalStartDateTime.value = simpleStart;
 
         // 清除結束日期時間
         internalEndDateTime.value = null;
         inputEndTime.value = null;
     } else if (startDate && endDate) {
         // 完整範圍
-        inputStartDate.value = formatCalendarDateToString(startDate, props.dateFormat);
-        inputEndDate.value = formatCalendarDateToString(endDate, props.dateFormat);
-        updateStartDateTime();
-        updateEndDateTime();
+        const simpleStart = fromCalendarDate(startDate);
+        const simpleEnd = fromCalendarDate(endDate);
+
+        inputStartDate.value = formatSimpleDate(simpleStart, props.dateFormat);
+        inputEndDate.value = formatSimpleDate(simpleEnd, props.dateFormat);
+
+        internalStartDateTime.value = simpleStart;
+        internalEndDateTime.value = simpleEnd;
 
         // 如果沒有設定時間，使用默認時間
         if (props.showTime) {
             if (!inputStartTime.value) {
                 inputStartTime.value = '00:00:00';
+                internalStartDateTime.value = { ...simpleStart, hour: 0, minute: 0, second: 0 };
             }
             if (!inputEndTime.value) {
                 inputEndTime.value = '23:59:59';
+                internalEndDateTime.value = { ...simpleEnd, hour: 23, minute: 59, second: 59 };
             }
         }
     } else {
@@ -545,20 +566,15 @@ const onCalendarRangeSelect = (startDate: CalendarDate | null, endDate: Calendar
 const applyShortcut = (shortcut: DateRangeShortcut) => {
     const range = shortcut.getValue();
 
-    const startDateTime = parseToCalendarDateTime(range.start);
-    const endDateTime = parseToCalendarDateTime(range.end);
+    internalStartDateTime.value = range.start;
+    internalEndDateTime.value = range.end;
 
-    if (startDateTime && endDateTime) {
-        internalStartDateTime.value = startDateTime;
-        internalEndDateTime.value = endDateTime;
+    inputStartDate.value = formatSimpleDate(range.start, props.dateFormat);
+    inputEndDate.value = formatSimpleDate(range.end, props.dateFormat);
 
-        inputStartDate.value = formatCalendarDateToString(startDateTime, props.dateFormat);
-        inputEndDate.value = formatCalendarDateToString(endDateTime, props.dateFormat);
-
-        if (props.showTime) {
-            inputStartTime.value = getTimeFromDateTime(startDateTime);
-            inputEndTime.value = getTimeFromDateTime(endDateTime);
-        }
+    if (props.showTime) {
+        inputStartTime.value = getTimeFromDateTime(range.start);
+        inputEndTime.value = getTimeFromDateTime(range.end);
     }
 };
 
@@ -570,11 +586,11 @@ const clearRange = () => {
 
 // 確認範圍
 const confirmRange = () => {
-    if (!isValidRange.value) return;
+    if (!isValidRange.value || !internalStartDateTime.value || !internalEndDateTime.value) return;
 
-    const range: DateRange = {
-        start: formatOutput(internalStartDateTime.value as CalendarDateTime, props.outputFormat),
-        end: formatOutput(internalEndDateTime.value as CalendarDateTime, props.outputFormat)
+    const range = {
+        start: formatOutput(internalStartDateTime.value, props.outputFormat),
+        end: formatOutput(internalEndDateTime.value, props.outputFormat)
     };
 
     emit('update:modelValue', range);
@@ -664,21 +680,21 @@ defineExpose({
             endTimeInputRef.value?.validate();
         }
     },
-    setRange: (range: DateRange | null) => {
+    setRange: (range: { start: DateTimeValue; end: DateTimeValue } | null) => {
         if (range) {
-            const startDateTime = parseToCalendarDateTime(range.start);
-            const endDateTime = parseToCalendarDateTime(range.end);
+            const startDateTime = parseToSimpleDate(range.start);
+            const endDateTime = parseToSimpleDate(range.end);
 
             internalStartDateTime.value = startDateTime;
             internalEndDateTime.value = endDateTime;
 
             if (startDateTime) {
-                inputStartDate.value = formatCalendarDateToString(startDateTime, props.dateFormat);
+                inputStartDate.value = formatSimpleDate(startDateTime, props.dateFormat);
                 inputStartTime.value = getTimeFromDateTime(startDateTime);
             }
 
             if (endDateTime) {
-                inputEndDate.value = formatCalendarDateToString(endDateTime, props.dateFormat);
+                inputEndDate.value = formatSimpleDate(endDateTime, props.dateFormat);
                 inputEndTime.value = getTimeFromDateTime(endDateTime);
             }
         } else {

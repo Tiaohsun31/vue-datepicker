@@ -45,7 +45,7 @@
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
-            <CalendarGrid :value="selectedCalendarDate" :min-date="minDate" :max-date="maxDate"
+            <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :enableSeconds="enableSeconds" :locale="locale" @select="onCalendarSelect"
                 @time-select="onTimeSelect" />
@@ -55,7 +55,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onBeforeMount } from 'vue';
-import { CalendarDate, CalendarDateTime } from '@internationalized/date';
 import dayjs from 'dayjs';
 import "./styles/theme.css";
 
@@ -66,16 +65,22 @@ import TimeInput from './components/inputs/TimeInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
 import CalendarGrid from './components/calendar/CalendarGrid.vue';
+
+// 使用簡化的 dateUtils
 import {
-    parseToCalendarDateTime,
-    formatCalendarDateToString,
-    ensureCalendarDate,
+    parseToSimpleDate,
+    formatSimpleDate,
+    ensureSimpleDate,
     formatOutput,
     getNow,
     isValidDateFormat,
     isValidTimeFormat,
     fixDateFormat,
     fixTimeFormat,
+    createSimpleDate,
+    toCalendarDate,
+    fromCalendarDate,
+    type SimpleDateValue,
     type DateTimeValue,
     type OutputFormat
 } from './utils/dateUtils';
@@ -153,37 +158,40 @@ const dateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
 const timeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 const calendarRef = ref<HTMLElement | null>(null);
 
-// 狀態
+// 狀態 - 使用 SimpleDateValue 而不是 CalendarDateTime
 const showCalendar = ref(false);
 const inputDateValue = ref<string | null>(null);
 const inputTimeValue = ref<string | null>(null);
 const errors = ref<Record<string, string>>({});
 const formatErrors = ref<Record<string, string>>({});
 
-// 內部格式變量
-const internalDateTime = ref<CalendarDateTime | null>(null);
+// 內部狀態使用簡單物件
+const internalDateTime = ref<SimpleDateValue | null>(null);
 const internalDateFormat = ref(props.dateFormat);
 const internalTimeFormat = ref(props.timeFormat);
 
-// 計算屬性
-const selectedCalendarDate = computed<CalendarDate | null>(() => {
-    return internalDateTime.value
-        ? new CalendarDate(internalDateTime.value.year, internalDateTime.value.month, internalDateTime.value.day)
-        : null;
+// 計算屬性 - 只在需要傳遞給 CalendarGrid 時才轉換為 CalendarDate
+const calendarDateForGrid = computed(() => {
+    if (!internalDateTime.value) return null;
+    return toCalendarDate(internalDateTime.value);
 });
 
-// 轉換 minDate 和 maxDate 為 CalendarDate
-const minDate = computed(() => props.minDate !== undefined ? ensureCalendarDate(props.minDate) : null);
-const maxDate = computed(() => props.maxDate !== undefined ? ensureCalendarDate(props.maxDate) : null);
+// 轉換 minDate 和 maxDate 為 CalendarDate（只在需要時）
+const calendarMinDate = computed(() => {
+    const minDateValue = ensureSimpleDate(props.minDate);
+    return minDateValue ? toCalendarDate(minDateValue) : null;
+});
 
-// 計算屬性 - 將CalendarDate轉換為字符串以供輸入組件使用
-const minDateStr = computed(() => formatCalendarDateToString(minDate.value));
-const maxDateStr = computed(() => formatCalendarDateToString(maxDate.value));
+const calendarMaxDate = computed(() => {
+    const maxDateValue = ensureSimpleDate(props.maxDate);
+    return maxDateValue ? toCalendarDate(maxDateValue) : null;
+});
 
-// 說明格式轉換流程
-// 1. 使用者輸入格式由 dateFormat 控制 (如 MM/DD/YYYY)
-// 2. 內部存儲為標準格式
-// 3. 輸出時會根據 outputDateFormat 或 dateFormat+timeFormat 進行格式化
+// 計算屬性 - 將日期轉換為字符串以供輸入組件使用
+const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
+const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
+
+// 輸出格式計算
 const outputFormat = computed(() => {
     return props.outputDateFormat || (props.showTime
         ? `${internalDateFormat.value} ${internalTimeFormat.value}`
@@ -197,33 +205,31 @@ const mergedErrors = computed(() => {
     return { ...errors.value, ...formatErrors.value };
 });
 
-// 從CalendarDateTime獲取時間部分
-const getTimeFromDateTime = (dateTime: CalendarDateTime | null): string | null => {
-    if (!dateTime) return null;
+// 從SimpleDateValue獲取時間部分
+const getTimeFromDateTime = (dateTime: SimpleDateValue | null): string | null => {
+    if (!dateTime || dateTime.hour === undefined) return null;
 
     const hour = dateTime.hour.toString().padStart(2, '0');
-    const minute = dateTime.minute.toString().padStart(2, '0');
+    const minute = (dateTime.minute || 0).toString().padStart(2, '0');
 
     if (props.enableSeconds) {
-        const second = dateTime.second.toString().padStart(2, '0');
+        const second = (dateTime.second || 0).toString().padStart(2, '0');
         return `${hour}:${minute}:${second}`;
     } else {
         return `${hour}:${minute}`;
     }
 };
 
-// 從日期和時間字串創建CalendarDateTime
-const createCalendarDateTime = (dateStr: string | null, timeStr: string | null): CalendarDateTime | null => {
+// 從日期和時間字串創建SimpleDateValue
+const createDateTimeFromInputs = (dateStr: string | null, timeStr: string | null): SimpleDateValue | null => {
     if (!dateStr) return null;
 
     const date = dayjs(dateStr);
     if (!date.isValid()) return null;
 
-    const calendarDate = new CalendarDate(date.year(), date.month() + 1, date.date());
-
     if (!timeStr && !props.showTime) {
-        // 如果不需要時間，創建默認為00:00的時間
-        return new CalendarDateTime(calendarDate.year, calendarDate.month, calendarDate.day, 0, 0, 0);
+        // 如果不需要時間，只返回日期部分
+        return createSimpleDate(date.year(), date.month() + 1, date.date());
     } else if (!timeStr) {
         // 如果需要時間但未提供，返回null
         return null;
@@ -234,17 +240,17 @@ const createCalendarDateTime = (dateStr: string | null, timeStr: string | null):
     const minute = timeParts[1] || 0;
     const second = timeParts[2] || 0;
 
-    return new CalendarDateTime(calendarDate.year, calendarDate.month, calendarDate.day, hour, minute, second);
+    return createSimpleDate(date.year(), date.month() + 1, date.date(), hour, minute, second);
 };
 
 // 監聽外部值變化
 watch(() => props.modelValue, (newValue) => {
-    const dateTime = parseToCalendarDateTime(newValue);
+    const dateTime = parseToSimpleDate(newValue);
     internalDateTime.value = dateTime;
 
     if (dateTime) {
         // 設置日期部分
-        inputDateValue.value = formatCalendarDateToString(dateTime, props.dateFormat);
+        inputDateValue.value = formatSimpleDate(dateTime, props.dateFormat);
 
         // 設置時間部分
         inputTimeValue.value = getTimeFromDateTime(dateTime);
@@ -318,7 +324,7 @@ const updateDateTimeValue = () => {
         inputTimeValue.value = '00:00:00';
     }
 
-    const dateTime = createCalendarDateTime(inputDateValue.value, inputTimeValue.value);
+    const dateTime = createDateTimeFromInputs(inputDateValue.value, inputTimeValue.value);
 
     if (dateTime) {
         internalDateTime.value = dateTime;
@@ -327,17 +333,20 @@ const updateDateTimeValue = () => {
 };
 
 // 發送更新事件
-const emitUpdate = (dateTime: CalendarDateTime | null) => {
+const emitUpdate = (dateTime: SimpleDateValue | null) => {
     const formattedOutput = formatOutput(dateTime, props.outputFormat, outputFormat.value);
 
     emit('update:modelValue', formattedOutput);
     emit('change', formattedOutput);
 };
 
-// 日曆選擇處理
-const onCalendarSelect = (date: CalendarDate, closeCalendar: boolean = true) => {
-    inputDateValue.value = formatCalendarDateToString(date, props.dateFormat);
+// 日曆選擇處理 - 接收 CalendarDate 並轉換為 SimpleDateValue
+const onCalendarSelect = (date: any, closeCalendar: boolean = true) => {
+    // 將 CalendarDate 轉換為 SimpleDateValue
+    const simpleDate = fromCalendarDate(date);
+    inputDateValue.value = formatSimpleDate(simpleDate, props.dateFormat);
     updateDateTimeValue();
+
     if (closeCalendar) {
         hideCalendar();
     }
@@ -483,12 +492,12 @@ defineExpose({
             timeInputRef.value.validate();
         }
     },
-    getDateTime: () => createCalendarDateTime(inputDateValue.value, inputTimeValue.value),
-    setDateTime: (dateTime: CalendarDateTime | null) => {
+    getDateTime: () => createDateTimeFromInputs(inputDateValue.value, inputTimeValue.value),
+    setDateTime: (dateTime: SimpleDateValue | null) => {
         internalDateTime.value = dateTime;
 
         if (dateTime) {
-            inputDateValue.value = formatCalendarDateToString(dateTime);
+            inputDateValue.value = formatSimpleDate(dateTime);
             inputTimeValue.value = getTimeFromDateTime(dateTime);
         } else {
             inputDateValue.value = null;
@@ -501,7 +510,7 @@ defineExpose({
     selectNow: () => {
         const now = getNow();
         internalDateTime.value = now;
-        inputDateValue.value = formatCalendarDateToString(now);
+        inputDateValue.value = formatSimpleDate(now);
         inputTimeValue.value = getTimeFromDateTime(now);
 
         emitUpdate(now);

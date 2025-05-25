@@ -1,4 +1,4 @@
-<!-- SimplifiedCalendarGrid.vue - 簡化版日曆網格 -->
+<!-- CalendarGrid.vue - 混合使用版本 -->
 <template>
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
@@ -9,8 +9,7 @@
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" />
 
         <!-- 日期網格 -->
-        <SimplifiedDateGridView :year="currentYear" :month="currentMonth"
-            :selected-date="selectionMode === 'single' ? ensureCalendarDate(selectedDate as DateTimeValue) : null"
+        <SimplifiedDateGridView :year="currentYear" :month="currentMonth" :selected-date="selectedCalendarDate"
             :range-start="selectionMode === 'range' ? rangeStart : null"
             :range-end="selectionMode === 'range' ? rangeEnd : null" :selection-mode="selectionMode" :min-date="minDate"
             :max-date="maxDate" :locale="locale" :week-starts-on="weekStartsOn" @select="handleSelect"
@@ -98,7 +97,10 @@ import { CalendarDate } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import SimplifiedDateGridView from './DateGridView.vue';
-import { ensureCalendarDate, getTodaysDate, type DateTimeValue } from '@/utils/dateUtils';
+import {
+    getTodaysDate,
+    toCalendarDate,
+} from '@/utils/dateUtils';
 
 // 選擇模式類型
 type SelectionMode = 'single' | 'range';
@@ -155,7 +157,7 @@ const emit = defineEmits<{
     'range-select': [startDate: CalendarDate | null, endDate: CalendarDate | null];
 }>();
 
-// 當前顯示的月份和年份
+// 當前顯示的月份和年份 - 使用簡單數值
 const currentYear = ref<number>(
     props.year ||
     (props.value ? props.value.year :
@@ -169,8 +171,8 @@ const currentMonth = ref<number>(
             getTodaysDate().month)
 );
 
-// 選擇的日期（單一日期模式）
-const selectedDate = ref<CalendarDate | null>(ensureCalendarDate(props.value));
+// 選擇的日期（單一日期模式） - 直接使用傳入的 CalendarDate
+const selectedCalendarDate = computed(() => props.value);
 
 // 時間相關（僅單一日期模式）
 const selectedHour = ref<number>(0);
@@ -234,7 +236,6 @@ watch(() => [props.year, props.month], ([newYear, newMonth]) => {
 
 // 監聽外部傳入的值
 watch(() => props.value, (newValue) => {
-    selectedDate.value = newValue;
     // 只有在沒有外部年月控制時才自動調整
     if (newValue && props.year === undefined && props.month === undefined) {
         currentYear.value = newValue.year;
@@ -273,7 +274,6 @@ const togglePeriod = () => {
 // 處理單一日期選擇
 const handleSelect = (date: CalendarDate) => {
     if (props.selectionMode === 'single') {
-        selectedDate.value = date;
         emit('select', date, true);
 
         // 如果有時間選擇器，也發送時間選擇事件
@@ -295,10 +295,12 @@ const handleRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate
 const setTodaysDate = () => {
     if (props.selectionMode === 'single') {
         const today = getTodaysDate();
-        selectedDate.value = today;
-        currentYear.value = today.year;
-        currentMonth.value = today.month;
-        emit('select', today, false);
+        const calendarToday = toCalendarDate(today);
+        if (calendarToday) {
+            currentYear.value = today.year;
+            currentMonth.value = today.month;
+            emit('select', calendarToday, false);
+        }
     }
 };
 
@@ -368,7 +370,7 @@ onMounted(() => {
 // 公開方法
 defineExpose({
     // 獲取當前選中的日期（單一模式）
-    getSelectedDate: () => selectedDate.value,
+    getSelectedDate: () => selectedCalendarDate.value,
 
     // 獲取當前範圍（範圍模式）
     getSelectedRange: () => ({ start: props.rangeStart, end: props.rangeEnd }),

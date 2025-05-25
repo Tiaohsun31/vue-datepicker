@@ -1,4 +1,4 @@
-<!-- SimplifiedDateGridView.vue - 簡化版日期網格 -->
+<!-- DateGridView.vue - 混合使用版本 -->
 <template>
     <div class="grid grid-cols-7 gap-1">
         <CalendarCell v-for="state in cellStates" :key="`${state.date.year}-${state.date.month}-${state.date.day}`"
@@ -51,9 +51,12 @@ const emit = defineEmits<{
     'navigate': [direction: 'prev-month' | 'next-month' | 'prev-year' | 'next-year'];
 }>();
 
-// 生成當月的日曆數據
+// 生成當月的日曆數據 - 這裡必須使用 @internationalized/date 的功能
 const calendarDays = computed(() => {
+    // 創建當月第一天的 CalendarDate
     const firstDayOfMonth = new CalendarDate(props.year, props.month, 1);
+
+    // 使用 @internationalized/date 的函數計算週數和開始日
     const weeksInMonth = getWeeksInMonth(firstDayOfMonth, props.locale);
     const startDay = startOfWeek(firstDayOfMonth, props.locale);
 
@@ -68,7 +71,7 @@ const calendarDays = computed(() => {
     return days;
 });
 
-// 今天的日期索引
+// 今天的日期鍵值 - 使用簡單計算
 const todayKey = computed(() => {
     const today = getTodaysDate();
     return `${today.year}-${today.month}-${today.day}`;

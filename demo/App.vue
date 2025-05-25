@@ -10,7 +10,7 @@
             </DatePicker>
         </div>
         <div>
-            <DateRange></DateRange>
+            <DateRange v-model="selectedDate"></DateRange>
         </div>
         <!-- <RouterView /> -->
     </div>
@@ -25,7 +25,10 @@ import { ref } from 'vue';
 import DatePicker from '@/DatePicker.vue';
 import DateRange from '@/DateRange.vue';
 
-const selectedDate = ref(null);
+const selectedDate = ref({
+    start: '2025-05-22',
+    end: '2025-05-25',
+});
 
 const dateTime = ref('2025-05-22 09:23:20');
 const dateTime2 = ref('2025-05-22T21:23:20');

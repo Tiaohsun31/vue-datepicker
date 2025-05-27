@@ -1,15 +1,15 @@
-<!-- DualMonthCalendar.vue - 混合使用版本（最終版） -->
+<!-- DualMonthCalendar.vue -->
 <template>
-    <div class="dual-month-calendar flex gap-4">
+    <div class="dual-month-calendar flex flex-col gap-4 min-w-auto md:min-w-[570px] md:flex-row m-1">
         <!-- 左側月份 -->
-        <div class="month-container">
+        <div class="month-container flex-1 min-w-auto md:min-w-[275px]">
             <CalendarGrid :range-start="actualStart" :range-end="actualEnd" :selection-mode="'range'" :year="leftYear"
                 :month="leftMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
                 :week-starts-on="weekStartsOn" @range-select="handleRangeSelect" />
         </div>
 
         <!-- 右側月份 -->
-        <div class="month-container">
+        <div class="month-container flex-1 md:min-w-[275px] min-w-auto">
             <CalendarGrid :range-start="actualStart" :range-end="actualEnd" :selection-mode="'range'" :year="rightYear"
                 :month="rightMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
                 :week-starts-on="weekStartsOn" @range-select="handleRangeSelect" />
@@ -219,27 +219,3 @@ defineExpose({
     })
 });
 </script>
-
-<style scoped>
-.dual-month-calendar {
-    min-width: 640px;
-}
-
-.month-container {
-    flex: 1;
-    min-width: 300px;
-}
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-    .dual-month-calendar {
-        flex-direction: column;
-        gap: 1rem;
-        min-width: auto;
-    }
-
-    .month-container {
-        min-width: auto;
-    }
-}
-</style>

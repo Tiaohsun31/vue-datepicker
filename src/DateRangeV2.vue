@@ -33,26 +33,31 @@
                         {{ endPlaceholder }}
                     </span>
                 </div>
-
-                <!-- 日曆圖標 -->
-                <span class="text-gray-400 hover:text-gray-600">
-                    <CalendarIcon class="h-5 w-5" />
-                </span>
+            </button>
+            <!-- 日曆圖標 -->
+            <button v-if="hasRangeValue && !disabled && showClearButton" type="button"
+                class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click="clearRange"
+                :title="'清除日期' + (showTime ? '時間' : '')">
+                <ClearIcon class="h-4 w-4 cursor-pointer" />
+            </button>
+            <button v-else type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                :disabled="disabled" @click="toggleCalendar">
+                <CalendarIcon class="h-5 w-5 cursor-pointer" />
             </button>
         </DateContainer>
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto md:min-w-[640px]"
+            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto md:min-w-[570px]"
             @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
 
             <!-- 範圍選擇器內容 -->
             <div class="p-2">
                 <!-- 輸入區域 -->
-                <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2 mb-2">
+                <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2 mb-4">
                     <!-- 開始日期輸入 -->
                     <div
-                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
                             :day-placeholder="dayPlaceholder" :max-date="endDateTime.inputDateValue.value"
@@ -68,7 +73,7 @@
 
                     <!-- 結束日期輸入 -->
                     <div
-                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
                             :day-placeholder="dayPlaceholder" :min-date="startDateTime.inputDateValue.value"
@@ -137,6 +142,7 @@ import DateInput from './components/inputs/DateInput.vue';
 import TimeInput from './components/inputs/TimeInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
+import ClearIcon from './components/icons/ClearIcon.vue';
 import DualMonthCalendar from './components/calendar/DualMonthCalendar.vue';
 
 // Composables
@@ -182,6 +188,7 @@ interface Props {
     dateFormat?: string;
     timeFormat?: string;
     showShortcuts?: boolean;
+    showClearButton?: boolean;
 
     // 範圍特定選項
     maxRange?: number;
@@ -211,6 +218,7 @@ const props = withDefaults(defineProps<Props>(), {
     locale: 'zh-TW',
     separator: ' ~ ',
     showShortcuts: true,
+    showClearButton: true,
     dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     outputFormat: 'iso',
@@ -320,6 +328,7 @@ const {
     calendarMaxDate,
     startDateTime,
     endDateTime,
+    hasRangeValue,
 
     // 事件處理方法
     handleStartDateValidation,

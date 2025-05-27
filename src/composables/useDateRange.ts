@@ -203,6 +203,11 @@ export function useDateRange(
         return dateStr + timeStr;
     });
 
+    // 檢查是否有範圍值
+    const hasRangeValue = computed(() => {
+        return !!(startDateTime.hasValue.value || endDateTime.hasValue.value);
+    });
+
     // 驗證範圍是否有效
     const isValidRange = computed(() => {
         if (!startDateTime.internalDateTime.value || !endDateTime.internalDateTime.value) {
@@ -560,6 +565,7 @@ export function useDateRange(
         // 顯示值
         displayStartDate,
         displayEndDate,
+        hasRangeValue,
 
         // 日曆相關
         ...calendarPopup,

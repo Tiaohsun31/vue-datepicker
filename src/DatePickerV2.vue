@@ -33,8 +33,13 @@
                 </div>
             </div>
 
-            <!-- 日曆圖標 -->
-            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            <!-- 日曆圖標和清除按鈕 -->
+            <button v-if="hasValue && !disabled && showClearButton" type="button"
+                class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click="reset"
+                :title="'清除日期' + (showTime ? '時間' : '')">
+                <ClearIcon class="h-4 w-4 cursor-pointer" />
+            </button>
+            <button v-else type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
                 :disabled="disabled" @click="toggleCalendar">
                 <CalendarIcon class="h-5 w-5 cursor-pointer" />
             </button>
@@ -58,7 +63,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, watch } from 'vue';
-import "./styles/theme.css";
 
 // 組件導入
 import DateContainer from './components/calendar/DateContainer.vue';
@@ -67,6 +71,7 @@ import TimeInput from './components/inputs/TimeInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
 import CalendarGrid from './components/calendar/CalendarGrid.vue';
+import ClearIcon from './components/icons/ClearIcon.vue';
 
 // Composables
 import { useDateTimePicker } from './composables/useDateTimePicker';
@@ -118,6 +123,7 @@ interface Props {
     dateFormat?: string;
     timeFormat?: string;
     autoFocus?: boolean;
+    showClearButton?: boolean;
 
     // 輸出格式
     outputFormat?: OutputFormat;
@@ -149,6 +155,7 @@ const props = withDefaults(defineProps<Props>(), {
     dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     autoFocus: false,
+    showClearButton: true,
     outputFormat: 'iso',
 });
 
@@ -292,6 +299,7 @@ const {
     calendarMinDate,
     calendarMaxDate,
     getValidDefaultTime,
+    hasValue,
 
     // 事件處理
     handleDateValidation,
@@ -306,5 +314,8 @@ const {
 
     // 日曆控制
     toggleCalendar,
+
+    // 清除功能
+    reset,
 } = datePicker;
 </script>

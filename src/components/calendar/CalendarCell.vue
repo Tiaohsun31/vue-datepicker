@@ -1,4 +1,4 @@
-<!-- CalendarCell.vue - 增強版支援範圍選擇 -->
+<!-- CalendarCell.vue -->
 <template>
     <div class="calendar-cell text-center relative">
         <!-- 日期按鈕 -->
@@ -79,7 +79,7 @@ const cellClasses = computed(() => {
             // 範圍起始點和結束點
             'bg-vdt-theme-500 text-white': props.isRangeStart || props.isRangeEnd,
             // 範圍內的日期
-            '!bg-vdt-interactive-hover text-white': props.isInRange && !props.isRangeStart && !props.isRangeEnd,
+            '!bg-vdt-outline !text-vdt-content': props.isInRange && !props.isRangeStart && !props.isRangeEnd,
             // 今天的標記（如果不在範圍選擇中）
             'ring-2 ring-vdt-theme-500': props.isToday && !props.isRangeStart && !props.isRangeEnd && !props.isInRange,
         };

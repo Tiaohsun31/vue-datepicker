@@ -157,6 +157,13 @@ export function useDateTimeValue(
     };
 
     /**
+     * 檢查是否有任何值
+     */
+    const hasValue = computed(() => {
+        return !!(inputDateValue.value || inputTimeValue.value || internalDateTime.value);
+    });
+
+    /**
      * 設置默認時間
      */
     const applyDefaultTime = () => {
@@ -185,6 +192,7 @@ export function useDateTimeValue(
         hasDateValue,
         hasTimeValue,
         hasCompleteValue,
+        hasValue,
 
         // 主要方法
         setExternalValue,

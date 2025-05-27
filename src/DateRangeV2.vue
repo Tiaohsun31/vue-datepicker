@@ -56,7 +56,7 @@
                 <!-- 輸入區域 -->
                 <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2 mb-4">
                     <!-- 開始日期輸入 -->
-                    <div
+                    <div @click="focusStartDate"
                         class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
@@ -72,7 +72,7 @@
                     </div>
 
                     <!-- 結束日期輸入 -->
-                    <div
+                    <div @click="focusEndDate"
                         class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
@@ -351,5 +351,8 @@ const {
     applyShortcut,
     clearRange,
     confirmRange,
+
+    focusStartDate,
+    focusEndDate,
 } = dateRange;
 </script>

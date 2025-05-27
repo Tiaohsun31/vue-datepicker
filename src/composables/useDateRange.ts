@@ -250,13 +250,6 @@ export function useDateRange(
             }
         },
         {
-            label: '昨天',
-            getValue: () => {
-                const yesterday = addDays(getNow(), -1);
-                return { start: yesterday, end: yesterday };
-            }
-        },
-        {
             label: '最近7天',
             getValue: () => {
                 const end = getNow();

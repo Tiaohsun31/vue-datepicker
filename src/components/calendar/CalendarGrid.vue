@@ -9,7 +9,7 @@
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" />
 
         <!-- 日期網格 -->
-        <SimplifiedDateGridView :year="currentYear" :month="currentMonth" :selected-date="selectedCalendarDate"
+        <DateGridView :year="currentYear" :month="currentMonth" :selected-date="selectedCalendarDate"
             :range-start="selectionMode === 'range' ? rangeStart : null"
             :range-end="selectionMode === 'range' ? rangeEnd : null" :selection-mode="selectionMode" :min-date="minDate"
             :max-date="maxDate" :locale="locale" :week-starts-on="weekStartsOn" @select="handleSelect"
@@ -96,7 +96,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { CalendarDate } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
-import SimplifiedDateGridView from './DateGridView.vue';
+import DateGridView from './DateGridView.vue';
 import {
     getTodaysDate,
     toCalendarDate,

@@ -1,7 +1,7 @@
 <template>
     <div class="container mx-auto p-4 space-y-6">
         <div>
-            <DatePicker v-model="dateTimeutc" locale="en-US" date-format="MM/DD/YYYY">
+            <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
             </DatePicker>
         </div>
         <div>
@@ -38,6 +38,12 @@
             </DatePicker>
         </div>
         <div>
+            <h3>3. 部分自定義錯誤顯示</h3>
+            <DatePicker v-model="partialCustomDate" :customErrorMessages="myCustomMessages">
+
+            </DatePicker>
+        </div>
+        <div>
             <DateRange v-model="selectedDate"></DateRange>
         </div>
         {{ selectedDate }}
@@ -69,6 +75,7 @@ const dateTime = ref('');
 const dateTime2 = ref('');
 const dateTime3 = ref('');
 const dateTimeutc = ref('');
+const partialCustomDate = ref();
 const fieldNames = {
     year: '年份',
     month: '月份',
@@ -88,4 +95,10 @@ function handleValidation(isValid: boolean, errors: Record<string, string>) {
 
     console.log('Validation errors:', validationErrors.value);
 }
+
+const myCustomMessages = {
+    '請輸入年份': '年份不能空白喔！',
+    '請輸入月份': '別忘了月份',
+    '請輸入日期': '日期也要填寫'
+};
 </script>

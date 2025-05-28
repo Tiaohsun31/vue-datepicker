@@ -1,11 +1,9 @@
-<!-- DateErrorMessage.vue -->
+<!-- DateErrorMessage.vue - 修復時間錯誤匹配 -->
 <template>
     <div v-if="hasErrors" class="mt-1 text-sm text-red-500">
-
         <!-- 預設的錯誤顯示邏輯 -->
         <div v-if="Array.isArray(processedErrors)">
             <div v-for="(error, index) in processedErrors" :key="index">
-                <!-- 嘗試使用具名 slot，回退到預設顯示 -->
                 <slot :name="`error-${error.field}`" :error="error" :message="error.message" :field="error.field">
                     <span>{{ error.message }}</span>
                 </slot>
@@ -20,15 +18,12 @@
 
         <div v-else-if="typeof processedErrors === 'object'">
             <div v-for="(error, field) in processedErrors" :key="field">
-                <!-- 關鍵修復：為每個字段提供具名 slot，處理帶點號的字段名 -->
                 <slot :name="getSlotName(field)" :field="field" :error="error" :message="error"
                     :originalKey="getOriginalKey(field)" :fieldType="getFieldType(field)">
-                    <!-- 預設顯示 -->
                     <span>{{ error }}</span>
                 </slot>
             </div>
         </div>
-
     </div>
 </template>
 
@@ -36,9 +31,7 @@
 import { computed, ref, watch } from 'vue';
 import { localeManager, type LocaleKey } from '@/locale/index';
 
-// 錯誤類型定義
-type ErrorField = 'year' | 'month' | 'day' | 'date' | 'time' | 'startDate' | 'endDate' | 'startTime' | 'endTime';
-type ErrorsType = string | string[] | Partial<Record<ErrorField | string, string>>;
+type ErrorsType = string | string[] | Record<string, string>;
 
 interface ProcessedError {
     field: string;
@@ -49,13 +42,9 @@ interface ProcessedError {
 interface Props {
     errors?: ErrorsType;
     locale?: string;
-    // 是否使用內建的i18n（可選關閉）
     useI18n?: boolean;
-    // 自定義錯誤訊息映射
     customMessages?: Record<string, string>;
-    // 錯誤鍵值映射到i18n路徑
     messageKeyMap?: Record<string, string>;
-    // 是否顯示調試信息
     debug?: boolean;
 }
 
@@ -68,7 +57,6 @@ const props = withDefaults(defineProps<Props>(), {
     debug: false
 });
 
-// 嘗試將string轉換為LocaleKey
 const tryConvertToLocaleKey = (locale: string): LocaleKey => {
     const validLocales: LocaleKey[] = ['zh-TW', 'zh-CN', 'en-US', 'ja-JP', 'ko-KR'];
     return validLocales.includes(locale as LocaleKey) ? (locale as LocaleKey) : 'zh-TW';
@@ -92,13 +80,11 @@ watch(() => props.locale, (newLocale) => {
 const internalCustomMessages = ref<Record<string, string>>({});
 const errorOriginalKeys = ref<Record<string, string>>({});
 
-// 合併自定義訊息
 const allCustomMessages = computed(() => ({
     ...props.customMessages,
     ...internalCustomMessages.value
 }));
 
-// 檢查是否有錯誤
 const hasErrors = computed(() => {
     if (!props.errors) return false;
 
@@ -111,16 +97,13 @@ const hasErrors = computed(() => {
     return false;
 });
 
-// 處理錯誤訊息，支援i18n
 const processedErrors = computed(() => {
     if (!props.errors) return null;
 
-    // 如果是字符串，嘗試轉換
     if (typeof props.errors === 'string') {
         return translateMessage(props.errors);
     }
 
-    // 如果是陣列
     if (Array.isArray(props.errors)) {
         return props.errors.map((error, index) => ({
             field: `item-${index}`,
@@ -129,21 +112,19 @@ const processedErrors = computed(() => {
         }));
     }
 
-    // 如果是物件 - 這是最重要的部分
     if (typeof props.errors === 'object') {
         const result: Record<string, string> = {};
         Object.entries(props.errors).forEach(([field, error]) => {
             if (error) {
-                // 保存原始錯誤鍵值
                 errorOriginalKeys.value[field] = error;
                 result[field] = translateMessage(error, field);
 
-                // 調試輸出
                 if (props.debug) {
                     console.log(`Processing error for field "${field}":`, {
                         original: error,
                         translated: result[field],
-                        field
+                        field,
+                        slotName: getSlotName(field)
                     });
                 }
             }
@@ -154,26 +135,15 @@ const processedErrors = computed(() => {
     return props.errors;
 });
 
-/**
- * 獲取字段的原始錯誤鍵值
- */
 function getOriginalKey(field: string): string | undefined {
     return errorOriginalKeys.value[field];
 }
 
-/**
- * 將字段名轉換為有效的 slot 名稱
- * 例如：'date.year' -> 'error-year'
- */
 function getSlotName(field: string): string {
-    // 移除前綴，只保留核心字段名
     const coreField = field.replace(/^(date|time|range)\./, '');
     return `error-${coreField}`;
 }
 
-/**
- * 獲取字段的類型（用於額外的 slot 屬性）
- */
 function getFieldType(field: string): string {
     if (field.startsWith('date.')) return 'date';
     if (field.startsWith('time.')) return 'time';
@@ -181,10 +151,11 @@ function getFieldType(field: string): string {
     return 'unknown';
 }
 
-/**
- * 翻譯訊息的核心函數
- */
 function translateMessage(message: string, field?: string): string {
+    if (props.debug) {
+        console.log(`Translating message: "${message}" for field: "${field}"`);
+    }
+
     // 1. 優先使用自定義訊息
     if (allCustomMessages.value[message]) {
         return allCustomMessages.value[message];
@@ -218,36 +189,51 @@ function translateMessage(message: string, field?: string): string {
     return message;
 }
 
-/**
- * 智能翻譯錯誤訊息
- */
 function smartTranslateError(message: string, field?: string): string {
-    // 先嘗試直接匹配具體的錯誤訊息
+    // 基於字段和訊息內容的智能匹配 - 更精確版本
+    function getI18nKeyByFieldAndMessage(message: string, field?: string): string | null {
+        // 精確匹配具體字段的必填錯誤
+        if (/請輸入|please enter|required/i.test(message)) {
+            if (field?.includes('year') || message.includes('年份')) return 'year.required';
+            if (field?.includes('month') || message.includes('月份')) return 'month.required';
+            if (field?.includes('day') || message.includes('日期')) return 'day.required';
+
+            // 時間字段的精確匹配
+            if (field?.includes('hour') || message.includes('小時')) return 'time.hourRequired';
+            if (field?.includes('minute') || message.includes('分鐘')) return 'time.minuteRequired';
+            if (field?.includes('second') || message.includes('秒鐘')) return 'time.secondRequired';
+
+            // 範圍相關
+            if (field?.includes('startDate') || message.includes('開始日期')) return 'range.startRequired';
+            if (field?.includes('endDate') || message.includes('結束日期')) return 'range.endRequired';
+
+            // 通用時間和日期（作為後備）
+            if (field?.includes('time') || message.includes('時間')) return 'time.required';
+            if (field?.includes('date') || message.includes('日期')) return 'date.required';
+        }
+
+        return null;
+    }
+
+    // 簡化的直接匹配表 - 只保留最明確的匹配
     const directMatches: Record<string, string> = {
-        // 中文錯誤訊息直接映射
-        '請輸入年份': 'year.required',
-        '請輸入月份': 'month.required',
-        '請輸入日期': 'day.required',
+        // 精確匹配的錯誤訊息
         '請選擇日期': 'date.required',
         '請選擇時間': 'time.required',
         '請選擇開始日期': 'range.startRequired',
         '請選擇結束日期': 'range.endRequired',
 
-        // 英文錯誤訊息直接映射
-        'Please enter year': 'year.required',
-        'Please enter month': 'month.required',
-        'Please enter day': 'day.required',
+        // 範圍錯誤
+        '小時必須是 0-23 之間的數字': 'time.hourOutOfRange',
+        '小時必須是 1-12 之間的數字': 'time.hourOutOfRange',
+        '分鐘必須是 0-59 之間的數字': 'time.minuteOutOfRange',
+        '秒鐘必須是 0-59 之間的數字': 'time.secondOutOfRange',
+
+        // 英文錯誤訊息
         'Please select a date': 'date.required',
         'Please select a time': 'time.required',
         'Please select start date': 'range.startRequired',
         'Please select end date': 'range.endRequired',
-
-        // 其他語言的常見錯誤（可擴展）
-        'Year is required': 'year.required',
-        'Month is required': 'month.required',
-        'Day is required': 'day.required',
-        'Date is required': 'date.required',
-        'Time is required': 'time.required',
     };
 
     // 先檢查直接匹配
@@ -258,32 +244,27 @@ function smartTranslateError(message: string, field?: string): string {
                 return translated;
             }
         } catch (error) {
-            console.warn(`Translation failed for direct match: ${directMatches[message]}`);
+            if (props.debug) console.warn(`Translation failed for direct match: ${directMatches[message]}`);
         }
     }
 
-    // 如果沒有直接匹配，使用模式匹配
-    const patterns = [
-        // 必填欄位模式 - 根據field參數決定翻譯鍵
-        {
-            regex: /請輸入|please enter|required/i,
-            handler: (field?: string) => {
-                let key = 'date.required'; // 預設值
-
-                if (field === 'year') key = 'year.required';
-                else if (field === 'month') key = 'month.required';
-                else if (field === 'day') key = 'day.required';
-                else if (field === 'time') key = 'time.required';
-                else if (field === 'startDate') key = 'range.startRequired';
-                else if (field === 'endDate') key = 'range.endRequired';
-                else if (field === 'startTime') key = 'time.required';
-                else if (field === 'endTime') key = 'time.required';
-
-                return key;
+    // 模式匹配 - 使用新的智能匹配函數
+    if (/請輸入|please enter|required/i.test(message)) {
+        const smartKey = getI18nKeyByFieldAndMessage(message, field);
+        if (smartKey) {
+            try {
+                const translated = localeManager.getMessage(smartKey);
+                if (translated && translated !== smartKey) {
+                    return translated;
+                }
+            } catch (error) {
+                if (props.debug) console.warn(`Translation failed for smart key: ${smartKey}`);
             }
-        },
+        }
+    }
 
-        // 範圍錯誤模式
+    // 其他模式匹配
+    const patterns = [
         {
             regex: /(年份|year).*(\d+)-(\d+).*數字/i,
             handler: () => 'year.outOfRange'
@@ -296,8 +277,6 @@ function smartTranslateError(message: string, field?: string): string {
             regex: /(日期|day).*1-31.*數字/i,
             handler: () => 'day.outOfRange'
         },
-
-        // 時間範圍錯誤
         {
             regex: /(小時|hour).*(\d+)-(\d+)/i,
             handler: () => 'time.hourOutOfRange'
@@ -310,54 +289,35 @@ function smartTranslateError(message: string, field?: string): string {
             regex: /(秒鐘|second).*0-59/i,
             handler: () => 'time.secondOutOfRange'
         },
-
-        // 閏年錯誤
-        {
-            regex: /(\d+)年2月.*29日.*閏年|february 29.*(\d+).*leap year/i,
-            handler: () => 'year.notLeapYear'
-        },
-
-        // 月份天數錯誤
-        {
-            regex: /(\d+)月.*(\d+)天|month.*(\d+).*(\d+) days/i,
-            handler: () => 'day.notExistInMonth'
-        },
-
-        // 無效格式
         {
             regex: /無效|invalid/i,
             handler: (field?: string) => {
-                if (field === 'year') return 'year.invalid';
-                if (field === 'month') return 'month.invalid';
-                if (field === 'day') return 'day.invalid';
-                if (field === 'time') return 'time.invalid';
+                if (field?.includes('year')) return 'year.invalid';
+                if (field?.includes('month')) return 'month.invalid';
+                if (field?.includes('day')) return 'day.invalid';
+                if (field?.includes('time') || field?.includes('hour') || field?.includes('minute') || field?.includes('second')) return 'time.invalid';
                 return 'date.invalid';
             }
         }
     ];
 
-    // 嘗試模式匹配
     for (const pattern of patterns) {
         if (pattern.regex.test(message)) {
             const i18nKey = pattern.handler(field);
-
             try {
                 const translated = localeManager.getMessage(i18nKey);
                 if (translated && translated !== i18nKey) {
                     return translated;
                 }
             } catch (error) {
-                console.warn(`Translation failed for pattern match: ${i18nKey}`);
-                continue;
+                if (props.debug) console.warn(`Translation failed for pattern: ${i18nKey}`);
             }
         }
     }
 
-    // 如果都沒匹配到，返回原始訊息
     return message;
 }
 
-// 暴露給父組件的方法
 defineExpose({
     hasErrors,
     processedErrors,
@@ -365,13 +325,10 @@ defineExpose({
     getOriginalKey,
     getSlotName,
     getFieldType,
-
-    // 手動設置語言
     setLocale: (locale: string) => {
         const localeKey = tryConvertToLocaleKey(locale);
         localeManager.setLocale(localeKey);
     },
-
     addCustomTranslation: (key: string, message: string) => {
         internalCustomMessages.value[key] = message;
     }

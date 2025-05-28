@@ -425,6 +425,10 @@ export function useDateRange(
             startDateTime.inputDateValue.value = formatSimpleDate(simpleStart, dateFormat);
             startDateTime.updateDateTime();
 
+            ['startDate', 'date.year', 'date.month', 'date.day'].forEach(field => {
+                validation.clearFieldErrors(field);
+            });
+
             // 清除結束日期
             endDateTime.clearValues();
         } else if (startDate && endDate) {
@@ -447,10 +451,18 @@ export function useDateRange(
 
             startDateTime.updateDateTime();
             endDateTime.updateDateTime();
+
+            ['startDate', 'endDate', 'range', 'date.year', 'date.month', 'date.day'].forEach(field => {
+                validation.clearFieldErrors(field);
+            });
         } else {
             // 清空選擇
             startDateTime.clearValues();
             endDateTime.clearValues();
+
+            ['startDate', 'endDate', 'range'].forEach(field => {
+                validation.clearFieldErrors(field);
+            });
         }
 
         emitRangeEvents();

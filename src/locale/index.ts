@@ -18,6 +18,9 @@ export interface ErrorMessages {
         hourOutOfRange: string;
         minuteOutOfRange: string;
         secondOutOfRange: string;
+        hourRequired: string;
+        minuteRequired: string;
+        secondRequired: string;
     };
 
     // 年月日個別錯誤
@@ -73,6 +76,9 @@ export const localeMessages: Record<LocaleKey, ErrorMessages> = {
             hourOutOfRange: '小時必須是 {min}-{max} 之間的數字',
             minuteOutOfRange: '分鐘必須是 0-59 之間的數字',
             secondOutOfRange: '秒鐘必須是 0-59 之間的數字',
+            hourRequired: '請輸入小時',
+            minuteRequired: '請輸入分鐘',
+            secondRequired: '請輸入秒鐘',
         },
         year: {
             required: '請輸入年份',
@@ -118,6 +124,9 @@ export const localeMessages: Record<LocaleKey, ErrorMessages> = {
             hourOutOfRange: '小时必须是 {min}-{max} 之间的数字',
             minuteOutOfRange: '分钟必须是 0-59 之间的数字',
             secondOutOfRange: '秒钟必须是 0-59 之间的数字',
+            hourRequired: '请输入小时',
+            minuteRequired: '请输入分钟',
+            secondRequired: '请输入秒钟',
         },
         year: {
             required: '请输入年份',
@@ -163,6 +172,9 @@ export const localeMessages: Record<LocaleKey, ErrorMessages> = {
             hourOutOfRange: 'Hour must be between {min}-{max}',
             minuteOutOfRange: 'Minute must be between 0-59',
             secondOutOfRange: 'Second must be between 0-59',
+            hourRequired: 'Please enter hour',
+            minuteRequired: 'Please enter minute',
+            secondRequired: 'Please enter second',
         },
         year: {
             required: 'Please enter year',
@@ -208,6 +220,9 @@ export const localeMessages: Record<LocaleKey, ErrorMessages> = {
             hourOutOfRange: '時間は {min}-{max} の間で入力してください',
             minuteOutOfRange: '分は 0-59 の間で入力してください',
             secondOutOfRange: '秒は 0-59 の間で入力してください',
+            hourRequired: '時間を入力してください',
+            minuteRequired: '分を入力してください',
+            secondRequired: '秒を入力してください',
         },
         year: {
             required: '年を入力してください',
@@ -253,6 +268,9 @@ export const localeMessages: Record<LocaleKey, ErrorMessages> = {
             hourOutOfRange: '시간은 {min}-{max} 사이의 숫자여야 합니다',
             minuteOutOfRange: '분은 0-59 사이의 숫자여야 합니다',
             secondOutOfRange: '초는 0-59 사이의 숫자여야 합니다',
+            hourRequired: '시간을 입력해주세요',
+            minuteRequired: '분을 입력해주세요',
+            secondRequired: '초을 입력해주세요',
         },
         year: {
             required: '연도를 입력해주세요',

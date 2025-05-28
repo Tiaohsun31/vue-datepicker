@@ -225,6 +225,10 @@ export function useDateTimePicker(
             new Date(simpleDate.year, simpleDate.month - 1, simpleDate.day)
                 .toLocaleDateString('zh-TW'); // ISO format YYYY-MM-DD
 
+        ['date', 'year', 'month', 'day'].forEach(field => {
+            validation.clearFieldErrors(field);
+        });
+
         const updatedDateTime = dateTimeValue.updateDateTime();
         emitEvents(updatedDateTime);
 
@@ -238,6 +242,9 @@ export function useDateTimePicker(
      */
     const handleTimeSelect = (timeStr: string) => {
         dateTimeValue.inputTimeValue.value = timeStr;
+        ['time', 'hour', 'minute', 'second'].forEach(field => {
+            validation.clearFieldErrors(field);
+        });
         const updatedDateTime = dateTimeValue.updateDateTime();
         emitEvents(updatedDateTime);
     };

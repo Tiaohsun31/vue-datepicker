@@ -223,7 +223,7 @@ export function useDateTimePicker(
 
         dateTimeValue.inputDateValue.value =
             new Date(simpleDate.year, simpleDate.month - 1, simpleDate.day)
-                .toLocaleDateString('sv-SE'); // ISO format YYYY-MM-DD
+                .toLocaleDateString('zh-TW'); // ISO format YYYY-MM-DD
 
         const updatedDateTime = dateTimeValue.updateDateTime();
         emitEvents(updatedDateTime);
@@ -280,7 +280,7 @@ export function useDateTimePicker(
      */
     const selectNow = () => {
         const now = new Date();
-        const dateStr = now.toLocaleDateString('sv-SE'); // ISO format
+        const dateStr = now.toLocaleDateString('zh-TW'); // ISO format
         const timeStr = defaultTime.getCurrentTimeString();
 
         dateTimeValue.inputDateValue.value = dateStr;

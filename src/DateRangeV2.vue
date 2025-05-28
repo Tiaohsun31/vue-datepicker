@@ -1,4 +1,4 @@
-<!-- 重構後的 DateRange.vue - 使用 Composables -->
+<!-- DateRangeV2.vue - 整合錯誤訊息 -->
 <template>
     <div class="date-range-wrapper md:min-w-auto relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[200px]']" v-bind="containerAttributes"
@@ -34,7 +34,8 @@
                     </span>
                 </div>
             </button>
-            <!-- 日曆圖標 -->
+
+            <!-- 日曆圖標和清除按鈕 -->
             <button v-if="hasRangeValue && !disabled && showClearButton" type="button"
                 class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click="clearRange"
                 :title="'清除日期' + (showTime ? '時間' : '')">
@@ -129,8 +130,20 @@
         </div>
     </div>
 
-    <!-- 錯誤訊息 -->
-    <DateErrorMessage :errors="mergedErrors" />
+    <!-- 錯誤訊息顯示 - 可選且可自定義 -->
+    <div v-if="showErrorMessage && hasErrors">
+        <!-- 讓使用者完全控制錯誤顯示 -->
+        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+            <!-- 預設使用 DateErrorMessage -->
+            <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
+                :custom-messages="customErrorMessages">
+                <!-- 將內部的 slot 轉發給使用者 -->
+                <template v-for="(_, slotName) in $slots" :key="slotName" #[slotName]="slotProps">
+                    <slot :name="slotName" v-bind="slotProps" />
+                </template>
+            </DateErrorMessage>
+        </slot>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -196,6 +209,11 @@ interface Props {
 
     // 輸出格式
     outputFormat?: OutputFormat;
+
+    // 錯誤處理選項
+    showErrorMessage?: boolean;  // 是否顯示錯誤訊息
+    useI18n?: boolean;           // 是否使用內建i18n
+    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -222,6 +240,9 @@ const props = withDefaults(defineProps<Props>(), {
     dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     outputFormat: 'iso',
+    showErrorMessage: true,     // 預設顯示錯誤訊息
+    useI18n: true,
+    customErrorMessages: () => ({})
 });
 
 const emit = defineEmits<{
@@ -284,6 +305,16 @@ const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDat
 const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
 const dateInputFormat = computed(() => props.dateFormat);
 
+// 合併所有錯誤
+const mergedErrors = computed(() => {
+    return dateRange.mergedErrors.value;
+});
+
+// 是否有錯誤
+const hasErrors = computed(() => {
+    return Object.keys(mergedErrors.value).length > 0;
+});
+
 // 監聽主題變化
 watch(() => props.theme, (newTheme) => {
     if (newTheme) {
@@ -311,6 +342,10 @@ defineExpose({
     setDarkMode: () => setMode('dark'),
     setLightMode: () => setMode('light'),
     setAutoMode: () => setMode('auto'),
+
+    // 錯誤相關
+    getErrors: () => mergedErrors.value,
+    hasErrors: () => hasErrors.value
 });
 
 // 解構賦值暴露 composable 的方法和狀態
@@ -320,7 +355,6 @@ const {
     displayEndDate,
     showCalendar,
     isValidRange,
-    mergedErrors,
     shortcuts,
     calendarStartDate,
     calendarEndDate,
@@ -330,7 +364,7 @@ const {
     endDateTime,
     hasRangeValue,
 
-    // 事件處理方法
+// 事件處理方法
     handleStartDateValidation,
     handleEndDateValidation,
     handleStartTimeValidation,

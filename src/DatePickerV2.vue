@@ -1,4 +1,4 @@
-<!-- 重構後的 DatePicker.vue - 使用 Composables -->
+<!-- DatePickerV2.vue - 整合錯誤訊息 -->
 <template>
     <div class="date-time-picker-wrapper relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
@@ -57,8 +57,20 @@
         </div>
     </div>
 
-    <!-- 錯誤訊息 -->
-    <DateErrorMessage :errors="mergedErrors" />
+    <!-- 錯誤訊息顯示 - 可選且可自定義 -->
+    <div v-if="showErrorMessage && hasErrors">
+        <!-- 讓使用者完全控制錯誤顯示 -->
+        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+            <!-- 預設使用 DateErrorMessage -->
+            <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
+                :custom-messages="customErrorMessages">
+                <!-- 將內部的 slot 轉發給使用者 -->
+                <template v-for="(_, slotName) in $slots" :key="slotName" #[slotName]="slotProps">
+                    <slot :name="slotName" v-bind="slotProps" />
+                </template>
+            </DateErrorMessage>
+        </slot>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -128,6 +140,11 @@ interface Props {
     // 輸出格式
     outputFormat?: OutputFormat;
     outputDateFormat?: string;
+
+    // 錯誤處理選項
+    showErrorMessage?: boolean;  // 是否顯示錯誤訊息
+    useI18n?: boolean;           // 是否使用內建i18n
+    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -157,6 +174,9 @@ const props = withDefaults(defineProps<Props>(), {
     autoFocus: false,
     showClearButton: true,
     outputFormat: 'iso',
+    showErrorMessage: true,     // 預設顯示錯誤訊息
+    useI18n: true,
+    customErrorMessages: () => ({})
 });
 
 const emit = defineEmits<{
@@ -224,9 +244,17 @@ const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDat
 const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
 const dateInputFormat = computed(() => internalDateFormat.value);
 
-// 合併格式錯誤
+// 合併所有錯誤（格式錯誤 + 驗證錯誤）
 const mergedErrors = computed(() => {
-    return { ...datePicker.mergedErrors.value, ...formatErrors.value };
+    return {
+        ...datePicker.mergedErrors.value,
+        ...formatErrors.value
+    };
+});
+
+// 是否有錯誤
+const hasErrors = computed(() => {
+    return Object.keys(mergedErrors.value).length > 0;
 });
 
 // 格式驗證和修復
@@ -287,6 +315,10 @@ defineExpose({
     getCurrentMode: () => currentMode.value,
     isDarkMode: () => isDark.value,
     isLightMode: () => isLight.value,
+
+    // 錯誤相關
+    getErrors: () => mergedErrors.value,
+    hasErrors: () => hasErrors.value
 });
 
 // 暴露 composable 的方法（解構賦值）

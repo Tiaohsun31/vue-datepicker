@@ -1,12 +1,40 @@
 <template>
-    <div class="container mx-auto max-w-sm space-y-4 p-5">
+    <div class="container mx-auto p-4 space-y-6">
         <div>
-            {{ dateTimeutc }}
-            <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
+            <DatePicker v-model="dateTimeutc" locale="en-US" date-format="MM/DD/YYYY">
             </DatePicker>
         </div>
         <div>
-            <DatePicker v-model="dateTime3" mode="dark">
+            <DatePicker v-model="dateTime2" mode="dark">
+                <template #error="{ errors }">
+                    <!-- 完全不使用 DateErrorMessage，自己寫 -->
+                    <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
+                        <h4 class="font-bold text-red-800">輸入錯誤：</h4>
+                        <ul class="list-disc list-inside text-red-700 text-sm">
+                            <li v-for="(error, field) in errors" :key="field">
+                                {{ getFieldName(field as string) }}: {{ error }}
+                            </li>
+                        </ul>
+                    </div>
+                </template>
+            </DatePicker>
+        </div>
+        <div>
+            <DatePicker v-model="dateTime3">
+                <template #error-year="{ message, field, originalKey }">自定義年份錯誤
+                    {{ message }}
+                    {{ field }}
+                    {{ originalKey }}
+                </template>
+                <template #error-month="{ message, field, fieldType }">
+                    <div class="custom-month-error">
+                        月份錯誤: {{ message }} {{ field }} {{ fieldType }}
+                    </div>
+                </template>
+            </DatePicker>
+        </div>
+        <div>
+            <DatePicker v-model="dateTime" locale="zh-TW" @validation="handleValidation" :showErrorMessage="false">
             </DatePicker>
         </div>
         <div>
@@ -28,8 +56,7 @@ import { ref } from 'vue';
 // import DatePickerV4 from '@/DatePickerV4.vue';
 import DatePicker from '@/DatePickerV2.vue';
 import DateRange from '@/DateRangeV2.vue';
-import { start } from 'repl';
-
+const validationErrors = ref<string[]>([]);
 // const selectedDate = ref({
 //     start: '2025-05-22',
 //     end: '2025-05-25',
@@ -38,8 +65,27 @@ const selectedDate = ref({
     start: '',
     end: '',
 });
-const dateTime = ref('2025-05-22 09:23:20');
-const dateTime2 = ref('2025-05-22T21:23:20');
+const dateTime = ref('');
+const dateTime2 = ref('');
 const dateTime3 = ref('');
 const dateTimeutc = ref('');
+const fieldNames = {
+    year: '年份',
+    month: '月份',
+    day: '日期',
+    date: '日期',
+    time: '時間'
+};
+function getFieldName(field: string): string {
+    return fieldNames[field as keyof typeof fieldNames] || field;
+}
+function handleValidation(isValid: boolean, errors: Record<string, string>) {
+    if (!isValid) {
+        validationErrors.value = Object.values(errors);
+    } else {
+        validationErrors.value = [];
+    }
+
+    console.log('Validation errors:', validationErrors.value);
+}
 </script>

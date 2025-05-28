@@ -1,14 +1,16 @@
-<!-- DateRange.vue  -->
+<!-- DateRangeV2.vue - 整合錯誤訊息 -->
 <template>
     <div class="date-range-wrapper md:min-w-auto relative w-full"
-        :class="[themeClasses, showTime ? 'min-w-[280px]' : 'min-w-[200px]']" v-bind="containerAttributes"
-        ref="rangeRef">
+        :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[200px]']" v-bind="containerAttributes"
+        ref="containerRef">
+
         <!-- 日期範圍顯示容器 -->
-        <DateContainer :errors="errors">
-            <button type="button" class="flex items-center gap-2 flex-1 cursor-pointer transition-colors duration-200"
+        <DateContainer :errors="mergedErrors">
+            <button type="button" class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200"
                 :disabled="disabled" @click="toggleCalendar">
+
                 <!-- 開始日期 -->
-                <div class="flex-1 text-center">
+                <div class="flex-1 text-center whitespace-nowrap">
                     <span v-if="displayStartDate" class="text-vdt-content text-sm">
                         {{ displayStartDate }}
                     </span>
@@ -23,7 +25,7 @@
                 </div>
 
                 <!-- 結束日期 -->
-                <div class="flex-1 text-center ">
+                <div class="flex-1 text-center whitespace-nowrap">
                     <span v-if="displayEndDate" class="text-vdt-content text-sm">
                         {{ displayEndDate }}
                     </span>
@@ -31,47 +33,59 @@
                         {{ endPlaceholder }}
                     </span>
                 </div>
-                <!-- 日曆圖標 -->
-                <span class="text-gray-400 hover:text-gray-600">
-                    <CalendarIcon class="h-5 w-5" />
-                </span>
+            </button>
+
+            <!-- 日曆圖標和清除按鈕 -->
+            <button v-if="hasRangeValue && !disabled && showClearButton" type="button"
+                class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click="clearRange"
+                :title="'清除日期' + (showTime ? '時間' : '')">
+                <ClearIcon class="h-4 w-4 cursor-pointer" />
+            </button>
+            <button v-else type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                :disabled="disabled" @click="toggleCalendar">
+                <CalendarIcon class="h-5 w-5 cursor-pointer" />
             </button>
         </DateContainer>
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto md:min-w-[640px]"
+            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto md:min-w-[570px]"
             @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
 
             <!-- 範圍選擇器內容 -->
             <div class="p-2">
                 <!-- 輸入區域 -->
-                <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2 mb-2">
+                <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2 mb-4">
                     <!-- 開始日期輸入 -->
-                    <div
-                        class="flex-1 flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
-                        <DateInput ref="startDateInputRef" v-model="inputStartDate" :year-placeholder="yearPlaceholder"
-                            :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder"
-                            :max-date="inputEndDate" :min-date="minDateStr" :date-format="dateInputFormat"
-                            @validation="onStartDateValidation" @complete="onStartDateComplete" />
-                        <TimeInput v-if="showTime" ref="startTimeInputRef" v-model="inputStartTime"
+                    <div @click="focusStartDate"
+                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
+                            :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
+                            :day-placeholder="dayPlaceholder" :max-date="endDateTime.inputDateValue.value"
+                            :min-date="minDateStr" :date-format="dateInputFormat"
+                            @validation="handleStartDateValidation" @complete="handleStartDateComplete" />
+
+                        <TimeInput v-if="showTime" ref="startTimeInputRef" v-model="startDateTime.inputTimeValue.value"
                             :hour-placeholder="hourPlaceholder" :minute-placeholder="minutePlaceholder"
                             :second-placeholder="secondPlaceholder" :enable-seconds="enableSeconds"
-                            :use24Hour="use24Hour" :locale="locale" @validation="onStartTimeValidation"
-                            @complete="onStartTimeComplete" />
+                            :use24Hour="use24Hour" :locale="locale" @validation="handleStartTimeValidation"
+                            @complete="handleStartTimeComplete" @navigate-to-date="handleStartNavigateToDate" />
                     </div>
+
                     <!-- 結束日期輸入 -->
-                    <div
-                        class="flex-1 flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
-                        <DateInput ref="endDateInputRef" v-model="inputEndDate" :year-placeholder="yearPlaceholder"
-                            :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder"
-                            :min-date="inputStartDate" :max-date="maxDateStr" :date-format="dateInputFormat"
-                            @validation="onEndDateValidation" @complete="onEndDateComplete" />
-                        <TimeInput v-if="showTime" ref="endTimeInputRef" v-model="inputEndTime"
+                    <div @click="focusEndDate"
+                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
+                            :year-placeholder="yearPlaceholder" :month-placeholder="monthPlaceholder"
+                            :day-placeholder="dayPlaceholder" :min-date="startDateTime.inputDateValue.value"
+                            :max-date="maxDateStr" :date-format="dateInputFormat" @validation="handleEndDateValidation"
+                            @complete="handleEndDateComplete" />
+
+                        <TimeInput v-if="showTime" ref="endTimeInputRef" v-model="endDateTime.inputTimeValue.value"
                             :hour-placeholder="hourPlaceholder" :minute-placeholder="minutePlaceholder"
                             :second-placeholder="secondPlaceholder" :enable-seconds="enableSeconds"
-                            :use24Hour="use24Hour" :locale="locale" @validation="onEndTimeValidation"
-                            @complete="onEndTimeComplete" />
+                            :use24Hour="use24Hour" :locale="locale" @validation="handleEndTimeValidation"
+                            @complete="handleEndTimeComplete" @navigate-to-date="handleEndNavigateToDate" />
                     </div>
                 </div>
 
@@ -90,7 +104,7 @@
                 <div class="calendar-container flex flex-col md:flex-row gap-2 overflow-auto">
                     <DualMonthCalendar :range-start="calendarStartDate" :range-end="calendarEndDate"
                         :min-date="calendarMinDate" :max-date="calendarMaxDate" :locale="locale" :week-starts-on="0"
-                        @range-select="onCalendarRangeSelect" />
+                        @range-select="handleCalendarRangeSelect" />
                 </div>
 
                 <!-- 操作按鈕 -->
@@ -115,13 +129,25 @@
             </div>
         </div>
     </div>
-    <!-- 錯誤訊息 -->
-    <DateErrorMessage :errors="mergedErrors" />
+
+    <!-- 錯誤訊息顯示 - 可選且可自定義 -->
+    <div v-if="showErrorMessage && hasErrors">
+        <!-- 讓使用者完全控制錯誤顯示 -->
+        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+            <!-- 預設使用 DateErrorMessage -->
+            <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
+                :custom-messages="customErrorMessages">
+                <!-- 將內部的 slot 轉發給使用者 -->
+                <template v-for="(_, slotName) in $slots" :key="slotName" #[slotName]="slotProps">
+                    <slot :name="slotName" v-bind="slotProps" />
+                </template>
+            </DateErrorMessage>
+        </slot>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import dayjs from 'dayjs';
+import { ref, computed, watch } from 'vue';
 
 // 組件導入
 import DateContainer from './components/calendar/DateContainer.vue';
@@ -129,37 +155,21 @@ import DateInput from './components/inputs/DateInput.vue';
 import TimeInput from './components/inputs/TimeInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
+import ClearIcon from './components/icons/ClearIcon.vue';
 import DualMonthCalendar from './components/calendar/DualMonthCalendar.vue';
 
-// 使用簡化的 dateUtils
+// Composables
+import { useDateRange } from './composables/useDateRange';
+import { useTheme } from './composables/useTheme';
+
+// Utils
 import {
-    parseToSimpleDate,
     formatSimpleDate,
     ensureSimpleDate,
-    formatOutput,
-    getNow,
-    createSimpleDate,
-    toCalendarDate,
-    fromCalendarDate,
-    compareDates,
-    addDays,
-    type SimpleDateValue,
     type DateTimeValue,
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
-import { useTheme } from './composables/useTheme';
-
-// 日期範圍類型 - 使用 SimpleDateValue
-interface SimpleDateRange {
-    start: SimpleDateValue;
-    end: SimpleDateValue;
-}
-
-interface DateRangeShortcut {
-    label: string;
-    getValue: () => SimpleDateRange;
-}
 
 interface Props {
     modelValue?: { start: DateTimeValue; end: DateTimeValue } | null;
@@ -190,14 +200,20 @@ interface Props {
     separator?: string;
     dateFormat?: string;
     timeFormat?: string;
-    showShortcuts?: boolean; // 是否顯示快捷選項
+    showShortcuts?: boolean;
+    showClearButton?: boolean;
 
     // 範圍特定選項
-    maxRange?: number; // 最大天數限制
-    minRange?: number; // 最小天數限制
+    maxRange?: number;
+    minRange?: number;
 
     // 輸出格式
     outputFormat?: OutputFormat;
+
+    // 錯誤處理選項
+    showErrorMessage?: boolean;  // 是否顯示錯誤訊息
+    useI18n?: boolean;           // 是否使用內建i18n
+    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -209,20 +225,24 @@ const props = withDefaults(defineProps<Props>(), {
     dayPlaceholder: '日',
     startPlaceholder: '開始日期',
     endPlaceholder: '結束日期',
-    showTime: false,
+    showTime: true,
     hourPlaceholder: '時',
     minutePlaceholder: '分',
     secondPlaceholder: '秒',
-    enableSeconds: false,
+    enableSeconds: true,
     use24Hour: true,
     disabled: false,
     required: false,
     locale: 'zh-TW',
     separator: ' ~ ',
     showShortcuts: true,
+    showClearButton: true,
     dateFormat: 'YYYY-MM-DD',
     timeFormat: 'HH:mm:ss',
     outputFormat: 'iso',
+    showErrorMessage: true,     // 預設顯示錯誤訊息
+    useI18n: true,
+    customErrorMessages: () => ({})
 });
 
 const emit = defineEmits<{
@@ -232,409 +252,47 @@ const emit = defineEmits<{
 }>();
 
 // DOM 引用
-const rangeRef = ref<HTMLElement | null>(null);
+const containerRef = ref<HTMLElement | null>(null);
 const calendarRef = ref<HTMLElement | null>(null);
 const startDateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
 const endDateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
 const startTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 
-// 狀態 - 使用 SimpleDateValue
-const showCalendar = ref(false);
-const errors = ref<Record<string, string>>({});
-const formatErrors = ref<Record<string, string>>({});
-
-// 輸入值
-const inputStartDate = ref<string | null>(null);
-const inputEndDate = ref<string | null>(null);
-const inputStartTime = ref<string | null>(null);
-const inputEndTime = ref<string | null>(null);
-
-// 內部日期時間 - 使用 SimpleDateValue
-const internalStartDateTime = ref<SimpleDateValue | null>(null);
-const internalEndDateTime = ref<SimpleDateValue | null>(null);
-
-// 輔助函數
-const getTimeFromDateTime = (dateTime: SimpleDateValue | null): string | null => {
-    if (!dateTime || dateTime.hour === undefined) return null;
-
-    const hour = dateTime.hour.toString().padStart(2, '0');
-    const minute = (dateTime.minute || 0).toString().padStart(2, '0');
-
-    if (props.enableSeconds) {
-        const second = (dateTime.second || 0).toString().padStart(2, '0');
-        return `${hour}:${minute}:${second}`;
-    } else {
-        return `${hour}:${minute}`;
-    }
-};
-
-const clearInternalState = () => {
-    internalStartDateTime.value = null;
-    internalEndDateTime.value = null;
-    inputStartDate.value = null;
-    inputEndDate.value = null;
-    inputStartTime.value = null;
-    inputEndTime.value = null;
-};
-
-const createDateTimeFromInputs = (dateStr: string | null, timeStr: string | null): SimpleDateValue | null => {
-    if (!dateStr) return null;
-
-    const date = dayjs(dateStr);
-    if (!date.isValid()) return null;
-
-    const timeParts = timeStr ? timeStr.split(':').map(Number) : [0, 0, 0];
-    const hour = timeParts[0] || 0;
-    const minute = timeParts[1] || 0;
-    const second = timeParts[2] || 0;
-
-    return createSimpleDate(
-        date.year(),
-        date.month() + 1,
-        date.date(),
-        hour,
-        minute,
-        second
-    );
-};
-
-// 計算屬性 - 只在需要傳遞給日曆組件時才轉換
-const calendarStartDate = computed(() => {
-    if (!internalStartDateTime.value) return null;
-    return toCalendarDate(internalStartDateTime.value);
-});
-
-const calendarEndDate = computed(() => {
-    if (!internalEndDateTime.value) return null;
-    return toCalendarDate(internalEndDateTime.value);
-});
-
-// 轉換 minDate 和 maxDate
-const calendarMinDate = computed(() => {
-    const minDateValue = ensureSimpleDate(props.minDate);
-    return minDateValue ? toCalendarDate(minDateValue) : null;
-});
-
-const calendarMaxDate = computed(() => {
-    const maxDateValue = ensureSimpleDate(props.maxDate);
-    return maxDateValue ? toCalendarDate(maxDateValue) : null;
-});
-
-const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
-const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
-
-const dateInputFormat = computed(() => props.dateFormat);
-
-// 顯示的日期範圍
-const displayStartDate = computed(() => {
-    if (!internalStartDateTime.value) return null;
-    return formatSimpleDate(internalStartDateTime.value, props.dateFormat) +
-        (props.showTime && inputStartTime.value ? ` ${inputStartTime.value}` : '');
-});
-
-const displayEndDate = computed(() => {
-    if (!internalEndDateTime.value) return null;
-    return formatSimpleDate(internalEndDateTime.value, props.dateFormat) +
-        (props.showTime && inputEndTime.value ? ` ${inputEndTime.value}` : '');
-});
-
-// 合併錯誤
-const mergedErrors = computed(() => {
-    return { ...errors.value, ...formatErrors.value };
-});
-
-// 驗證範圍是否有效
-const isValidRange = computed(() => {
-    if (!internalStartDateTime.value || !internalEndDateTime.value) return false;
-
-    // 基本順序檢查
-    if (compareDates(internalStartDateTime.value, internalEndDateTime.value) > 0) return false;
-
-    // 範圍限制檢查
-    if (props.maxRange || props.minRange) {
-        const startDate = new Date(internalStartDateTime.value.year, internalStartDateTime.value.month - 1, internalStartDateTime.value.day);
-        const endDate = new Date(internalEndDateTime.value.year, internalEndDateTime.value.month - 1, internalEndDateTime.value.day);
-        const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (props.maxRange && diffDays > props.maxRange) return false;
-        if (props.minRange && diffDays < props.minRange) return false;
-    }
-
-    return Object.keys(errors.value).length === 0;
-});
-
-// 快捷選項
-const shortcuts = computed<DateRangeShortcut[]>(() => [
+// 使用日期範圍 composable
+const dateRange = useDateRange(
     {
-        label: '今天',
-        getValue: () => {
-            const today = getNow();
-            return { start: today, end: today };
-        }
+        modelValue: props.modelValue,
+        showTime: props.showTime,
+        required: props.required,
+        disabled: props.disabled,
+        dateFormat: props.dateFormat,
+        timeFormat: props.timeFormat,
+        outputFormat: props.outputFormat,
+        enableSeconds: props.enableSeconds,
+        minDate: props.minDate,
+        maxDate: props.maxDate,
+        maxRange: props.maxRange,
+        minRange: props.minRange
     },
     {
-        label: '昨天',
-        getValue: () => {
-            const yesterday = addDays(getNow(), -1);
-            return { start: yesterday, end: yesterday };
-        }
-    },
-    {
-        label: '最近7天',
-        getValue: () => {
-            const end = getNow();
-            const start = addDays(end, -6);
-            return { start, end };
-        }
-    },
-    {
-        label: '最近30天',
-        getValue: () => {
-            const end = getNow();
-            const start = addDays(end, -29);
-            return { start, end };
-        }
-    },
-    {
-        label: '本月',
-        getValue: () => {
-            const now = getNow();
-            const start = createSimpleDate(now.year, now.month, 1, 0, 0, 0);
-            // 計算月末
-            const nextMonth = now.month === 12 ? 1 : now.month + 1;
-            const nextYear = now.month === 12 ? now.year + 1 : now.year;
-            const firstDayNextMonth = createSimpleDate(nextYear, nextMonth, 1);
-            const end = addDays(firstDayNextMonth, -1);
-            return { start, end };
-        }
+        containerRef,
+        calendarRef,
+        startDateInputRef,
+        endDateInputRef,
+        startTimeInputRef,
+        endTimeInputRef
     }
-]);
+);
 
-// 監聽外部值變化
-watch(() => props.modelValue, (newValue) => {
-    if (newValue) {
-        const startDateTime = parseToSimpleDate(newValue.start);
-        const endDateTime = parseToSimpleDate(newValue.end);
-
-        internalStartDateTime.value = startDateTime;
-        internalEndDateTime.value = endDateTime;
-
-        if (startDateTime) {
-            inputStartDate.value = formatSimpleDate(startDateTime, props.dateFormat);
-            inputStartTime.value = getTimeFromDateTime(startDateTime);
-        }
-
-        if (endDateTime) {
-            inputEndDate.value = formatSimpleDate(endDateTime, props.dateFormat);
-            inputEndTime.value = getTimeFromDateTime(endDateTime);
-        }
-    } else {
-        clearInternalState();
-    }
-}, { immediate: true });
-
-// 驗證事件處理
-const handleValidation = (field: string, isValid: boolean, validationErrors: Record<string, string>) => {
-    // 清除該字段的錯誤
-    Object.keys(errors.value).forEach(key => {
-        if (key.startsWith(field)) {
-            delete errors.value[key];
-        }
-    });
-
-    // 添加新錯誤（如果有）
-    if (!isValid) {
-        Object.entries(validationErrors).forEach(([key, message]) => {
-            errors.value[`${field}.${key}`] = message;
-        });
-    }
-
-    emit('validation', Object.keys(errors.value).length === 0, errors.value);
-};
-
-const onStartDateValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
-    handleValidation('startDate', isValid, validationErrors);
-};
-
-const onEndDateValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
-    handleValidation('endDate', isValid, validationErrors);
-};
-
-const onStartTimeValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
-    handleValidation('startTime', isValid, validationErrors);
-};
-
-const onEndTimeValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
-    handleValidation('endTime', isValid, validationErrors);
-};
-
-// 更新日期時間
-const updateStartDateTime = () => {
-    if (!inputStartDate.value) return;
-
-    const dateTime = createDateTimeFromInputs(inputStartDate.value, inputStartTime.value);
-    if (dateTime) {
-        internalStartDateTime.value = dateTime;
-    }
-};
-
-const updateEndDateTime = () => {
-    if (!inputEndDate.value) return;
-
-    const dateTime = createDateTimeFromInputs(inputEndDate.value, inputEndTime.value);
-    if (dateTime) {
-        internalEndDateTime.value = dateTime;
-    }
-};
-
-// 完成事件處理
-const onStartDateComplete = (dateStr: string) => {
-    inputStartDate.value = dateStr;
-    updateStartDateTime();
-};
-
-const onEndDateComplete = (dateStr: string) => {
-    inputEndDate.value = dateStr;
-    updateEndDateTime();
-};
-
-const onStartTimeComplete = (timeStr: string) => {
-    inputStartTime.value = timeStr;
-    updateStartDateTime();
-};
-
-const onEndTimeComplete = (timeStr: string) => {
-    inputEndTime.value = timeStr;
-    updateEndDateTime();
-};
-
-// 日曆範圍選擇處理 - 接收 CalendarDate 並轉換
-const onCalendarRangeSelect = (startDate: any, endDate: any) => {
-    if (startDate && !endDate) {
-        // 只有開始日期 - 清除結束日期
-        const simpleStart = fromCalendarDate(startDate);
-        inputStartDate.value = formatSimpleDate(simpleStart, props.dateFormat);
-        inputEndDate.value = null;
-        internalStartDateTime.value = simpleStart;
-
-        // 清除結束日期時間
-        internalEndDateTime.value = null;
-        inputEndTime.value = null;
-    } else if (startDate && endDate) {
-        // 完整範圍
-        const simpleStart = fromCalendarDate(startDate);
-        const simpleEnd = fromCalendarDate(endDate);
-
-        inputStartDate.value = formatSimpleDate(simpleStart, props.dateFormat);
-        inputEndDate.value = formatSimpleDate(simpleEnd, props.dateFormat);
-
-        internalStartDateTime.value = simpleStart;
-        internalEndDateTime.value = simpleEnd;
-
-        // 如果沒有設定時間，使用默認時間
-        if (props.showTime) {
-            if (!inputStartTime.value) {
-                inputStartTime.value = '00:00:00';
-                internalStartDateTime.value = { ...simpleStart, hour: 0, minute: 0, second: 0 };
-            }
-            if (!inputEndTime.value) {
-                inputEndTime.value = '23:59:59';
-                internalEndDateTime.value = { ...simpleEnd, hour: 23, minute: 59, second: 59 };
-            }
-        }
-    } else {
-        // 清空選擇
-        clearInternalState();
-    }
-};
-
-// 快捷選項應用
-const applyShortcut = (shortcut: DateRangeShortcut) => {
-    const range = shortcut.getValue();
-
-    internalStartDateTime.value = range.start;
-    internalEndDateTime.value = range.end;
-
-    inputStartDate.value = formatSimpleDate(range.start, props.dateFormat);
-    inputEndDate.value = formatSimpleDate(range.end, props.dateFormat);
-
-    if (props.showTime) {
-        inputStartTime.value = getTimeFromDateTime(range.start);
-        inputEndTime.value = getTimeFromDateTime(range.end);
-    }
-};
-
-// 清除範圍
-const clearRange = () => {
-    clearInternalState();
-    errors.value = {};
-};
-
-// 確認範圍
-const confirmRange = () => {
-    if (!isValidRange.value || !internalStartDateTime.value || !internalEndDateTime.value) return;
-
-    const range = {
-        start: formatOutput(internalStartDateTime.value, props.outputFormat),
-        end: formatOutput(internalEndDateTime.value, props.outputFormat)
-    };
-
-    emit('update:modelValue', range);
-    emit('change', range);
-    hideCalendar();
-};
-
-// 日曆顯示控制
-const toggleCalendar = () => {
-    if (props.disabled) return;
-    showCalendar.value = !showCalendar.value;
-
-    if (showCalendar.value) {
-        nextTick(() => {
-            updateCalendarPosition();
-            startDateInputRef.value?.focus();
-        });
-    }
-};
-
-const hideCalendar = () => {
-    showCalendar.value = false;
-};
-
-const updateCalendarPosition = () => {
-    if (!rangeRef.value || !calendarRef.value) return;
-
-    const rangeRect = rangeRef.value.getBoundingClientRect();
-    const calendar = calendarRef.value;
-
-    calendar.style.position = 'absolute';
-    calendar.style.top = `${rangeRect.height + 5}px`;
-    calendar.style.left = '0';
-};
-
-// 點擊外部處理
-const handleClickOutside = (event: MouseEvent) => {
-    const calendar = calendarRef.value;
-    const range = rangeRef.value;
-    const target = event.target as Node;
-
-    if (showCalendar.value && calendar && !calendar.contains(target) &&
-        range && !range.contains(target)) {
-        hideCalendar();
-    }
-};
-
-// 事件監聽器
-onMounted(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+// 設置事件發射器
+dateRange.setEmitters({
+    update: (range) => emit('update:modelValue', range),
+    change: (range) => emit('change', range),
+    validation: (isValid, errors) => emit('validation', isValid, errors)
 });
 
-onBeforeUnmount(() => {
-    document.removeEventListener('mousedown', handleClickOutside);
-});
-
-// 主題設置
+// 使用主題 composable
 const {
     themeClasses,
     containerAttributes,
@@ -642,6 +300,22 @@ const {
     setMode
 } = useTheme();
 
+// 計算屬性
+const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
+const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
+const dateInputFormat = computed(() => props.dateFormat);
+
+// 合併所有錯誤
+const mergedErrors = computed(() => {
+    return dateRange.mergedErrors.value;
+});
+
+// 是否有錯誤
+const hasErrors = computed(() => {
+    return Object.keys(mergedErrors.value).length > 0;
+});
+
+// 監聽主題變化
 watch(() => props.theme, (newTheme) => {
     if (newTheme) {
         setColor(newTheme);
@@ -654,56 +328,65 @@ watch(() => props.mode, (newMode) => {
 
 // 公開方法
 defineExpose({
-    // focus: () => startDateInputRef.value?.focus(),
-    reset: () => {
-        clearRange();
-        emit('update:modelValue', null);
-    },
-    validate: () => {
-        startDateInputRef.value?.validate();
-        endDateInputRef.value?.validate();
-        if (props.showTime) {
-            startTimeInputRef.value?.validate();
-            endTimeInputRef.value?.validate();
-        }
-    },
-    setRange: (range: { start: DateTimeValue; end: DateTimeValue } | null) => {
-        if (range) {
-            const startDateTime = parseToSimpleDate(range.start);
-            const endDateTime = parseToSimpleDate(range.end);
+    // 基本操作
+    reset: dateRange.clearRange,
+    validate: dateRange.validate,
+    setRange: dateRange.setRange,
 
-            internalStartDateTime.value = startDateTime;
-            internalEndDateTime.value = endDateTime;
+    // 聚焦方法
+    focusStartDate: dateRange.focusStartDate,
+    focusEndDate: dateRange.focusEndDate,
 
-            if (startDateTime) {
-                inputStartDate.value = formatSimpleDate(startDateTime, props.dateFormat);
-                inputStartTime.value = getTimeFromDateTime(startDateTime);
-            }
-
-            if (endDateTime) {
-                inputEndDate.value = formatSimpleDate(endDateTime, props.dateFormat);
-                inputEndTime.value = getTimeFromDateTime(endDateTime);
-            }
-        } else {
-            clearRange();
-        }
-
-        emit('update:modelValue', range);
-    },
-
-    // 主題控制方法
+    // 主題控制
     setTheme: setColor,
     setDarkMode: () => setMode('dark'),
     setLightMode: () => setMode('light'),
     setAutoMode: () => setMode('auto'),
-});
-</script>
-<style scoped>
-/* 響應式設計 */
-@media (max-width: 768px) {
-    .date-range-wrapper {
-        min-width: auto !important;
-    }
 
-}
-</style>
+    // 錯誤相關
+    getErrors: () => mergedErrors.value,
+    hasErrors: () => hasErrors.value
+});
+
+// 解構賦值暴露 composable 的方法和狀態
+const {
+    // 狀態
+    displayStartDate,
+    displayEndDate,
+    showCalendar,
+    isValidRange,
+    shortcuts,
+    calendarStartDate,
+    calendarEndDate,
+    calendarMinDate,
+    calendarMaxDate,
+    startDateTime,
+    endDateTime,
+    hasRangeValue,
+
+// 事件處理方法
+    handleStartDateValidation,
+    handleEndDateValidation,
+    handleStartTimeValidation,
+    handleEndTimeValidation,
+    handleStartDateComplete,
+    handleEndDateComplete,
+    handleStartTimeComplete,
+    handleEndTimeComplete,
+    handleCalendarRangeSelect,
+    handleStartNavigateToDate,
+    handleEndNavigateToDate,
+    handleContainerClick,
+    handleContainerMouseDown,
+
+    // 操作方法
+    toggleCalendar,
+    hideCalendar,
+    applyShortcut,
+    clearRange,
+    confirmRange,
+
+    focusStartDate,
+    focusEndDate,
+} = dateRange;
+</script>

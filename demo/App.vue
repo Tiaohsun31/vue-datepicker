@@ -60,8 +60,8 @@ import { ref } from 'vue';
 // import DatePickerV1 from '@/DatePickerV1.vue';
 // import DatePickerV2 from '@/DatePickerV2.vue';
 // import DatePickerV4 from '@/DatePickerV4.vue';
-import DatePicker from '@/DatePickerV2.vue';
-import DateRange from '@/DateRangeV2.vue';
+import DatePicker from '@/DatePicker.vue';
+import DateRange from '@/DateRange.vue';
 const validationErrors = ref<string[]>([]);
 // const selectedDate = ref({
 //     start: '2025-05-22',

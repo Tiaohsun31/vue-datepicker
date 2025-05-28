@@ -130,8 +130,8 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import DatePickerV2 from '@/DatePickerV2.vue';
-import DateRangeV2 from '@/DateRangeV2.vue';
+import DatePickerV2 from '@/DatePicker.vue';
+import DateRangeV2 from '@/DateRange.vue';
 import DateErrorMessage from '@/components/calendar/DateErrorMessage.vue';
 
 // 響應式數據

@@ -5,8 +5,8 @@
 
         <!-- 日期時間輸入容器 -->
         <DateContainer :errors="mergedErrors">
-            <div class="flex w-full items-center justify-start gap-1" @click="handleContainerClick"
-                @mousedown="handleContainerMouseDown">
+            <div v-if="calendar === 'gregory'" class="flex w-full items-center justify-start gap-1"
+                @click="handleContainerClick" @mousedown="handleContainerMouseDown">
 
                 <!-- 日期輸入部分 -->
                 <div>
@@ -30,6 +30,10 @@
                         :useLocalizedPeriod="useLocalizedPeriod" @validation="handleTimeValidation"
                         @complete="handleTimeComplete" @navigate-to-date="handleNavigateToDate" />
                 </div>
+            </div>
+            <div v-else class="flex w-full items-center justify-start gap-1" @click="toggleCalendar">
+                {{ inputDateValue }}
+                <span v-if="showTime"> {{ inputTimeValue }}</span>
             </div>
 
             <!-- 日曆圖標和清除按鈕 -->
@@ -151,7 +155,6 @@ interface Props {
 
     // 輸出格式
     outputFormat?: OutputFormat;
-    outputDateFormat?: string;
 
     // 錯誤處理選項
     showErrorMessage?: boolean;  // 是否顯示錯誤訊息

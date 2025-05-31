@@ -105,6 +105,11 @@ export function useDateTimeValue(
         );
     };
 
+    const setInternalDateTime = (dateTime: SimpleDateValue | null) => {
+        internalDateTime.value = dateTime;
+        return dateTime;
+    };
+
     /**
      * 設置外部值
      */
@@ -195,6 +200,7 @@ export function useDateTimeValue(
         hasValue,
 
         // 主要方法
+        setInternalDateTime,
         setExternalValue,
         updateDateTime,
         getFormattedOutput,

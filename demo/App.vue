@@ -4,7 +4,7 @@
             <!-- <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
             </DatePicker> -->
             {{ rocDate }}
-            <DatePicker v-model="rocDate" calendar="roc" output-date-format="ROC-YYYY-MM-DD" locale="zh-TW"
+            <DatePicker v-model="rocDate" calendar="roc" date-format="ROC-YYYY-MM-DD" locale="zh-TW"
                 @change="handleDateChange" />
         </div>
         <!-- <div>

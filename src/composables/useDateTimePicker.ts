@@ -379,13 +379,27 @@ export function useDateTimePicker(
                 const dateStr = calendarSystem.value.formatOutput(simpleDate, dateFormat, locale);
                 dateTimeValue.inputDateValue.value = dateStr;
 
+                // 保留現有的時間，如果有的話
+                const existingTime = dateTimeValue.internalDateTime.value;
+                const updatedDateTime = {
+                    ...simpleDate,
+                    hour: existingTime?.hour || (showTime ? 9 : 0),  // 如果顯示時間，預設 9 點
+                    minute: existingTime?.minute || 0,
+                    second: existingTime?.second || 0
+                };
+
+                // 直接設置內部日期時間
+                dateTimeValue.setInternalDateTime(updatedDateTime);
+
                 // 清除日期相關錯誤
                 ['date', 'year', 'month', 'day'].forEach(field => {
                     validation.clearFieldErrors(field);
                 });
 
-                const updatedDateTime = dateTimeValue.updateDateTime();
-                await emitEvents(updatedDateTime);
+                // 確保有有效的日期時間才發送事件
+                if (updatedDateTime && updatedDateTime.year && updatedDateTime.month && updatedDateTime.day) {
+                    await emitEvents(updatedDateTime);
+                }
 
                 if (closeCalendar) {
                     calendarPopup.hideCalendar();
@@ -400,12 +414,35 @@ export function useDateTimePicker(
      * 處理時間選擇（來自日曆的時間選擇器）
      */
     const handleTimeSelect = async (timeStr: string) => {
+        console.log('處理時間選擇:', timeStr);
+        console.log('當前內部日期時間:', dateTimeValue.internalDateTime.value);
+
+        // 設置時間值
         dateTimeValue.inputTimeValue.value = timeStr;
+
+        // 清除時間相關錯誤
         ['time', 'hour', 'minute', 'second'].forEach(field => {
             validation.clearFieldErrors(field);
         });
-        const updatedDateTime = dateTimeValue.updateDateTime();
-        await emitEvents(updatedDateTime);
+
+        // 確保有日期數據才更新
+        if (dateTimeValue.internalDateTime.value) {
+            const updatedDateTime = dateTimeValue.updateDateTime();
+            console.log('時間選擇後的日期時間:', updatedDateTime);
+
+            // 只有在有效日期時間時才發送事件
+            if (updatedDateTime && updatedDateTime.year && updatedDateTime.month && updatedDateTime.day) {
+                await emitEvents(updatedDateTime);
+            } else {
+                console.warn('時間選擇後沒有有效的日期時間，跳過事件發送');
+            }
+        } else {
+            console.warn('沒有日期數據，無法設置時間');
+            // 可以選擇是否要顯示錯誤提示
+            validation.handleTimeValidation(false, {
+                time: '請先選擇日期'
+            });
+        }
     };
 
     /**

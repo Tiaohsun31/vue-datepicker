@@ -141,31 +141,49 @@ export class RocCalendarPlugin implements CalendarPlugin {
      * 格式化 ROC 日期
      */
     format(date: SimpleDateValue, format: string, locale: string): string {
-        const rocDate = this.fromGregorian(date);
 
+
+        console.log('RocCalendarPlugin.format 被調用:', { date, format, locale });
+
+        // 檢查是否為複合格式（包含時間部分）
+        const parts = format.split(' ');
+        const dateFormatPart = parts[0];
+        const timeFormatPart = parts.slice(1).join(' ');
+
+        console.log('格式分析:', { dateFormatPart, timeFormatPart });
+
+        // 處理日期部分的 ROC 格式
+        const formattedDate = this.formatDatePart(date, dateFormatPart, locale);
+
+        // 如果有時間部分，處理時間格式
+        if (timeFormatPart) {
+            const formattedTime = this.formatTimePart(date, timeFormatPart);
+            return `${formattedDate} ${formattedTime}`;
+        }
+
+        return formattedDate;
+    }
+    /**
+     * 格式化日期部分
+     */
+    private formatDatePart(date: SimpleDateValue, format: string, locale: string): string {
         const rocYear = date.year - this.YEAR_OFFSET;
         const month = date.month;
         const day = date.day;
 
-        // 處理年份格式化
+        // ROC 特定格式
         const rocFormats: Record<string, string> = {
-            // 純年份格式 - 用於日曆標題顯示
             'ROC-YYYY': `民國${rocYear}年`,
             'ROC-YY': `民國${rocYear.toString().slice(-2)}年`,
-
-            // 完整日期格式
             'ROC-YYYY-MM-DD': `民國${rocYear}年${month.toString().padStart(2, '0')}月${day.toString().padStart(2, '0')}日`,
             'ROC-YY-MM-DD': `民國${rocYear.toString().slice(-2)}年${month.toString().padStart(2, '0')}月${day.toString().padStart(2, '0')}日`,
-
-            // 簡化數字格式
             'ROC-NUM-YYYY-MM-DD': `${rocYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
             'ROC-NUM-YY-MM-DD': `${rocYear.toString().slice(-2)}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
-
-            // 斜線格式
             'ROC-YYYY/MM/DD': `民國${rocYear}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`,
         };
 
         if (rocFormats[format]) {
+            console.log(`使用 ROC 格式 ${format}:`, rocFormats[format]);
             return rocFormats[format];
         }
 
@@ -175,16 +193,29 @@ export class RocCalendarPlugin implements CalendarPlugin {
 
         // 將西元年替換為民國年
         if (format.includes('YYYY')) {
-            formatted = formatted.replace(date.year.toString(), rocDate.year.toString());
+            formatted = formatted.replace(date.year.toString(), rocYear.toString());
         } else if (format.includes('YY')) {
-            const gregorianYearShort = date.year.toString().slice(-2);
-            const rocYearShort = rocDate.year.toString().slice(-2);
-            formatted = formatted.replace(gregorianYearShort, rocYearShort);
+            const shortYear = date.year.toString().slice(-2);
+            const rocShortYear = rocYear.toString().slice(-2);
+            formatted = formatted.replace(shortYear, rocShortYear);
         }
 
+        console.log(`標準格式 ${format} 轉換結果:`, formatted);
         return formatted;
     }
 
+    /**
+     * 格式化時間部分
+     */
+    private formatTimePart(date: SimpleDateValue, timeFormat: string): string {
+        const hour = date.hour || 0;
+        const minute = date.minute || 0;
+        const second = date.second || 0;
+
+        // 使用 dayjs 格式化時間
+        const jsDate = new Date(date.year, date.month - 1, date.day, hour, minute, second);
+        return dayjs(jsDate).format(timeFormat);
+    }
     /**
      * 西元曆轉 ROC 日曆
      */

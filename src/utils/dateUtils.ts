@@ -38,7 +38,11 @@ export type DateTimeValue =
     | null;
 
 /**
+ * TODO: 確認日曆系統是否有使用該值、以及該值是否有效
  * 輸出格式選項
+ * ISO 格式 - 用於 API 或顯示 "2024-06-01 14:30:25"
+ * date 格式 - 用於 JavaScript Date 物件
+ * simple 格式 - 用於簡單日期物件 { year: 2024, month: 6, day: 1, hour: 14, minute: 30, second: 25 }
  */
 export type OutputFormat = 'iso' | 'date' | 'simple';
 

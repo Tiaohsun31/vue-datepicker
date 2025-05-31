@@ -165,13 +165,13 @@ watch(() => props.modelValue, (newValue) => {
 }, { immediate: true });
 
 // 自動聚焦 - 修復版本
-onMounted(() => {
-    if (props.autoFocus) {
-        nextTick(() => {
-            focusFirstInput();
-        });
-    }
-});
+// onMounted(() => {
+//     if (props.autoFocus) {
+//         nextTick(() => {
+//             focusFirstInput();
+//         });
+//     }
+// });
 
 // 聚焦到第一個輸入框 - 修復版本
 const focusFirstInput = () => {

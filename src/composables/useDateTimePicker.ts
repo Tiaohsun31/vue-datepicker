@@ -72,7 +72,6 @@ export function useDateTimePicker(
         autoFocusTimeAfterDate = true,
         minDate,
         maxDate,
-        autoFocus = false,
         locale = 'zh-TW'
     } = options;
 
@@ -449,9 +448,7 @@ export function useDateTimePicker(
      * 容器點擊處理
      */
     const handleContainerClick = (event: MouseEvent) => {
-        calendarPopup.handleContainerClick(event, () => {
-            navigation.focusFirstInput();
-        });
+        navigation.focusFirstInput();
     };
 
     /**

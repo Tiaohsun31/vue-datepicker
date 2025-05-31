@@ -170,7 +170,7 @@ function translateMessage(message: string, field?: string): string {
     const i18nKey = props.messageKeyMap[message];
     if (i18nKey) {
         try {
-            const translated = localeManager.getMessage(i18nKey);
+            const translated = localeManager.getErrorMessage(i18nKey);
             if (translated && translated !== i18nKey) {
                 return translated;
             }
@@ -239,7 +239,7 @@ function smartTranslateError(message: string, field?: string): string {
     // 先檢查直接匹配
     if (directMatches[message]) {
         try {
-            const translated = localeManager.getMessage(directMatches[message]);
+            const translated = localeManager.getErrorMessage(directMatches[message]);
             if (translated && translated !== directMatches[message]) {
                 return translated;
             }
@@ -253,7 +253,7 @@ function smartTranslateError(message: string, field?: string): string {
         const smartKey = getI18nKeyByFieldAndMessage(message, field);
         if (smartKey) {
             try {
-                const translated = localeManager.getMessage(smartKey);
+                const translated = localeManager.getErrorMessage(smartKey);
                 if (translated && translated !== smartKey) {
                     return translated;
                 }
@@ -305,7 +305,7 @@ function smartTranslateError(message: string, field?: string): string {
         if (pattern.regex.test(message)) {
             const i18nKey = pattern.handler(field);
             try {
-                const translated = localeManager.getMessage(i18nKey);
+                const translated = localeManager.getErrorMessage(i18nKey);
                 if (translated && translated !== i18nKey) {
                     return translated;
                 }

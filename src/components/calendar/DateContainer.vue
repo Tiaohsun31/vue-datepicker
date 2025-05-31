@@ -1,7 +1,7 @@
 <template>
     <div class="relative w-full date-input-container">
         <!-- 輸入框容器 -->
-        <div class="flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200"
+        <div class="flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <slot></slot>
         </div>

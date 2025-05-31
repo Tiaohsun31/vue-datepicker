@@ -5,46 +5,52 @@
 
         <!-- 日期時間輸入容器 -->
         <DateContainer :errors="mergedErrors">
-            <div v-if="calendar === 'gregory'" class="flex w-full items-center justify-start gap-1"
+            <div v-if="isGregoryCalendar && inputEnabled" class="flex w-full items-center justify-start gap-2"
                 @click="handleContainerClick" @mousedown="handleContainerMouseDown">
-
                 <!-- 日期輸入部分 -->
                 <div>
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="computedPlaceholders.year"
                         :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
-                        :min-date="minDateStr" :max-date="maxDateStr" :required="required" :auto-focus="autoFocus"
-                        :separator="separator" :date-format="dateInputFormat" @validation="handleDateValidation"
+                        :min-date="minDateStr" :max-date="maxDateStr" :required="required" :separator="dateSeparator"
+                        :date-format="dateInputFormat" @validation="handleDateValidation"
                         @complete="handleDateComplete" />
-                </div>
-
-                <!-- 分隔符 -->
-                <div v-if="showTime" class="text-gray-400 mx-1">
-                    <span>{{ timeSeparator }}</span>
                 </div>
 
                 <!-- 時間輸入部分 -->
                 <div v-if="showTime">
-                    <TimeInput ref="timeInputRef" v-model="inputTimeValue" :hour-placeholder="hourPlaceholder"
-                        :minute-placeholder="minutePlaceholder" :second-placeholder="secondPlaceholder"
-                        :enable-seconds="enableSeconds" :use24Hour="use24Hour" :required="required" :locale="locale"
+                    <TimeInput ref="timeInputRef" v-model="inputTimeValue" :hour-placeholder="placeholderOverrides.hour"
+                        :minute-placeholder="placeholderOverrides.minute"
+                        :second-placeholder="placeholderOverrides.second" :enable-seconds="enableSeconds"
+                        :use24Hour="use24Hour" :required="required" :locale="locale"
                         :useLocalizedPeriod="useLocalizedPeriod" @validation="handleTimeValidation"
                         @complete="handleTimeComplete" @navigate-to-date="handleNavigateToDate" />
                 </div>
             </div>
-            <div v-else class="flex w-full items-center justify-start gap-1" @click="toggleCalendar">
-                {{ inputDateValue }}
-                <span v-if="showTime"> {{ inputTimeValue }}</span>
+            <!-- 非西元曆或禁用輸入時的顯示區域 -->
+            <div v-else class="flex w-full h-full items-center justify-start gap-1" :class="{
+                'text-gray-400': !hasDisplayValue,
+                'text-gray-900': hasDisplayValue,
+                'cursor-not-allowed opacity-50': disabled
+            }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
+                @keydown.space.prevent="!disabled && toggleCalendar?.()">
+                <!-- 顯示值或 placeholder -->
+                <span v-if="hasDisplayValue">
+                    {{ inputDateValue }}
+                    <span v-if="showTime && inputTimeValue" class="ml-1">{{ inputTimeValue }}</span>
+                </span>
+                <span v-else class="text-gray-400">
+                    {{ computedSelectDatePlaceholder }}
+                </span>
             </div>
 
             <!-- 日曆圖標和清除按鈕 -->
             <button v-if="hasValue && !disabled && showClearButton" type="button"
-                class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click="reset"
-                :title="'清除日期' + (showTime ? '時間' : '')">
-                <ClearIcon class="h-4 w-4 cursor-pointer" />
+                class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click.stop="reset">
+                <ClearIcon class="h-4 w-4" />
             </button>
             <button v-else type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                :disabled="disabled" @click="toggleCalendar">
-                <CalendarIcon class="h-5 w-5 cursor-pointer" />
+                :disabled="disabled" @click.stop="toggleCalendar">
+                <CalendarIcon class="h-5 w-5" />
             </button>
         </DateContainer>
 
@@ -52,14 +58,6 @@
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
-
-            <!-- 日曆系統狀態指示器（開發時顯示） -->
-            <div v-if="showCalendarInfo && calendarSystem"
-                class="px-2 py-1 text-xs text-vdt-content-muted border-b border-vdt-outline">
-                📅 {{ currentCalendarName }}
-                <span v-if="!calendarInitialized" class="text-orange-500">初始化中...</span>
-                <span v-else class="text-green-500">✓</span>
-            </div>
 
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
@@ -111,88 +109,47 @@ import {
     fixDateFormat,
     fixTimeFormat,
     type DateTimeValue,
-    type OutputFormat
 } from './utils/dateUtils';
-import { type TailwindColor } from './types/main';
+import type { DatePickerProps } from './types/DatePickerProps';
+import { localeManager, type LocaleKey } from '@/locale/index';
 
-interface Props {
-    modelValue?: DateTimeValue;
-    mode?: 'light' | 'dark' | 'auto';
-    theme?: TailwindColor | string;
-
-    calendar?: string;              // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
-    showCalendarInfo?: boolean;     // 是否顯示日曆系統資訊（開發用）
-
-    // 日期選項
-    yearPlaceholder?: string;
-    monthPlaceholder?: string;
-    dayPlaceholder?: string;
-
-    // 時間選項
-    showTime?: boolean;
-    hourPlaceholder?: string;
-    minutePlaceholder?: string;
-    secondPlaceholder?: string;
-    enableSeconds?: boolean;
-    use24Hour?: boolean;
-    minuteStep?: number;
-    timeSeparator?: string;
-    useLocalizedPeriod?: boolean;
-    customDefaultTime?: string;
-    autoFocusTimeAfterDate?: boolean;
-
-    // 一般選項
-    disabled?: boolean;
-    required?: boolean;
-    minDate?: DateTimeValue;
-    maxDate?: DateTimeValue;
-    locale?: string;
-    separator?: string;
-    dateFormat?: string;
-    timeFormat?: string;
-    autoFocus?: boolean;
-    showClearButton?: boolean;
-
-    // 輸出格式
-    outputFormat?: OutputFormat;
-
-    // 錯誤處理選項
-    showErrorMessage?: boolean;  // 是否顯示錯誤訊息
-    useI18n?: boolean;           // 是否使用內建i18n
-    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息
-}
-
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<DatePickerProps>(), {
     modelValue: null,
     mode: 'auto',
     theme: () => 'violet',
 
-    calendar: 'gregory',           // 預設使用西元曆
-    showCalendarInfo: false,       // 生產環境不顯示
+    // 預設使用西元曆
+    calendar: 'gregory',
+    locale: 'zh-TW',
 
-    yearPlaceholder: '',           // 將動態從日曆系統獲取
-    monthPlaceholder: '',          // 將動態從日曆系統獲取
-    dayPlaceholder: '',            // 將動態從日曆系統獲取
+    // 日期相關屬性
+    dateSeparator: '-',
+    dateFormat: 'YYYY-MM-DD',
+    showClearButton: true,
 
+    // 時間相關屬性
+    timeFormat: 'HH:mm:ss',
     showTime: true,
-    hourPlaceholder: '時',
-    minutePlaceholder: '分',
-    secondPlaceholder: '秒',
     enableSeconds: true,
     use24Hour: true,
-    minuteStep: 5,
-    timeSeparator: ' ',
+    minuteStep: 1,
     useLocalizedPeriod: false,
-    customDefaultTime: '09:00:00',
-    autoFocusTimeAfterDate: true,
+    customDefaultTime: '00:00:00',
+    autoFocusTimeAfterDate: false,
+
     disabled: false,
-    required: true,
-    locale: 'zh-TW',
-    separator: '-',
-    dateFormat: 'YYYY-MM-DD',
-    timeFormat: 'HH:mm:ss',
-    autoFocus: false,
-    showClearButton: true,
+    inputEnabled: true,
+    required: false,
+
+    placeholderOverrides: () => ({
+        selectDate: localeManager.getPlaceholderMessage('general.selectDate'),
+        year: localeManager.getPlaceholderMessage('date.year'),
+        month: localeManager.getPlaceholderMessage('date.month'),
+        day: localeManager.getPlaceholderMessage('date.day'),
+        hour: localeManager.getPlaceholderMessage('time.hour'),
+        minute: localeManager.getPlaceholderMessage('time.minute'),
+        second: localeManager.getPlaceholderMessage('time.second')
+    }),
     outputFormat: 'iso',
     showErrorMessage: true,     // 預設顯示錯誤訊息
     useI18n: true,
@@ -223,7 +180,7 @@ const datePicker = useDateTimePicker(
         showTime: props.showTime,
         required: props.required,
         disabled: props.disabled,
-        calendar: props.calendar,        // 新增：傳入日曆系統
+        calendar: props.calendar,
         dateFormat: internalDateFormat.value,
         timeFormat: internalTimeFormat.value,
         outputFormat: props.outputFormat,
@@ -232,8 +189,7 @@ const datePicker = useDateTimePicker(
         autoFocusTimeAfterDate: props.autoFocusTimeAfterDate,
         minDate: props.minDate,
         maxDate: props.maxDate,
-        autoFocus: props.autoFocus,
-        locale: props.locale,           // 新增：傳入語言
+        locale: props.locale,
     },
     {
         containerRef,
@@ -265,39 +221,37 @@ const {
 const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
 const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
 const dateInputFormat = computed(() => internalDateFormat.value);
+const isGregoryCalendar = computed(() => props.calendar === 'gregory');
+
+const hasDisplayValue = computed(() => {
+    return !!(inputDateValue.value && inputDateValue.value.trim());
+});
 
 // 日曆系統相關計算屬性
 const computedPlaceholders = computed(() => {
-    // 如果用戶提供了自定義 placeholder，優先使用
-    if (props.yearPlaceholder || props.monthPlaceholder || props.dayPlaceholder) {
-        return {
-            year: props.yearPlaceholder || '年',
-            month: props.monthPlaceholder || '月',
-            day: props.dayPlaceholder || '日'
-        };
+    if (!isGregoryCalendar.value) {
+        return datePicker.dynamicPlaceholders.value;
     }
-
-    // 否則使用日曆系統的動態 placeholder
-    return datePicker.dynamicPlaceholders.value;
-});
-
-const currentCalendarName = computed(() => {
-    if (!datePicker.calendarSystem.value) return '載入中...';
-
-    const calendarId = datePicker.calendarSystem.value.getCurrentCalendar();
-    if (calendarId === 'gregory') return '西元曆';
-
-    // 可以擴展為更完整的名稱映射
-    const nameMap: Record<string, string> = {
-        'roc': '民國曆',
-        'buddhist': '佛曆',
-        'japanese': '日本年號',
-        'islamic': '伊斯蘭曆',
-        'persian': '波斯曆'
+    // 從語言包獲取預設值
+    const localePlaceholders = {
+        year: localeManager.getPlaceholderMessage('date.year'),
+        month: localeManager.getPlaceholderMessage('date.month'),
+        day: localeManager.getPlaceholderMessage('date.day')
     };
 
-    return nameMap[calendarId] || calendarId;
+    // 允許 props 覆寫
+    return {
+        year: props.placeholderOverrides?.year || localePlaceholders.year,
+        month: props.placeholderOverrides?.month || localePlaceholders.month,
+        day: props.placeholderOverrides?.day || localePlaceholders.day
+    };
 });
+
+const computedSelectDatePlaceholder = computed(() => {
+    return props.placeholderOverrides?.selectDate ||
+        localeManager.getPlaceholderMessage('general.selectDate');
+});
+
 
 // 合併所有錯誤（格式錯誤 + 驗證錯誤）
 const mergedErrors = computed(() => {
@@ -314,6 +268,9 @@ const hasErrors = computed(() => {
 
 // 格式驗證和修復
 onBeforeMount(() => {
+    if (props.locale) {
+        localeManager.setLocale(props.locale as LocaleKey);
+    }
     // 驗證日期格式
     if (!isValidDateFormat(props.dateFormat)) {
         const originalFormat = props.dateFormat;
@@ -348,7 +305,14 @@ watch(() => props.mode, (newMode) => {
     setMode(newMode);
 }, { immediate: true });
 
-// === 新增：監聽日曆變化 ===
+// 監聽語言變化
+watch(() => props.locale, (newLocale) => {
+    if (newLocale) {
+        localeManager.setLocale(newLocale as LocaleKey);
+    }
+});
+
+// 監聽日曆變化
 watch(() => props.calendar, (newCalendar) => {
     if (newCalendar && datePicker.calendarSystem.value) {
         const success = datePicker.calendarSystem.value.setCalendar(newCalendar);
@@ -413,8 +377,7 @@ const {
     calendarMaxDate,
     getValidDefaultTime,
     hasValue,
-    calendarInitialized,          // 新增
-    calendarSystem,               // 新增
+    calendarSystem,
 
     // 事件處理
     handleDateValidation,

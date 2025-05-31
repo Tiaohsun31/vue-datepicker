@@ -7,8 +7,8 @@
             <DatePicker v-model="rocDate" calendar="roc" date-format="ROC-YYYY-MM-DD" locale="zh-TW"
                 @change="handleDateChange" />
         </div>
-        <!-- <div>
-            <DatePicker v-model="dateTime2" mode="dark">
+        <div>
+            <DatePicker v-model="dateTime2" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -19,8 +19,8 @@
                         </ul>
                     </div>
                 </template>
-</DatePicker>
-</div> -->
+            </DatePicker>
+        </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">
                 <template #error-year="{ message, field, originalKey }">自定義年份錯誤

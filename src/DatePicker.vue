@@ -1,4 +1,3 @@
-<!-- DatePickerV2.vue - 整合錯誤訊息 -->
 <template>
     <div class="date-time-picker-wrapper relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
@@ -11,10 +10,10 @@
 
                 <!-- 日期輸入部分 -->
                 <div>
-                    <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="yearPlaceholder"
-                        :month-placeholder="monthPlaceholder" :day-placeholder="dayPlaceholder" :min-date="minDateStr"
-                        :max-date="maxDateStr" :required="required" :auto-focus="autoFocus" :separator="separator"
-                        :date-format="dateInputFormat" @validation="handleDateValidation"
+                    <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="computedPlaceholders.year"
+                        :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
+                        :min-date="minDateStr" :max-date="maxDateStr" :required="required" :auto-focus="autoFocus"
+                        :separator="separator" :date-format="dateInputFormat" @validation="handleDateValidation"
                         @complete="handleDateComplete" />
                 </div>
 
@@ -50,6 +49,14 @@
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
 
+            <!-- 日曆系統狀態指示器（開發時顯示） -->
+            <div v-if="showCalendarInfo && calendarSystem"
+                class="px-2 py-1 text-xs text-vdt-content-muted border-b border-vdt-outline">
+                📅 {{ currentCalendarName }}
+                <span v-if="!calendarInitialized" class="text-orange-500">初始化中...</span>
+                <span v-else class="text-green-500">✓</span>
+            </div>
+
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale"
@@ -60,7 +67,7 @@
     <!-- 錯誤訊息顯示 - 可選且可自定義 -->
     <div v-if="showErrorMessage && hasErrors">
         <!-- 讓使用者完全控制錯誤顯示 -->
-        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors" :calendarSystem="calendarSystem">
             <!-- 預設使用 DateErrorMessage -->
             <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
                 :custom-messages="customErrorMessages">
@@ -107,6 +114,10 @@ interface Props {
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
 
+    // === 新增：日曆系統支援 ===
+    calendar?: string;              // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
+    showCalendarInfo?: boolean;     // 是否顯示日曆系統資訊（開發用）
+
     // 日期選項
     yearPlaceholder?: string;
     monthPlaceholder?: string;
@@ -151,9 +162,15 @@ const props = withDefaults(defineProps<Props>(), {
     modelValue: null,
     mode: 'auto',
     theme: () => 'violet',
-    yearPlaceholder: '年',
-    monthPlaceholder: '月',
-    dayPlaceholder: '日',
+
+    // === 新增預設值 ===
+    calendar: 'gregory',           // 預設使用西元曆
+    showCalendarInfo: false,       // 生產環境不顯示
+
+    yearPlaceholder: '',           // 將動態從日曆系統獲取
+    monthPlaceholder: '',          // 將動態從日曆系統獲取
+    dayPlaceholder: '',            // 將動態從日曆系統獲取
+
     showTime: true,
     hourPlaceholder: '時',
     minutePlaceholder: '分',
@@ -203,6 +220,7 @@ const datePicker = useDateTimePicker(
         showTime: props.showTime,
         required: props.required,
         disabled: props.disabled,
+        calendar: props.calendar,        // 新增：傳入日曆系統
         dateFormat: internalDateFormat.value,
         timeFormat: internalTimeFormat.value,
         outputFormat: props.outputFormat,
@@ -212,6 +230,7 @@ const datePicker = useDateTimePicker(
         minDate: props.minDate,
         maxDate: props.maxDate,
         autoFocus: props.autoFocus,
+        locale: props.locale,           // 新增：傳入語言
     },
     {
         containerRef,
@@ -243,6 +262,39 @@ const {
 const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
 const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
 const dateInputFormat = computed(() => internalDateFormat.value);
+
+// === 新增：日曆系統相關計算屬性 ===
+const computedPlaceholders = computed(() => {
+    // 如果用戶提供了自定義 placeholder，優先使用
+    if (props.yearPlaceholder || props.monthPlaceholder || props.dayPlaceholder) {
+        return {
+            year: props.yearPlaceholder || '年',
+            month: props.monthPlaceholder || '月',
+            day: props.dayPlaceholder || '日'
+        };
+    }
+
+    // 否則使用日曆系統的動態 placeholder
+    return datePicker.dynamicPlaceholders.value;
+});
+
+const currentCalendarName = computed(() => {
+    if (!datePicker.calendarSystem.value) return '載入中...';
+
+    const calendarId = datePicker.calendarSystem.value.getCurrentCalendar();
+    if (calendarId === 'gregory') return '西元曆';
+
+    // 可以擴展為更完整的名稱映射
+    const nameMap: Record<string, string> = {
+        'roc': '民國曆',
+        'buddhist': '佛曆',
+        'japanese': '日本年號',
+        'islamic': '伊斯蘭曆',
+        'persian': '波斯曆'
+    };
+
+    return nameMap[calendarId] || calendarId;
+});
 
 // 合併所有錯誤（格式錯誤 + 驗證錯誤）
 const mergedErrors = computed(() => {
@@ -293,6 +345,17 @@ watch(() => props.mode, (newMode) => {
     setMode(newMode);
 }, { immediate: true });
 
+// === 新增：監聽日曆變化 ===
+watch(() => props.calendar, (newCalendar) => {
+    if (newCalendar && datePicker.calendarSystem.value) {
+        const success = datePicker.calendarSystem.value.setCalendar(newCalendar);
+        if (success) {
+            // 更新 placeholder
+            datePicker.updatePlaceholders();
+        }
+    }
+}, { immediate: false });
+
 // 公開方法
 defineExpose({
     // 基本操作
@@ -306,6 +369,21 @@ defineExpose({
     setDateTime: (dateTime: any) => {
         datePicker.setExternalValue(dateTime);
     },
+
+    // === 新增：日曆系統相關 ===
+    getCalendarSystem: () => datePicker.calendarSystem.value,
+    setCalendar: async (calendarId: string) => {
+        if (datePicker.calendarSystem.value) {
+            const success = await datePicker.calendarSystem.value.setCalendar(calendarId);
+            if (success) {
+                await datePicker.updatePlaceholders();
+            }
+            return success;
+        }
+        return false;
+    },
+    getCurrentCalendar: () => datePicker.calendarSystem.value?.getCurrentCalendar() || 'gregory',
+    parseInput: (input: string) => datePicker.parseInputWithCalendar(input),
 
     // 主題控制
     setTheme: setColor,
@@ -332,6 +410,8 @@ const {
     calendarMaxDate,
     getValidDefaultTime,
     hasValue,
+    calendarInitialized,          // 新增
+    calendarSystem,               // 新增
 
     // 事件處理
     handleDateValidation,

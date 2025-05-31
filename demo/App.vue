@@ -1,13 +1,15 @@
 <template>
     <div class="container mx-auto p-4 space-y-6">
         <div>
-            <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
-            </DatePicker>
+            <!-- <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
+            </DatePicker> -->
+            {{ rocDate }}
+            <DatePicker v-model="rocDate" calendar="roc" output-date-format="ROC-YYYY-MM-DD" locale="zh-TW"
+                @change="handleDateChange" />
         </div>
-        <div>
+        <!-- <div>
             <DatePicker v-model="dateTime2" mode="dark">
                 <template #error="{ errors }">
-                    <!-- 完全不使用 DateErrorMessage，自己寫 -->
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
                         <ul class="list-disc list-inside text-red-700 text-sm">
@@ -17,9 +19,9 @@
                         </ul>
                     </div>
                 </template>
-            </DatePicker>
-        </div>
-        <div>
+</DatePicker>
+</div> -->
+        <!-- <div>
             <DatePicker v-model="dateTime3">
                 <template #error-year="{ message, field, originalKey }">自定義年份錯誤
                     {{ message }}
@@ -32,8 +34,8 @@
                     </div>
                 </template>
             </DatePicker>
-        </div>
-        <div>
+        </div> -->
+        <!-- <div>
             <DatePicker v-model="dateTime" locale="zh-TW" @validation="handleValidation" :showErrorMessage="false">
             </DatePicker>
         </div>
@@ -49,7 +51,7 @@
         {{ selectedDate }}
         <div>
             <DateRange v-model="selectedDate" mode="dark"></DateRange>
-        </div>
+        </div> -->
         <!-- <RouterView /> -->
     </div>
     <!-- <ScopeTheme></ScopeTheme> -->
@@ -71,6 +73,7 @@ const selectedDate = ref({
     start: '',
     end: '',
 });
+const rocDate = ref('');
 const dateTime = ref('');
 const dateTime2 = ref('');
 const dateTime3 = ref('');
@@ -100,5 +103,9 @@ const myCustomMessages = {
     '請輸入年份': '年份不能空白喔！',
     '請輸入月份': '別忘了月份',
     '請輸入日期': '日期也要填寫'
+};
+
+const handleDateChange = (date: any) => {
+    console.log('日期變更:', date);
 };
 </script>

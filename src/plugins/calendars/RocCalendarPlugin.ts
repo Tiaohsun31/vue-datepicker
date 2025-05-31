@@ -143,13 +143,26 @@ export class RocCalendarPlugin implements CalendarPlugin {
     format(date: SimpleDateValue, format: string, locale: string): string {
         const rocDate = this.fromGregorian(date);
 
-        // ROC 特有格式
+        const rocYear = date.year - this.YEAR_OFFSET;
+        const month = date.month;
+        const day = date.day;
+
+        // 處理年份格式化
         const rocFormats: Record<string, string> = {
-            'ROC-YYYY': `民國${rocDate.year}年`,
-            'ROC-YY': `民國${rocDate.year.toString().slice(-2)}年`,
-            'ROC-YYYY-MM-DD': `民國${rocDate.year}年${rocDate.month.toString().padStart(2, '0')}月${rocDate.day.toString().padStart(2, '0')}日`,
-            'ROC-YY-MM-DD': `${rocDate.year.toString().slice(-2)}-${rocDate.month.toString().padStart(2, '0')}-${rocDate.day.toString().padStart(2, '0')}`,
-            'ROC-YYYY/MM/DD': `民國${rocDate.year}/${rocDate.month.toString().padStart(2, '0')}/${rocDate.day.toString().padStart(2, '0')}`,
+            // 純年份格式 - 用於日曆標題顯示
+            'ROC-YYYY': `民國${rocYear}年`,
+            'ROC-YY': `民國${rocYear.toString().slice(-2)}年`,
+
+            // 完整日期格式
+            'ROC-YYYY-MM-DD': `民國${rocYear}年${month.toString().padStart(2, '0')}月${day.toString().padStart(2, '0')}日`,
+            'ROC-YY-MM-DD': `民國${rocYear.toString().slice(-2)}年${month.toString().padStart(2, '0')}月${day.toString().padStart(2, '0')}日`,
+
+            // 簡化數字格式
+            'ROC-NUM-YYYY-MM-DD': `${rocYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+            'ROC-NUM-YY-MM-DD': `${rocYear.toString().slice(-2)}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+
+            // 斜線格式
+            'ROC-YYYY/MM/DD': `民國${rocYear}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`,
         };
 
         if (rocFormats[format]) {

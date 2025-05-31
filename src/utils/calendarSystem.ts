@@ -139,7 +139,23 @@ export class UnifiedCalendarSystem {
      */
     private createInternationalizedCalendar(calendarId: string): Calendar {
         try {
-            return createCalendar(calendarId as any);
+            // 特殊處理：某些日曆 ID 需要映射
+            const calendarMapping: Record<string, string> = {
+                'roc': 'roc',           // 民國曆
+                'buddhist': 'buddhist', // 佛曆
+                'japanese': 'japanese', // 日本年號
+                'islamic': 'islamic',   // 伊斯蘭曆
+                'persian': 'persian',   // 波斯曆
+                'hebrew': 'hebrew',     // 希伯來曆
+                'indian': 'indian',     // 印度曆
+                'chinese': 'chinese',   // 農曆
+                'gregory': 'gregory'    // 西元曆（預設）
+            };
+
+            const mappedCalendarId = calendarMapping[calendarId] || 'gregory';
+
+            console.log(`🗓️  創建 @internationalized/date 日曆: ${mappedCalendarId}`);
+            return createCalendar(mappedCalendarId as any);
         } catch (error) {
             console.warn(`無法創建日曆 ${calendarId}，回退到西元曆`, error);
             this.calendarId = 'gregory';
@@ -445,6 +461,101 @@ export class UnifiedCalendarSystem {
         }
 
         return formats;
+    }
+
+    /**
+ * 獲取當前日曆的插件實例（供 UI 組件使用）
+ */
+    getPlugin(calendarId?: string): CalendarPlugin | null {
+        const targetCalendarId = calendarId || this.calendarId;
+
+        if (targetCalendarId === 'gregory') {
+            return null; // 西元曆不使用插件
+        }
+
+        return pluginRegistry.get(targetCalendarId);
+    }
+
+    /**
+     * 獲取當前插件實例
+     */
+    getCurrentPlugin(): CalendarPlugin | null {
+        return this.plugin;
+    }
+
+    /**
+     * 檢查插件是否有特定方法
+     */
+    hasPluginMethod(methodName: string): boolean {
+        return this.plugin !== null && methodName in this.plugin;
+    }
+
+    /**
+     * 安全調用插件方法
+     */
+    callPluginMethod<T = any>(methodName: string, ...args: any[]): T | null {
+        if (!this.plugin || !(methodName in this.plugin)) {
+            return null;
+        }
+
+        try {
+            const method = (this.plugin as any)[methodName];
+            if (typeof method === 'function') {
+                return method.call(this.plugin, ...args);
+            }
+        } catch (error) {
+            console.warn(`調用插件方法 ${methodName} 失敗:`, error);
+        }
+
+        return null;
+    }
+
+    /**
+     * 獲取插件支援的年份範圍
+     */
+    getPluginYearRange(): { min: number; max: number } | null {
+        if (!this.plugin) return null;
+
+        try {
+            const config = this.plugin.getConfig();
+            return config.yearRange;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * 使用插件進行本地年份到西元年的轉換
+     */
+    convertLocalToGregorian(localYear: number): number | null {
+        if (!this.plugin || !this.hasPluginMethod('toGregorian')) {
+            return localYear; // 如果沒有插件或方法，假設已經是西元年
+        }
+
+        try {
+            const localDate = { year: localYear, month: 1, day: 1 };
+            const gregorianDate = this.callPluginMethod('toGregorian', localDate);
+            return gregorianDate?.year || null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * 使用插件進行西元年到本地年份的轉換
+     */
+    convertGregorianToLocal(gregorianYear: number): number | null {
+        if (!this.plugin || !this.hasPluginMethod('fromGregorian')) {
+            return gregorianYear; // 如果沒有插件或方法，直接返回
+        }
+
+        try {
+            const gregorianDate = { year: gregorianYear, month: 1, day: 1 };
+            const localDate = this.callPluginMethod('fromGregorian', gregorianDate);
+            return localDate?.year || null;
+        } catch {
+            return null;
+        }
     }
 }
 

@@ -3,7 +3,7 @@
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
-            :max-year="maxYear" />
+            :calendar-system="calendarSystem" :max-year="maxYear" />
 
         <!-- 星期列 -->
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" />
@@ -101,6 +101,7 @@ import {
     getTodaysDate,
     toCalendarDate,
 } from '@/utils/dateUtils';
+import type { UnifiedCalendarSystem } from '@/utils/calendarSystem';
 
 // 選擇模式類型
 type SelectionMode = 'single' | 'range';
@@ -131,6 +132,8 @@ interface Props {
     use24Hour?: boolean;
 
     defaultTime?: string;
+
+    calendarSystem?: UnifiedCalendarSystem | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -148,7 +151,8 @@ const props = withDefaults(defineProps<Props>(), {
     timeValue: null,
     enableSeconds: true,
     use24Hour: false,
-    defaultTime: '00:00:00'
+    defaultTime: '00:00:00',
+    calendarSystem: null,
 });
 
 const emit = defineEmits<{

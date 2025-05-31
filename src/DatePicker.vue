@@ -60,7 +60,8 @@
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale"
-                @select="handleCalendarSelect" @time-select="handleTimeSelect" />
+                :calendarSystem="(calendarSystem as UnifiedCalendarSystem)" @select="handleCalendarSelect"
+                @time-select="handleTimeSelect" />
         </div>
     </div>
 
@@ -95,6 +96,7 @@ import ClearIcon from './components/icons/ClearIcon.vue';
 // Composables
 import { useDateTimePicker } from './composables/useDateTimePicker';
 import { useTheme } from './composables/useTheme';
+import { UnifiedCalendarSystem } from './utils/calendarSystem';
 
 // Utils
 import {
@@ -114,7 +116,6 @@ interface Props {
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
 
-    // === 新增：日曆系統支援 ===
     calendar?: string;              // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
     showCalendarInfo?: boolean;     // 是否顯示日曆系統資訊（開發用）
 
@@ -163,7 +164,6 @@ const props = withDefaults(defineProps<Props>(), {
     mode: 'auto',
     theme: () => 'violet',
 
-    // === 新增預設值 ===
     calendar: 'gregory',           // 預設使用西元曆
     showCalendarInfo: false,       // 生產環境不顯示
 
@@ -263,7 +263,7 @@ const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDat
 const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
 const dateInputFormat = computed(() => internalDateFormat.value);
 
-// === 新增：日曆系統相關計算屬性 ===
+// 日曆系統相關計算屬性
 const computedPlaceholders = computed(() => {
     // 如果用戶提供了自定義 placeholder，優先使用
     if (props.yearPlaceholder || props.monthPlaceholder || props.dayPlaceholder) {
@@ -374,9 +374,9 @@ defineExpose({
     getCalendarSystem: () => datePicker.calendarSystem.value,
     setCalendar: async (calendarId: string) => {
         if (datePicker.calendarSystem.value) {
-            const success = await datePicker.calendarSystem.value.setCalendar(calendarId);
+            const success = datePicker.calendarSystem.value.setCalendar(calendarId);
             if (success) {
-                await datePicker.updatePlaceholders();
+                datePicker.updatePlaceholders();
             }
             return success;
         }

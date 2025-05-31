@@ -1,4 +1,5 @@
 <template>
+    {{ calendarSystem }}
     <div class="flex justify-between items-center mb-4 gap-2">
         <button type="button" @click="previousMonth"
             class="p-2 hover:bg-gray-100  text-vdt-content-secondary  hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500"
@@ -22,12 +23,13 @@
                 <button type="button" @click="toggleYearSelector" data-year-selector-button
                     class="inline-flex items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200"
                     aria-label="選擇年份">
-                    {{ selectedYearLocal }}
+                    {{ displayYear }}
                 </button>
 
                 <!-- 年份選擇面板 -->
                 <YearSelector :selected-year="selectedYearLocal" v-model:show-selector="showYearSelector"
-                    :min-year="minYear" :max-year="maxYear" @year-selected="onYearSelected" />
+                    :min-year="minYear" :max-year="maxYear" :calendar-system="calendarSystem"
+                    @year-selected="onYearSelected" />
             </div>
         </div>
 
@@ -43,6 +45,7 @@ import { ref, computed, watch } from 'vue';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
 import YearSelector from './YearSelector.vue';
+import type { UnifiedCalendarSystem } from '@/utils/calendarSystem';
 
 interface Props {
     month: number;
@@ -50,12 +53,14 @@ interface Props {
     locale?: string;
     minYear?: number;
     maxYear?: number;
+    calendarSystem?: UnifiedCalendarSystem | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     locale: 'en-US',
     minYear: 1900,
-    maxYear: 2100
+    maxYear: 2100,
+    calendarSystem: null,
 });
 
 const emit = defineEmits<{
@@ -76,6 +81,44 @@ watch(() => props.month, (newMonth) => {
 watch(() => props.year, (newYear) => {
     selectedYearLocal.value = newYear;
 }, { immediate: true });
+
+// === 新增：顯示年份的計算屬性 ===
+const displayYear = computed(() => {
+    if (!props.calendarSystem) {
+        return selectedYearLocal.value;
+    }
+
+    try {
+        // 創建一個簡單的日期來格式化年份
+        const simpleDate = {
+            year: selectedYearLocal.value,
+            month: selectedMonthLocal.value,
+            day: 1
+        };
+
+        // 使用日曆系統格式化年份
+        const currentCalendar = props.calendarSystem.getCurrentCalendar();
+        console.log('currentCalendar:', currentCalendar);
+
+        if (currentCalendar === 'gregory') {
+            return selectedYearLocal.value;
+        }
+
+        const yearFormat = `${currentCalendar}-YYYY`.toUpperCase();
+
+        // 對於其他日曆，使用插件格式化
+        const formattedYear = props.calendarSystem.formatOutput(simpleDate, yearFormat, props.locale);
+
+        // 如果格式化成功且包含年份信息，返回格式化結果
+        if (formattedYear && formattedYear !== selectedYearLocal.value.toString()) {
+            return formattedYear;
+        }
+    } catch (error) {
+        console.warn('年份格式化失敗:', error);
+    }
+
+    return selectedYearLocal.value;
+});
 
 // 產生月份名稱列表
 const monthNames = computed(() => {

@@ -9,7 +9,8 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { createCalendarSystem, type UnifiedCalendarSystem } from '../utils/calendarSystem';
-import { toCalendarDate, ensureSimpleDate, type DateTimeValue, type SimpleDateValue } from '../utils/dateUtils';
+import { toCalendarDate, ensureSimpleDate, formatSimpleDate, type DateTimeValue, type SimpleDateValue } from '../utils/dateUtils';
+import dayjs from 'dayjs';
 
 interface DateTimePickerOptions {
     // 基本配置
@@ -168,6 +169,41 @@ export function useDateTimePicker(
         }
     };
 
+    // 統一的格式化函數
+    const formatDateTimeWithCalendar = (dateTime: SimpleDateValue, formatStr: string): string => {
+        if (!dateTime) return '';
+
+        // 如果是西元曆，使用 dayjs 格式化
+        if (!calendarSystem.value || calendar === 'gregory') {
+            const jsDate = new Date(
+                dateTime.year,
+                dateTime.month - 1,
+                dateTime.day,
+                dateTime.hour || 0,
+                dateTime.minute || 0,
+                dateTime.second || 0
+            );
+            return dayjs(jsDate).format(formatStr);
+        }
+
+        // 非西元曆，使用日曆系統格式化
+        try {
+            return calendarSystem.value.formatOutput(dateTime, formatStr, locale);
+        } catch (error) {
+            console.warn('日曆系統格式化失敗:', error);
+            // 回退到西元曆格式化
+            const jsDate = new Date(
+                dateTime.year,
+                dateTime.month - 1,
+                dateTime.day,
+                dateTime.hour || 0,
+                dateTime.minute || 0,
+                dateTime.second || 0
+            );
+            return dayjs(jsDate).format(formatStr);
+        }
+    };
+
     // 計算屬性 - 轉換為 CalendarDate 格式（供日曆組件使用）
     const calendarDateForGrid = computed(() => {
         if (!dateTimeValue.internalDateTime.value || !calendarSystem.value) return null;
@@ -204,36 +240,43 @@ export function useDateTimePicker(
         emitValidation = emitters.validation || null;
     };
 
+    const wrappedEmitUpdate = async (dateTime = dateTimeValue.internalDateTime.value, source: string) => {
+        console.debug(`發送更新事件，來源: ${source}`, dateTime);
+        await emitEvents(dateTime);
+    }
+
     /**
      * 發送更新事件
      */
     const emitEvents = async (dateTime = dateTimeValue.internalDateTime.value) => {
         let formattedOutput: DateTimeValue = null;
 
-        if (dateTime && calendarSystem.value) {
-            // 使用日曆系統格式化輸出
-            try {
-                const outputFormatStr = showTime
-                    ? `${dateFormat} ${timeFormat}`
-                    : dateFormat;
+        if (dateTime) {
+            const outputFormatStr = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
 
-                // 根據 outputFormat 決定輸出格式
+            try {
                 if (outputFormat === 'simple') {
                     formattedOutput = dateTime;
                 } else if (outputFormat === 'date') {
-                    const jsDate = new Date(dateTime.year, dateTime.month - 1, dateTime.day,
-                        dateTime.hour || 0, dateTime.minute || 0, dateTime.second || 0);
+                    const jsDate = new Date(
+                        dateTime.year,
+                        dateTime.month - 1,
+                        dateTime.day,
+                        dateTime.hour || 0,
+                        dateTime.minute || 0,
+                        dateTime.second || 0
+                    );
                     formattedOutput = jsDate;
                 } else {
-                    // iso 格式，使用日曆系統格式化
-                    formattedOutput = calendarSystem.value.formatOutput(dateTime, outputFormatStr, locale);
+                    // iso 格式 - 使用統一格式化函數
+                    formattedOutput = formatDateTimeWithCalendar(dateTime, outputFormatStr);
                 }
+
+                console.log('格式化輸出:', { dateTime, formattedOutput, format: outputFormatStr });
             } catch (error) {
                 console.warn('格式化輸出失敗:', error);
                 formattedOutput = dateTimeValue.getFormattedOutput(dateTime);
             }
-        } else {
-            formattedOutput = dateTimeValue.getFormattedOutput(dateTime);
         }
 
         emitUpdate?.(formattedOutput);
@@ -248,6 +291,7 @@ export function useDateTimePicker(
      * 監聽外部值變化
      */
     watch(() => modelValue, (newValue) => {
+        console.debug('外部值變化:', newValue);
         dateTimeValue.setExternalValue(newValue);
     }, { immediate: true });
 
@@ -314,37 +358,19 @@ export function useDateTimePicker(
     };
 
     /**
-     * 處理日期輸入完成 - 整合日曆系統解析（同步）
+     * 處理日期輸入完成
      */
     const handleDateComplete = async (dateStr: string) => {
         dateTimeValue.inputDateValue.value = dateStr;
-
-        // 使用日曆系統解析日期
-        if (calendarSystem.value) {
-            try {
-                const parsedDate = parseInputWithCalendar(dateStr);
-                if (parsedDate) {
-                    // 更新內部日期時間
-                    dateTimeValue.internalDateTime.value = {
-                        ...parsedDate,
-                        hour: dateTimeValue.internalDateTime.value?.hour,
-                        minute: dateTimeValue.internalDateTime.value?.minute,
-                        second: dateTimeValue.internalDateTime.value?.second
-                    };
-                }
-            } catch (error) {
-                console.warn('日曆解析日期失敗:', error);
-            }
-        }
 
         // 如果啟用時間且沒有時間值，應用默認時間
         if (showTime && !dateTimeValue.inputTimeValue.value) {
             dateTimeValue.inputTimeValue.value = defaultTime.getValidDefaultTime.value;
         }
 
-        // 更新內部值並發送事件
+        // 更新內部值
         const updatedDateTime = dateTimeValue.updateDateTime();
-        await emitEvents(updatedDateTime);
+        await wrappedEmitUpdate(updatedDateTime, 'handleDateComplete');
 
         // 自動聚焦到時間輸入
         if (showTime && autoFocusTimeAfterDate) {
@@ -361,7 +387,7 @@ export function useDateTimePicker(
     const handleTimeComplete = async (timeStr: string) => {
         dateTimeValue.inputTimeValue.value = timeStr;
         const updatedDateTime = dateTimeValue.updateDateTime();
-        await emitEvents(updatedDateTime);
+        await wrappedEmitUpdate(updatedDateTime, 'handleTimeComplete');
     };
 
     /**
@@ -374,31 +400,14 @@ export function useDateTimePicker(
             // 將選擇的日期轉回西元曆格式
             const simpleDate = calendarSystem.value.fromCalendarDate(date);
             if (simpleDate) {
-                // 格式化為字符串
-                const dateStr = calendarSystem.value.formatOutput(simpleDate, dateFormat, locale);
-                dateTimeValue.inputDateValue.value = dateStr;
+                dateTimeValue.inputDateValue.value = new Date(simpleDate.year, simpleDate.month - 1, simpleDate.day).toLocaleDateString(locale);
 
-                // 保留現有的時間，如果有的話
-                const existingTime = dateTimeValue.internalDateTime.value;
-                const updatedDateTime = {
-                    ...simpleDate,
-                    hour: existingTime?.hour || (showTime ? 9 : 0),  // 如果顯示時間，預設 9 點
-                    minute: existingTime?.minute || 0,
-                    second: existingTime?.second || 0
-                };
-
-                // 直接設置內部日期時間
-                dateTimeValue.setInternalDateTime(updatedDateTime);
-
-                // 清除日期相關錯誤
                 ['date', 'year', 'month', 'day'].forEach(field => {
                     validation.clearFieldErrors(field);
                 });
 
-                // 確保有有效的日期時間才發送事件
-                if (updatedDateTime && updatedDateTime.year && updatedDateTime.month && updatedDateTime.day) {
-                    await emitEvents(updatedDateTime);
-                }
+                const updatedDateTime = dateTimeValue.updateDateTime();
+                await wrappedEmitUpdate(updatedDateTime, 'handleCalendarSelect');
 
                 if (closeCalendar) {
                     calendarPopup.hideCalendar();
@@ -414,42 +423,36 @@ export function useDateTimePicker(
      */
     const handleTimeSelect = async (timeStr: string) => {
         console.log('處理時間選擇:', timeStr);
-        console.log('當前內部日期時間:', dateTimeValue.internalDateTime.value);
 
-        // 設置時間值
-        dateTimeValue.inputTimeValue.value = timeStr;
+        if (dateTimeValue.internalDateTime.value) {
+            const timeParts = timeStr.split(':').map(Number);
+            const updatedDateTime: SimpleDateValue = {
+                ...dateTimeValue.internalDateTime.value,
+                hour: timeParts[0] || 0,
+                minute: timeParts[1] || 0,
+                second: timeParts[2] || 0
+            };
 
-        // 清除時間相關錯誤
+            dateTimeValue.internalDateTime.value = updatedDateTime;
+            dateTimeValue.inputTimeValue.value = timeStr;
+
+            await emitEvents(updatedDateTime);
+        }
+
         ['time', 'hour', 'minute', 'second'].forEach(field => {
             validation.clearFieldErrors(field);
         });
-
-        // 確保有日期數據才更新
-        if (dateTimeValue.internalDateTime.value) {
-            const updatedDateTime = dateTimeValue.updateDateTime();
-            console.log('時間選擇後的日期時間:', updatedDateTime);
-
-            // 只有在有效日期時間時才發送事件
-            if (updatedDateTime && updatedDateTime.year && updatedDateTime.month && updatedDateTime.day) {
-                await emitEvents(updatedDateTime);
-            } else {
-                console.warn('時間選擇後沒有有效的日期時間，跳過事件發送');
-            }
-        } else {
-            console.warn('沒有日期數據，無法設置時間');
-            // 可以選擇是否要顯示錯誤提示
-            validation.handleTimeValidation(false, {
-                time: '請先選擇日期'
-            });
-        }
     };
 
     /**
      * 容器點擊處理
      */
     const handleContainerClick = (event: MouseEvent) => {
-        navigation.focusFirstInput();
+        calendarPopup.handleContainerClick(event, () => {
+            navigation.focusFirstInput();
+        });
     };
+
 
     /**
      * 重置所有值

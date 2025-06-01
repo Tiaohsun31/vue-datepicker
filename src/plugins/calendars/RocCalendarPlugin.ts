@@ -141,23 +141,26 @@ export class RocCalendarPlugin implements CalendarPlugin {
      * 格式化 ROC 日期
      */
     format(date: SimpleDateValue, format: string, locale: string): string {
-
-
-        console.log('RocCalendarPlugin.format 被調用:', { date, format, locale });
-
+        const jsDate = new Date(
+            date.year,
+            date.month - 1,
+            date.day,
+            date.hour || 0,
+            date.minute || 0,
+            date.second || 0
+        );
         // 檢查是否為複合格式（包含時間部分）
         const parts = format.split(' ');
         const dateFormatPart = parts[0];
         const timeFormatPart = parts.slice(1).join(' ');
-
-        console.log('格式分析:', { dateFormatPart, timeFormatPart });
 
         // 處理日期部分的 ROC 格式
         const formattedDate = this.formatDatePart(date, dateFormatPart, locale);
 
         // 如果有時間部分，處理時間格式
         if (timeFormatPart) {
-            const formattedTime = this.formatTimePart(date, timeFormatPart);
+            const formattedTime = dayjs(jsDate).format(timeFormatPart);
+            console.log(`時間格式 ${timeFormatPart} 轉換結果:`, formattedTime);
             return `${formattedDate} ${formattedTime}`;
         }
 
@@ -202,19 +205,6 @@ export class RocCalendarPlugin implements CalendarPlugin {
 
         console.log(`標準格式 ${format} 轉換結果:`, formatted);
         return formatted;
-    }
-
-    /**
-     * 格式化時間部分
-     */
-    private formatTimePart(date: SimpleDateValue, timeFormat: string): string {
-        const hour = date.hour || 0;
-        const minute = date.minute || 0;
-        const second = date.second || 0;
-
-        // 使用 dayjs 格式化時間
-        const jsDate = new Date(date.year, date.month - 1, date.day, hour, minute, second);
-        return dayjs(jsDate).format(timeFormat);
     }
     /**
      * 西元曆轉 ROC 日曆

@@ -34,11 +34,10 @@
             }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
                 @keydown.space.prevent="!disabled && toggleCalendar?.()">
                 <!-- 顯示值或 placeholder -->
-                <span v-if="hasDisplayValue">
-                    {{ inputDateValue }}
-                    <span v-if="showTime && inputTimeValue" class="ml-1">{{ inputTimeValue }}</span>
+                <span v-if="hasDisplayValue" class="text-vdt-content">
+                    {{ modelValue }}
                 </span>
-                <span v-else class="text-gray-400">
+                <span v-else class="text-vdt-content-muted">
                     {{ computedSelectDatePlaceholder }}
                 </span>
             </div>
@@ -58,7 +57,7 @@
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
-
+            {{ calendarDateForGrid }}
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale"
@@ -317,7 +316,6 @@ watch(() => props.calendar, (newCalendar) => {
     if (newCalendar && datePicker.calendarSystem.value) {
         const success = datePicker.calendarSystem.value.setCalendar(newCalendar);
         if (success) {
-            // 更新 placeholder
             datePicker.updatePlaceholders();
         }
     }

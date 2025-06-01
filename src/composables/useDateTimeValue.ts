@@ -105,11 +105,6 @@ export function useDateTimeValue(
         );
     };
 
-    const setInternalDateTime = (dateTime: SimpleDateValue | null) => {
-        internalDateTime.value = dateTime;
-        return dateTime;
-    };
-
     /**
      * 設置外部值
      */
@@ -127,12 +122,32 @@ export function useDateTimeValue(
     };
 
     /**
-     * 更新日期時間值
+     * === 修改：增強 updateDateTime 方法 ===
+     * 支援直接使用現有的 internalDateTime，而不強制重新解析
      */
     const updateDateTime = (dateStr?: string | null, timeStr?: string | null) => {
+        // 如果沒有提供參數，且已有內部日期時間，則更新時間部分
+        if (dateStr === undefined && timeStr === undefined && internalDateTime.value) {
+            return internalDateTime.value;
+        }
+
         const finalDateStr = dateStr !== undefined ? dateStr : inputDateValue.value;
         const finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
 
+        // 如果有 finalTimeStr 但沒有新的 dateStr，且已有內部日期，只更新時間
+        if (finalTimeStr && !dateStr && internalDateTime.value) {
+            const timeParts = finalTimeStr.split(':').map(Number);
+            const updatedDateTime: SimpleDateValue = {
+                ...internalDateTime.value,
+                hour: timeParts[0] || 0,
+                minute: timeParts[1] || 0,
+                second: timeParts[2] || 0
+            };
+            internalDateTime.value = updatedDateTime;
+            return updatedDateTime;
+        }
+
+        // 原有邏輯：完整解析
         const dateTime = createDateTimeFromInputs(finalDateStr, finalTimeStr);
         internalDateTime.value = dateTime;
 
@@ -200,7 +215,6 @@ export function useDateTimeValue(
         hasValue,
 
         // 主要方法
-        setInternalDateTime,
         setExternalValue,
         updateDateTime,
         getFormattedOutput,

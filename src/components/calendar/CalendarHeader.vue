@@ -89,20 +89,23 @@ const displayYear = computed(() => {
     }
 
     try {
+
+
+        // 使用日曆系統格式化年份
+        const currentCalendar = props.calendarSystem.getCurrentCalendar();
+        console.log('currentCalendar:', currentCalendar);
+        console.log('selectedYearLocal:', selectedYearLocal.value);
+
+        if (currentCalendar === 'gregory') {
+            return selectedYearLocal.value;
+        }
+
         // 創建一個簡單的日期來格式化年份
         const simpleDate = {
             year: selectedYearLocal.value,
             month: selectedMonthLocal.value,
             day: 1
         };
-
-        // 使用日曆系統格式化年份
-        const currentCalendar = props.calendarSystem.getCurrentCalendar();
-        console.log('currentCalendar:', currentCalendar);
-
-        if (currentCalendar === 'gregory') {
-            return selectedYearLocal.value;
-        }
 
         const yearFormat = `${currentCalendar}-YYYY`.toUpperCase();
 
@@ -119,6 +122,7 @@ const displayYear = computed(() => {
 
     return selectedYearLocal.value;
 });
+
 
 // 產生月份名稱列表
 const monthNames = computed(() => {

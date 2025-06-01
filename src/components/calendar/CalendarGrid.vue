@@ -277,10 +277,29 @@ watch(() => [props.year, props.month], ([newYear, newMonth]) => {
 
 // 監聽外部傳入的值
 watch(() => props.value, (newValue) => {
+    console.log('外部值變化', props.value, newValue);
     // 只有在沒有外部年月控制時才自動調整
     if (newValue && props.year === undefined && props.month === undefined) {
-        currentYear.value = newValue.year;
-        currentMonth.value = newValue.month;
+        // ✅ 需要將當地日曆年份轉換回西元年來正確顯示月份導航
+        let displayYear = newValue.year;
+        let displayMonth = newValue.month;
+
+        // 如果有日曆系統且不是西元曆，需要轉換
+        if (props.calendarSystem && props.calendarSystem.getCurrentCalendar() !== 'gregory') {
+            try {
+                // 將當地日曆日期轉換為西元曆日期
+                const simpleDate = props.calendarSystem.fromCalendarDate(newValue);
+                if (simpleDate) {
+                    displayYear = simpleDate.year;
+                    displayMonth = simpleDate.month;
+                }
+            } catch (error) {
+                console.warn('轉換日曆日期失敗，使用原始值:', error);
+            }
+        }
+
+        currentYear.value = displayYear;
+        currentMonth.value = displayMonth;
     }
 }, { immediate: true });
 

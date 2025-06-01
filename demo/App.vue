@@ -1,13 +1,15 @@
 <template>
     <div class="container mx-auto p-4 space-y-6">
         <div>
-            <!-- <DatePicker v-model="dateTimeutc" date-format="MM/DD/YYYY">
-            </DatePicker> -->
+            {{ dateTimeutc }}
+            <DatePicker v-model="dateTimeutc">
+            </DatePicker>
             {{ rocDate }}
             <DatePicker v-model="rocDate" calendar="roc" date-format="ROC-YYYY-MM-DD" locale="zh-TW"
                 @change="handleDateChange" />
         </div>
         <div>
+            {{ dateTime2 }}
             <DatePicker v-model="dateTime2" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
@@ -106,6 +108,6 @@ const myCustomMessages = {
 };
 
 const handleDateChange = (date: any) => {
-    console.log('日期變更:', date);
+    // console.log('日期變更:', date);
 };
 </script>

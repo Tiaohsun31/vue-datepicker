@@ -6,6 +6,7 @@ import timezone from 'dayjs/plugin/timezone';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import localeData from 'dayjs/plugin/localeData';
+import { parseUserDateInput } from './dateParsingUtils';
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
@@ -243,6 +244,24 @@ export function ensureSimpleDate(value: DateTimeValue | undefined): SimpleDateVa
     };
 }
 
+/*
+* 確保值是 SimpleDateValue，並使用指定的語言環境進行解析
+*/
+export function ensureSimpleDateWithLocale(
+    value: DateTimeValue | undefined,
+    locale: string = 'zh-TW'
+): SimpleDateValue | null {
+    if (!value) return null;
+
+    // 如果是字符串，直接使用增強解析
+    if (typeof value === 'string') {
+        return enhancedParseToSimpleDate(value, locale);
+    }
+
+    // 其他類型使用原有邏輯
+    return ensureSimpleDate(value);
+}
+
 /**
  * 將 SimpleDateValue 轉換為字符串
  */
@@ -401,6 +420,36 @@ export function isValidTimeFormat(format: string): boolean {
     });
 
     return hasHour && hasMinute && !hasInvalidToken;
+}
+
+export function enhancedParseToSimpleDate(
+    value: any,
+    locale: string = 'zh-TW'
+): { year: number; month: number; day: number } | null {
+    if (!value) return null;
+
+    // 如果已經是正確的物件格式
+    if (typeof value === 'object' && value.year && value.month && value.day) {
+        return value;
+    }
+
+    // 如果是字符串，使用智能解析
+    if (typeof value === 'string') {
+        const result = parseUserDateInput(value, locale);
+        return result.success ? result.date : null;
+    }
+
+    // 如果是 Date 物件
+    if (value instanceof Date && !isNaN(value.getTime())) {
+        return {
+            year: value.getFullYear(),
+            month: value.getMonth() + 1,
+            day: value.getDate()
+        };
+    }
+
+    // 其他情況回到原有邏輯...
+    return null;
 }
 
 /**

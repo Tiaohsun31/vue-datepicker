@@ -5,12 +5,12 @@
             <DatePicker v-model="dateTimeutc">
             </DatePicker>
             {{ rocDate }}
-            <DatePicker v-model="rocDate" calendar="roc" date-format="ROC-YYYY-MM-DD" locale="zh-TW"
-                @change="handleDateChange" />
+            <DatePicker v-model="rocDate" calendar="roc" min-date="01-01-2000" date-format="ROC-YYYY-MM-DD"
+                locale="zh-TW" @change="handleDateChange" />
         </div>
         <div>
             {{ dateTime2 }}
-            <DatePicker v-model="dateTime2" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
+            <DatePicker v-model="dateTime2" min-date="01/03/2000" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -77,7 +77,7 @@ const selectedDate = ref({
 });
 const rocDate = ref('');
 const dateTime = ref('');
-const dateTime2 = ref('');
+const dateTime2 = ref('01/03/2000');
 const dateTime3 = ref('');
 const dateTimeutc = ref('');
 const partialCustomDate = ref();

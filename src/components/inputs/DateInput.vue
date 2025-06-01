@@ -490,8 +490,14 @@ const handleFocus = (field: DateFieldType) => {
 };
 
 const handleBlur = (field: DateFieldType) => {
+    setTimeout(() => {
+        // 如果沒有其他字段獲得焦點，才進行驗證
+        if (focused.value === null) {
+            validateAndEmit();
+        }
+    }, 50); // 給足夠時間讓新字段獲得焦點
+
     focused.value = null;
-    validateAndEmit();
 };
 
 // 提供方法給父組件 - 修復版本

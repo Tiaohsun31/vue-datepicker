@@ -9,7 +9,7 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { createCalendarSystem, type UnifiedCalendarSystem } from '../utils/calendarSystem';
-import { toCalendarDate, ensureSimpleDate, formatSimpleDate, type DateTimeValue, type SimpleDateValue } from '../utils/dateUtils';
+import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue } from '../utils/dateUtils';
 import dayjs from 'dayjs';
 
 interface DateTimePickerOptions {
@@ -211,13 +211,13 @@ export function useDateTimePicker(
     });
 
     const calendarMinDate = computed(() => {
-        const minDateValue = ensureSimpleDate(minDate);
+        const minDateValue = ensureSimpleDateWithLocale(minDate, locale);
         if (!minDateValue || !calendarSystem.value) return null;
         return calendarSystem.value.toCalendarDate(minDateValue);
     });
 
     const calendarMaxDate = computed(() => {
-        const maxDateValue = ensureSimpleDate(maxDate);
+        const maxDateValue = ensureSimpleDateWithLocale(maxDate, locale);
         if (!maxDateValue || !calendarSystem.value) return null;
         return calendarSystem.value.toCalendarDate(maxDateValue);
     });

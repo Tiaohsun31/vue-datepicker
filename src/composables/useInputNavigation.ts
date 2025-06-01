@@ -1,8 +1,6 @@
 /**
  * useInputNavigation.ts
  * 處理 DateInput 和 TimeInput 之間的導航邏輯
- * TODO: 如果輸入格式是日月年，往後回退會造成日期異常{year: 2222, month: 2, day: 11, hour: 0, minute: 0, …}{year: 2222, month: 2, day: 11, hour: 0, minute: 0, …}
- * TODO: 鍵盤導覽時不應該發送時間輸入的事件，應該只在用戶手動輸入時發送
  */
 
 import { ref, nextTick, type Ref } from 'vue';

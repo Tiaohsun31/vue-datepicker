@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, watch } from 'vue';
+import { ref, computed, onBeforeMount, watch, onMounted } from 'vue';
 
 // 組件導入
 import DateContainer from './components/calendar/DateContainer.vue';
@@ -99,12 +99,14 @@ import { useDateTimePicker } from './composables/useDateTimePicker';
 import { useTheme } from './composables/useTheme';
 import { UnifiedCalendarSystem } from './utils/calendarSystem';
 
+
 // Utils
 import {
     formatSimpleDate,
     ensureSimpleDate,
     isValidDateFormat,
     isValidTimeFormat,
+    ensureSimpleDateWithLocale,
     fixDateFormat,
     fixTimeFormat,
     type DateTimeValue,
@@ -217,8 +219,15 @@ const {
 } = useTheme();
 
 // 計算屬性
-const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
-const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
+const minDateStr = computed(() => {
+    const minDateValue = ensureSimpleDateWithLocale(props.minDate, props.locale);
+    return formatSimpleDate(minDateValue);
+});
+
+const maxDateStr = computed(() => {
+    const maxDateValue = ensureSimpleDateWithLocale(props.maxDate, props.locale);
+    return formatSimpleDate(maxDateValue);
+});
 const dateInputFormat = computed(() => internalDateFormat.value);
 const isGregoryCalendar = computed(() => props.calendar === 'gregory');
 

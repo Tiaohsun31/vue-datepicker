@@ -1,4 +1,4 @@
-<!-- DateInput.vue 修復版本 -->
+<!-- DateInput.vue -->
 <template>
     <!-- 年份/月份/日期輸入組 -->
     <div class="flex items-center justify-start">
@@ -27,16 +27,17 @@
                 :aria-errormessage="errors.day ? 'day-error' : undefined" />
 
             <!-- 分隔符，除非是最後一個段 -->
-            <span v-if="index < dateSegments.length - 1" class="text-gray-400 mx-1">{{ separator }}</span>
+            <span v-if="index < dateSegments.length - 1" class="text-gray-400">{{ separator }}</span>
         </template>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
+import { dayjsParseDate } from '@/utils/dateUtils';
 
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
@@ -151,7 +152,7 @@ watch(() => props.modelValue, (newValue) => {
     }
 
     if (newValue) {
-        const date = dayjs(newValue);
+        const date = dayjsParseDate(newValue, props.dateFormat);
         if (date.isValid()) {
             yearValue.value = date.format('YYYY');
             monthValue.value = date.format('MM');
@@ -164,7 +165,7 @@ watch(() => props.modelValue, (newValue) => {
     }
 }, { immediate: true });
 
-// 自動聚焦 - 修復版本
+// 自動聚焦 -
 // onMounted(() => {
 //     if (props.autoFocus) {
 //         nextTick(() => {
@@ -173,7 +174,7 @@ watch(() => props.modelValue, (newValue) => {
 //     }
 // });
 
-// 聚焦到第一個輸入框 - 修復版本
+// 聚焦到第一個輸入框
 const focusFirstInput = () => {
     if (dateSegments.value.length === 0) return;
 
@@ -202,7 +203,7 @@ const focusFirstInput = () => {
     }
 };
 
-// 安全地聚焦到元素 - 修復版本
+// 安全地聚焦到元素
 const safelyFocus = (fieldType: DateFieldType) => {
     const element = getInputRef(fieldType);
     if (element && typeof element.focus === 'function') {
@@ -214,7 +215,7 @@ const safelyFocus = (fieldType: DateFieldType) => {
     }
 };
 
-// 安全地聚焦到元素並設定游標位置 - 修復版本
+// 安全地聚焦到元素並設定游標位置
 const safelyFocusAndSetCursor = (fieldType: DateFieldType, position: 'start' | 'end') => {
     const element = getInputRef(fieldType);
     if (!element) return;
@@ -334,8 +335,8 @@ const validateAndEmit = () => {
         if (!dayValue.value) errors.value.day = '請輸入日期';
     }
 
-    if (dateString.value) {
-        const date = dayjs(dateString.value);
+    if (formattedDateString.value) {
+        const date = dayjs(formattedDateString.value);
 
         if (!date.isValid()) {
             errors.value.day = '無效的日期';
@@ -345,7 +346,7 @@ const validateAndEmit = () => {
             } else if (props.maxDate && date.isAfter(dayjs(props.maxDate))) {
                 errors.value.day = `日期不能晚於 ${dayjs(props.maxDate).format(props.dateFormat)}`;
             } else if (formattedDateString.value) {
-                emit('update:modelValue', dateString.value);
+                emit('update:modelValue', formattedDateString.value);
                 emit('complete', formattedDateString.value);
             }
         }
@@ -364,7 +365,7 @@ const resetFields = () => {
     errors.value = {};
 };
 
-// 處理字段填寫完成後的邏輯 - 修復版本
+// 處理字段填寫完成後的邏輯
 const handleFieldCompletion = (field: DateFieldType) => {
     const fieldIndex = dateSegments.value.findIndex(segment => segment === field);
     const nextSegment = fieldIndex < dateSegments.value.length - 1 ? dateSegments.value[fieldIndex + 1] : null;
@@ -445,10 +446,9 @@ const focusLastInput = () => {
     });
 };
 
-// 鍵盤事件處理 - 修復版本
+// 鍵盤事件處理
 const handleKeydown = (event: KeyboardEvent, field: string) => {
     const target = event.target as HTMLInputElement;
-    const fieldType = field as DateFieldType;
 
     const currentIndex = dateSegments.value.findIndex(segment => segment === field);
     const prevSegment = currentIndex > 0 ? dateSegments.value[currentIndex - 1] as DateFieldType : null;
@@ -490,17 +490,11 @@ const handleFocus = (field: DateFieldType) => {
 };
 
 const handleBlur = (field: DateFieldType) => {
-    setTimeout(() => {
-        // 如果沒有其他字段獲得焦點，才進行驗證
-        if (focused.value === null) {
-            validateAndEmit();
-        }
-    }, 50); // 給足夠時間讓新字段獲得焦點
-
+    validateAndEmit();
     focused.value = null;
 };
 
-// 提供方法給父組件 - 修復版本
+// 提供方法給父組件 -
 defineExpose({
     validate: validateAndEmit,
     reset: () => {

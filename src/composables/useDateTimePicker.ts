@@ -9,7 +9,7 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { createCalendarSystem, type UnifiedCalendarSystem } from '../utils/calendarSystem';
-import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue } from '../utils/dateUtils';
+import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue, dayjsParseDate } from '../utils/dateUtils';
 import dayjs from 'dayjs';
 
 interface DateTimePickerOptions {
@@ -172,7 +172,7 @@ export function useDateTimePicker(
     // 統一的格式化函數
     const formatDateTimeWithCalendar = (dateTime: SimpleDateValue, formatStr: string): string => {
         if (!dateTime) return '';
-
+        console.log('格式化日期:', dateTime, formatStr);
         // 如果是西元曆，使用 dayjs 格式化
         if (!calendarSystem.value || calendar === 'gregory') {
             const jsDate = new Date(
@@ -291,7 +291,18 @@ export function useDateTimePicker(
      * 監聽外部值變化
      */
     watch(() => modelValue, (newValue) => {
-        console.debug('外部值變化:', newValue);
+        if (newValue && typeof newValue === 'string') {
+            const date = dayjsParseDate(newValue, dateFormat);
+            if (!date.isValid()) {
+                console.warn('無效的日期格式:', newValue);
+                dateTimeValue.setExternalValue(null);
+                validation.handleDateValidation(false, { date: '無效的日期格式' });
+                emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+                return;
+            } else {
+                validation.clearFieldErrors('invalidInput');
+            }
+        }
         dateTimeValue.setExternalValue(newValue);
     }, { immediate: true });
 
@@ -361,7 +372,16 @@ export function useDateTimePicker(
      * 處理日期輸入完成
      */
     const handleDateComplete = async (dateStr: string) => {
-        dateTimeValue.inputDateValue.value = dateStr;
+        const date = dayjsParseDate(dateStr, dateFormat);
+        if (!date.isValid()) {
+            console.warn('無效的日期格式:', dateStr);
+            validation.handleDateValidation(false, { date: '無效的日期格式' });
+            emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+            return;
+        }
+        // 存儲標準格式，確保內部一致性
+        dateTimeValue.inputDateValue.value = date.format('YYYY-MM-DD');
+
 
         // 如果啟用時間且沒有時間值，應用默認時間
         if (showTime && !dateTimeValue.inputTimeValue.value) {
@@ -452,7 +472,6 @@ export function useDateTimePicker(
             navigation.focusFirstInput();
         });
     };
-
 
     /**
      * 重置所有值

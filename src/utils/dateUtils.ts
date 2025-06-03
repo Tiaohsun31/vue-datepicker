@@ -475,6 +475,78 @@ export function fixTimeFormat(format: string): string {
     return fixed;
 }
 
+/**
+ * 智能日期解析函數
+ * 優先使用指定格式，回退到常見格式，最後自動解析
+ */
+export const dayjsParseDate = (dateStr: string, dateFormat?: string): dayjs.Dayjs => {
+    if (!dateStr || typeof dateStr !== 'string') {
+        return dayjs(''); // 返回無效日期
+    }
+
+    const trimmedStr = dateStr.trim();
+
+    // 1. 如果指定了格式，優先嘗試
+    if (dateFormat) {
+        const date = dayjs(trimmedStr, dateFormat, true); // strict mode
+        if (date.isValid()) {
+            return date;
+        }
+    }
+
+    // 2. 嘗試常見格式（按使用頻率排序）
+    const commonFormats = [
+        'YYYY-MM-DD',    // ISO 標準格式
+        'DD/MM/YYYY',    // 歐洲格式
+        'MM/DD/YYYY',    // 美國格式
+        'DD-MM-YYYY',    // 替代分隔符
+        'MM-DD-YYYY',
+        'DD.MM.YYYY',    // 德國格式
+        'MM.DD.YYYY',
+        'YYYY/MM/DD',    // 亞洲格式
+        'YYYY.MM.DD',
+        'DD MMM YYYY',   // 月份縮寫
+        'MMM DD, YYYY',  // 美式月份縮寫
+    ];
+
+    for (const format of commonFormats) {
+        const date = dayjs(trimmedStr, format, true);
+        if (date.isValid()) {
+            return date;
+        }
+    }
+
+    // 3. 最後嘗試自動解析（寬鬆模式）
+    const autoDate = dayjs(trimmedStr);
+    return autoDate; // 即使無效也返回，讓調用方檢查 isValid()
+};
+
+/**
+ * 格式化日期為指定格式
+ * 提供安全的格式化，避免無效日期
+ */
+export const dayjsFormatDate = (date: dayjs.Dayjs, format: string): string | null => {
+    if (!date || !date.isValid()) {
+        return null;
+    }
+
+    try {
+        return date.format(format);
+    } catch (error) {
+        console.warn('日期格式化失敗:', error);
+        return null;
+    }
+};
+
+/**
+ * 驗證日期字符串是否符合指定格式
+ */
+export const isDateStringValid = (dateStr: string, format: string): boolean => {
+    if (!dateStr || !format) return false;
+    const parsed = dayjs(dateStr, format, true);
+    return parsed.isValid() && parsed.format(format) === dateStr;
+};
+
 // 為了向後兼容，保留一些舊的函數名稱
 export { parseToSimpleDate as parseToCalendarDateTime };
 export { ensureSimpleDate as ensureCalendarDate };

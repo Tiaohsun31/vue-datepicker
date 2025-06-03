@@ -6,7 +6,8 @@
         <!-- 日期時間輸入容器 -->
         <DateContainer :errors="mergedErrors">
             <div v-if="isGregoryCalendar && inputEnabled" class="flex w-full items-center justify-start gap-2"
-                @click="handleContainerClick" @mousedown="handleContainerMouseDown">
+                :class="[disabled ? 'cursor-not-allowed cursor-event-none opacity-50' : '']"
+                @click.stop="handleContainerClick" @mousedown="handleContainerMouseDown">
                 <!-- 日期輸入部分 -->
                 <div>
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="computedPlaceholders.year"
@@ -27,7 +28,7 @@
                 </div>
             </div>
             <!-- 非西元曆或禁用輸入時的顯示區域 -->
-            <div v-else class="flex w-full h-full items-center justify-start gap-1" :class="{
+            <button v-else type="button" class="flex w-full h-full items-center justify-start gap-1" :class="{
                 'text-gray-400': !hasDisplayValue,
                 'text-gray-900': hasDisplayValue,
                 'cursor-not-allowed opacity-50': disabled
@@ -40,24 +41,24 @@
                 <span v-else class="text-vdt-content-muted">
                     {{ computedSelectDatePlaceholder }}
                 </span>
-            </div>
+            </button>
 
             <!-- 日曆圖標和清除按鈕 -->
-            <button v-if="hasValue && !disabled && showClearButton" type="button"
-                class="text-gray-400 hover:text-red-500 transition-colors duration-200" @click.stop="reset">
-                <ClearIcon class="h-4 w-4" />
-            </button>
-            <button v-else type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                :disabled="disabled" @click.stop="toggleCalendar">
+            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
                 <CalendarIcon class="h-5 w-5" />
             </button>
+            <button v-if="hasValue && !disabled && showClearButton" type="button"
+                class="text-gray-400 hover:text-red-500 transition-colors duration-200 ml-1" @click.stop="reset">
+                <ClearIcon class="h-4 w-4" />
+            </button>
+
         </DateContainer>
 
         <!-- 日曆彈出層 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
-            {{ calendarDateForGrid }}
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale"
@@ -132,8 +133,8 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     timeFormat: 'HH:mm:ss',
     showTime: true,
     enableSeconds: true,
-    use24Hour: true,
-    minuteStep: 1,
+    use24Hour: false,
+    minuteStep: 5,
     useLocalizedPeriod: false,
     customDefaultTime: '00:00:00',
     autoFocusTimeAfterDate: false,

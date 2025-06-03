@@ -82,7 +82,7 @@ export interface LocaleMessages {
     placeholder: PlaceholderMessages;
 }
 
-// 預設語言包
+// 預設語言包 TODO: 這邊能帶參數?
 export const localeMessages: Record<LocaleKey, LocaleMessages> = {
     'zh-TW': {
         error: {

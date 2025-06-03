@@ -6,7 +6,7 @@
             </DatePicker>
             {{ rocDate }}
             <DatePicker v-model="rocDate" calendar="roc" min-date="01-01-2000" date-format="ROC-YYYY-MM-DD"
-                locale="zh-TW" @change="handleDateChange" />
+                time-format="A HH時mm分" locale="zh-TW" @change="handleDateChange" />
         </div>
         <div>
             {{ dateTime2 }}
@@ -77,7 +77,7 @@ const selectedDate = ref({
 });
 const rocDate = ref('');
 const dateTime = ref('');
-const dateTime2 = ref('01/03/2000');
+const dateTime2 = ref('');
 const dateTime3 = ref('');
 const dateTimeutc = ref('');
 const partialCustomDate = ref();

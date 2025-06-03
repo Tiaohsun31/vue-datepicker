@@ -1,4 +1,4 @@
-<!-- CalendarGrid.vue - 混合使用版本 -->
+<!-- CalendarGrid.vue -->
 <template>
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
@@ -64,26 +64,18 @@
                         </select>
                     </div>
 
-                    <!-- AM/PM 選擇器 (僅12小時制) -->
-                    <div class="col-span-1" v-if="!use24Hour && enableSeconds">
-                        <button type="button" @click="togglePeriod"
-                            class="px-3 py-1 text-sm transition-colors rounded-sm bg-gray-500 text-white">
-                            {{ selectedPeriod }}
-                        </button>
-                    </div>
-                </div>
-
-                <!-- AM/PM 選擇器 (僅12小時制，沒有秒鐘時顯示在同一行) -->
-                <div class="mt-2" v-if="!use24Hour && !enableSeconds">
-                    <div class="isolate inline-flex rounded-md border border-gray-300 overflow-hidden">
-                        <button type="button" @click="setPeriod('AM')" class="px-3 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'AM' ? 'bg-vdt-theme-500 text-vdt-content ' : 'text-gray-700 hover:bg-gray-100'">
-                            AM
-                        </button>
-                        <button type="button" @click="setPeriod('PM')" class="px-3 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'PM' ? 'bg-vdt-theme-500 text-vdt-content ' : 'text-gray-700 hover:bg-gray-100'">
-                            PM
-                        </button>
+                    <div v-if="!use24Hour" class="flex-shrink-0">
+                        <div
+                            class="isolate inline-flex rounded-md border border-vdt-outline  bg-vdt-surface overflow-hidden">
+                            <button type="button" @click="setPeriod('AM')" class="px-2 py-1 text-sm transition-colors"
+                                :class="selectedPeriod === 'AM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
+                                AM
+                            </button>
+                            <button type="button" @click="setPeriod('PM')" class="px-2 py-1 text-sm transition-colors"
+                                :class="selectedPeriod === 'PM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
+                                PM
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { CalendarDate } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';

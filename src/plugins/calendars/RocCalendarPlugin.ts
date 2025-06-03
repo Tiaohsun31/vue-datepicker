@@ -141,14 +141,6 @@ export class RocCalendarPlugin implements CalendarPlugin {
      * 格式化 ROC 日期
      */
     format(date: SimpleDateValue, format: string, locale: string): string {
-        const jsDate = new Date(
-            date.year,
-            date.month - 1,
-            date.day,
-            date.hour || 0,
-            date.minute || 0,
-            date.second || 0
-        );
         // 檢查是否為複合格式（包含時間部分）
         const parts = format.split(' ');
         const dateFormatPart = parts[0];
@@ -159,12 +151,35 @@ export class RocCalendarPlugin implements CalendarPlugin {
 
         // 如果有時間部分，處理時間格式
         if (timeFormatPart) {
-            const formattedTime = dayjs(jsDate).format(timeFormatPart);
-            console.log(`時間格式 ${timeFormatPart} 轉換結果:`, formattedTime);
+            // 透過 format 字串判斷是否使用 24 小時制
+            const use24Hour = this.detectTimeFormat(timeFormatPart);
+            const formattedTime = this.formatTimePart(date, timeFormatPart, use24Hour);
             return `${formattedDate} ${formattedTime}`;
         }
 
         return formattedDate;
+    }
+    /**
+     * 透過格式字串偵測時間制式
+     */
+    private detectTimeFormat(timeFormat: string): boolean {
+        // 包含 A 或 a 表示 12 小時制
+        if (timeFormat.includes('A') || timeFormat.includes('a')) {
+            return false; // 12小時制
+        }
+
+        // 包含 HH 通常表示 24 小時制
+        if (timeFormat.includes('HH')) {
+            return true; // 24小時制
+        }
+
+        // 包含 hh 通常表示 12 小時制
+        if (timeFormat.includes('hh') || timeFormat.includes('h')) {
+            return false; // 12小時制
+        }
+
+        // 預設為 24 小時制
+        return true;
     }
     /**
      * 格式化日期部分
@@ -186,7 +201,6 @@ export class RocCalendarPlugin implements CalendarPlugin {
         };
 
         if (rocFormats[format]) {
-            console.log(`使用 ROC 格式 ${format}:`, rocFormats[format]);
             return rocFormats[format];
         }
 
@@ -202,10 +216,157 @@ export class RocCalendarPlugin implements CalendarPlugin {
             const rocShortYear = rocYear.toString().slice(-2);
             formatted = formatted.replace(shortYear, rocShortYear);
         }
-
-        console.log(`標準格式 ${format} 轉換結果:`, formatted);
         return formatted;
     }
+
+    /**
+     * 格式化 ROC 時間
+     */
+    private formatTimePart(date: SimpleDateValue, format: string, use24Hour: boolean): string {
+        if (!date) return '';
+
+        const hour = date.hour || 0;
+        const minute = date.minute || 0;
+        const second = date.second || 0;
+
+        // 統一的格式化邏輯
+        const formatResult = this.getFormattedTime(hour, minute, second, format, use24Hour);
+        if (formatResult) return formatResult;
+
+        // 回退到 dayjs 處理
+        return this.fallbackToDateJs(date, format, use24Hour);
+    }
+
+    /**
+ * 統一的時間格式化處理
+ */
+    private getFormattedTime(hour: number, minute: number, second: number, format: string, use24Hour: boolean): string | null {
+        // 24小時制格式
+        if (use24Hour) {
+            const formats24: Record<string, () => string> = {
+                'HH:mm:ss': () => this.formatBasicTime(hour, minute, second, true),
+                'HH:mm': () => this.formatBasicTime(hour, minute, 0, false),
+                'HH時mm分ss秒': () => this.formatChineseTime(hour, minute, second, true),
+                'HH時mm分': () => this.formatChineseTime(hour, minute, 0, false),
+            };
+
+            if (formats24[format]) {
+                return formats24[format]();
+            }
+        } else {
+            // 12小時制格式
+            const formats12: Record<string, () => string> = {
+                'hh:mm:ss A': () => this.format12HourTime(hour, minute, second, true, 'suffix'),
+                'hh:mm A': () => this.format12HourTime(hour, minute, 0, false, 'suffix'),
+                'h:mm A': () => this.format12HourTime(hour, minute, 0, false, 'suffix', false),
+                'A hh:mm:ss': () => this.format12HourTime(hour, minute, second, true, 'prefix'),
+                'A hh:mm': () => this.format12HourTime(hour, minute, 0, false, 'prefix'),
+                'A HH時mm分ss秒': () => this.format12HourTime(hour, minute, second, true, 'chinese'),
+                'A HH時mm分': () => this.format12HourTime(hour, minute, 0, false, 'chinese'),
+            };
+
+            if (formats12[format]) {
+                return formats12[format]();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 基本時間格式化（24小時制）
+     */
+    private formatBasicTime(hour: number, minute: number, second: number, showSeconds: boolean): string {
+        const hourStr = hour.toString().padStart(2, '0');
+        const minuteStr = minute.toString().padStart(2, '0');
+
+        if (showSeconds) {
+            const secondStr = second.toString().padStart(2, '0');
+            return `${hourStr}:${minuteStr}:${secondStr}`;
+        }
+
+        return `${hourStr}:${minuteStr}`;
+    }
+
+    /**
+     * 中文時間格式化（24小時制）
+     */
+    private formatChineseTime(hour: number, minute: number, second: number, showSeconds: boolean): string {
+        const hourStr = hour.toString().padStart(2, '0');
+        const minuteStr = minute.toString().padStart(2, '0');
+
+        if (showSeconds) {
+            const secondStr = second.toString().padStart(2, '0');
+            return `${hourStr}時${minuteStr}分${secondStr}秒`;
+        }
+
+        return `${hourStr}時${minuteStr}分`;
+    }
+
+    /**
+     * 12小時制時間格式化（統一處理）
+     */
+    private format12HourTime(
+        hour: number,
+        minute: number,
+        second: number,
+        showSeconds: boolean,
+        style: 'suffix' | 'prefix' | 'chinese',
+        padHour: boolean = true
+    ): string {
+        const period = hour < 12 ? '上午' : '下午';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const hourStr = padHour ? displayHour.toString().padStart(2, '0') : displayHour.toString();
+        const minuteStr = minute.toString().padStart(2, '0');
+        const secondStr = showSeconds ? second.toString().padStart(2, '0') : '';
+
+        switch (style) {
+            case 'suffix':
+                return showSeconds
+                    ? `${hourStr}:${minuteStr}:${secondStr} ${period}`
+                    : `${hourStr}:${minuteStr} ${period}`;
+
+            case 'prefix':
+                return showSeconds
+                    ? `${period} ${hourStr}:${minuteStr}:${secondStr}`
+                    : `${period} ${hourStr}:${minuteStr}`;
+
+            case 'chinese':
+                return showSeconds
+                    ? `${period} ${hourStr}時${minuteStr}分${secondStr}秒`
+                    : `${period} ${hourStr}時${minuteStr}分`;
+
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * 回退到 dayjs 處理
+     */
+    private fallbackToDateJs(date: SimpleDateValue, format: string, use24Hour: boolean): string {
+        const jsDate = new Date(
+            date.year,
+            date.month - 1,
+            date.day,
+            date.hour || 0,
+            date.minute || 0,
+            date.second || 0
+        );
+
+        if (!jsDate || isNaN(jsDate.getTime())) return '';
+
+        let formatted = dayjs(jsDate).format(format);
+
+        // 本地化 AM/PM
+        if (!use24Hour && (format.includes('A') || format.includes('a'))) {
+            formatted = formatted.replace(/AM/g, '上午').replace(/PM/g, '下午');
+            formatted = formatted.replace(/am/g, '上午').replace(/pm/g, '下午');
+        }
+
+        return formatted;
+    }
+
     /**
      * 西元曆轉 ROC 日曆
      */

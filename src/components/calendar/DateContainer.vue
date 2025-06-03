@@ -5,9 +5,6 @@
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <slot></slot>
         </div>
-
-        <!-- 錯誤訊息插槽 -->
-        <slot name="error"></slot>
     </div>
 </template>
 
@@ -42,29 +39,3 @@ const hasErrors = computed(() => {
     return false;
 });
 </script>
-
-<style scoped>
-/* 錯誤動畫 */
-@keyframes errorShake {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    10%,
-    30%,
-    50%,
-    70%,
-    90% {
-        transform: translateX(-2px);
-    }
-
-    20%,
-    40%,
-    60%,
-    80% {
-        transform: translateX(2px);
-    }
-}
-</style>

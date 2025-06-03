@@ -1,4 +1,4 @@
-<!-- TimeInput.vue - 增加導航到DateInput的功能 -->
+<!-- components/inputs/TimeInput.vue  -->
 <template>
     <!-- 時間輸入 -->
     <div class="flex items-center justify-center">
@@ -259,6 +259,7 @@ const validateField = (field: TimeFieldType, value: string): boolean => {
             // 如果設定了minuteStep，檢查是否符合步進值
             if (props.minuteStep > 1 && numValue % props.minuteStep !== 0) {
                 errors.value[field] = `分鐘必須是 ${props.minuteStep} 的倍數`;
+
                 return false;
             }
             break;
@@ -479,6 +480,16 @@ const handleBlur = (field: TimeFieldType) => {
     // 失焦時驗證
     validateAndEmit();
 };
+// const handleBlur = (field: DateFieldType) => {
+//     setTimeout(() => {
+//         // 如果沒有其他字段獲得焦點，才進行驗證
+//         if (focused.value === null) {
+//             validateAndEmit();
+//         }
+//     }, 50); // 給足夠時間讓新字段獲得焦點
+
+//     focused.value = null;
+// };
 
 // 公開方法
 defineExpose({
@@ -522,7 +533,7 @@ defineExpose({
     focus: () => {
         hourRef.value?.focus();
     },
-    // 新增：聚焦到最後一個輸入框（用於從 DateInput 導航過來時）
+    // 聚焦到最後一個輸入框（用於從 DateInput 導航過來時）
     focusLast: () => {
         if (props.enableSeconds && secondRef.value) {
             secondRef.value.focus();

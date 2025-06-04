@@ -9,22 +9,22 @@
                 v-model="yearValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="yearPlaceholder"
                 :maxlength="4" class="date-input text-sm text-center active:bg-vdt-theme-100" @input="handleYearInput"
                 @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')" @blur="handleBlur('year')"
-                aria-label="year" :aria-invalid="!!errors.year"
-                :aria-errormessage="errors.year ? 'year-error' : undefined" />
+                aria-label="year" :aria-invalid="!!localizedErrors.year"
+                :aria-errormessage="localizedErrors.year ? 'year-error' : undefined" />
 
             <input v-else-if="segment === 'month'" :ref="(el) => setInputRef(el as HTMLInputElement, 'month')"
                 v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="monthPlaceholder"
                 :maxlength="2" class="date-input text-sm text-center" @input="handleMonthInput"
                 @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')" @blur="handleBlur('month')"
-                aria-label="month" :aria-invalid="!!errors.month"
-                :aria-errormessage="errors.month ? 'month-error' : undefined" />
+                aria-label="month" :aria-invalid="!!localizedErrors.month"
+                :aria-errormessage="localizedErrors.month ? 'month-error' : undefined" />
 
             <input v-else-if="segment === 'day'" :ref="(el) => setInputRef(el as HTMLInputElement, 'day')"
                 v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric" :placeholder="dayPlaceholder"
                 :maxlength="2" class="date-input text-sm text-center" @input="handleDayInput"
                 @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
-                aria-label="day" :aria-invalid="!!errors.day"
-                :aria-errormessage="errors.day ? 'day-error' : undefined" />
+                aria-label="day" :aria-invalid="!!localizedErrors.day"
+                :aria-errormessage="localizedErrors.day ? 'day-error' : undefined" />
 
             <!-- 分隔符，除非是最後一個段 -->
             <span v-if="index < dateSegments.length - 1" class="text-gray-400">{{ separator }}</span>
@@ -38,6 +38,7 @@ import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
 import { dayjsParseDate } from '@/utils/dateUtils';
+import { localeManager } from '@/locale/index';
 
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
@@ -45,8 +46,12 @@ const vAutowidth = {
     beforeUnmount: vAutowidthDirective.beforeUnmount
 };
 
+interface FieldError {
+    key: string;
+    params?: Record<string, any>;
+}
+
 type DateFieldType = 'year' | 'month' | 'day';
-type DateField = Record<string, string>;
 
 interface Props {
     modelValue?: string | null;
@@ -74,7 +79,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     'update:modelValue': [value: string | null];
-    'validation': [isValid: boolean, errors: DateField];
+    'validation': [
+        isValid: boolean,
+        errors: Record<string, string>,
+        errorParams: Record<string, Record<string, any>>
+    ];
     'complete': [date: string];
 }>();
 
@@ -82,7 +91,8 @@ const emit = defineEmits<{
 const yearValue = ref<string>('');
 const monthValue = ref<string>('');
 const dayValue = ref<string>('');
-const errors = ref<DateField>({});
+const errors = ref<Record<string, FieldError>>({});
+const errorParams = ref<Record<string, Record<string, any>>>({});
 const focused = ref<DateFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
@@ -104,8 +114,20 @@ const getInputRef = (fieldType: DateFieldType): HTMLInputElement | undefined => 
 };
 
 // 計算屬性
+const localizedErrors = computed(() => {
+    const result: Record<string, string> = {};
+    Object.entries(errors.value).forEach(([field, error]) => {
+        const params = errorParams.value[field] || {};
+        try {
+            result[field] = localeManager.getParameterizedErrorMessage(error.key, params);
+        } catch (e) {
+            result[field] = error.key; // 回退到 key
+        }
+    });
+    return result;
+});
 const hasErrors = computed(() => Object.keys(errors.value).length > 0);
-const errorMessages = computed(() => Object.values(errors.value));
+const errorMessages = computed(() => Object.values(localizedErrors.value));
 
 // 根據日期格式順序計算段排序
 const dateSegments = computed(() => {
@@ -247,51 +269,50 @@ const getDaysInMonth = (year: number, month: number): number => {
 };
 
 // 驗證單個字段
-const validateField = (field: DateFieldType, value: string): boolean => {
-    if (!value) return true;
+const validateField = (field: DateFieldType, value: string): { valid: boolean; error?: FieldError } => {
+    if (!value) return { valid: true };
 
     const numValue = parseInt(value);
 
     switch (field) {
         case 'year':
-            if (value.length < 4) return true;
+            if (value.length < 4) return { valid: true };
+
             const maxYear = props.maxDate ? dayjs(props.maxDate).year() : new Date().getFullYear() + 50;
             const minYear = props.minDate ? dayjs(props.minDate).year() : 1;
+
             if (!isNumeric(value) || numValue < minYear || numValue > maxYear) {
-                errors.value[field] = `年份必須是 ${minYear}-${maxYear} 之間的數字`;
-                return false;
+                return { valid: false, error: { key: 'year.outOfRange', params: { min: minYear, max: maxYear } } };
             }
 
+            // 檢查閏年
             if (monthValue.value === '02' && dayValue.value === '29') {
                 if (!isLeapYear(numValue)) {
-                    errors.value.day = `${numValue}年2月沒有29日，不是閏年`;
-                    return false;
+                    return { valid: false, error: { key: 'year.notLeapYear', params: { year: numValue } } };
                 }
             }
             break;
 
         case 'month':
             if (!isNumeric(value) || numValue < 1 || numValue > 12) {
-                errors.value[field] = '月份必須是 1-12 之間的數字';
-                return false;
+                return { valid: false, error: { key: 'month.outOfRange' } };
             }
 
+            // 檢查月份天數
             if (dayValue.value && yearValue.value) {
                 const yearNum = parseInt(yearValue.value);
                 const daysInSelectedMonth = getDaysInMonth(yearNum, numValue);
                 const currentDay = parseInt(dayValue.value);
 
                 if (currentDay > daysInSelectedMonth) {
-                    errors.value.day = `${value}月最多只有${daysInSelectedMonth}天`;
-                    return false;
+                    return { valid: false, error: { key: 'day.notExistInMonth', params: { month: value, maxDays: daysInSelectedMonth } } };
                 }
             }
             break;
 
         case 'day':
             if (!isNumeric(value) || numValue < 1 || numValue > 31) {
-                errors.value[field] = '日期必須是 1-31 之間的數字';
-                return false;
+                return { valid: false, error: { key: 'day.outOfRange' } };
             }
 
             if (yearValue.value && monthValue.value) {
@@ -301,11 +322,10 @@ const validateField = (field: DateFieldType, value: string): boolean => {
 
                 if (numValue > daysInMonth) {
                     if (month === 2 && numValue === 29) {
-                        errors.value[field] = `${year}年2月沒有29日，不是閏年`;
+                        return { valid: false, error: { key: 'year.notLeapYear', params: { year: year } } };
                     } else {
-                        errors.value[field] = `${monthValue.value}月最多只有${daysInMonth}天`;
+                        return { valid: false, error: { key: 'day.notExistInMonth', params: { month: monthValue.value, maxDays: daysInMonth } } };
                     }
-                    return false;
                 }
             }
             break;
@@ -315,35 +335,76 @@ const validateField = (field: DateFieldType, value: string): boolean => {
         delete errors.value[field];
     }
 
-    return true;
+    return { valid: true };
 };
 
 // 驗證並發送事件
 const validateAndEmit = () => {
     if (!isInitialized.value) return;
 
+    // 清空之前的錯誤
     errors.value = {};
+    errorParams.value = {};
 
-    validateField('year', yearValue.value);
-    validateField('month', monthValue.value);
-    validateField('day', dayValue.value);
+    // 驗證各個字段
+    const yearResult = validateField('year', yearValue.value);
+    const monthResult = validateField('month', monthValue.value);
+    const dayResult = validateField('day', dayValue.value);
 
-    if (props.required && (!yearValue.value || !monthValue.value || !dayValue.value)) {
-        if (!yearValue.value) errors.value.year = '請輸入年份';
-        if (!monthValue.value) errors.value.month = '請輸入月份';
-        if (!dayValue.value) errors.value.day = '請輸入日期';
+    // 收集錯誤
+    if (!yearResult.valid && yearResult.error) {
+        errors.value.year = yearResult.error;
+        if (yearResult.error.params) {
+            errorParams.value.year = yearResult.error.params;
+        }
     }
-    if (dateString.value) {
+
+    if (!monthResult.valid && monthResult.error) {
+        errors.value.month = monthResult.error;
+        if (monthResult.error.params) {
+            errorParams.value.month = monthResult.error.params;
+        }
+    }
+
+    if (!dayResult.valid && dayResult.error) {
+        errors.value.day = dayResult.error;
+        if (dayResult.error.params) {
+            errorParams.value.day = dayResult.error.params;
+        }
+    }
+
+    // 檢查必填
+    if (props.required) {
+        if (!yearValue.value) { errors.value.year = { key: 'year.required' }; }
+        if (!monthValue.value) { errors.value.month = { key: 'month.required' }; }
+        if (!dayValue.value) { errors.value.day = { key: 'day.required' }; }
+    }
+
+    // 檢查日期有效性和範圍
+    if (dateString.value && Object.keys(errors.value).length === 0) {
         const date = dayjs(dateString.value);
 
         if (!date.isValid()) {
-            errors.value.day = '無效的日期';
+            errors.value.day = { key: 'day.invalid' };
         } else {
+            // 檢查最小日期
             if (props.minDate && date.isBefore(dayjs(props.minDate))) {
-                errors.value.day = `日期不能早於 ${dayjs(props.minDate).format(props.dateFormat)}`;
-            } else if (props.maxDate && date.isAfter(dayjs(props.maxDate))) {
-                errors.value.day = `日期不能晚於 ${dayjs(props.maxDate).format(props.dateFormat)}`;
-            } else if (formattedDateString.value) {
+                errors.value.day = {
+                    key: 'date.beforeMin',
+                    params: { minDate: dayjs(props.minDate).format(props.dateFormat) }
+                };
+                errorParams.value.day = { minDate: dayjs(props.minDate).format(props.dateFormat) };
+            }
+            // 檢查最大日期
+            else if (props.maxDate && date.isAfter(dayjs(props.maxDate))) {
+                errors.value.day = {
+                    key: 'date.afterMax',
+                    params: { maxDate: dayjs(props.maxDate).format(props.dateFormat) }
+                };
+                errorParams.value.day = { maxDate: dayjs(props.maxDate).format(props.dateFormat) };
+            }
+            // 日期有效，發送更新
+            else if (formattedDateString.value) {
                 emit('update:modelValue', formattedDateString.value);
                 emit('complete', formattedDateString.value);
             }
@@ -352,7 +413,8 @@ const validateAndEmit = () => {
         emit('update:modelValue', null);
     }
 
-    emit('validation', !hasErrors.value, errors.value);
+    // 發送驗證結果
+    emit('validation', Object.keys(errors.value).length === 0, localizedErrors.value, errorParams.value);
 };
 
 // 重置所有輸入欄位
@@ -395,9 +457,6 @@ const handleInputBase = (field: DateFieldType, value: string, maxLength: number,
             else if (field === 'month') monthValue.value = cleanValue;
             else if (field === 'day') dayValue.value = cleanValue;
         }
-
-        const isValid = validateField(field, cleanValue);
-        if (!isValid) return;
 
         if (cleanValue.length === maxLength) {
             handleFieldCompletion(field);

@@ -4,6 +4,7 @@
  */
 
 import { ref, computed, type Ref } from 'vue';
+import { localeManager } from '@/locale/index';
 
 interface ValidationOptions {
     required?: boolean;
@@ -29,23 +30,39 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
 
     /**
      * 處理日期輸入驗證
+     * 通用的驗證處理器，負責管理錯誤狀態，處理錯誤的存儲、清除等基礎操作
      */
     const handleDateValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
-        fieldPrefix: string = 'date'
+        fieldPrefix: string = 'date',
+        errorParams: Record<string, Record<string, any>> = {}
     ) => {
-        // 清除該字段相關的錯誤
-        clearFieldErrors(fieldPrefix);
+        // 清除相關錯誤
+        ['date', 'year', 'month', 'day'].forEach(field => {
+            clearFieldErrors(`${fieldPrefix}.${field}`);
+        });
 
-        // 添加新錯誤
+        console.log('handleDateValidation', isValid, validationErrors, fieldPrefix, errorParams);
+
         if (!isValid) {
-            Object.entries(validationErrors).forEach(([key, message]) => {
-                errors.value[`${fieldPrefix}.${key}`] = message;
+            Object.entries(validationErrors).forEach(([field, localeKey]) => {
+
+                const errorKey = `${fieldPrefix}.${field}`;
+                const params = errorParams[field] || {};
+
+                try {
+                    errors.value[errorKey] = localeManager.getParameterizedErrorMessage(localeKey, params);
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log(`翻譯錯誤: ${localeKey} -> ${errors.value[errorKey]}`, params);
+                    }
+                } catch (error) {
+                    console.warn(`翻譯失敗: ${localeKey}`, error);
+                    // 回退到原始 key
+                    errors.value[errorKey] = localeKey;
+                }
             });
         }
-
-        return !hasErrors.value;
     };
 
     /**

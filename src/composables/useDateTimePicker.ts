@@ -10,6 +10,7 @@ import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { createCalendarSystem, type UnifiedCalendarSystem } from '../utils/calendarSystem';
 import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue, dayjsParseDate } from '../utils/dateUtils';
+import { localeManager } from '@/locale/index';
 import dayjs from 'dayjs';
 
 interface DateTimePickerOptions {
@@ -327,37 +328,17 @@ export function useDateTimePicker(
     };
 
     /**
-     * 處理日期輸入驗證 - 整合日曆系統（同步）
+     * 處理日期輸入驗證
      */
-    const handleDateValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
-        // 如果基本驗證失敗，直接設置錯誤
-        if (!isValid) {
-            validation.handleDateValidation(isValid, validationErrors);
-            emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-            return;
-        }
+    const validateDateInput = (
+        isValid: boolean,
+        validationErrors: Record<string, string>,
+        errorParams: Record<string, Record<string, any>> = {}
+    ) => {
+        console.log('處理日期驗證:', isValid, validationErrors, errorParams);
 
-        // 如果有日期值且日曆系統已初始化，進行日曆特定驗證
-        if (dateTimeValue.inputDateValue.value && calendarSystem.value) {
-            try {
-                const parsedDate = parseInputWithCalendar(dateTimeValue.inputDateValue.value);
-                if (parsedDate) {
-                    const isCalendarValid = calendarSystem.value.isValidDate(parsedDate);
-                    if (!isCalendarValid) {
-                        const supportedFormats = calendarSystem.value.getSupportedFormats();
-                        validation.handleDateValidation(false, {
-                            calendar: `不支援的日期格式，支援格式: ${supportedFormats.join(', ')}`
-                        });
-                        emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.warn('日曆驗證失敗:', error);
-            }
-        }
-
-        validation.handleDateValidation(isValid, validationErrors);
+        // 直接使用通用驗證處理器
+        validation.handleDateValidation(isValid, validationErrors, 'date', errorParams);
         emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
     };
 
@@ -374,10 +355,9 @@ export function useDateTimePicker(
      */
     const handleDateComplete = async (dateStr: string) => {
         const date = dayjsParseDate(dateStr, dateFormat);
-        console.log('處理日期完成:', dateStr, date);
         if (!date.isValid()) {
             console.warn('無效的日期格式:', dateStr);
-            validation.handleDateValidation(false, { date: '無效的日期格式' });
+            validation.handleDateValidation(false, { date: 'date.invalid' });
             emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
             return;
         }
@@ -582,7 +562,7 @@ export function useDateTimePicker(
 
         // 事件處理方法
         setEmitters,
-        handleDateValidation,
+        validateDateInput,
         handleTimeValidation,
         handleDateComplete,
         handleTimeComplete,

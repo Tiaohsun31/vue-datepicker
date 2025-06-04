@@ -9,6 +9,8 @@ export interface ErrorMessages {
         outOfRange: string;
         beforeMin: string;
         afterMax: string;
+        unsupportedFormat: string;
+        parseError: string;
     };
 
     // 時間相關錯誤
@@ -92,6 +94,8 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 outOfRange: '日期超出允許範圍',
                 beforeMin: '日期不能早於 {minDate}',
                 afterMax: '日期不能晚於 {maxDate}',
+                unsupportedFormat: '不支援的日期格式，支援格式: {formats}',
+                parseError: '日期解析失敗，請檢查日期格式',
             },
             time: {
                 required: '請選擇時間',
@@ -159,6 +163,8 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 outOfRange: '日期超出允许范围',
                 beforeMin: '日期不能早于 {minDate}',
                 afterMax: '日期不能晚于 {maxDate}',
+                unsupportedFormat: '不支持的日期格式，支持格式: {formats}',
+                parseError: '日期解析失败，请检查日期格式',
             },
             time: {
                 required: '请选择时间',
@@ -225,6 +231,8 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 outOfRange: 'Date is out of allowed range',
                 beforeMin: 'Date cannot be before {minDate}',
                 afterMax: 'Date cannot be after {maxDate}',
+                unsupportedFormat: 'Unsupported date format, supported formats: {formats}',
+                parseError: 'Failed to parse date, please check the date format',
             },
             time: {
                 required: 'Please select a time',
@@ -292,6 +300,8 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 outOfRange: '日付が許可範囲外です',
                 beforeMin: '日付は {minDate} より前にはできません',
                 afterMax: '日付は {maxDate} より後にはできません',
+                unsupportedFormat: 'サポートされていない日付形式です。サポート形式: {formats}',
+                parseError: '日付の解析に失敗しました。日付形式を確認してください',
             },
             time: {
                 required: '時刻を選択してください',
@@ -359,6 +369,8 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 outOfRange: '날짜가 허용 범위를 벗어났습니다',
                 beforeMin: '날짜는 {minDate}보다 이전일 수 없습니다',
                 afterMax: '날짜는 {maxDate}보다 이후일 수 없습니다',
+                unsupportedFormat: '지원하지 않는 날짜 형식입니다. 지원 형식: {formats}',
+                parseError: '날짜를 파싱하는 데 실패했습니다. 날짜 형식을 확인해주세요',
             },
             time: {
                 required: '시간을 선택해주세요',
@@ -470,6 +482,35 @@ export class LocaleManager {
         };
     }
 
+    /**
+     * 獲取參數化錯誤訊息
+     */
+    getParameterizedErrorMessage(key: string, params: Record<string, any> = {}): string {
+        const message = this.getErrorMessage(key);
+        return this.interpolateParameters(message, params);
+    }
+
+    /**
+     * 參數插值
+     */
+    interpolateParameters(template: string, variables: Record<string, any> = {}): string {
+        if (!variables || Object.keys(variables).length === 0) {
+            return template;
+        }
+
+        return template.replace(/\{(\w+)\}/g, (match, key) => {
+            const value = variables[key];
+
+            // 處理 undefined 或 null 值
+            if (value === undefined || value === null) {
+                console.warn(`Missing variable '${key}' for template: "${template}"`);
+                return match; // 保持原始佔位符
+            }
+
+            return String(value);
+        });
+    }
+
     private deepMerge(target: any, source: any): any {
         const result = { ...target };
 
@@ -487,3 +528,20 @@ export class LocaleManager {
 
 // 全域實例
 export const localeManager = new LocaleManager();
+
+// 使用範例：
+// safeGetParameterizedMessage(localeManager, 'year.outOfRange', { min: 1, max: 2075 });
+export function safeGetParameterizedMessage(
+    localeManager: LocaleManager,
+    key: string,
+    params: Record<string, any> = {},
+    fallback?: string
+): string {
+    try {
+        const message = localeManager.getParameterizedErrorMessage(key, params);
+        return message !== key ? message : (fallback || key);
+    } catch (error) {
+        console.warn(`翻譯失敗: ${key}`, error);
+        return fallback || key;
+    }
+}

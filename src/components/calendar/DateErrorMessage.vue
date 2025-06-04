@@ -151,9 +151,9 @@ function getFieldType(field: string): string {
     return 'unknown';
 }
 
-function translateMessage(message: string, field?: string): string {
+function translateMessage(message: string, field?: string, params: Record<string, any> = {}): string {
     if (props.debug) {
-        console.log(`Translating message: "${message}" for field: "${field}"`);
+        console.log(`翻譯訊息: "${message}", field: "${field}", params:`, params);
     }
 
     // 1. 優先使用自定義訊息
@@ -166,70 +166,186 @@ function translateMessage(message: string, field?: string): string {
         return message;
     }
 
-    // 3. 嘗試使用messageKeyMap映射
+    // 3. 檢查是否為 locale key
+    const isLocaleKey = /^[a-zA-Z]+\.[a-zA-Z]+$/.test(message);
+
+    if (isLocaleKey) {
+        try {
+            const translated = localeManager.getParameterizedErrorMessage(message, params);
+            if (props.debug) {
+                console.log(`Locale key 翻譯: "${message}" -> "${translated}"`);
+            }
+            if (translated && translated !== message) {
+                return translated;
+            }
+        } catch (error) {
+            if (props.debug) console.warn(`Locale key 翻譯失敗: ${message}`, error);
+        }
+    }
+
+    // 4. 嘗試使用messageKeyMap映射
     const i18nKey = props.messageKeyMap[message];
     if (i18nKey) {
         try {
-            const translated = localeManager.getErrorMessage(i18nKey);
+            const translated = localeManager.getParameterizedErrorMessage(i18nKey, params);
+            if (props.debug) {
+                console.log(`MessageKeyMap 翻譯: "${message}" -> "${translated}"`);
+            }
             if (translated && translated !== i18nKey) {
                 return translated;
             }
         } catch (error) {
-            if (props.debug) console.warn(`Translation failed for key: ${i18nKey}`);
+            if (props.debug) console.warn(`MessageKeyMap 翻譯失敗: ${i18nKey}`, error);
         }
     }
 
-    // 4. 智能匹配常見錯誤模式
-    const smartTranslated = smartTranslateError(message, field);
-    if (smartTranslated !== message) {
-        return smartTranslated;
-    }
-
-    // 5. 返回原始訊息
-    return message;
+    // 5. 智能模式匹配（作為最後的回退）
+    return smartTranslateError(message, field, params);
 }
 
-function smartTranslateError(message: string, field?: string): string {
-    // 基於字段和訊息內容的智能匹配 - 更精確版本
-    function getI18nKeyByFieldAndMessage(message: string, field?: string): string | null {
-        // 精確匹配具體字段的必填錯誤
-        if (/請輸入|please enter|required/i.test(message)) {
-            if (field?.includes('year') || message.includes('年份')) return 'year.required';
-            if (field?.includes('month') || message.includes('月份')) return 'month.required';
-            if (field?.includes('day') || message.includes('日期')) return 'day.required';
+// function smartTranslateError(message: string, field?: string, params: Record<string, any> = {}): string {
 
-            // 時間字段的精確匹配
-            if (field?.includes('hour') || message.includes('小時')) return 'time.hourRequired';
-            if (field?.includes('minute') || message.includes('分鐘')) return 'time.minuteRequired';
-            if (field?.includes('second') || message.includes('秒鐘')) return 'time.secondRequired';
+//     // 基於字段和訊息內容的智能匹配 - 更精確版本
+//     function getI18nKeyByFieldAndMessage(message: string, field?: string): string | null {
+//         // 精確匹配具體字段的必填錯誤
+//         if (/請輸入|please enter|required/i.test(message)) {
+//             if (field?.includes('year') || message.includes('年份')) return 'year.required';
+//             if (field?.includes('month') || message.includes('月份')) return 'month.required';
+//             if (field?.includes('day') || message.includes('日期')) return 'day.required';
 
-            // 範圍相關
-            if (field?.includes('startDate') || message.includes('開始日期')) return 'range.startRequired';
-            if (field?.includes('endDate') || message.includes('結束日期')) return 'range.endRequired';
+//             // 時間字段的精確匹配
+//             if (field?.includes('hour') || message.includes('小時')) return 'time.hourRequired';
+//             if (field?.includes('minute') || message.includes('分鐘')) return 'time.minuteRequired';
+//             if (field?.includes('second') || message.includes('秒鐘')) return 'time.secondRequired';
 
-            // 通用時間和日期（作為後備）
-            if (field?.includes('time') || message.includes('時間')) return 'time.required';
-            if (field?.includes('date') || message.includes('日期')) return 'date.required';
-        }
+//             // 範圍相關
+//             if (field?.includes('startDate') || message.includes('開始日期')) return 'range.startRequired';
+//             if (field?.includes('endDate') || message.includes('結束日期')) return 'range.endRequired';
 
-        return null;
+//             // 通用時間和日期（作為後備）
+//             if (field?.includes('time') || message.includes('時間')) return 'time.required';
+//             if (field?.includes('date') || message.includes('日期')) return 'date.required';
+//         }
+
+//         return null;
+//     }
+
+//     // 簡化的直接匹配表 - 只保留最明確的匹配
+//     const directMatches: Record<string, string> = {
+//         // 精確匹配的錯誤訊息
+//         '請選擇日期': 'date.required',
+//         '請選擇時間': 'time.required',
+//         '請選擇開始日期': 'range.startRequired',
+//         '請選擇結束日期': 'range.endRequired',
+
+//         // 範圍錯誤
+//         '小時必須是 0-23 之間的數字': 'time.hourOutOfRange',
+//         '小時必須是 1-12 之間的數字': 'time.hourOutOfRange',
+//         '分鐘必須是 0-59 之間的數字': 'time.minuteOutOfRange',
+//         '秒鐘必須是 0-59 之間的數字': 'time.secondOutOfRange',
+
+//         // 英文錯誤訊息
+//         'Please select a date': 'date.required',
+//         'Please select a time': 'time.required',
+//         'Please select start date': 'range.startRequired',
+//         'Please select end date': 'range.endRequired',
+//     };
+
+//     // 先檢查直接匹配
+//     if (directMatches[message]) {
+//         try {
+//             const translated = localeManager.getErrorMessage(directMatches[message]);
+
+//             if (translated && translated !== directMatches[message]) {
+//                 return translated;
+//             }
+//         } catch (error) {
+//             if (props.debug) console.warn(`Translation failed for direct match: ${directMatches[message]}`);
+//         }
+//     }
+
+//     // 模式匹配 - 使用新的智能匹配函數
+//     if (/請輸入|please enter|required/i.test(message)) {
+//         const smartKey = getI18nKeyByFieldAndMessage(message, field);
+//         if (smartKey) {
+//             try {
+//                 const translated = localeManager.getErrorMessage(smartKey);
+//                 if (translated && translated !== smartKey) {
+//                     return translated;
+//                 }
+//             } catch (error) {
+//                 if (props.debug) console.warn(`Translation failed for smart key: ${smartKey}`);
+//             }
+//         }
+//     }
+
+//     // 其他模式匹配
+//     const patterns = [
+//         {
+//             regex: /(年份|year).*(\d+)-(\d+).*數字/i,
+//             handler: () => 'year.outOfRange'
+//         },
+//         {
+//             regex: /(月份|month).*1-12.*數字/i,
+//             handler: () => 'month.outOfRange'
+//         },
+//         {
+//             regex: /(日期|day).*1-31.*數字/i,
+//             handler: () => 'day.outOfRange'
+//         },
+//         {
+//             regex: /(小時|hour).*(\d+)-(\d+)/i,
+//             handler: () => 'time.hourOutOfRange'
+//         },
+//         {
+//             regex: /(分鐘|minute).*0-59/i,
+//             handler: () => 'time.minuteOutOfRange'
+//         },
+//         {
+//             regex: /(秒鐘|second).*0-59/i,
+//             handler: () => 'time.secondOutOfRange'
+//         },
+//         {
+//             regex: /無效|invalid/i,
+//             handler: (field?: string) => {
+//                 if (field?.includes('year')) return 'year.invalid';
+//                 if (field?.includes('month')) return 'month.invalid';
+//                 if (field?.includes('day')) return 'day.invalid';
+//                 if (field?.includes('time') || field?.includes('hour') || field?.includes('minute') || field?.includes('second')) return 'time.invalid';
+//                 return 'date.invalid';
+//             }
+//         }
+//     ];
+
+//     for (const pattern of patterns) {
+//         if (pattern.regex.test(message)) {
+//             const i18nKey = pattern.handler(field);
+//             try {
+//                 const translated = localeManager.getErrorMessage(i18nKey);
+//                 console.log(`Pattern matched for "${message}": "${translated}" using key "${i18nKey}"`);
+//                 if (translated && translated !== i18nKey) {
+//                     return translated;
+//                 }
+//             } catch (error) {
+//                 if (props.debug) console.warn(`Translation failed for pattern: ${i18nKey}`);
+//             }
+//         }
+//     }
+
+//     return message;
+// }
+
+function smartTranslateError(message: string, field?: string, params: Record<string, any> = {}): string {
+    if (props.debug) {
+        console.log(`smartTranslateError: "${message}", field: "${field}", params:`, params);
     }
 
-    // 簡化的直接匹配表 - 只保留最明確的匹配
+    // 簡化的直接匹配表
     const directMatches: Record<string, string> = {
-        // 精確匹配的錯誤訊息
         '請選擇日期': 'date.required',
         '請選擇時間': 'time.required',
         '請選擇開始日期': 'range.startRequired',
         '請選擇結束日期': 'range.endRequired',
-
-        // 範圍錯誤
-        '小時必須是 0-23 之間的數字': 'time.hourOutOfRange',
-        '小時必須是 1-12 之間的數字': 'time.hourOutOfRange',
-        '分鐘必須是 0-59 之間的數字': 'time.minuteOutOfRange',
-        '秒鐘必須是 0-59 之間的數字': 'time.secondOutOfRange',
-
-        // 英文錯誤訊息
         'Please select a date': 'date.required',
         'Please select a time': 'time.required',
         'Please select start date': 'range.startRequired',
@@ -239,58 +355,80 @@ function smartTranslateError(message: string, field?: string): string {
     // 先檢查直接匹配
     if (directMatches[message]) {
         try {
-            const translated = localeManager.getErrorMessage(directMatches[message]);
+            const translated = localeManager.getParameterizedErrorMessage(directMatches[message], params);
+            if (props.debug) {
+                console.log(`直接匹配翻譯: "${message}" -> "${translated}"`);
+            }
             if (translated && translated !== directMatches[message]) {
                 return translated;
             }
         } catch (error) {
-            if (props.debug) console.warn(`Translation failed for direct match: ${directMatches[message]}`);
+            if (props.debug) console.warn(`直接匹配翻譯失敗: ${directMatches[message]}`, error);
         }
     }
 
-    // 模式匹配 - 使用新的智能匹配函數
-    if (/請輸入|please enter|required/i.test(message)) {
-        const smartKey = getI18nKeyByFieldAndMessage(message, field);
-        if (smartKey) {
-            try {
-                const translated = localeManager.getErrorMessage(smartKey);
-                if (translated && translated !== smartKey) {
-                    return translated;
-                }
-            } catch (error) {
-                if (props.debug) console.warn(`Translation failed for smart key: ${smartKey}`);
+    // 智能字段匹配
+    function getI18nKeyByFieldAndMessage(message: string, field?: string): string | null {
+        if (/請輸入|please enter|required/i.test(message)) {
+            if (field?.includes('year') || message.includes('年份')) return 'year.required';
+            if (field?.includes('month') || message.includes('月份')) return 'month.required';
+            if (field?.includes('day') || message.includes('日期')) return 'day.required';
+            if (field?.includes('hour') || message.includes('小時')) return 'time.hourRequired';
+            if (field?.includes('minute') || message.includes('分鐘')) return 'time.minuteRequired';
+            if (field?.includes('second') || message.includes('秒鐘')) return 'time.secondRequired';
+            if (field?.includes('startDate') || message.includes('開始日期')) return 'range.startRequired';
+            if (field?.includes('endDate') || message.includes('結束日期')) return 'range.endRequired';
+            if (field?.includes('time') || message.includes('時間')) return 'time.required';
+            if (field?.includes('date') || message.includes('日期')) return 'date.required';
+        }
+        return null;
+    }
+
+    // 模式匹配 - 必填錯誤
+    const smartKey = getI18nKeyByFieldAndMessage(message, field);
+    if (smartKey) {
+        try {
+            const translated = localeManager.getParameterizedErrorMessage(smartKey, params);
+            if (props.debug) {
+                console.log(`智能匹配翻譯: "${message}" -> "${translated}"`);
             }
+            if (translated && translated !== smartKey) {
+                return translated;
+            }
+        } catch (error) {
+            if (props.debug) console.warn(`智能匹配翻譯失敗: ${smartKey}`, error);
         }
     }
 
-    // 其他模式匹配
+    // 複雜模式匹配
     const patterns = [
         {
             regex: /(年份|year).*(\d+)-(\d+).*數字/i,
-            handler: () => 'year.outOfRange'
+            key: 'year.outOfRange'
         },
         {
             regex: /(月份|month).*1-12.*數字/i,
-            handler: () => 'month.outOfRange'
+            key: 'month.outOfRange'
         },
         {
             regex: /(日期|day).*1-31.*數字/i,
-            handler: () => 'day.outOfRange'
+            key: 'day.outOfRange'
         },
         {
             regex: /(小時|hour).*(\d+)-(\d+)/i,
-            handler: () => 'time.hourOutOfRange'
+            key: 'time.hourOutOfRange'
         },
         {
             regex: /(分鐘|minute).*0-59/i,
-            handler: () => 'time.minuteOutOfRange'
+            key: 'time.minuteOutOfRange'
         },
         {
             regex: /(秒鐘|second).*0-59/i,
-            handler: () => 'time.secondOutOfRange'
+            key: 'time.secondOutOfRange'
         },
         {
             regex: /無效|invalid/i,
+            key: null, // 需要動態判斷
             handler: (field?: string) => {
                 if (field?.includes('year')) return 'year.invalid';
                 if (field?.includes('month')) return 'month.invalid';
@@ -303,18 +441,27 @@ function smartTranslateError(message: string, field?: string): string {
 
     for (const pattern of patterns) {
         if (pattern.regex.test(message)) {
-            const i18nKey = pattern.handler(field);
-            try {
-                const translated = localeManager.getErrorMessage(i18nKey);
-                if (translated && translated !== i18nKey) {
-                    return translated;
+            const i18nKey = pattern.handler ? pattern.handler(field) : pattern.key;
+            if (i18nKey) {
+                try {
+                    const translated = localeManager.getParameterizedErrorMessage(i18nKey, params);
+                    if (props.debug) {
+                        console.log(`模式匹配翻譯: "${message}" -> "${translated}" (key: ${i18nKey})`);
+                    }
+                    if (translated && translated !== i18nKey) {
+                        return translated;
+                    }
+                } catch (error) {
+                    if (props.debug) console.warn(`模式匹配翻譯失敗: ${i18nKey}`, error);
                 }
-            } catch (error) {
-                if (props.debug) console.warn(`Translation failed for pattern: ${i18nKey}`);
             }
         }
     }
 
+    // 如果都無法匹配，返回原始訊息
+    if (props.debug) {
+        console.log(`無法翻譯，返回原始訊息: "${message}"`);
+    }
     return message;
 }
 

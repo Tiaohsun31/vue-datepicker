@@ -2,10 +2,10 @@
     <div class="container mx-auto p-4 space-y-6">
         <div>
             {{ dateTimeutc }}
-            <DatePicker v-model="dateTimeutc">
+            <DatePicker v-model="dateTimeutc" min-date="2002-01-01">
             </DatePicker>
             {{ rocDate }}
-            <DatePicker v-model="rocDate" calendar="roc" min-date="01-01-2000" date-format="ROC-YYYY-MM-DD"
+            <DatePicker v-model="rocDate" calendar="roc" min-date="2002-01-01" date-format="ROC-YYYY-MM-DD"
                 time-format="A HH時mm分" locale="zh-TW" @change="handleDateChange" />
         </div>
         <div>

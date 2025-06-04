@@ -13,8 +13,7 @@
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="computedPlaceholders.year"
                         :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
                         :min-date="minDateStr" :max-date="maxDateStr" :required="required" :separator="dateSeparator"
-                        :date-format="dateInputFormat" @validation="handleDateValidation"
-                        @complete="handleDateComplete" />
+                        :date-format="dateInputFormat" @validation="validateDateInput" @complete="handleDateComplete" />
                 </div>
 
                 <!-- 時間輸入部分 -->
@@ -141,7 +140,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
 
     disabled: false,
     inputEnabled: true,
-    required: false,
+    required: true,
 
     placeholderOverrides: () => ({
         selectDate: localeManager.getPlaceholderMessage('general.selectDate'),
@@ -388,7 +387,7 @@ const {
     calendarSystem,
 
     // 事件處理
-    handleDateValidation,
+    validateDateInput,
     handleTimeValidation,
     handleDateComplete,
     handleTimeComplete,

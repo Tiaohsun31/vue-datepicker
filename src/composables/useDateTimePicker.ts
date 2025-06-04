@@ -250,6 +250,7 @@ export function useDateTimePicker(
      */
     const emitEvents = async (dateTime = dateTimeValue.internalDateTime.value) => {
         let formattedOutput: DateTimeValue = null;
+        console.log(dateTime, '發送更新事件:', dateTime);
 
         if (dateTime) {
             const outputFormatStr = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
@@ -373,13 +374,14 @@ export function useDateTimePicker(
      */
     const handleDateComplete = async (dateStr: string) => {
         const date = dayjsParseDate(dateStr, dateFormat);
+        console.log('處理日期完成:', dateStr, date);
         if (!date.isValid()) {
             console.warn('無效的日期格式:', dateStr);
             validation.handleDateValidation(false, { date: '無效的日期格式' });
             emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
             return;
         }
-        // 存儲標準格式，確保內部一致性
+
         dateTimeValue.inputDateValue.value = date.format('YYYY-MM-DD');
 
 

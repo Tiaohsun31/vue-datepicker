@@ -56,7 +56,6 @@ interface Props {
     minDate?: string | null;
     maxDate?: string | null;
     required?: boolean;
-    autoFocus?: boolean;
     separator?: string;
     dateFormat?: string;
 }
@@ -69,7 +68,6 @@ const props = withDefaults(defineProps<Props>(), {
     minDate: null,
     maxDate: null,
     required: true,
-    autoFocus: false,
     separator: '-',
     dateFormat: 'YYYY-MM-DD'
 });
@@ -112,14 +110,24 @@ const errorMessages = computed(() => Object.values(errors.value));
 // 根據日期格式順序計算段排序
 const dateSegments = computed(() => {
     const format = props.dateFormat.toUpperCase();
-    const formatMatches = format.match(/(YYYY|MM|DD)/g) || [];
 
-    return formatMatches.map(segment => {
-        if (segment === 'YYYY') return 'year';
-        if (segment === 'MM') return 'month';
-        if (segment === 'DD') return 'day';
-        return undefined;
-    }).filter(Boolean);
+    // 更精確的解析，處理各種可能的格式
+    const segments: ('year' | 'month' | 'day')[] = [];
+    const tokens = format.split(/[^A-Z]+/).filter(Boolean);
+
+    tokens.forEach(token => {
+        if (token.includes('Y')) segments.push('year');
+        else if (token.includes('M')) segments.push('month');
+        else if (token.includes('D')) segments.push('day');
+    });
+
+    // 確保有基本的三個組件
+    if (segments.length !== 3) {
+        console.warn(`Invalid date format: ${props.dateFormat}, falling back to YYYY-MM-DD`);
+        return ['year', 'month', 'day'];
+    }
+
+    return segments;
 });
 
 // 組合的日期字符串 (YYYY-MM-DD 格式)
@@ -164,15 +172,6 @@ watch(() => props.modelValue, (newValue) => {
         dayValue.value = '';
     }
 }, { immediate: true });
-
-// 自動聚焦 -
-// onMounted(() => {
-//     if (props.autoFocus) {
-//         nextTick(() => {
-//             focusFirstInput();
-//         });
-//     }
-// });
 
 // 聚焦到第一個輸入框
 const focusFirstInput = () => {
@@ -256,7 +255,7 @@ const validateField = (field: DateFieldType, value: string): boolean => {
     switch (field) {
         case 'year':
             if (value.length < 4) return true;
-            const maxYear = props.maxDate ? dayjs(props.maxDate).year() : new Date().getFullYear() + 10;
+            const maxYear = props.maxDate ? dayjs(props.maxDate).year() : new Date().getFullYear() + 50;
             const minYear = props.minDate ? dayjs(props.minDate).year() : 1;
             if (!isNumeric(value) || numValue < minYear || numValue > maxYear) {
                 errors.value[field] = `年份必須是 ${minYear}-${maxYear} 之間的數字`;
@@ -334,9 +333,8 @@ const validateAndEmit = () => {
         if (!monthValue.value) errors.value.month = '請輸入月份';
         if (!dayValue.value) errors.value.day = '請輸入日期';
     }
-
-    if (formattedDateString.value) {
-        const date = dayjs(formattedDateString.value);
+    if (dateString.value) {
+        const date = dayjs(dateString.value);
 
         if (!date.isValid()) {
             errors.value.day = '無效的日期';
@@ -501,11 +499,11 @@ defineExpose({
         resetFields();
         emit('update:modelValue', null);
     },
-    getErrors: () => errors.value,
-    hasErrors,
-    errorMessages,
-    focus: focusFirstInput, // 使用修復後的聚焦方法
-    focusLast: focusLastInput, // 新增：聚焦到最後一個輸入框
+    getErrors: () => ({ ...errors.value }),
+    hasErrors: () => hasErrors.value,
+    errorMessages: () => errorMessages.value,
+    focus: focusFirstInput,
+    focusLast: focusLastInput,
     setDate: (dateStr: string) => {
         if (dateStr) {
             const date = dayjs(dateStr);

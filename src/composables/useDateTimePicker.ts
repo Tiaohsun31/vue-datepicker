@@ -9,7 +9,7 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { createCalendarSystem, type UnifiedCalendarSystem } from '../utils/calendarSystem';
-import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue, dayjsParseDate } from '../utils/dateUtils';
+import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue, dayjsParseDate, compareDates, ensureSimpleDate } from '../utils/dateUtils';
 import { localeManager } from '@/locale/index';
 import dayjs from 'dayjs';
 
@@ -335,9 +335,6 @@ export function useDateTimePicker(
         validationErrors: Record<string, string>,
         errorParams: Record<string, Record<string, any>> = {}
     ) => {
-        console.log('處理日期驗證:', isValid, validationErrors, errorParams);
-
-        // 直接使用通用驗證處理器
         validation.handleDateValidation(isValid, validationErrors, 'date', errorParams);
         emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
     };
@@ -345,8 +342,12 @@ export function useDateTimePicker(
     /**
      * 處理時間輸入驗證
      */
-    const handleTimeValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
-        validation.handleTimeValidation(isValid, validationErrors);
+    const validateTimeInput = (
+        isValid: boolean,
+        validationErrors: Record<string, string>,
+        errorParams: Record<string, Record<string, any>> = {} // 新增：接收錯誤參數
+    ) => {
+        validation.handleTimeValidation(isValid, validationErrors, 'time', errorParams); // 新增：傳遞參數
         emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
     };
 
@@ -354,25 +355,29 @@ export function useDateTimePicker(
      * 處理日期輸入完成
      */
     const handleDateComplete = async (dateStr: string) => {
-        const date = dayjsParseDate(dateStr, dateFormat);
-        if (!date.isValid()) {
-            console.warn('無效的日期格式:', dateStr);
-            validation.handleDateValidation(false, { date: 'date.invalid' });
+        // const date = dayjsParseDate(dateStr, dateFormat);
+        // if (!date.isValid()) {
+        //     console.warn('無效的日期格式:', dateStr);
+        //     validation.handleDateValidation(false, { date: 'date.invalid' });
+        //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+        //     return;
+        // }
+        if (!validateAndUpdateDate(dateStr)) {
             emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
             return;
         }
 
-        dateTimeValue.inputDateValue.value = date.format('YYYY-MM-DD');
-
-
-        // 如果啟用時間且沒有時間值，應用默認時間
-        if (showTime && !dateTimeValue.inputTimeValue.value) {
-            dateTimeValue.inputTimeValue.value = defaultTime.getValidDefaultTime.value;
-        }
+        // dateTimeValue.inputDateValue.value = date.format('YYYY-MM-DD');
+        dateTimeValue.inputDateValue.value = dateStr;
 
         // 更新內部值
         const updatedDateTime = dateTimeValue.updateDateTime();
-        await wrappedEmitUpdate(updatedDateTime, 'handleDateComplete');
+        emitEvents(updatedDateTime);
+
+        // 清除相關驗證錯誤
+        ['date', 'year', 'month', 'day'].forEach(field => {
+            validation.clearFieldErrors(field);
+        });
 
         // 自動聚焦到時間輸入
         if (showTime && autoFocusTimeAfterDate) {
@@ -389,13 +394,18 @@ export function useDateTimePicker(
     const handleTimeComplete = async (timeStr: string) => {
         dateTimeValue.inputTimeValue.value = timeStr;
         const updatedDateTime = dateTimeValue.updateDateTime();
-        await wrappedEmitUpdate(updatedDateTime, 'handleTimeComplete');
+        emitEvents(updatedDateTime);
+        // 清除時間相關驗證錯誤
+        ['time', 'hour', 'minute', 'second'].forEach(field => {
+            validation.clearFieldErrors(field);
+        });
     };
 
     /**
-     * 處理日曆選擇 - 使用日曆系統轉換（同步）
+     * 處理日曆選擇 - 有搭配日曆系統
      */
     const handleCalendarSelect = async (date: any, closeCalendar: boolean = true) => {
+        console.log('處理日曆選擇:', date);
         if (!calendarSystem.value) return;
 
         try {
@@ -444,6 +454,59 @@ export function useDateTimePicker(
         ['time', 'hour', 'minute', 'second'].forEach(field => {
             validation.clearFieldErrors(field);
         });
+    };
+
+    /**
+     * 驗證日期輸入
+     * @param dateStr 日期字符串
+     * @returns 是否驗證通過
+     */
+    const validateAndUpdateDate = (dateStr: string): boolean => {
+        const date = dayjsParseDate(dateStr, dateFormat);
+
+        if (!date.isValid()) {
+            validation.handleDateValidation(false, {
+                date: 'date.invalid'
+            }, 'date', {
+                date: { original: dateStr, format: dateFormat }
+            });
+            return false;
+        }
+
+        // 檢查日期範圍
+        if (minDate || maxDate) {
+            const simpleDate = {
+                year: date.year(),
+                month: date.month() + 1,
+                day: date.date()
+            };
+
+            if (minDate) {
+                const minSimpleDate = ensureSimpleDate(minDate);
+                if (minSimpleDate && compareDates(simpleDate, minSimpleDate) < 0) {
+                    validation.handleDateValidation(false, {
+                        date: 'date.beforeMin'
+                    }, 'date', {
+                        date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
+                    });
+                    return false;
+                }
+            }
+
+            if (maxDate) {
+                const maxSimpleDate = ensureSimpleDate(maxDate);
+                if (maxSimpleDate && compareDates(simpleDate, maxSimpleDate) > 0) {
+                    validation.handleDateValidation(false, {
+                        date: 'date.afterMax'
+                    }, 'date', {
+                        date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
+                    });
+                    return false;
+                }
+            }
+        }
+
+        return true;
     };
 
     /**
@@ -563,7 +626,7 @@ export function useDateTimePicker(
         // 事件處理方法
         setEmitters,
         validateDateInput,
-        handleTimeValidation,
+        validateTimeInput,
         handleDateComplete,
         handleTimeComplete,
         handleCalendarSelect,

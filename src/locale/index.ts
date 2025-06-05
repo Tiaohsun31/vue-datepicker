@@ -23,6 +23,7 @@ export interface ErrorMessages {
         hourRequired: string;
         minuteRequired: string;
         secondRequired: string;
+        minuteStepInvalid: string;
     };
 
     // 年月日個別錯誤
@@ -106,6 +107,7 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 hourRequired: '請輸入小時',
                 minuteRequired: '請輸入分鐘',
                 secondRequired: '請輸入秒鐘',
+                minuteStepInvalid: '分鐘必須是 {step} 的倍數',
             },
             year: {
                 required: '請輸入年份',
@@ -175,6 +177,7 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 hourRequired: '请输入小时',
                 minuteRequired: '请输入分钟',
                 secondRequired: '请输入秒钟',
+                minuteStepInvalid: '分钟必须是 {step} 的倍数',
             },
             year: {
                 required: '请输入年份',
@@ -243,6 +246,7 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 hourRequired: 'Please enter hour',
                 minuteRequired: 'Please enter minute',
                 secondRequired: 'Please enter second',
+                minuteStepInvalid: 'Minute must be a multiple of {step}',
             },
             year: {
                 required: 'Please enter year',
@@ -312,6 +316,7 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 hourRequired: '時間を入力してください',
                 minuteRequired: '分を入力してください',
                 secondRequired: '秒を入力してください',
+                minuteStepInvalid: '分は {step} の倍数でなければなりません',
             },
             year: {
                 required: '年を入力してください',
@@ -381,6 +386,7 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 hourRequired: '시간을 입력해주세요',
                 minuteRequired: '분을 입력해주세요',
                 secondRequired: '초을 입력해주세요',
+                minuteStepInvalid: '분은 {step}의 배수여야 합니다',
             },
             year: {
                 required: '연도를 입력해주세요',

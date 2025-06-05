@@ -22,7 +22,7 @@
                         :minute-placeholder="placeholderOverrides.minute"
                         :second-placeholder="placeholderOverrides.second" :enable-seconds="enableSeconds"
                         :use24Hour="use24Hour" :required="required" :locale="locale"
-                        :useLocalizedPeriod="useLocalizedPeriod" @validation="handleTimeValidation"
+                        :useLocalizedPeriod="useLocalizedPeriod" @validation="validateTimeInput"
                         @complete="handleTimeComplete" @navigate-to-date="handleNavigateToDate" />
                 </div>
             </div>
@@ -388,7 +388,7 @@ const {
 
     // 事件處理
     validateDateInput,
-    handleTimeValidation,
+    validateTimeInput,
     handleDateComplete,
     handleTimeComplete,
     handleCalendarSelect,

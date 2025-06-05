@@ -3,8 +3,7 @@
  * 處理日期時間驗證邏輯的 Composable
  */
 
-import { ref, computed, type Ref } from 'vue';
-import { localeManager } from '@/locale/index';
+import { ref, computed } from 'vue';
 
 interface ValidationOptions {
     required?: boolean;
@@ -17,6 +16,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
     // 錯誤狀態
     const errors = ref<Record<string, string>>({});
     const formatErrors = ref<Record<string, string>>({});
+    const errorParams = ref<Record<string, Record<string, any>>>({}); // 新增：錯誤參數存儲
 
     // 合併所有錯誤
     const mergedErrors = computed(() => {
@@ -30,36 +30,27 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
 
     /**
      * 處理日期輸入驗證
-     * 通用的驗證處理器，負責管理錯誤狀態，處理錯誤的存儲、清除等基礎操作
      */
     const handleDateValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
         fieldPrefix: string = 'date',
-        errorParams: Record<string, Record<string, any>> = {}
+        validationErrorParams: Record<string, Record<string, any>> = {}
     ) => {
         // 清除相關錯誤
         ['date', 'year', 'month', 'day'].forEach(field => {
             clearFieldErrors(`${fieldPrefix}.${field}`);
+            clearFieldParams(`${fieldPrefix}.${field}`);
         });
-
-        console.log('handleDateValidation', isValid, validationErrors, fieldPrefix, errorParams);
 
         if (!isValid) {
             Object.entries(validationErrors).forEach(([field, localeKey]) => {
-
                 const errorKey = `${fieldPrefix}.${field}`;
-                const params = errorParams[field] || {};
 
-                try {
-                    errors.value[errorKey] = localeManager.getParameterizedErrorMessage(localeKey, params);
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log(`翻譯錯誤: ${localeKey} -> ${errors.value[errorKey]}`, params);
-                    }
-                } catch (error) {
-                    console.warn(`翻譯失敗: ${localeKey}`, error);
-                    // 回退到原始 key
-                    errors.value[errorKey] = localeKey;
+                errors.value[errorKey] = localeKey;
+
+                if (validationErrorParams[field]) {
+                    errorParams.value[errorKey] = validationErrorParams[field];
                 }
             });
         }
@@ -71,15 +62,22 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
     const handleTimeValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
-        fieldPrefix: string = 'time'
+        fieldPrefix: string = 'time',
+        validationErrorParams: Record<string, Record<string, any>> = {}
     ) => {
-        // 清除該字段相關的錯誤
-        clearFieldErrors(fieldPrefix);
+        ['time', 'hour', 'minute', 'second'].forEach(field => {
+            clearFieldErrors(`${fieldPrefix}.${field}`);
+            clearFieldParams(`${fieldPrefix}.${field}`);
+        });
 
-        // 添加新錯誤
         if (!isValid) {
-            Object.entries(validationErrors).forEach(([key, message]) => {
-                errors.value[`${fieldPrefix}.${key}`] = message;
+            Object.entries(validationErrors).forEach(([key, localeKey]) => {
+                const fullFieldKey = `${fieldPrefix}.${key}`;
+                errors.value[fullFieldKey] = localeKey;
+
+                if (validationErrorParams[key]) {
+                    errorParams.value[fullFieldKey] = validationErrorParams[key];
+                }
             });
         }
 
@@ -98,11 +96,23 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
     };
 
     /**
+     * 清除特定字段的錯誤參數
+     */
+    const clearFieldParams = (fieldPrefix: string) => {
+        Object.keys(errorParams.value).forEach(key => {
+            if (key.startsWith(fieldPrefix)) {
+                delete errorParams.value[key];
+            }
+        });
+    };
+
+    /**
      * 清除所有錯誤
      */
     const clearAllErrors = () => {
         errors.value = {};
         formatErrors.value = {};
+        errorParams.value = {};
     };
 
     /**
@@ -134,12 +144,12 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         // 檢查必填項
         if (required) {
             if (!dateValue) {
-                validationResult.errors['date'] = '請選擇日期';
+                validationResult.errors['date'] = 'date.required';
                 validationResult.isValid = false;
             }
 
             if (showTime && !timeValue) {
-                validationResult.errors['time'] = '請選擇時間';
+                validationResult.errors['time'] = 'time.required';
                 validationResult.isValid = false;
             }
         }
@@ -164,6 +174,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
 
         // 錯誤管理
         clearFieldErrors,
+        clearFieldParams,
         clearAllErrors,
         setFormatError,
         clearFormatError,

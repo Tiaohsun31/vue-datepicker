@@ -127,7 +127,13 @@ export function useDateTimeValue(
      */
     const updateDateTime = (dateStr?: string | null, timeStr?: string | null) => {
         const finalDateStr = dateStr !== undefined ? dateStr : inputDateValue.value;
-        const finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
+        let finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
+
+        // 統一在這裡處理默認時間
+        if (showTime && finalDateStr && !finalTimeStr) {
+            finalTimeStr = defaultTime;
+            inputTimeValue.value = finalTimeStr;
+        }
 
         const dateTime = createDateTimeFromInputs(finalDateStr, finalTimeStr);
         internalDateTime.value = dateTime;

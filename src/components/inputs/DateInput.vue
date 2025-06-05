@@ -1,7 +1,7 @@
-<!-- DateInput.vue -->
+<!-- components/inputs/DateInput.vue -->
 <template>
     <!-- 年份/月份/日期輸入組 -->
-    <div class="flex items-center justify-start">
+    <div class="date-input-container flex items-center justify-start">
         <!-- 根據格式順序動態排序輸入字段 -->
         <template v-for="(segment, index) in dateSegments" :key="segment">
             <!-- 渲染對應的輸入框 -->
@@ -39,6 +39,7 @@ import { isNumeric, isLeapYear } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
 import { dayjsParseDate } from '@/utils/dateUtils';
 import { localeManager } from '@/locale/index';
+import { type FieldError } from '@/types/internal';
 
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
@@ -46,10 +47,6 @@ const vAutowidth = {
     beforeUnmount: vAutowidthDirective.beforeUnmount
 };
 
-interface FieldError {
-    key: string;
-    params?: Record<string, any>;
-}
 
 type DateFieldType = 'year' | 'month' | 'day';
 
@@ -117,12 +114,7 @@ const getInputRef = (fieldType: DateFieldType): HTMLInputElement | undefined => 
 const localizedErrors = computed(() => {
     const result: Record<string, string> = {};
     Object.entries(errors.value).forEach(([field, error]) => {
-        const params = errorParams.value[field] || {};
-        try {
-            result[field] = localeManager.getParameterizedErrorMessage(error.key, params);
-        } catch (e) {
-            result[field] = error.key; // 回退到 key
-        }
+        result[field] = error.key;
     });
     return result;
 });
@@ -333,6 +325,7 @@ const validateField = (field: DateFieldType, value: string): { valid: boolean; e
 
     if (errors.value[field]) {
         delete errors.value[field];
+        delete errorParams.value[field];
     }
 
     return { valid: true };
@@ -414,7 +407,7 @@ const validateAndEmit = () => {
     }
 
     // 發送驗證結果
-    emit('validation', Object.keys(errors.value).length === 0, localizedErrors.value, errorParams.value);
+    emit('validation', !hasErrors.value, localizedErrors.value, errorParams.value);
 };
 
 // 重置所有輸入欄位
@@ -595,7 +588,6 @@ defineExpose({
 }
 
 .date-input:focus {
-    background-color: var(--vdt-theme-100) !important;
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
@@ -609,6 +601,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 input[type="number"] {
+    appearance: textfield;
     -moz-appearance: textfield;
 }
 </style>

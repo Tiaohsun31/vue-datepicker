@@ -343,7 +343,6 @@ export function useDateTimePicker(
     };
     /**
      * 監聽外部值變化
-     * TODO: 考慮設定props，決定初始化時，是否執行minDate和maxDate的驗證
      */
     watch(() => modelValue, (newValue) => {
         if (newValue && typeof newValue === 'string') {

@@ -2,7 +2,7 @@
     <div class="container mx-auto p-4 space-y-6">
         <div>
             {{ dateTimeutc }}
-            <DatePicker v-model="dateTimeutc" min-date="2002-01-01">
+            <DatePicker v-model="dateTimeutc" locale="en-US" min-date="2002-01-01">
             </DatePicker>
             {{ rocDate }}
             <DatePicker v-model="rocDate" calendar="roc" min-date="2002-01-01" date-format="ROC-YYYY-MM-DD"
@@ -79,7 +79,7 @@ const rocDate = ref('');
 const dateTime = ref('');
 const dateTime2 = ref('');
 const dateTime3 = ref('');
-const dateTimeutc = ref('1990-01-01'); // UTC 時間格式
+const dateTimeutc = ref(''); // UTC 時間格式
 const partialCustomDate = ref();
 const fieldNames = {
     year: '年份',

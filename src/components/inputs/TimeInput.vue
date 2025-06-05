@@ -1,7 +1,7 @@
 <!-- components/inputs/TimeInput.vue -->
 <template>
     <!-- 時間輸入 -->
-    <div class="flex items-center justify-center">
+    <div class="time-input-container flex items-center justify-center">
         <!-- 小時輸入 -->
         <input ref="hourRef" v-model="hourValue" v-autowidth="20" type="text" inputmode="numeric"
             :placeholder="hourPlaceholder" :maxlength="2" class="time-input text-sm text-center"
@@ -29,7 +29,8 @@
 
         <!-- AM/PM 選擇器 (12小時制) -->
         <template v-if="!use24Hour">
-            <button type="button" class="pl-2 text-sm cursor-pointer text-gray-600" @click.stop="togglePeriod">
+            <button type="button" class="time-period pl-2 text-sm cursor-pointer text-gray-600"
+                @click.stop="togglePeriod">
                 {{ displayPeriod }}
             </button>
         </template>

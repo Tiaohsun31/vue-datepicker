@@ -269,10 +269,9 @@ watch(() => [props.year, props.month], ([newYear, newMonth]) => {
 
 // 監聽外部傳入的值
 watch(() => props.value, (newValue) => {
-    console.log('外部值變化', props.value, newValue);
-    // 只有在沒有外部年月控制時才自動調整
+
     if (newValue && props.year === undefined && props.month === undefined) {
-        // ✅ 需要將當地日曆年份轉換回西元年來正確顯示月份導航
+        // 需要將當地日曆年份轉換回西元年來正確顯示月份導航
         let displayYear = newValue.year;
         let displayMonth = newValue.month;
 
@@ -317,10 +316,6 @@ const formatHour = (hour: number): string => {
 // 設置時間段
 const setPeriod = (period: 'AM' | 'PM') => {
     selectedPeriod.value = period;
-};
-
-const togglePeriod = () => {
-    selectedPeriod.value = selectedPeriod.value === 'AM' ? 'PM' : 'AM';
 };
 
 // 處理單一日期選擇

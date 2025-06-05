@@ -38,7 +38,6 @@ import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
 import { dayjsParseDate } from '@/utils/dateUtils';
-import { localeManager } from '@/locale/index';
 import { type FieldError } from '@/types/internal';
 
 const vAutowidth = {

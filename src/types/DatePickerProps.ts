@@ -1,6 +1,10 @@
 import { type TailwindColor } from './main';
 import type { DateTimeValue, OutputFormat } from '@/utils/dateUtils';
 import type { CalendarIdentifier } from '@internationalized/date';
+
+//  TODO:
+// 考慮設定props，決定初始化時，是否執行minDate和maxDate的驗證
+// minuteStep
 export interface DatePickerProps {
     modelValue?: DateTimeValue;
     mode?: 'light' | 'dark' | 'auto';

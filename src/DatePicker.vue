@@ -72,7 +72,7 @@
         <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors" :calendarSystem="calendarSystem">
             <!-- 預設使用 DateErrorMessage -->
             <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
-                :custom-messages="customErrorMessages">
+                :custom-messages="customErrorMessages" :errorParams="mergedErrorParams">
                 <!-- 將內部的 slot 轉發給使用者 -->
                 <template v-for="(_, slotName) in $slots" :key="slotName" #[slotName]="slotProps">
                     <slot :name="slotName" v-bind="slotProps" />
@@ -266,6 +266,14 @@ const mergedErrors = computed(() => {
     return {
         ...datePicker.mergedErrors.value,
         ...formatErrors.value
+    };
+});
+
+// 合併所有錯誤參數
+const mergedErrorParams = computed(() => {
+    return {
+        ...datePicker.mergedErrorParams?.value || {},
+        // 格式錯誤通常不需要參數，但可以擴展
     };
 });
 

@@ -23,6 +23,11 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         return { ...errors.value, ...formatErrors.value };
     });
 
+    // 合併所有錯誤參數
+    const mergedErrorParams = computed(() => {
+        return { ...errorParams.value };
+    });
+
     // 是否有錯誤
     const hasErrors = computed(() => {
         return Object.keys(mergedErrors.value).length > 0;
@@ -42,13 +47,10 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
             clearFieldErrors(`${fieldPrefix}.${field}`);
             clearFieldParams(`${fieldPrefix}.${field}`);
         });
-
         if (!isValid) {
             Object.entries(validationErrors).forEach(([field, localeKey]) => {
                 const errorKey = `${fieldPrefix}.${field}`;
-
                 errors.value[errorKey] = localeKey;
-
                 if (validationErrorParams[field]) {
                     errorParams.value[errorKey] = validationErrorParams[field];
                 }
@@ -166,6 +168,8 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         formatErrors,
         mergedErrors,
         hasErrors,
+        errorParams,
+        mergedErrorParams,
 
         // 驗證方法
         handleDateValidation,

@@ -290,10 +290,70 @@ export function useDateTimePicker(
     };
 
     /**
+     * 驗證日期輸入
+     * @param dateStr 日期字符串
+     * @returns 是否驗證通過
+     */
+    const validateAndUpdateDate = (dateStr: string): boolean => {
+        const date = dayjsParseDate(dateStr, dateFormat);
+
+        if (!date.isValid()) {
+            validation.handleDateValidation(false, {
+                date: 'date.invalid'
+            }, 'date', {
+                date: { original: dateStr, format: dateFormat }
+            });
+            return false;
+        }
+
+        // 檢查日期範圍
+        if (minDate || maxDate) {
+            const simpleDate = {
+                year: date.year(),
+                month: date.month() + 1,
+                day: date.date()
+            };
+
+            if (minDate) {
+                const minSimpleDate = ensureSimpleDate(minDate);
+                if (minSimpleDate && compareDates(simpleDate, minSimpleDate) < 0) {
+                    validation.handleDateValidation(false, {
+                        date: 'date.beforeMin'
+                    }, 'date', {
+                        date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
+                    });
+                    return false;
+                }
+            }
+
+            if (maxDate) {
+                const maxSimpleDate = ensureSimpleDate(maxDate);
+                if (maxSimpleDate && compareDates(simpleDate, maxSimpleDate) > 0) {
+                    validation.handleDateValidation(false, {
+                        date: 'date.afterMax'
+                    }, 'date', {
+                        date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
+                    });
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
+    /**
      * 監聽外部值變化
+     * TODO: 考慮設定props，決定初始化時，是否執行minDate和maxDate的驗證
      */
     watch(() => modelValue, (newValue) => {
         if (newValue && typeof newValue === 'string') {
+            // if (!validateAndUpdateDate(newValue)) {
+            //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+            //     dateTimeValue.setExternalValue(null);
+            //     return;
+            // } else {
+            //     validation.clearFieldErrors('invalidInput');
+            // }
             const date = dayjsParseDate(newValue, dateFormat);
             if (!date.isValid()) {
                 console.warn('無效的日期格式:', newValue);
@@ -456,58 +516,7 @@ export function useDateTimePicker(
         });
     };
 
-    /**
-     * 驗證日期輸入
-     * @param dateStr 日期字符串
-     * @returns 是否驗證通過
-     */
-    const validateAndUpdateDate = (dateStr: string): boolean => {
-        const date = dayjsParseDate(dateStr, dateFormat);
 
-        if (!date.isValid()) {
-            validation.handleDateValidation(false, {
-                date: 'date.invalid'
-            }, 'date', {
-                date: { original: dateStr, format: dateFormat }
-            });
-            return false;
-        }
-
-        // 檢查日期範圍
-        if (minDate || maxDate) {
-            const simpleDate = {
-                year: date.year(),
-                month: date.month() + 1,
-                day: date.date()
-            };
-
-            if (minDate) {
-                const minSimpleDate = ensureSimpleDate(minDate);
-                if (minSimpleDate && compareDates(simpleDate, minSimpleDate) < 0) {
-                    validation.handleDateValidation(false, {
-                        date: 'date.beforeMin'
-                    }, 'date', {
-                        date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
-                    });
-                    return false;
-                }
-            }
-
-            if (maxDate) {
-                const maxSimpleDate = ensureSimpleDate(maxDate);
-                if (maxSimpleDate && compareDates(simpleDate, maxSimpleDate) > 0) {
-                    validation.handleDateValidation(false, {
-                        date: 'date.afterMax'
-                    }, 'date', {
-                        date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
-                    });
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    };
 
     /**
      * 容器點擊處理

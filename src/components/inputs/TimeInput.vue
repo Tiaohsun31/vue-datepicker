@@ -270,7 +270,7 @@ const togglePeriod = () => {
     validateAndEmit();
 };
 
-// 驗證並發送事件 - 改進版本
+// 驗證並發送事件
 const validateAndEmit = () => {
     if (!isInitialized.value) return;
 

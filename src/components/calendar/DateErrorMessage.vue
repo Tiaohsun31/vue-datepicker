@@ -1,4 +1,4 @@
-<!-- DateErrorMessage.vue - 修復時間錯誤匹配 -->
+<!-- DateErrorMessage.vue -->
 <template>
     <div v-if="hasErrors" class="mt-1 text-sm text-red-500">
         <!-- 預設的錯誤顯示邏輯 -->
@@ -41,6 +41,7 @@ interface ProcessedError {
 
 interface Props {
     errors?: ErrorsType;
+    errorParams?: Record<string, Record<string, any>>; // ✅ 新增：錯誤參數
     locale?: string;
     useI18n?: boolean;
     customMessages?: Record<string, string>;
@@ -50,6 +51,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     errors: undefined,
+    errorParams: () => ({}), // ✅ 新增：預設空物件
     locale: 'zh-TW',
     useI18n: true,
     customMessages: () => ({}),
@@ -117,11 +119,15 @@ const processedErrors = computed(() => {
         Object.entries(props.errors).forEach(([field, error]) => {
             if (error) {
                 errorOriginalKeys.value[field] = error;
-                result[field] = translateMessage(error, field);
+
+                // ✅ 修正：傳遞對應字段的參數
+                const fieldParams = props.errorParams?.[field] || {};
+                result[field] = translateMessage(error, field, fieldParams);
 
                 if (props.debug) {
                     console.log(`Processing error for field "${field}":`, {
                         original: error,
+                        params: fieldParams,
                         translated: result[field],
                         field,
                         slotName: getSlotName(field)
@@ -151,6 +157,7 @@ function getFieldType(field: string): string {
     return 'unknown';
 }
 
+// ✅ 修正：translateMessage 現在正確使用參數
 function translateMessage(message: string, field?: string, params: Record<string, any> = {}): string {
     if (props.debug) {
         console.log(`翻譯訊息: "${message}", field: "${field}", params:`, params);
@@ -173,7 +180,7 @@ function translateMessage(message: string, field?: string, params: Record<string
         try {
             const translated = localeManager.getParameterizedErrorMessage(message, params);
             if (props.debug) {
-                console.log(`Locale key 翻譯: "${message}" -> "${translated}"`);
+                console.log(`Locale key 翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== message) {
                 return translated;
@@ -189,7 +196,7 @@ function translateMessage(message: string, field?: string, params: Record<string
         try {
             const translated = localeManager.getParameterizedErrorMessage(i18nKey, params);
             if (props.debug) {
-                console.log(`MessageKeyMap 翻譯: "${message}" -> "${translated}"`);
+                console.log(`MessageKeyMap 翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== i18nKey) {
                 return translated;
@@ -203,138 +210,7 @@ function translateMessage(message: string, field?: string, params: Record<string
     return smartTranslateError(message, field, params);
 }
 
-// function smartTranslateError(message: string, field?: string, params: Record<string, any> = {}): string {
-
-//     // 基於字段和訊息內容的智能匹配 - 更精確版本
-//     function getI18nKeyByFieldAndMessage(message: string, field?: string): string | null {
-//         // 精確匹配具體字段的必填錯誤
-//         if (/請輸入|please enter|required/i.test(message)) {
-//             if (field?.includes('year') || message.includes('年份')) return 'year.required';
-//             if (field?.includes('month') || message.includes('月份')) return 'month.required';
-//             if (field?.includes('day') || message.includes('日期')) return 'day.required';
-
-//             // 時間字段的精確匹配
-//             if (field?.includes('hour') || message.includes('小時')) return 'time.hourRequired';
-//             if (field?.includes('minute') || message.includes('分鐘')) return 'time.minuteRequired';
-//             if (field?.includes('second') || message.includes('秒鐘')) return 'time.secondRequired';
-
-//             // 範圍相關
-//             if (field?.includes('startDate') || message.includes('開始日期')) return 'range.startRequired';
-//             if (field?.includes('endDate') || message.includes('結束日期')) return 'range.endRequired';
-
-//             // 通用時間和日期（作為後備）
-//             if (field?.includes('time') || message.includes('時間')) return 'time.required';
-//             if (field?.includes('date') || message.includes('日期')) return 'date.required';
-//         }
-
-//         return null;
-//     }
-
-//     // 簡化的直接匹配表 - 只保留最明確的匹配
-//     const directMatches: Record<string, string> = {
-//         // 精確匹配的錯誤訊息
-//         '請選擇日期': 'date.required',
-//         '請選擇時間': 'time.required',
-//         '請選擇開始日期': 'range.startRequired',
-//         '請選擇結束日期': 'range.endRequired',
-
-//         // 範圍錯誤
-//         '小時必須是 0-23 之間的數字': 'time.hourOutOfRange',
-//         '小時必須是 1-12 之間的數字': 'time.hourOutOfRange',
-//         '分鐘必須是 0-59 之間的數字': 'time.minuteOutOfRange',
-//         '秒鐘必須是 0-59 之間的數字': 'time.secondOutOfRange',
-
-//         // 英文錯誤訊息
-//         'Please select a date': 'date.required',
-//         'Please select a time': 'time.required',
-//         'Please select start date': 'range.startRequired',
-//         'Please select end date': 'range.endRequired',
-//     };
-
-//     // 先檢查直接匹配
-//     if (directMatches[message]) {
-//         try {
-//             const translated = localeManager.getErrorMessage(directMatches[message]);
-
-//             if (translated && translated !== directMatches[message]) {
-//                 return translated;
-//             }
-//         } catch (error) {
-//             if (props.debug) console.warn(`Translation failed for direct match: ${directMatches[message]}`);
-//         }
-//     }
-
-//     // 模式匹配 - 使用新的智能匹配函數
-//     if (/請輸入|please enter|required/i.test(message)) {
-//         const smartKey = getI18nKeyByFieldAndMessage(message, field);
-//         if (smartKey) {
-//             try {
-//                 const translated = localeManager.getErrorMessage(smartKey);
-//                 if (translated && translated !== smartKey) {
-//                     return translated;
-//                 }
-//             } catch (error) {
-//                 if (props.debug) console.warn(`Translation failed for smart key: ${smartKey}`);
-//             }
-//         }
-//     }
-
-//     // 其他模式匹配
-//     const patterns = [
-//         {
-//             regex: /(年份|year).*(\d+)-(\d+).*數字/i,
-//             handler: () => 'year.outOfRange'
-//         },
-//         {
-//             regex: /(月份|month).*1-12.*數字/i,
-//             handler: () => 'month.outOfRange'
-//         },
-//         {
-//             regex: /(日期|day).*1-31.*數字/i,
-//             handler: () => 'day.outOfRange'
-//         },
-//         {
-//             regex: /(小時|hour).*(\d+)-(\d+)/i,
-//             handler: () => 'time.hourOutOfRange'
-//         },
-//         {
-//             regex: /(分鐘|minute).*0-59/i,
-//             handler: () => 'time.minuteOutOfRange'
-//         },
-//         {
-//             regex: /(秒鐘|second).*0-59/i,
-//             handler: () => 'time.secondOutOfRange'
-//         },
-//         {
-//             regex: /無效|invalid/i,
-//             handler: (field?: string) => {
-//                 if (field?.includes('year')) return 'year.invalid';
-//                 if (field?.includes('month')) return 'month.invalid';
-//                 if (field?.includes('day')) return 'day.invalid';
-//                 if (field?.includes('time') || field?.includes('hour') || field?.includes('minute') || field?.includes('second')) return 'time.invalid';
-//                 return 'date.invalid';
-//             }
-//         }
-//     ];
-
-//     for (const pattern of patterns) {
-//         if (pattern.regex.test(message)) {
-//             const i18nKey = pattern.handler(field);
-//             try {
-//                 const translated = localeManager.getErrorMessage(i18nKey);
-//                 console.log(`Pattern matched for "${message}": "${translated}" using key "${i18nKey}"`);
-//                 if (translated && translated !== i18nKey) {
-//                     return translated;
-//                 }
-//             } catch (error) {
-//                 if (props.debug) console.warn(`Translation failed for pattern: ${i18nKey}`);
-//             }
-//         }
-//     }
-
-//     return message;
-// }
-
+// ✅ 修正：smartTranslateError 現在所有地方都使用參數
 function smartTranslateError(message: string, field?: string, params: Record<string, any> = {}): string {
     if (props.debug) {
         console.log(`smartTranslateError: "${message}", field: "${field}", params:`, params);
@@ -357,7 +233,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
         try {
             const translated = localeManager.getParameterizedErrorMessage(directMatches[message], params);
             if (props.debug) {
-                console.log(`直接匹配翻譯: "${message}" -> "${translated}"`);
+                console.log(`直接匹配翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== directMatches[message]) {
                 return translated;
@@ -390,7 +266,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
         try {
             const translated = localeManager.getParameterizedErrorMessage(smartKey, params);
             if (props.debug) {
-                console.log(`智能匹配翻譯: "${message}" -> "${translated}"`);
+                console.log(`智能匹配翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== smartKey) {
                 return translated;
@@ -428,7 +304,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
         },
         {
             regex: /無效|invalid/i,
-            key: null, // 需要動態判斷
+            key: null,
             handler: (field?: string) => {
                 if (field?.includes('year')) return 'year.invalid';
                 if (field?.includes('month')) return 'month.invalid';
@@ -444,9 +320,10 @@ function smartTranslateError(message: string, field?: string, params: Record<str
             const i18nKey = pattern.handler ? pattern.handler(field) : pattern.key;
             if (i18nKey) {
                 try {
+                    // ✅ 修正：所有模式匹配都使用參數
                     const translated = localeManager.getParameterizedErrorMessage(i18nKey, params);
                     if (props.debug) {
-                        console.log(`模式匹配翻譯: "${message}" -> "${translated}" (key: ${i18nKey})`);
+                        console.log(`模式匹配翻譯: "${message}" -> "${translated}" (key: ${i18nKey}) with params:`, params);
                     }
                     if (translated && translated !== i18nKey) {
                         return translated;

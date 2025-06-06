@@ -4,10 +4,10 @@
         <!-- 日期按鈕 -->
         <button type="button" class="calendar-cell-button" :class="cellClasses" :disabled="disabled"
             :tabindex="focusable ? 0 : -1" :aria-selected="selected || isRangeStart || isRangeEnd"
-            :aria-disabled="disabled" :aria-current="isToday ? 'date' : undefined" @click="handleSelect"
-            @keydown.enter="handleSelect" @keydown.space="handleSelect" @keydown.up="emit('nav', 'up')"
-            @keydown.down="emit('nav', 'down')" @keydown.left="emit('nav', 'left')"
-            @keydown.right="emit('nav', 'right')">
+            :aria-disabled="disabled" :aria-current="isToday ? 'date' : undefined"
+            :data-in-current-month="!isOutsideMonth" @click="handleSelect" @keydown.enter="handleSelect"
+            @keydown.space="handleSelect" @keydown.up="emit('nav', 'up')" @keydown.down="emit('nav', 'down')"
+            @keydown.left="emit('nav', 'left')" @keydown.right="emit('nav', 'right')">
             {{ date.day }}
         </button>
     </div>
@@ -123,3 +123,26 @@ const handleSelect = () => {
     }
 };
 </script>
+<style scoped>
+/* 範圍選擇時的特殊效果 */
+.calendar-cell-button[data-in-current-month="false"] {
+    opacity: 0.6;
+}
+
+/* 今天的日期特殊標記 */
+.calendar-cell-button[aria-current="date"]:not(.bg-vdt-theme-500) {
+    position: relative;
+}
+
+.calendar-cell-button[aria-current="date"]:not(.bg-vdt-theme-500)::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: var(--color-vdt-theme-500);
+    border-radius: 50%;
+}
+</style>

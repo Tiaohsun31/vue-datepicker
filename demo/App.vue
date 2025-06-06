@@ -23,6 +23,9 @@
                 </template>
             </DatePicker>
         </div>
+        <div>
+            <DateRange v-model="selectedDate"></DateRange>
+        </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">
                 <template #error-year="{ message, field, originalKey }">自定義年份錯誤
@@ -47,9 +50,7 @@
 
             </DatePicker>
         </div>
-        <div>
-            <DateRange v-model="selectedDate"></DateRange>
-        </div>
+
         {{ selectedDate }}
         <div>
             <DateRange v-model="selectedDate" mode="dark"></DateRange>

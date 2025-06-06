@@ -5,7 +5,8 @@
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <DateContainer :errors="mergedErrors">
+        <div class="date-picker-container flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <button type="button" class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200"
                 :disabled="disabled" @click="toggleCalendar">
 
@@ -45,7 +46,7 @@
                 :disabled="disabled" @click="toggleCalendar">
                 <CalendarIcon class="h-5 w-5 cursor-pointer" />
             </button>
-        </DateContainer>
+        </div>
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
@@ -150,7 +151,6 @@
 import { ref, computed, watch } from 'vue';
 
 // 組件導入
-import DateContainer from './components/calendar/DateContainer.vue';
 import DateInput from './components/inputs/DateInput.vue';
 import TimeInput from './components/inputs/TimeInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
@@ -364,7 +364,7 @@ const {
     endDateTime,
     hasRangeValue,
 
-// 事件處理方法
+    // 事件處理方法
     handleStartDateValidation,
     handleEndDateValidation,
     handleStartTimeValidation,

@@ -1,4 +1,3 @@
-<!-- CalendarGrid.vue -->
 <template>
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
@@ -16,70 +15,9 @@
             @range-select="handleRangeSelect" />
 
         <!-- 時間選擇區域（單一日期模式） -->
-        <template v-if="showTimeSelector && selectionMode === 'single'">
-            <hr class="my-2 border-vdt-outline" />
-            <div class="flex flex-row items-center justify-between">
-                <label class="text-sm font-medium text-vdt-content uppercase">Time:</label>
-                <div class="flex flex-row items-center gap-1">
-                    <button type="button" @click="setNowTime"
-                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
-                        Now
-                    </button>
-                    <button type="button" @click="setTodaysDate"
-                        class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
-                        Today
-                    </button>
-                </div>
-            </div>
-            <div class="time-selector-container pt-1">
-                <!-- 簡化版時間選擇器 -->
-                <div class="flex flex-row items-center gap-1">
-                    <!-- 小時選擇器 -->
-                    <div class="flex-1">
-                        <select v-model="selectedHour"
-                            class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
-                            <option v-for="hour in hourOptions" :key="hour" :value="hour">
-                                {{ formatHour(hour) }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- 分鐘選擇器 -->
-                    <div class="flex-1">
-                        <select v-model="selectedMinute"
-                            class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
-                            <option v-for="minute in minuteOptions" :key="minute" :value="minute">
-                                {{ formatNumber(minute) }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- 秒鐘選擇器 -->
-                    <div class="flex-1" v-if="enableSeconds">
-                        <select v-model="selectedSecond"
-                            class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
-                            <option v-for="second in secondOptions" :key="second" :value="second">
-                                {{ formatNumber(second) }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div v-if="!use24Hour" class="flex-shrink-0">
-                        <div
-                            class="isolate inline-flex rounded-md border border-vdt-outline  bg-vdt-surface overflow-hidden">
-                            <button type="button" @click="setPeriod('AM')" class="px-2 py-1 text-sm transition-colors"
-                                :class="selectedPeriod === 'AM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
-                                AM
-                            </button>
-                            <button type="button" @click="setPeriod('PM')" class="px-2 py-1 text-sm transition-colors"
-                                :class="selectedPeriod === 'PM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
-                                PM
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
+        <TimeSelector v-if="selectionMode === 'single'" :show="showTimeSelector" :time-value="timeValue"
+            :enable-seconds="enableSeconds" :use24-hour="use24Hour" :default-time="defaultTime"
+            @time-change="handleTimeChange" @today-click="setTodaysDate" />
     </div>
 </template>
 
@@ -89,6 +27,7 @@ import { CalendarDate } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import DateGridView from './DateGridView.vue';
+import TimeSelector from './TimeSelector.vue';
 import {
     getTodaysDate,
     toCalendarDate,
@@ -107,7 +46,7 @@ interface Props {
     rangeEnd?: CalendarDate | null;
     selectionMode?: SelectionMode;
 
-    // 外部控制的年月（新增）
+    // 外部控制的年月
     year?: number;
     month?: number;
 
@@ -122,7 +61,6 @@ interface Props {
     timeValue?: string | null;
     enableSeconds?: boolean;
     use24Hour?: boolean;
-
     defaultTime?: string;
 
     calendarSystem?: UnifiedCalendarSystem | null;
@@ -156,7 +94,7 @@ const emit = defineEmits<{
     'range-select': [startDate: CalendarDate | null, endDate: CalendarDate | null];
 }>();
 
-// 當前顯示的月份和年份 - 使用簡單數值
+// 當前顯示的月份和年份
 const currentYear = ref<number>(
     props.year ||
     (props.value ? props.value.year :
@@ -170,92 +108,12 @@ const currentMonth = ref<number>(
             getTodaysDate().month)
 );
 
-// 選擇的日期（單一日期模式） - 直接使用傳入的 CalendarDate
+// 選擇的日期（單一日期模式）
 const selectedCalendarDate = computed(() => props.value);
-
-// 時間相關（僅單一日期模式）
-const selectedHour = ref<number>(0);
-const selectedMinute = ref<number>(0);
-const selectedSecond = ref<number>(0);
-const selectedPeriod = ref<'AM' | 'PM'>('AM');
-
-// 時間是否已初始化的標誌
-const timeInitialized = ref<boolean>(false);
 
 // 可選的年份範圍
 const minYear = computed(() => props.minDate?.year || 1900);
 const maxYear = computed(() => props.maxDate?.year || 2100);
-
-// 小時選項
-const hourOptions = computed(() => {
-    return props.use24Hour
-        ? Array.from({ length: 24 }, (_, i) => i)
-        : Array.from({ length: 12 }, (_, i) => i + 1);
-});
-
-// 分鐘選項
-const minuteOptions = computed(() => {
-    return Array.from({ length: 60 }, (_, i) => i);
-});
-
-// 秒鐘選項
-const secondOptions = computed(() => {
-    return Array.from({ length: 60 }, (_, i) => i);
-});
-
-// 格式化的時間值
-const formattedTimeValue = computed(() => {
-    let hour = selectedHour.value;
-
-    if (!props.use24Hour) {
-        if (selectedPeriod.value === 'PM' && hour < 12) {
-            hour += 12;
-        } else if (selectedPeriod.value === 'AM' && hour === 12) {
-            hour = 0;
-        }
-    }
-
-    const hourStr = formatNumber(hour);
-    const minuteStr = formatNumber(selectedMinute.value);
-
-    if (props.enableSeconds) {
-        const secondStr = formatNumber(selectedSecond.value);
-        return `${hourStr}:${minuteStr}:${secondStr}`;
-    } else {
-        return `${hourStr}:${minuteStr}`;
-    }
-});
-
-const parseAndSetTime = (timeStr: string) => {
-    if (!timeStr) return;
-
-    const [hoursStr, minutes, seconds] = timeStr.split(':');
-    let hours = parseInt(hoursStr) || 0;
-
-    if (!props.use24Hour) {
-        if (hours >= 12) {
-            selectedPeriod.value = 'PM';
-            hours = hours === 12 ? 12 : hours - 12;
-        } else {
-            selectedPeriod.value = 'AM';
-            hours = hours === 0 ? 12 : hours;
-        }
-    }
-
-    selectedHour.value = hours;
-    selectedMinute.value = parseInt(minutes) || 0;
-
-    if (props.enableSeconds && seconds) {
-        selectedSecond.value = parseInt(seconds) || 0;
-    }
-
-    timeInitialized.value = true;
-};
-
-// 使用預設時間初始化
-const initializeWithDefaultTime = () => {
-    parseAndSetTime(props.defaultTime);
-};
 
 // 監聽外部傳入的年月變化
 watch(() => [props.year, props.month], ([newYear, newMonth]) => {
@@ -269,7 +127,6 @@ watch(() => [props.year, props.month], ([newYear, newMonth]) => {
 
 // 監聽外部傳入的值
 watch(() => props.value, (newValue) => {
-
     if (newValue && props.year === undefined && props.month === undefined) {
         // 需要將當地日曆年份轉換回西元年來正確顯示月份導航
         let displayYear = newValue.year;
@@ -303,31 +160,10 @@ watch(() => props.rangeStart, (newValue) => {
     }
 }, { immediate: true });
 
-// 格式化數字為兩位數
-const formatNumber = (num: number): string => {
-    return num.toString().padStart(2, '0');
-};
-
-// 格式化小時
-const formatHour = (hour: number): string => {
-    return formatNumber(hour);
-};
-
-// 設置時間段
-const setPeriod = (period: 'AM' | 'PM') => {
-    selectedPeriod.value = period;
-};
-
 // 處理單一日期選擇
 const handleSelect = (date: CalendarDate) => {
     if (props.selectionMode === 'single') {
         emit('select', date, true);
-
-        // 如果有時間選擇器，也發送時間選擇事件
-        if (props.showTimeSelector) {
-            const time = formattedTimeValue.value;
-            emit('time-select', time);
-        }
     }
 };
 
@@ -336,6 +172,11 @@ const handleRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate
     if (props.selectionMode === 'range') {
         emit('range-select', startDate, endDate);
     }
+};
+
+// 處理時間變化
+const handleTimeChange = (time: string) => {
+    emit('time-select', time);
 };
 
 // 設置今天日期
@@ -350,46 +191,6 @@ const setTodaysDate = () => {
         }
     }
 };
-
-// 設置為當前時間
-const setNowTime = () => {
-    const now = new Date();
-
-    if (props.use24Hour) {
-        selectedHour.value = now.getHours();
-    } else {
-        const hours = now.getHours();
-        selectedPeriod.value = hours >= 12 ? 'PM' : 'AM';
-        selectedHour.value = hours % 12 || 12;
-    }
-
-    selectedMinute.value = now.getMinutes();
-
-    if (props.enableSeconds) {
-        selectedSecond.value = now.getSeconds();
-    }
-
-    timeInitialized.value = true;
-};
-
-// 監聽外部傳入的時間值
-watch(() => props.timeValue, (newValue) => {
-    if (newValue) {
-        parseAndSetTime(newValue);
-    } else if (!timeInitialized.value && props.showTimeSelector && props.selectionMode === 'single') {
-        initializeWithDefaultTime();
-    }
-}, { immediate: true });
-
-// 監聽時間值的變化並發送事件
-watch(
-    [selectedHour, selectedMinute, selectedSecond, selectedPeriod],
-    () => {
-        if (props.showTimeSelector && props.selectionMode === 'single' && timeInitialized.value) {
-            emit('time-select', formattedTimeValue.value);
-        }
-    }
-);
 
 // 公開方法
 defineExpose({

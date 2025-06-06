@@ -5,8 +5,8 @@
             <DatePicker v-model="dateTimeutc" locale="en-US" min-date="2002-01-01">
             </DatePicker>
             {{ rocDate }}
-            <DatePicker v-model="rocDate" calendar="roc" min-date="2002-01-01" date-format="ROC-YYYY-MM-DD"
-                time-format="A HH時mm分" locale="zh-TW" @change="handleDateChange" />
+            <DatePicker v-model="rocDate" calendar="roc" date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分"
+                locale="zh-TW" @change="handleDateChange" />
         </div>
         <div>
             {{ dateTime2 }}

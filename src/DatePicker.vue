@@ -62,7 +62,7 @@
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
-                :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale"
+                :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale" :calendar="calendar"
                 :calendarSystem="(calendarSystem as UnifiedCalendarSystem)" @select="handleCalendarSelect"
                 @time-select="handleTimeSelect" />
         </div>

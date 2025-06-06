@@ -2,7 +2,7 @@
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
-            :calendar-system="calendarSystem" :max-year="maxYear" />
+            :max-year="maxYear" :calendar="calendar" />
 
         <!-- 星期列 -->
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" />
@@ -14,27 +14,22 @@
             :max-date="maxDate" :locale="locale" :week-starts-on="weekStartsOn" @select="handleSelect"
             @range-select="handleRangeSelect" />
 
-        <!-- 時間選擇區域（單一日期模式） -->
+        <!-- 時間選擇器 -->
         <TimeSelector v-if="selectionMode === 'single'" :show="showTimeSelector" :time-value="timeValue"
             :enable-seconds="enableSeconds" :use24-hour="use24Hour" :default-time="defaultTime"
-            @time-change="handleTimeChange" @today-click="setTodaysDate" />
+            @time-change="emitTimeSelect" @today-click="setTodaysDate" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { CalendarDate } from '@internationalized/date';
+import { CalendarDate, GregorianCalendar, toCalendar } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import DateGridView from './DateGridView.vue';
 import TimeSelector from './TimeSelector.vue';
-import {
-    getTodaysDate,
-    toCalendarDate,
-} from '@/utils/dateUtils';
-import type { UnifiedCalendarSystem } from '@/utils/calendarSystem';
+import { getTodaysDate, toCalendarDate } from '@/utils/dateUtils';
 
-// 選擇模式類型
 type SelectionMode = 'single' | 'range';
 
 interface Props {
@@ -63,7 +58,8 @@ interface Props {
     use24Hour?: boolean;
     defaultTime?: string;
 
-    calendarSystem?: UnifiedCalendarSystem | null;
+    // 日曆系統標識符
+    calendar?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -82,7 +78,7 @@ const props = withDefaults(defineProps<Props>(), {
     enableSeconds: true,
     use24Hour: false,
     defaultTime: '00:00:00',
-    calendarSystem: null,
+    calendar: 'gregory',
 });
 
 const emit = defineEmits<{
@@ -96,20 +92,48 @@ const emit = defineEmits<{
 
 // 當前顯示的月份和年份
 const currentYear = ref<number>(
-    props.year ||
-    (props.value ? props.value.year :
-        props.rangeStart ? props.rangeStart.year :
-            getTodaysDate().year)
+    props.year ?? (props.value ? getGregorianYear(props.value) : props.rangeStart ? getGregorianYear(props.rangeStart) : getTodaysDate().year)
 );
+
 const currentMonth = ref<number>(
-    props.month ||
-    (props.value ? props.value.month :
-        props.rangeStart ? props.rangeStart.month :
-            getTodaysDate().month)
+    props.month ?? (props.value ? getGregorianMonth(props.value) : props.rangeStart ? getGregorianMonth(props.rangeStart) : getTodaysDate().month)
 );
+
+// 輔助函數：獲取西元曆年份
+function getGregorianYear(date: CalendarDate): number {
+    if (props.calendar === 'gregory') {
+        return date.year;
+    }
+
+    try {
+        const gregorianDate = toCalendar(date, new GregorianCalendar());
+        return gregorianDate.year;
+    } catch (error) {
+        console.warn('無法轉換到西元曆年份，使用原始年份:', error);
+        return date.year;
+    }
+}
+
+// 輔助函數：獲取西元曆月份
+function getGregorianMonth(date: CalendarDate): number {
+    if (props.calendar === 'gregory') {
+        return date.month;
+    }
+
+    try {
+        const gregorianDate = toCalendar(date, new GregorianCalendar());
+        return gregorianDate.month;
+    } catch (error) {
+        console.warn('無法轉換到西元曆月份，使用原始月份:', error);
+        return date.month;
+    }
+}
 
 // 選擇的日期（單一日期模式）
 const selectedCalendarDate = computed(() => props.value);
+
+// 內部時間值
+const timeValue = ref<string | null>(props.timeValue);
 
 // 可選的年份範圍
 const minYear = computed(() => props.minDate?.year || 1900);
@@ -117,35 +141,30 @@ const maxYear = computed(() => props.maxDate?.year || 2100);
 
 // 監聽外部傳入的年月變化
 watch(() => [props.year, props.month], ([newYear, newMonth]) => {
-    if (newYear !== undefined) {
-        currentYear.value = newYear;
-    }
-    if (newMonth !== undefined) {
-        currentMonth.value = newMonth;
-    }
+    if (newYear !== undefined) currentYear.value = newYear;
+    if (newMonth !== undefined) currentMonth.value = newMonth;
 }, { immediate: true });
 
-// 監聽外部傳入的值
+// 監聽外部傳入的值變化
 watch(() => props.value, (newValue) => {
     if (newValue && props.year === undefined && props.month === undefined) {
-        // 需要將當地日曆年份轉換回西元年來正確顯示月份導航
         let displayYear = newValue.year;
         let displayMonth = newValue.month;
-
-        // 如果有日曆系統且不是西元曆，需要轉換
-        if (props.calendarSystem && props.calendarSystem.getCurrentCalendar() !== 'gregory') {
+        if (props.calendar && props.calendar !== 'gregory') {
             try {
-                // 將當地日曆日期轉換為西元曆日期
-                const simpleDate = props.calendarSystem.fromCalendarDate(newValue);
-                if (simpleDate) {
-                    displayYear = simpleDate.year;
-                    displayMonth = simpleDate.month;
-                }
+                // 將當地日曆的 CalendarDate 轉換為西元曆 CalendarDate
+                const gregorianCalendar = new GregorianCalendar();
+                const gregorianDate = toCalendar(newValue, gregorianCalendar);
+
+                // 使用西元曆的年月來設置導航顯示
+                displayYear = gregorianDate.year;
+                displayMonth = gregorianDate.month;
             } catch (error) {
-                console.warn('轉換日曆日期失敗，使用原始值:', error);
+                // 如果轉換失敗，回退到原始值
+                displayYear = newValue.year;
+                displayMonth = newValue.month;
             }
         }
-
         currentYear.value = displayYear;
         currentMonth.value = displayMonth;
     }
@@ -153,17 +172,29 @@ watch(() => props.value, (newValue) => {
 
 // 監聽範圍選擇的開始日期
 watch(() => props.rangeStart, (newValue) => {
-    // 只有在沒有外部年月控制且為範圍模式時才自動調整
     if (newValue && props.selectionMode === 'range' && props.year === undefined && props.month === undefined) {
-        currentYear.value = newValue.year;
-        currentMonth.value = newValue.month;
+        const displayYear = getGregorianYear(newValue);
+        const displayMonth = getGregorianMonth(newValue);
+
+        currentYear.value = displayYear;
+        currentMonth.value = displayMonth;
     }
+}, { immediate: true });
+
+// 監聽外部時間值變化
+watch(() => props.timeValue, (newValue) => {
+    timeValue.value = newValue;
 }, { immediate: true });
 
 // 處理單一日期選擇
 const handleSelect = (date: CalendarDate) => {
     if (props.selectionMode === 'single') {
         emit('select', date, true);
+
+        // 如果有時間選擇器，也發送時間選擇事件
+        if (props.showTimeSelector && timeValue.value) {
+            emit('time-select', timeValue.value);
+        }
     }
 };
 
@@ -174,8 +205,9 @@ const handleRangeSelect = (startDate: CalendarDate | null, endDate: CalendarDate
     }
 };
 
-// 處理時間變化
-const handleTimeChange = (time: string) => {
+// 發送時間選擇事件
+const emitTimeSelect = (time: string) => {
+    timeValue.value = time;
     emit('time-select', time);
 };
 

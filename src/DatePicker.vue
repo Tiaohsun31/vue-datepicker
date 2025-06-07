@@ -2,7 +2,6 @@
     <div class="date-picker-wrapper relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
         ref="containerRef">
-
         <!-- 日期時間輸入容器 -->
         <div class="date-picker-container flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
@@ -63,15 +62,14 @@
             <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale" :calendar="calendar"
-                :calendarSystem="(calendarSystem as UnifiedCalendarSystem)" @select="handleCalendarSelect"
-                @time-select="handleTimeSelect" />
+                @select="handleCalendarSelect" @time-select="handleTimeSelect" />
         </div>
     </div>
 
     <!-- 錯誤訊息顯示 - 可選且可自定義 -->
     <div v-if="showErrorMessage && hasErrors">
         <!-- 讓使用者完全控制錯誤顯示 -->
-        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors" :calendarSystem="calendarSystem">
+        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
             <!-- 預設使用 DateErrorMessage -->
             <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
                 :custom-messages="customErrorMessages" :errorParams="mergedErrorParams">
@@ -238,9 +236,6 @@ const hasDisplayValue = computed(() => {
 
 // 日曆系統相關計算屬性
 const computedPlaceholders = computed(() => {
-    if (!isGregoryCalendar.value) {
-        return datePicker.dynamicPlaceholders.value;
-    }
     // 從語言包獲取預設值
     const localePlaceholders = {
         year: localeManager.getPlaceholderMessage('date.year'),
@@ -329,15 +324,6 @@ watch(() => props.locale, (newLocale) => {
     }
 });
 
-// 監聽日曆變化
-watch(() => props.calendar, (newCalendar) => {
-    if (newCalendar && datePicker.calendarSystem.value) {
-        const success = datePicker.calendarSystem.value.setCalendar(newCalendar);
-        if (success) {
-            datePicker.updatePlaceholders();
-        }
-    }
-}, { immediate: false });
 
 // 公開方法
 defineExpose({
@@ -352,21 +338,6 @@ defineExpose({
     setDateTime: (dateTime: any) => {
         datePicker.setExternalValue(dateTime);
     },
-
-    // === 新增：日曆系統相關 ===
-    getCalendarSystem: () => datePicker.calendarSystem.value,
-    setCalendar: async (calendarId: string) => {
-        if (datePicker.calendarSystem.value) {
-            const success = datePicker.calendarSystem.value.setCalendar(calendarId);
-            if (success) {
-                datePicker.updatePlaceholders();
-            }
-            return success;
-        }
-        return false;
-    },
-    getCurrentCalendar: () => datePicker.calendarSystem.value?.getCurrentCalendar() || 'gregory',
-    parseInput: (input: string) => datePicker.parseInputWithCalendar(input),
 
     // 主題控制
     setTheme: setColor,
@@ -393,7 +364,6 @@ const {
     calendarMaxDate,
     getValidDefaultTime,
     hasValue,
-    calendarSystem,
 
     // 事件處理
     validateDateInput,

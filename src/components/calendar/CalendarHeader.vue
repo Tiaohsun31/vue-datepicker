@@ -2,8 +2,8 @@
     <div class="flex justify-between items-center mb-4 gap-2">
         <!-- 上個月按鈕 -->
         <button type="button" @click="previousMonth"
-            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500"
-            aria-label="上個月">
+            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="上個月" :disabled="!canNavigatePrevious">
             <DatePickerPrev class="h-5 w-5" />
         </button>
 
@@ -44,10 +44,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { CalendarDate, createCalendar, toCalendar } from '@internationalized/date';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
 import YearSelector from './YearSelector.vue';
+import { CalendarUtils } from '@/utils/calendarUtils';
+import { CalendarDate } from '@internationalized/date';
 
 interface Props {
     month: number;
@@ -89,46 +90,68 @@ watch(() => props.year, (newYear) => {
 
 // 年份顯示邏輯 - 簡化為只顯示西元年
 const displayYear = computed(() => {
-    // 對於非西元曆，在 YearSelector 中處理顯示
-    // 這裡保持簡單，只顯示西元年
+    if (props.calendar === 'gregory') {
+        return selectedYearLocal.value.toString();
+    }
+
+    // 對於非西元曆，顯示對應的當地年份
+    const { localYear, isValid } = CalendarUtils.convertGregorianYear(
+        selectedYearLocal.value,
+        props.calendar
+    );
+
+    if (isValid) {
+        const calendarName = CalendarUtils.getCalendarDisplayName(props.calendar, props.locale);
+        // 根據語言決定顯示格式
+        if (props.locale?.startsWith('zh')) {
+            return `${calendarName} ${localYear}年`;
+        } else {
+            return `${calendarName} ${localYear}`;
+        }
+    }
+
     return selectedYearLocal.value.toString();
 });
 
 // 月份名稱
 const monthNames = computed(() => {
-    try {
-        // 使用 @internationalized/date 創建日曆實例
-        console.log('使用的日曆 ID:', calendarId.value);
-        const calendar = createCalendar(calendarId.value as any);
-
-        // 創建示例日期來獲取月份名稱
-        const formatter = new Intl.DateTimeFormat(props.locale, {
-            month: 'long',
-            calendar: calendarId.value
-        });
-
-        return Array.from({ length: 12 }, (_, i) => {
-            // 使用當前年份創建日期
-            const date = new CalendarDate(calendar, selectedYearLocal.value, i + 1, 1);
-
-            try {
-                // 轉換為 JavaScript Date 來格式化
-                const jsDate = date.toDate('UTC');
-                return formatter.format(jsDate);
-            } catch (error) {
-                // 如果轉換失敗，回退到簡單的月份數字
-                console.warn(`無法格式化月份 ${i + 1}:`, error);
-                return `${i + 1}月`;
-            }
-        });
-    } catch (error) {
-        console.warn('月份名稱獲取失敗，使用回退邏輯:', error);
-
-        // 回退到簡單的數字月份
-        return Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
-    }
+    return CalendarUtils.getMonthNames(props.locale, props.calendar);
 });
 
+// 獲取當前日曆的年月日期範圍
+const calendarYearRange = computed(() => {
+    return CalendarUtils.getCalendarYearRange(props.calendar);
+});
+
+// 檢查是否可以導航到上個月
+const canNavigatePrevious = computed(() => {
+    if (props.calendar === 'gregory') {
+        return selectedYearLocal.value > props.minYear ||
+            (selectedYearLocal.value === props.minYear && selectedMonthLocal.value > 1);
+    }
+
+    try {
+        // 對於非西元曆，需要檢查轉換後的日期是否在有效範圍內
+        const currentDate = new CalendarDate(selectedYearLocal.value, selectedMonthLocal.value, 1);
+        const targetCalendar = CalendarUtils.createSafeCalendar(props.calendar);
+        const localDate = CalendarUtils.safeToCalendar(currentDate, targetCalendar);
+
+        // 檢查上個月是否會超出日曆系統的最小範圍
+        let prevMonth = localDate.month - 1;
+        let prevYear = localDate.year;
+
+        if (prevMonth < 1) {
+            prevMonth = 12;
+            prevYear -= 1;
+        }
+
+        // 檢查是否超出日曆系統的年份範圍
+        return prevYear >= calendarYearRange.value.min;
+    } catch (error) {
+        console.warn('檢查上月導航失敗:', error);
+        return selectedYearLocal.value > props.minYear;
+    }
+});
 // 月份切換邏輯
 const previousMonth = () => {
     let newMonth = selectedMonthLocal.value - 1;

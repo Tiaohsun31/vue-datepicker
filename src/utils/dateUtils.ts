@@ -178,10 +178,12 @@ export function fromCalendarDateTime(dateTime: CalendarDateTime): SimpleDateValu
  */
 export function parseToSimpleDate(value: DateTimeValue | undefined): SimpleDateValue | null {
     if (!value) return null;
+    console.log('parseToSimpleDate: 開始解析', value);
 
     try {
         // 已經是 SimpleDateValue
         if (isSimpleDateValue(value)) {
+            console.log('parseToSimpleDate: 已經是 SimpleDateValue，直接返回');
             return value;
         }
 

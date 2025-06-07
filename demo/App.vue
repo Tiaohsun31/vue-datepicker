@@ -10,7 +10,7 @@
         </div>
         <div>
             {{ dateTime2 }}
-            <DatePicker v-model="dateTime2" min-date="01/03/2000" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
+            <!-- <DatePicker v-model="dateTime2" min-date="01/03/2000" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -21,10 +21,10 @@
                         </ul>
                     </div>
                 </template>
-            </DatePicker>
+</DatePicker> -->
         </div>
         <div>
-            <DateRange v-model="selectedDate"></DateRange>
+            <!-- <DateRange v-model="selectedDate"></DateRange> -->
         </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">
@@ -76,7 +76,7 @@ const selectedDate = ref({
     start: '',
     end: '',
 });
-const rocDate = ref('');
+const rocDate = ref('民國114年06月18日 上午 02時48分');
 const dateTime = ref('');
 const dateTime2 = ref('');
 const dateTime3 = ref('');

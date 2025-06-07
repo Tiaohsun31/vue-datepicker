@@ -1,5 +1,6 @@
 /**
- * useDateTimePicker.ts - 整合日曆系統支援
+ * useDateTimePicker.ts - 重構版本
+ * 移除 calendarSystem 依賴，改用 @internationalized/date + calendarUtils
  */
 
 import { ref, computed, watch, type Ref } from 'vue';
@@ -8,10 +9,17 @@ import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
-import { createCalendarSystem, type UnifiedCalendarSystem } from '../utils/calendarSystem';
-import { toCalendarDate, ensureSimpleDateWithLocale, formatSimpleDate, type DateTimeValue, type SimpleDateValue, dayjsParseDate, compareDates, ensureSimpleDate } from '../utils/dateUtils';
-import { localeManager } from '@/locale/index';
-import dayjs from 'dayjs';
+import { CalendarUtils } from '../utils/calendarUtils';
+import {
+    ensureSimpleDateWithLocale,
+    formatSimpleDate,
+    compareDates,
+    ensureSimpleDate,
+    dayjsParseDate,
+    type DateTimeValue,
+    type SimpleDateValue
+} from '../utils/dateUtils';
+import { CalendarDate } from '@internationalized/date';
 
 interface DateTimePickerOptions {
     // 基本配置
@@ -20,7 +28,7 @@ interface DateTimePickerOptions {
     required?: boolean;
     disabled?: boolean;
 
-    // === 新增：日曆系統支援 ===
+    // 日曆系統支援
     calendar?: string;              // 日曆系統 ID
 
     // 格式配置
@@ -65,7 +73,7 @@ export function useDateTimePicker(
         showTime = false,
         required = true,
         disabled = false,
-        calendar = 'gregory',          // 新增：日曆系統
+        calendar = 'gregory',          // 日曆系統
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
         outputFormat = 'iso',
@@ -78,10 +86,6 @@ export function useDateTimePicker(
     } = options;
 
     const { containerRef, calendarRef, dateInputRef, timeInputRef } = refs;
-
-    // === 新增：日曆系統 ===
-    const calendarSystem = ref<UnifiedCalendarSystem | null>(null);
-    const calendarInitialized = ref(false);
 
     // 創建禁用狀態的響應式引用
     const isDisabled = ref(disabled);
@@ -123,107 +127,71 @@ export function useDateTimePicker(
         fallbackTime: '00:00:00'
     });
 
-    // === 新增：初始化日曆系統 ===
-    const initializeCalendarSystem = async () => {
-        try {
-            calendarSystem.value = await createCalendarSystem(calendar);
-            calendarInitialized.value = true;
-            console.log(`📅 日曆系統初始化完成: ${calendar}`);
-        } catch (error) {
-            console.error('日曆系統初始化失敗:', error);
-            // 回退到西元曆
-            calendarSystem.value = await createCalendarSystem('gregory');
-            calendarInitialized.value = true;
-        }
-    };
-
-    /**
-     * 監聽日期變化
-     */
-    watch(() => calendar, (newCalendar) => {
-        if (newCalendar && calendarSystem.value) {
-            const success = calendarSystem.value.setCalendar(newCalendar);
-            if (!success) {
-                console.warn(`切換到日曆 ${newCalendar} 失敗，保持原有日曆`);
-            } else {
-                // 成功切換後更新 placeholder
-                updatePlaceholders();
-            }
-        }
-    });
-
-    // === 新增：動態 placeholder ===
-    const dynamicPlaceholders = ref<{ year: string; month: string; day: string }>({
-        year: '年',
-        month: '月',
-        day: '日'
-    });
-
-    // 獲取動態 placeholder（同步）
-    const updatePlaceholders = () => {
-        if (calendarSystem.value) {
-            try {
-                dynamicPlaceholders.value = calendarSystem.value.getPlaceholders(locale);
-            } catch (error) {
-                console.warn('獲取 placeholder 失敗:', error);
-            }
-        }
-    };
-
     // 統一的格式化函數
     const formatDateTimeWithCalendar = (dateTime: SimpleDateValue, formatStr: string): string => {
         if (!dateTime) return '';
-        console.log('格式化日期:', dateTime, formatStr);
-        // 如果是西元曆，使用 dayjs 格式化
-        if (!calendarSystem.value || calendar === 'gregory') {
-            const jsDate = new Date(
-                dateTime.year,
-                dateTime.month - 1,
-                dateTime.day,
-                dateTime.hour || 0,
-                dateTime.minute || 0,
-                dateTime.second || 0
-            );
-            return dayjs(jsDate).format(formatStr);
-        }
-
-        // 非西元曆，使用日曆系統格式化
-        try {
-            return calendarSystem.value.formatOutput(dateTime, formatStr, locale);
-        } catch (error) {
-            console.warn('日曆系統格式化失敗:', error);
-            // 回退到西元曆格式化
-            const jsDate = new Date(
-                dateTime.year,
-                dateTime.month - 1,
-                dateTime.day,
-                dateTime.hour || 0,
-                dateTime.minute || 0,
-                dateTime.second || 0
-            );
-            return dayjs(jsDate).format(formatStr);
-        }
+        // 使用 CalendarUtils 進行格式化
+        return CalendarUtils.formatOutput(dateTime, formatStr, calendar, locale);
     };
 
-    // 計算屬性 - 轉換為 CalendarDate 格式（供日曆組件使用）
+    // 計算屬性 - 轉換為 CalendarDate 格式（供日曆組件使用）// 不在使用，傳入的日曆一律使用SimpleDateValue
     const calendarDateForGrid = computed(() => {
-        if (!dateTimeValue.internalDateTime.value || !calendarSystem.value) return null;
-        return calendarSystem.value.toCalendarDate(dateTimeValue.internalDateTime.value);
+        if (!dateTimeValue.internalDateTime.value) return null;
+
+        try {
+            // 對於非西元曆，需要使用對應的日曆系統創建 CalendarDate
+            const gregorianDate = new CalendarDate(
+                dateTimeValue.internalDateTime.value.year,
+                dateTimeValue.internalDateTime.value.month,
+                dateTimeValue.internalDateTime.value.day
+            );
+
+            // return gregorianDate;
+
+            // 如果是西元曆，直接返回
+            if (calendar === 'gregory') {
+                return gregorianDate;
+            }
+
+            console.log('轉換為非西元曆日曆:', calendar);
+
+            // 否則轉換為目標日曆
+            const calendarInstance = CalendarUtils.createSafeCalendar(calendar);
+            console.log('創建日曆實例:', calendarInstance);
+            return CalendarUtils.safeToCalendar(gregorianDate, calendarInstance);
+        } catch (error) {
+            console.error('創建 CalendarDate 失敗:', error);
+            return null;
+        }
     });
 
     const calendarMinDate = computed(() => {
         const minDateValue = ensureSimpleDateWithLocale(minDate, locale);
-        if (!minDateValue || !calendarSystem.value) return null;
-        return calendarSystem.value.toCalendarDate(minDateValue);
+        if (!minDateValue) return null;
+
+        try {
+            const calendarInstance = CalendarUtils.createSafeCalendar(calendar);
+            return new CalendarDate(calendarInstance, minDateValue.year, minDateValue.month, minDateValue.day);
+        } catch (error) {
+            console.error('創建最小日期失敗:', error);
+            return null;
+        }
     });
 
     const calendarMaxDate = computed(() => {
         const maxDateValue = ensureSimpleDateWithLocale(maxDate, locale);
-        if (!maxDateValue || !calendarSystem.value) return null;
-        return calendarSystem.value.toCalendarDate(maxDateValue);
+        if (!maxDateValue) return null;
+
+        try {
+            const calendarInstance = CalendarUtils.createSafeCalendar(calendar);
+            return new CalendarDate(calendarInstance, maxDateValue.year, maxDateValue.month, maxDateValue.day);
+        } catch (error) {
+            console.error('創建最大日期失敗:', error);
+            return null;
+        }
     });
 
-    // 事件發射器（需要由調用方提供）
+    // 事件發射器
     let emitUpdate: ((value: DateTimeValue) => void) | null = null;
     let emitChange: ((value: DateTimeValue) => void) | null = null;
     let emitValidation: ((isValid: boolean, errors: Record<string, string>) => void) | null = null;
@@ -291,8 +259,6 @@ export function useDateTimePicker(
 
     /**
      * 驗證日期輸入
-     * @param dateStr 日期字符串
-     * @returns 是否驗證通過
      */
     const validateAndUpdateDate = (dateStr: string): boolean => {
         const date = dayjsParseDate(dateStr, dateFormat);
@@ -341,18 +307,19 @@ export function useDateTimePicker(
 
         return true;
     };
+
     /**
-     * 監聽外部值變化
+     * 監聽外部值變化 一律嘗試轉換成 SimpleDateValue
      */
     watch(() => modelValue, (newValue) => {
         if (newValue && typeof newValue === 'string') {
-            // if (!validateAndUpdateDate(newValue)) {
-            //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-            //     dateTimeValue.setExternalValue(null);
-            //     return;
-            // } else {
-            //     validation.clearFieldErrors('invalidInput');
-            // }
+            const parsedDate = CalendarUtils.parseInput(newValue, calendar, locale);
+            console.log('解析後的日期:', parsedDate);
+            if (parsedDate) {
+                dateTimeValue.setExternalValue(parsedDate);
+                validation.clearFieldErrors('invalidInput');
+                return;
+            }
             const date = dayjsParseDate(newValue, dateFormat);
             if (!date.isValid()) {
                 console.warn('無效的日期格式:', newValue);
@@ -366,25 +333,6 @@ export function useDateTimePicker(
         }
         dateTimeValue.setExternalValue(newValue);
     }, { immediate: true });
-
-    /**
-     * === 修改：使用日曆系統解析輸入（同步） ===
-     */
-    const parseInputWithCalendar = (input: string): SimpleDateValue | null => {
-        if (!calendarSystem.value || !input) return null;
-
-        try {
-            const result = calendarSystem.value.parseInput(input);
-            if (result.success) {
-                console.debug(`日曆解析成功，來源: ${result.source}`);
-                return result.date;
-            }
-        } catch (error) {
-            console.warn('日曆解析失敗:', error);
-        }
-
-        return null;
-    };
 
     /**
      * 處理日期輸入驗證
@@ -404,9 +352,9 @@ export function useDateTimePicker(
     const validateTimeInput = (
         isValid: boolean,
         validationErrors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>> = {} // 新增：接收錯誤參數
+        errorParams: Record<string, Record<string, any>> = {}
     ) => {
-        validation.handleTimeValidation(isValid, validationErrors, 'time', errorParams); // 新增：傳遞參數
+        validation.handleTimeValidation(isValid, validationErrors, 'time', errorParams);
         emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
     };
 
@@ -414,19 +362,11 @@ export function useDateTimePicker(
      * 處理日期輸入完成
      */
     const handleDateComplete = async (dateStr: string) => {
-        // const date = dayjsParseDate(dateStr, dateFormat);
-        // if (!date.isValid()) {
-        //     console.warn('無效的日期格式:', dateStr);
-        //     validation.handleDateValidation(false, { date: 'date.invalid' });
-        //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-        //     return;
-        // }
         if (!validateAndUpdateDate(dateStr)) {
             emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
             return;
         }
 
-        // dateTimeValue.inputDateValue.value = date.format('YYYY-MM-DD');
         dateTimeValue.inputDateValue.value = dateStr;
 
         // 更新內部值
@@ -454,6 +394,7 @@ export function useDateTimePicker(
         dateTimeValue.inputTimeValue.value = timeStr;
         const updatedDateTime = dateTimeValue.updateDateTime();
         emitEvents(updatedDateTime);
+
         // 清除時間相關驗證錯誤
         ['time', 'hour', 'minute', 'second'].forEach(field => {
             validation.clearFieldErrors(field);
@@ -461,28 +402,49 @@ export function useDateTimePicker(
     };
 
     /**
-     * 處理日曆選擇 - 有搭配日曆系統
+     * 處理日曆選擇 - 使用 CalendarUtils
      */
-    const handleCalendarSelect = async (date: any, closeCalendar: boolean = true) => {
+    const handleCalendarSelect = async (date: CalendarDate, closeCalendar: boolean = true) => {
         console.log('處理日曆選擇:', date);
-        if (!calendarSystem.value) return;
 
         try {
-            // 將選擇的日期轉回西元曆格式
-            const simpleDate = calendarSystem.value.fromCalendarDate(date);
-            if (simpleDate) {
-                dateTimeValue.inputDateValue.value = new Date(simpleDate.year, simpleDate.month - 1, simpleDate.day).toLocaleDateString(locale);
+            // 不需要轉換，因為 CalendarUtils.generateCalendarDays 已經生成了正確的日期
+            // 直接從 CalendarDate 提取日期資訊
+            let simpleDate: SimpleDateValue;
 
-                ['date', 'year', 'month', 'day'].forEach(field => {
-                    validation.clearFieldErrors(field);
-                });
+            if (calendar === 'gregory') {
+                // 西元曆直接使用
+                simpleDate = {
+                    year: date.year,
+                    month: date.month,
+                    day: date.day
+                };
+            } else {
+                // 非西元曆需要轉換為西元曆
+                const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+                const gregorianDate = CalendarUtils.safeToCalendar(date, gregorianCalendar);
 
-                const updatedDateTime = dateTimeValue.updateDateTime();
-                await wrappedEmitUpdate(updatedDateTime, 'handleCalendarSelect');
+                simpleDate = {
+                    year: gregorianDate.year,
+                    month: gregorianDate.month,
+                    day: gregorianDate.day
+                };
+            }
 
-                if (closeCalendar) {
-                    calendarPopup.hideCalendar();
-                }
+            console.log('3. simpleDate:', simpleDate);
+            dateTimeValue.inputDateValue.value = formatSimpleDate(simpleDate, dateFormat);
+
+            console.log('4. 更新日期輸入值:', dateTimeValue.inputDateValue.value);
+
+            ['date', 'year', 'month', 'day'].forEach(field => {
+                validation.clearFieldErrors(field);
+            });
+
+            const updatedDateTime = dateTimeValue.updateDateTime();
+            await wrappedEmitUpdate(updatedDateTime, 'handleCalendarSelect');
+
+            if (closeCalendar) {
+                calendarPopup.hideCalendar();
             }
         } catch (error) {
             console.error('處理日曆選擇失敗:', error);
@@ -515,8 +477,6 @@ export function useDateTimePicker(
         });
     };
 
-
-
     /**
      * 容器點擊處理
      */
@@ -544,9 +504,14 @@ export function useDateTimePicker(
             timeInputRef.value.validate();
         }
 
-        // 額外的日曆驗證
-        if (calendarSystem.value && dateTimeValue.internalDateTime.value) {
-            const isCalendarValid = calendarSystem.value.isValidDate(dateTimeValue.internalDateTime.value);
+        // 使用 CalendarUtils 進行日曆驗證
+        if (dateTimeValue.internalDateTime.value) {
+            const isCalendarValid = CalendarUtils.isValidDate(
+                dateTimeValue.internalDateTime.value.year,
+                dateTimeValue.internalDateTime.value.month,
+                dateTimeValue.internalDateTime.value.day,
+                calendar
+            );
             if (!isCalendarValid) {
                 return false;
             }
@@ -572,28 +537,26 @@ export function useDateTimePicker(
             second: now.getSeconds()
         };
 
-        if (calendarSystem.value) {
-            try {
-                const dateStr = calendarSystem.value.formatOutput(simpleDate, dateFormat, locale);
-                const timeStr = defaultTime.getCurrentTimeString();
+        try {
+            const dateStr = formatDateTimeWithCalendar(simpleDate, dateFormat);
+            const timeStr = defaultTime.getCurrentTimeString();
 
-                dateTimeValue.inputDateValue.value = dateStr;
-                dateTimeValue.inputTimeValue.value = timeStr;
+            dateTimeValue.inputDateValue.value = dateStr;
+            dateTimeValue.inputTimeValue.value = timeStr;
 
-                const updatedDateTime = dateTimeValue.updateDateTime();
-                await emitEvents(updatedDateTime);
-            } catch (error) {
-                console.warn('設置當前時間失敗:', error);
-                // 回退到原有邏輯
-                const dateStr = `${simpleDate.year}-${simpleDate.month.toString().padStart(2, '0')}-${simpleDate.day.toString().padStart(2, '0')}`;
-                const timeStr = defaultTime.getCurrentTimeString();
+            const updatedDateTime = dateTimeValue.updateDateTime();
+            await emitEvents(updatedDateTime);
+        } catch (error) {
+            console.warn('設置當前時間失敗:', error);
+            // 回退到原有邏輯
+            const dateStr = `${simpleDate.year}-${simpleDate.month.toString().padStart(2, '0')}-${simpleDate.day.toString().padStart(2, '0')}`;
+            const timeStr = defaultTime.getCurrentTimeString();
 
-                dateTimeValue.inputDateValue.value = dateStr;
-                dateTimeValue.inputTimeValue.value = timeStr;
+            dateTimeValue.inputDateValue.value = dateStr;
+            dateTimeValue.inputTimeValue.value = timeStr;
 
-                const updatedDateTime = dateTimeValue.updateDateTime();
-                await emitEvents(updatedDateTime);
-            }
+            const updatedDateTime = dateTimeValue.updateDateTime();
+            await emitEvents(updatedDateTime);
         }
     };
 
@@ -604,19 +567,12 @@ export function useDateTimePicker(
         navigation.focusFirstInput();
     };
 
-    // === 初始化日曆系統 ===
-    initializeCalendarSystem().then(() => {
-        updatePlaceholders();
-    });
-
     return {
         // 狀態
         isDisabled,
-        calendarInitialized,
 
-        // === 新增：日曆系統相關 ===
-        calendarSystem,
-        dynamicPlaceholders,
+        // 日曆系統相關
+        calendar: ref(calendar),
 
         // 從各個 composables 暴露的狀態
         ...validation,
@@ -655,9 +611,5 @@ export function useDateTimePicker(
         // 直接暴露導航方法（用於 defineExpose）
         focusFirstInput: navigation.focusFirstInput,
         focusLastInput: navigation.focusLastInput,
-
-        // === 新增：日曆系統方法 ===
-        parseInputWithCalendar,
-        updatePlaceholders
     };
 }

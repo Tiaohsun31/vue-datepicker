@@ -11,21 +11,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import {
-    CalendarDate,
-    getWeeksInMonth,
-    startOfWeek,
-    getDayOfWeek,
-    createCalendar,
-    toCalendar,
-    GregorianCalendar,
-    BuddhistCalendar,
-    JapaneseCalendar,
-    TaiwanCalendar,
-} from '@internationalized/date';
+import { computed, onMounted } from 'vue';
+import { CalendarDate } from '@internationalized/date';
 import CalendarCell from './CalendarCell.vue';
 import { getTodaysDate } from '@/utils/dateUtils';
+import { CalendarUtils } from '@/utils/calendarUtils';
 
 type SelectionMode = 'single' | 'range';
 
@@ -68,12 +58,7 @@ const emit = defineEmits<{
 
 // 創建日曆實例
 const calendarInstance = computed(() => {
-    try {
-        return createCalendar(props.calendar as any);
-    } catch (error) {
-        console.warn(`無法創建日曆 ${props.calendar}，回退到西元曆`);
-        return new GregorianCalendar();
-    }
+    return CalendarUtils.createSafeCalendar(props.calendar);
 });
 
 // 🔥 關鍵修正：需要將西元曆的年月轉換為目標日曆系統的年月來生成日期網格
@@ -85,7 +70,8 @@ const currentDisplayMonth = computed(() => {
     try {
         // 將西元曆年月轉換為目標日曆系統的月份
         const gregorianDate = new CalendarDate(props.year, props.month, 1);
-        const localDate = toCalendar(gregorianDate, calendarInstance.value);
+        const localDate = CalendarUtils.safeToCalendar(gregorianDate, calendarInstance.value);
+        console.log(`轉換月份: 西元${props.year}年${props.month}月 -> ${props.calendar}曆${localDate.year}年${localDate.month}月`);
         return localDate.month;
     } catch (error) {
         console.warn('月份轉換失敗，使用原始月份:', error);
@@ -101,7 +87,7 @@ const currentDisplayYear = computed(() => {
     try {
         // 將西元曆年月轉換為目標日曆系統的年份
         const gregorianDate = new CalendarDate(props.year, props.month, 1);
-        const localDate = toCalendar(gregorianDate, calendarInstance.value);
+        const localDate = CalendarUtils.safeToCalendar(gregorianDate, calendarInstance.value);
         return localDate.year;
     } catch (error) {
         console.warn('年份轉換失敗，使用原始年份:', error);
@@ -117,43 +103,15 @@ const todayKey = computed(() => {
 
 // 生成當月的日曆數據 - 修正版本
 const calendarDays = computed(() => {
-    try {
-        // 🔥 關鍵：使用目標日曆系統的年月創建第一天
-        const firstDayOfMonth = new CalendarDate(
-            calendarInstance.value,
-            currentDisplayYear.value,
-            currentDisplayMonth.value,
-            1
-        );
+    console.log(`生成 ${props.calendar} 曆 ${props.year}年${props.month}月 的日曆`);     // 生成 roc 曆 2025年6月 的日曆
 
-        // 使用 @internationalized/date 的函數計算週數和開始日
-        const weeksInMonth = getWeeksInMonth(firstDayOfMonth, props.locale);
-
-        // 計算一週的開始日
-        let startDay: CalendarDate;
-        try {
-            startDay = startOfWeek(firstDayOfMonth, props.locale);
-        } catch (error) {
-            // 如果 locale 不支援，手動計算
-            console.warn(`Locale ${props.locale} not supported for startOfWeek, using manual calculation`);
-            const dayOfWeek = getDayOfWeek(firstDayOfMonth, props.locale);
-            startDay = firstDayOfMonth.subtract({ days: dayOfWeek });
-        }
-
-        const days: CalendarDate[] = [];
-        let currentDate = startDay;
-
-        const totalCells = weeksInMonth * 7;
-        for (let i = 0; i < totalCells; i++) {
-            days.push(currentDate);
-            currentDate = currentDate.add({ days: 1 });
-        }
-
-        return days;
-    } catch (error) {
-        console.error('Error generating calendar days:', error);
-        return [];
-    }
+    return CalendarUtils.generateCalendarDays(
+        props.year,          // 西元年
+        props.month,         // 西元月
+        props.calendar,
+        props.locale,
+        props.weekStartsOn
+    );
 });
 
 // 範圍檢查優化
@@ -170,8 +128,23 @@ const isDateInRange = (date: CalendarDate): boolean => {
 // 日期比較的輔助函數
 const isDateEqual = (date1: CalendarDate | null, date2: CalendarDate | null): boolean => {
     if (!date1 || !date2) return false;
+
     try {
-        return date1.compare(date2) === 0;
+        // 如果是同一個日曆系統，直接比較
+        if (date1.calendar.identifier === date2.calendar.identifier) {
+            return date1.year === date2.year &&
+                date1.month === date2.month &&
+                date1.day === date2.day;
+        }
+
+        // 不同日曆系統，轉換為西元曆比較
+        const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+        const gregorianDate1 = CalendarUtils.safeToCalendar(date1, gregorianCalendar);
+        const gregorianDate2 = CalendarUtils.safeToCalendar(date2, gregorianCalendar);
+
+        return gregorianDate1.year === gregorianDate2.year &&
+            gregorianDate1.month === gregorianDate2.month &&
+            gregorianDate1.day === gregorianDate2.day;
     } catch {
         return false;
     }
@@ -188,20 +161,25 @@ const isDateDisabled = (date: CalendarDate): boolean => {
     }
 };
 
-// 檢查是否是今天 - 需要轉換為西元曆比較
+// 檢查是否是今天
 const isToday = (date: CalendarDate): boolean => {
     try {
+        // 統一轉換為西元曆進行比較
         let gregorianDate: CalendarDate;
 
         if (props.calendar === 'gregory') {
             gregorianDate = date;
         } else {
-            gregorianDate = toCalendar(date, new GregorianCalendar());
+            const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+            gregorianDate = CalendarUtils.safeToCalendar(date, gregorianCalendar);
         }
 
-        const dateKey = `${gregorianDate.year}-${gregorianDate.month}-${gregorianDate.day}`;
-        return dateKey === todayKey.value;
-    } catch {
+        const today = new Date();
+        return gregorianDate.year === today.getFullYear() &&
+            gregorianDate.month === today.getMonth() + 1 &&
+            gregorianDate.day === today.getDate();
+    } catch (error) {
+        console.warn('檢查今天日期失敗:', error);
         return false;
     }
 };
@@ -306,6 +284,10 @@ const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
             break;
     }
 };
+onMounted(() => {
+    // 初始化時可以進行一些必要的設置或檢查
+    console.log(props.selectedDate)
+});
 
 // 公開方法
 defineExpose({

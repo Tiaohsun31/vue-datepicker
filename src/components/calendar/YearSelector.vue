@@ -54,9 +54,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { CalendarDate, createCalendar, toCalendar, GregorianCalendar } from '@internationalized/date';
+import { CalendarDate } from '@internationalized/date';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
+import { CalendarUtils } from '@/utils/calendarUtils';
 
 interface Props {
     selectedYear: number;  // 西元曆年份
@@ -91,12 +92,7 @@ const yearRangeStart = ref(Math.floor(props.selectedYear / props.pageSize) * pro
 
 // 計算當前使用的日曆系統
 const currentCalendar = computed(() => {
-    try {
-        return createCalendar(props.calendar as any);
-    } catch (error) {
-        console.warn(`無法創建日曆 ${props.calendar}，回退到西元曆`);
-        return new GregorianCalendar();
-    }
+    return CalendarUtils.createSafeCalendar(props.calendar);
 });
 
 const isGregorianCalendar = computed(() => props.calendar === 'gregory');
@@ -104,17 +100,7 @@ const showGregorianReference = computed(() => !isGregorianCalendar.value);
 
 // 日曆顯示名稱
 const calendarDisplayName = computed(() => {
-    const names: Record<string, string> = {
-        'roc': '民國',
-        'buddhist': '佛曆',
-        'japanese': '和曆',
-        'islamic': '伊斯蘭曆',
-        'persian': '波斯曆',
-        'hebrew': '希伯來曆',
-        'indian': '印度曆',
-        'chinese': '農曆'
-    };
-    return names[props.calendar] || props.calendar;
+    return CalendarUtils.getCalendarDisplayName(props.calendar, props.locale);
 });
 
 // 年份顯示數據介面
@@ -127,24 +113,8 @@ interface YearDisplayData {
 
 // 計算日曆系統的有效年份範圍（當地日曆年份）
 const calendarYearRange = computed(() => {
-    if (isGregorianCalendar.value) return null;
-
-    try {
-        // 嘗試找到日曆系統的有效範圍
-        // 對於 ROC，有效年份從 1 開始（對應 1912 西元年）
-        // 對於 Buddhist，有效年份從 1 開始（對應 -542 西元年，但實際使用更晚）
-
-        const ranges: Record<string, { min: number; max: number }> = {
-            'roc': { min: 1, max: 200 },      // 民國 1年 (1912) 到 200年 (2111)
-            'buddhist': { min: 1, max: 3000 }, // 佛曆使用範圍
-            'japanese': { min: 1, max: 100 },  // 現代日本年號範圍
-        };
-
-        return ranges[props.calendar] || null;
-    } catch (error) {
-        console.warn('無法計算日曆年份範圍:', error);
-        return null;
-    }
+    if (isGregorianCalendar.value) return { min: props.minYear, max: props.maxYear };
+    return CalendarUtils.getCalendarYearRange(props.calendar);
 });
 
 // 計算有效的西元年份範圍
@@ -159,8 +129,8 @@ const effectiveYearRange = computed(() => {
             const minLocalDate = new CalendarDate(currentCalendar.value, calendarYearRange.value.min, 1, 1);
             const maxLocalDate = new CalendarDate(currentCalendar.value, calendarYearRange.value.max, 12, 31);
 
-            const minGregorianDate = toCalendar(minLocalDate, new GregorianCalendar());
-            const maxGregorianDate = toCalendar(maxLocalDate, new GregorianCalendar());
+            const minGregorianDate = CalendarUtils.safeToCalendar(minLocalDate, CalendarUtils.createSafeCalendar('gregory'));
+            const maxGregorianDate = CalendarUtils.safeToCalendar(maxLocalDate, CalendarUtils.createSafeCalendar('gregory'));
 
             // 確保不超出用戶設定的範圍
             minYear = Math.max(minYear, minGregorianDate.year);
@@ -178,7 +148,7 @@ const effectiveYearRange = computed(() => {
 const effectiveMinYear = computed(() => effectiveYearRange.value.min);
 const effectiveMaxYear = computed(() => effectiveYearRange.value.max);
 
-// 年份轉換函數 - 使用 @internationalized/date
+// 年份轉換函數 - 使用 CalendarUtils
 const convertYearForDisplay = (gregorianYear: number): YearDisplayData => {
     if (isGregorianCalendar.value) {
         return {
@@ -188,21 +158,14 @@ const convertYearForDisplay = (gregorianYear: number): YearDisplayData => {
     }
 
     try {
-        // 創建西元曆日期
-        const gregorianDate = new CalendarDate(gregorianYear, 1, 1);
-
-        // 轉換到目標日曆系統
-        const localDate = toCalendar(gregorianDate, currentCalendar.value);
-
-        // 檢查是否為有效年份（避免負數或過小的年份）
-        const isInvalid = calendarYearRange.value &&
-            (localDate.year < calendarYearRange.value.min || localDate.year > calendarYearRange.value.max);
+        // 使用 CalendarUtils 進行年份轉換
+        const { localYear, isValid } = CalendarUtils.convertGregorianYear(gregorianYear, props.calendar);
 
         return {
             gregorianYear,
-            displayYear: localDate.year.toString(),
-            localYear: localDate.year,
-            isInvalid: isInvalid || false
+            displayYear: localYear.toString(),
+            localYear: localYear,
+            isInvalid: !isValid
         };
     } catch (error) {
         console.warn(`年份轉換失敗 ${gregorianYear}:`, error);
@@ -311,17 +274,11 @@ const goToSpecificYear = () => {
     }
 
     // 對於非西元曆，檢查轉換後的當地年份是否有效
-    if (!isGregorianCalendar.value && calendarYearRange.value) {
-        try {
-            const gregorianDate = new CalendarDate(targetGregorianYear, 1, 1);
-            const localDate = toCalendar(gregorianDate, currentCalendar.value);
+    if (!isGregorianCalendar.value) {
+        const { isValid } = CalendarUtils.convertGregorianYear(targetGregorianYear, props.calendar);
 
-            if (localDate.year < calendarYearRange.value.min || localDate.year > calendarYearRange.value.max) {
-                console.warn(`西元年 ${targetGregorianYear} 對應的${calendarDisplayName.value}年 ${localDate.year} 超出有效範圍`);
-                return;
-            }
-        } catch (error) {
-            console.warn('驗證年份有效性失敗:', error);
+        if (!isValid) {
+            console.warn(`西元年 ${targetGregorianYear} 在 ${calendarDisplayName.value} 中無效`);
             return;
         }
     }

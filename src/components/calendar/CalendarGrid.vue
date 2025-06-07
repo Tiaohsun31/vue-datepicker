@@ -1,18 +1,19 @@
 <template>
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
+        {{ value }}
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
             :max-year="maxYear" :calendar="calendar" />
 
         <!-- 星期列 -->
-        <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" />
+        <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" :calendar="calendar" />
 
         <!-- 日期網格 -->
         <DateGridView :year="currentYear" :month="currentMonth" :selected-date="selectedCalendarDate"
             :range-start="selectionMode === 'range' ? rangeStart : null"
             :range-end="selectionMode === 'range' ? rangeEnd : null" :selection-mode="selectionMode" :min-date="minDate"
-            :max-date="maxDate" :locale="locale" :week-starts-on="weekStartsOn" @select="handleSelect"
-            @range-select="handleRangeSelect" />
+            :max-date="maxDate" :locale="locale" :week-starts-on="weekStartsOn" :calendar="calendar"
+            @select="handleSelect" @range-select="handleRangeSelect" />
 
         <!-- 時間選擇器 -->
         <TimeSelector v-if="selectionMode === 'single'" :show="showTimeSelector" :time-value="timeValue"
@@ -23,12 +24,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { CalendarDate, GregorianCalendar, toCalendar } from '@internationalized/date';
+import { CalendarDate } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import DateGridView from './DateGridView.vue';
 import TimeSelector from './TimeSelector.vue';
 import { getTodaysDate, toCalendarDate } from '@/utils/dateUtils';
+import { CalendarUtils } from '@/utils/calendarUtils';
 
 type SelectionMode = 'single' | 'range';
 
@@ -90,23 +92,16 @@ const emit = defineEmits<{
     'range-select': [startDate: CalendarDate | null, endDate: CalendarDate | null];
 }>();
 
-// 當前顯示的月份和年份
-const currentYear = ref<number>(
-    props.year ?? (props.value ? getGregorianYear(props.value) : props.rangeStart ? getGregorianYear(props.rangeStart) : getTodaysDate().year)
-);
-
-const currentMonth = ref<number>(
-    props.month ?? (props.value ? getGregorianMonth(props.value) : props.rangeStart ? getGregorianMonth(props.rangeStart) : getTodaysDate().month)
-);
-
-// 輔助函數：獲取西元曆年份
+// 輔助函數：獲取西元曆年份 - 使用 CalendarUtils
 function getGregorianYear(date: CalendarDate): number {
     if (props.calendar === 'gregory') {
         return date.year;
     }
 
     try {
-        const gregorianDate = toCalendar(date, new GregorianCalendar());
+        const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+        const gregorianDate = CalendarUtils.safeToCalendar(date, gregorianCalendar);
+        console.log('轉換到西元曆年份:', gregorianDate.year);
         return gregorianDate.year;
     } catch (error) {
         console.warn('無法轉換到西元曆年份，使用原始年份:', error);
@@ -114,14 +109,15 @@ function getGregorianYear(date: CalendarDate): number {
     }
 }
 
-// 輔助函數：獲取西元曆月份
+// 輔助函數：獲取西元曆月份 - 使用 CalendarUtils
 function getGregorianMonth(date: CalendarDate): number {
     if (props.calendar === 'gregory') {
         return date.month;
     }
 
     try {
-        const gregorianDate = toCalendar(date, new GregorianCalendar());
+        const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+        const gregorianDate = CalendarUtils.safeToCalendar(date, gregorianCalendar);
         return gregorianDate.month;
     } catch (error) {
         console.warn('無法轉換到西元曆月份，使用原始月份:', error);
@@ -129,8 +125,52 @@ function getGregorianMonth(date: CalendarDate): number {
     }
 }
 
+// 當前顯示的月份和年份
+// const currentYear = ref<number>(
+//     props.year ?? (props.value ? props.value.year : props.rangeStart ? props.rangeStart.year : getTodaysDate().year)
+// );
+
+// const currentMonth = ref<number>(
+//     props.month ?? (props.value ? props.value.month : props.rangeStart ? props.rangeStart.month : getTodaysDate().month)
+// );
+const getInitialYearMonth = () => {
+    // 優先使用 props 提供的年月
+    if (props.year !== undefined && props.month !== undefined) {
+        return { year: props.year, month: props.month };
+    }
+    console.log(props.value, 'props.value');
+    // 從 value 中提取
+    if (props.value) {
+        if (props.value.calendar.identifier === 'gregory') {
+            return { year: props.value.year, month: props.value.month };
+        } else {
+            // 非西元曆，需要轉換
+            try {
+                const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+                const gregorianDate = CalendarUtils.safeToCalendar(props.value, gregorianCalendar);
+                console.log('轉換到西元曆日期:', gregorianDate);
+                return { year: gregorianDate.year, month: gregorianDate.month };
+            } catch (error) {
+                console.warn('轉換日期失敗:', error);
+            }
+        }
+    }
+
+    // 使用今天的日期
+    const today = getTodaysDate();
+    return { year: today.year, month: today.month };
+};
+
+const { year: initialYear, month: initialMonth } = getInitialYearMonth();
+
+const currentYear = ref<number>(initialYear);
+const currentMonth = ref<number>(initialMonth);
+
 // 選擇的日期（單一日期模式）
-const selectedCalendarDate = computed(() => props.value);
+const selectedCalendarDate = computed(() => {
+    console.log('當前選擇的日期:', props.value);
+    return props.value
+});
 
 // 內部時間值
 const timeValue = ref<string | null>(props.timeValue);
@@ -141,45 +181,41 @@ const maxYear = computed(() => props.maxDate?.year || 2100);
 
 // 監聽外部傳入的年月變化
 watch(() => [props.year, props.month], ([newYear, newMonth]) => {
+    console.log('監聽到年月變化:', newYear, newMonth);
     if (newYear !== undefined) currentYear.value = newYear;
     if (newMonth !== undefined) currentMonth.value = newMonth;
 }, { immediate: true });
 
-// 監聽外部傳入的值變化
-watch(() => props.value, (newValue) => {
-    if (newValue && props.year === undefined && props.month === undefined) {
-        let displayYear = newValue.year;
-        let displayMonth = newValue.month;
-        if (props.calendar && props.calendar !== 'gregory') {
-            try {
-                // 將當地日曆的 CalendarDate 轉換為西元曆 CalendarDate
-                const gregorianCalendar = new GregorianCalendar();
-                const gregorianDate = toCalendar(newValue, gregorianCalendar);
+// 監聽外部傳入的值變化 - 使用 CalendarUtils
+// watch(() => props.value, (newValue) => {
+//     if (newValue && props.year === undefined && props.month === undefined) {
+//         console.log('監聽到新值:', newValue);
 
-                // 使用西元曆的年月來設置導航顯示
-                displayYear = gregorianDate.year;
-                displayMonth = gregorianDate.month;
-            } catch (error) {
-                // 如果轉換失敗，回退到原始值
-                displayYear = newValue.year;
-                displayMonth = newValue.month;
-            }
-        }
-        currentYear.value = displayYear;
-        currentMonth.value = displayMonth;
-    }
-}, { immediate: true });
+//         currentYear.value = newValue.year;
+//         currentMonth.value = newValue.month;
+//     }
+// }, { immediate: true });
 
 // 監聽範圍選擇的開始日期
-watch(() => props.rangeStart, (newValue) => {
-    if (newValue && props.selectionMode === 'range' && props.year === undefined && props.month === undefined) {
-        const displayYear = getGregorianYear(newValue);
-        const displayMonth = getGregorianMonth(newValue);
-
-        currentYear.value = displayYear;
-        currentMonth.value = displayMonth;
-    }
-}, { immediate: true });
+// watch(() => props.rangeStart, (newValue) => {
+//     if (newValue && props.selectionMode === 'range' && props.year === undefined && props.month === undefined) {
+//         if (props.calendar === 'gregory') {
+//             currentYear.value = newValue.year;
+//             currentMonth.value = newValue.month;
+//         } else {
+//             try {
+//                 const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
+//                 const gregorianDate = CalendarUtils.safeToCalendar(newValue, gregorianCalendar);
+//                 currentYear.value = gregorianDate.year;
+//                 currentMonth.value = gregorianDate.month;
+//             } catch (error) {
+//                 console.warn('日期轉換失敗，使用原始值:', error);
+//                 currentYear.value = newValue.year;
+//                 currentMonth.value = newValue.month;
+//             }
+//         }
+//     }
+// }, { immediate: true });
 
 // 監聽外部時間值變化
 watch(() => props.timeValue, (newValue) => {
@@ -189,6 +225,7 @@ watch(() => props.timeValue, (newValue) => {
 // 處理單一日期選擇
 const handleSelect = (date: CalendarDate) => {
     if (props.selectionMode === 'single') {
+        console.log('選擇的日期:', date);
         emit('select', date, true);
 
         // 如果有時間選擇器，也發送時間選擇事件

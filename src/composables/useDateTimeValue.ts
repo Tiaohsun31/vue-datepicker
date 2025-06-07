@@ -113,6 +113,8 @@ export function useDateTimeValue(
         const dateTime = parseToSimpleDate(value);
         internalDateTime.value = dateTime;
 
+        console.log('Setting external value:', dateTime);
+
         if (dateTime) {
             inputDateValue.value = formatSimpleDate(dateTime, dateFormat);
             inputTimeValue.value = getTimeFromDateTime(dateTime);

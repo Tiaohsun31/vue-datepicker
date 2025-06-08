@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { CalendarDate } from '@internationalized/date';
+import { CalendarDate, today } from '@internationalized/date';
 import CalendarCell from './CalendarCell.vue';
 import { getTodaysDate } from '@/utils/dateUtils';
 import { CalendarUtils } from '@/utils/calendarUtils';
@@ -56,44 +56,8 @@ const emit = defineEmits<{
     'navigate': [direction: 'prev-month' | 'next-month' | 'prev-year' | 'next-year'];
 }>();
 
-// 創建日曆實例
-const calendarInstance = computed(() => {
-    return CalendarUtils.createSafeCalendar(props.calendar);
-});
-
-// 🔥 關鍵修正：需要將西元曆的年月轉換為目標日曆系統的年月來生成日期網格
-const currentDisplayMonth = computed(() => {
-    if (props.calendar === 'gregory') {
-        return props.month;
-    }
-
-    try {
-        // 將西元曆年月轉換為目標日曆系統的月份
-        const gregorianDate = new CalendarDate(props.year, props.month, 1);
-        const localDate = CalendarUtils.safeToCalendar(gregorianDate, calendarInstance.value);
-        console.log(`轉換月份: 西元${props.year}年${props.month}月 -> ${props.calendar}曆${localDate.year}年${localDate.month}月`);
-        return localDate.month;
-    } catch (error) {
-        console.warn('月份轉換失敗，使用原始月份:', error);
-        return props.month;
-    }
-});
-
-const currentDisplayYear = computed(() => {
-    if (props.calendar === 'gregory') {
-        return props.year;
-    }
-
-    try {
-        // 將西元曆年月轉換為目標日曆系統的年份
-        const gregorianDate = new CalendarDate(props.year, props.month, 1);
-        const localDate = CalendarUtils.safeToCalendar(gregorianDate, calendarInstance.value);
-        return localDate.year;
-    } catch (error) {
-        console.warn('年份轉換失敗，使用原始年份:', error);
-        return props.year;
-    }
-});
+const currentDisplayMonth = computed(() => props.month);
+const currentDisplayYear = computed(() => props.year);
 
 // 緩存今天的日期鍵值
 const todayKey = computed(() => {
@@ -130,21 +94,7 @@ const isDateEqual = (date1: CalendarDate | null, date2: CalendarDate | null): bo
     if (!date1 || !date2) return false;
 
     try {
-        // 如果是同一個日曆系統，直接比較
-        if (date1.calendar.identifier === date2.calendar.identifier) {
-            return date1.year === date2.year &&
-                date1.month === date2.month &&
-                date1.day === date2.day;
-        }
-
-        // 不同日曆系統，轉換為西元曆比較
-        const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
-        const gregorianDate1 = CalendarUtils.safeToCalendar(date1, gregorianCalendar);
-        const gregorianDate2 = CalendarUtils.safeToCalendar(date2, gregorianCalendar);
-
-        return gregorianDate1.year === gregorianDate2.year &&
-            gregorianDate1.month === gregorianDate2.month &&
-            gregorianDate1.day === gregorianDate2.day;
+        return date1.compare(date2) === 0;
     } catch {
         return false;
     }
@@ -164,22 +114,9 @@ const isDateDisabled = (date: CalendarDate): boolean => {
 // 檢查是否是今天
 const isToday = (date: CalendarDate): boolean => {
     try {
-        // 統一轉換為西元曆進行比較
-        let gregorianDate: CalendarDate;
-
-        if (props.calendar === 'gregory') {
-            gregorianDate = date;
-        } else {
-            const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
-            gregorianDate = CalendarUtils.safeToCalendar(date, gregorianCalendar);
-        }
-
-        const today = new Date();
-        return gregorianDate.year === today.getFullYear() &&
-            gregorianDate.month === today.getMonth() + 1 &&
-            gregorianDate.day === today.getDate();
-    } catch (error) {
-        console.warn('檢查今天日期失敗:', error);
+        const todayInCalendar = today(date.calendar.identifier);
+        return date.compare(todayInCalendar) === 0;
+    } catch {
         return false;
     }
 };

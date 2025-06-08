@@ -46,7 +46,7 @@
 import { ref, computed, watch } from 'vue';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
-import YearSelector from './YearSelector.vue';
+import YearSelector from '../selector/YearSelector.vue';
 import { CalendarUtils } from '@/utils/calendarUtils';
 import { CalendarDate } from '@internationalized/date';
 
@@ -88,7 +88,7 @@ watch(() => props.year, (newYear) => {
     selectedYearLocal.value = newYear;
 }, { immediate: true });
 
-// 年份顯示邏輯 - 簡化為只顯示西元年
+// 年份顯示邏輯
 const displayYear = computed(() => {
     if (props.calendar === 'gregory') {
         return selectedYearLocal.value.toString();

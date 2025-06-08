@@ -1,3 +1,4 @@
+<!-- components/calendar/YearSelector.vue -->
 <template>
     <div v-if="showSelector" ref="yearSelectorRef"
         class="absolute top-full mt-1 right-0 w-56 max-h-72 overflow-y-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20 overflow-hidden">

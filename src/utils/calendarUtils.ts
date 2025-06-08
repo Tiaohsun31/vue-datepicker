@@ -8,9 +8,11 @@ import {
     getWeeksInMonth,
     startOfWeek,
     getDayOfWeek,
+    DateFormatter
 } from '@internationalized/date';
 
 import type { SimpleDateValue } from './dateUtils';
+import { parseUserDateInput } from './dateParsingUtils';
 import { createRocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 import dayjs from 'dayjs';
 
@@ -61,6 +63,59 @@ export class CalendarUtils {
 
         return ranges[calendarId] || { min: 1, max: 9999 };
     }
+
+    /**
+     * 統一的轉換函數：SimpleDateValue → CalendarDate
+     */
+    static convertToCalendarDate = (simpleDate: SimpleDateValue | null, calendar: string): CalendarDate | null => {
+        if (!simpleDate) return null;
+
+        try {
+            if (calendar === 'gregory') {
+                // 西元曆直接創建
+                return new CalendarDate(simpleDate.year, simpleDate.month, simpleDate.day);
+            } else {
+                // 其他日曆系統：西元曆 → 目標日曆
+                const calendarInstance = this.createSafeCalendar(calendar);
+                const gregorianDate = new CalendarDate(simpleDate.year, simpleDate.month, simpleDate.day);
+                return this.safeToCalendar(gregorianDate, calendarInstance);
+            }
+        } catch (error) {
+            console.error('轉換為 CalendarDate 失敗:', error);
+            return null;
+        }
+    };
+
+    /**
+     * 統一的轉換函數：CalendarDate → SimpleDateValue
+     */
+    static convertFromCalendarDate = (calendarDate: CalendarDate | null, calendar: string): SimpleDateValue | null => {
+        if (!calendarDate) return null;
+
+        try {
+            // 檢查 CalendarDate 的實際日曆系統
+            if (calendarDate.calendar.identifier === 'gregory' || calendar === 'gregory') {
+                // 西元曆直接提取
+                return {
+                    year: calendarDate.year,
+                    month: calendarDate.month,
+                    day: calendarDate.day
+                };
+            } else {
+                // 目標日曆 → 西元曆
+                const gregorianCalendar = this.createSafeCalendar('gregory');
+                const gregorianDate = this.safeToCalendar(calendarDate, gregorianCalendar);
+                return {
+                    year: gregorianDate.year,
+                    month: gregorianDate.month,
+                    day: gregorianDate.day
+                };
+            }
+        } catch (error) {
+            console.error('轉換從 CalendarDate 失敗:', error);
+            return null;
+        }
+    };
 
     /**
      * 轉換西元年到目標日曆系統年份
@@ -158,7 +213,7 @@ export class CalendarUtils {
             const firstDayOfMonth = calendarId === 'gregory'
                 ? gregorianDate
                 : this.safeToCalendar(gregorianDate, calendar);
-            console.log('生成日曆網格 - 首日:', firstDayOfMonth.toString());
+            // console.log('生成日曆網格 - 首日:', firstDayOfMonth.toString());
 
             const weeksInMonth = getWeeksInMonth(firstDayOfMonth, locale) ?? 6;
 
@@ -275,114 +330,101 @@ export class CalendarUtils {
 
     /**
      * 解析輸入字串為 SimpleDateValue
-     * 優先使用插件解析，回退到 dayjs 和 @internationalized/date
+     * 執行順序：插件翻譯 → @internationalized/date → dayjs → 回退
      */
     static parseInput(input: string, calendar: string = 'gregory', locale: string = 'zh-TW'): SimpleDateValue | null {
         if (!input) return null;
 
-        // 1. 優先嘗試專用插件解析
-        try {
-            switch (calendar) {
-                case 'gregory':
-                    // 西元曆直接使用 dayjs 解析
-                    const date = dayjs(input);
-                    if (date.isValid()) {
-                        return {
-                            year: date.year(),
-                            month: date.month() + 1,
-                            day: date.date(),
-                            hour: date.hour() || 0,
-                            minute: date.minute() || 0,
-                            second: date.second() || 0
-                        };
-                    }
-                    break;
-                case 'roc':
-                    if (rocPlugin.canParseInput(input)) {
-                        return rocPlugin.parseInput(input, locale);
-                    }
-                    break;
+        const result = parseUserDateInput(input, locale, calendar);
 
+        if (result.success && result.date) {
+            // 如果是非西元曆且解析結果是西元日期，需要進行轉換
+            if (calendar !== 'gregory' && result.calendarSystem === 'gregory') {
+                // 將西元日期轉換為目標日曆系統的日期
+                const gregorianDate = new CalendarDate(result.date.year, result.date.month, result.date.day);
+                const targetCalendar = this.createSafeCalendar(calendar);
+                const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
 
-                // 其他日曆...
-            }
-        } catch (error) {
-            console.warn(`插件解析失敗 (${calendar}):`, error);
-        }
-
-        // 2. 回退到 dayjs 解析
-        try {
-            const date = dayjs(input);
-            if (date.isValid()) {
                 return {
-                    year: date.year(),
-                    month: date.month() + 1,
-                    day: date.date(),
-                    hour: date.hour(),
-                    minute: date.minute(),
-                    second: date.second()
+                    year: localDate.year,
+                    month: localDate.month,
+                    day: localDate.day
                 };
             }
-        } catch (error) {
-            console.warn('dayjs 解析失敗:', error);
-        }
 
-        // 3. 嘗試 @internationalized/date 解析
-        // try {
-        //     // 使用 Intl.DateTimeFormat 的逆向操作
-        //     // 這部分比較複雜，可能需要額外處理
-        // } catch (error) {
-        //     console.warn('@internationalized/date 解析失敗:', error);
-        // }
+            return result.date;
+        }
 
         return null;
     }
 
+
     /**
-     * 格式化輸出 - 優先使用插件，回退到西元曆
+     * 格式化輸出 - 統一執行順序：插件 → @internationalized/date → dayjs → 基本回退
      */
     static formatOutput(date: SimpleDateValue, format: string, calendar: string = 'gregory', locale: string = 'zh-TW'): string {
         if (!date) return '';
 
         try {
+            // 1. 優先嘗試專用插件解析
             switch (calendar) {
                 case 'gregory':
+                    // 西元曆直接使用 dayjs
                     return dayjs(new Date(date.year, date.month - 1, date.day,
                         date.hour || 0, date.minute || 0, date.second || 0)).format(format);
                 case 'roc':
                     if (rocPlugin.supportsFormat(format)) {
                         return rocPlugin.format(date, format, locale);
                     }
+                    break;
+                // 其他日曆插件可以在這裡添加
                 case 'buddhist':
                 case 'japanese':
                 case 'islamic':
                 case 'persian':
                 case 'hebrew':
-                default:
-                    // 其他日曆系統使用西元曆格式化
-                    console.warn(`日曆 ${calendar} 尚未實現格式化，使用西元曆格式化`);
-                    return dayjs(new Date(date.year, date.month - 1, date.day,
-                        date.hour || 0, date.minute || 0, date.second || 0)).format(format);
+                    // 目前這些日曆還沒有專用插件，跳到下一步
+                    break;
             }
-        } catch (error) {
-            console.warn('日期格式化失敗:', error);
-        }
 
-        try {
-            const calendarInstance = this.createSafeCalendar(calendar);
-            const calendarDate = new CalendarDate(calendarInstance, date.year, date.month, date.day);
-            return calendarDate.toLocaleString();
-        } catch (error) {
-            console.warn(`@internationalized/date 格式化失敗:`, error);
-        }
+            // 2. 嘗試使用 @internationalized/date 的 DateFormatter
+            const calendarDate = this.convertToCalendarDate(date, calendar);
+            if (calendarDate) {
+                const formatter = new DateFormatter(locale, {
+                    calendar: calendar,
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                return formatter.format(calendarDate.toDate(Intl.DateTimeFormat().resolvedOptions().timeZone));
+            }
 
-        try {
+            // 3. 回退到 dayjs 格式化
             const jsDate = new Date(date.year, date.month - 1, date.day,
                 date.hour || 0, date.minute || 0, date.second || 0);
             return dayjs(jsDate).format(format);
+
         } catch (error) {
-            console.error('所有格式化方法都失敗:', error);
-            return date.year + '-' + date.month + '-' + date.day; // 最基本的回退
+            console.warn('所有格式化方法都失敗，使用基本回退:', error);
+
+            // 4. 最基本的回退格式
+            return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
+        }
+    }
+
+    static formatWithLocale(calendarDate: CalendarDate, locale: string = 'zh-TW'): string {
+        try {
+            const formatter = new DateFormatter(locale, {
+                calendar: calendarDate.calendar.identifier,
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            return formatter.format(calendarDate.toDate(Intl.DateTimeFormat().resolvedOptions().timeZone));
+        } catch (error) {
+            console.warn('DateFormatter 格式化失敗:', error);
+            return calendarDate.toString();
         }
     }
 }
@@ -392,6 +434,8 @@ export const {
     createSafeCalendar,
     safeToCalendar,
     getCalendarYearRange,
+    convertToCalendarDate,
+    convertFromCalendarDate,
     convertGregorianYear,
     convertToGregorianYear,
     getMonthNames,

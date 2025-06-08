@@ -59,7 +59,7 @@
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
-            <CalendarGrid :value="calendarDateForGrid" :min-date="calendarMinDate" :max-date="calendarMaxDate"
+            <CalendarGrid :value="internalDateTime" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale" :calendar="calendar"
                 @select="handleCalendarSelect" @time-select="handleTimeSelect" />
@@ -359,7 +359,7 @@ const {
     inputDateValue,
     inputTimeValue,
     showCalendar,
-    calendarDateForGrid,
+    internalDateTime,
     calendarMinDate,
     calendarMaxDate,
     getValidDefaultTime,

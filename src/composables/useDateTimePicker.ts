@@ -19,7 +19,6 @@ import {
     type DateTimeValue,
     type SimpleDateValue
 } from '../utils/dateUtils';
-import { CalendarDate } from '@internationalized/date';
 
 interface DateTimePickerOptions {
     // 基本配置
@@ -134,61 +133,20 @@ export function useDateTimePicker(
         return CalendarUtils.formatOutput(dateTime, formatStr, calendar, locale);
     };
 
-    // 計算屬性 - 轉換為 CalendarDate 格式（供日曆組件使用）// 不在使用，傳入的日曆一律使用SimpleDateValue
-    const calendarDateForGrid = computed(() => {
-        if (!dateTimeValue.internalDateTime.value) return null;
-
-        try {
-            // 對於非西元曆，需要使用對應的日曆系統創建 CalendarDate
-            const gregorianDate = new CalendarDate(
-                dateTimeValue.internalDateTime.value.year,
-                dateTimeValue.internalDateTime.value.month,
-                dateTimeValue.internalDateTime.value.day
-            );
-
-            // return gregorianDate;
-
-            // 如果是西元曆，直接返回
-            if (calendar === 'gregory') {
-                return gregorianDate;
-            }
-
-            console.log('轉換為非西元曆日曆:', calendar);
-
-            // 否則轉換為目標日曆
-            const calendarInstance = CalendarUtils.createSafeCalendar(calendar);
-            console.log('創建日曆實例:', calendarInstance);
-            return CalendarUtils.safeToCalendar(gregorianDate, calendarInstance);
-        } catch (error) {
-            console.error('創建 CalendarDate 失敗:', error);
-            return null;
-        }
-    });
-
+    // 轉換為 SimpleDateValue
     const calendarMinDate = computed(() => {
         const minDateValue = ensureSimpleDateWithLocale(minDate, locale);
         if (!minDateValue) return null;
 
-        try {
-            const calendarInstance = CalendarUtils.createSafeCalendar(calendar);
-            return new CalendarDate(calendarInstance, minDateValue.year, minDateValue.month, minDateValue.day);
-        } catch (error) {
-            console.error('創建最小日期失敗:', error);
-            return null;
-        }
+        return minDateValue;
     });
 
+    //  SimpleDateValue
     const calendarMaxDate = computed(() => {
         const maxDateValue = ensureSimpleDateWithLocale(maxDate, locale);
         if (!maxDateValue) return null;
 
-        try {
-            const calendarInstance = CalendarUtils.createSafeCalendar(calendar);
-            return new CalendarDate(calendarInstance, maxDateValue.year, maxDateValue.month, maxDateValue.day);
-        } catch (error) {
-            console.error('創建最大日期失敗:', error);
-            return null;
-        }
+        return maxDateValue;
     });
 
     // 事件發射器
@@ -404,37 +362,9 @@ export function useDateTimePicker(
     /**
      * 處理日曆選擇 - 使用 CalendarUtils
      */
-    const handleCalendarSelect = async (date: CalendarDate, closeCalendar: boolean = true) => {
-        console.log('處理日曆選擇:', date);
-
+    const handleCalendarSelect = async (date: SimpleDateValue, closeCalendar: boolean = true) => {
         try {
-            // 不需要轉換，因為 CalendarUtils.generateCalendarDays 已經生成了正確的日期
-            // 直接從 CalendarDate 提取日期資訊
-            let simpleDate: SimpleDateValue;
-
-            if (calendar === 'gregory') {
-                // 西元曆直接使用
-                simpleDate = {
-                    year: date.year,
-                    month: date.month,
-                    day: date.day
-                };
-            } else {
-                // 非西元曆需要轉換為西元曆
-                const gregorianCalendar = CalendarUtils.createSafeCalendar('gregory');
-                const gregorianDate = CalendarUtils.safeToCalendar(date, gregorianCalendar);
-
-                simpleDate = {
-                    year: gregorianDate.year,
-                    month: gregorianDate.month,
-                    day: gregorianDate.day
-                };
-            }
-
-            console.log('3. simpleDate:', simpleDate);
-            dateTimeValue.inputDateValue.value = formatSimpleDate(simpleDate, dateFormat);
-
-            console.log('4. 更新日期輸入值:', dateTimeValue.inputDateValue.value);
+            dateTimeValue.inputDateValue.value = formatSimpleDate(date, dateFormat);
 
             ['date', 'year', 'month', 'day'].forEach(field => {
                 validation.clearFieldErrors(field);
@@ -580,7 +510,6 @@ export function useDateTimePicker(
         ...calendarPopup,
 
         // 計算屬性
-        calendarDateForGrid,
         calendarMinDate,
         calendarMaxDate,
 

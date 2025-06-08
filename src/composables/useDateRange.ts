@@ -16,16 +16,18 @@ import {
     formatOutput,
     getNow,
     createSimpleDate,
-    toCalendarDate,
-    fromCalendarDate,
+    // toCalendarDate,
+    // fromCalendarDate,
     compareDates,
     addDays,
     type SimpleDateValue,
     type DateTimeValue,
     type OutputFormat
 } from '../utils/dateUtils';
+import { CalendarUtils } from '@/utils/calendarUtils';
 
 interface DateRangeOptions {
+    calendar?: string
     // 基本配置
     modelValue?: { start: DateTimeValue; end: DateTimeValue } | null;
     showTime?: boolean;
@@ -67,6 +69,7 @@ export function useDateRange(
     refs: DateRangeRefs
 ) {
     const {
+        calendar = 'gregory',
         modelValue = null,
         showTime = false,
         required = false,
@@ -166,27 +169,6 @@ export function useDateRange(
         emitChange = emitters.change || null;
         emitValidation = emitters.validation || null;
     };
-
-    // 計算屬性
-    const calendarStartDate = computed(() => {
-        if (!startDateTime.internalDateTime.value) return null;
-        return toCalendarDate(startDateTime.internalDateTime.value);
-    });
-
-    const calendarEndDate = computed(() => {
-        if (!endDateTime.internalDateTime.value) return null;
-        return toCalendarDate(endDateTime.internalDateTime.value);
-    });
-
-    const calendarMinDate = computed(() => {
-        const minDateValue = ensureSimpleDate(minDate);
-        return minDateValue ? toCalendarDate(minDateValue) : null;
-    });
-
-    const calendarMaxDate = computed(() => {
-        const maxDateValue = ensureSimpleDate(maxDate);
-        return maxDateValue ? toCalendarDate(maxDateValue) : null;
-    });
 
     // 顯示的日期範圍
     const displayStartDate = computed(() => {
@@ -421,7 +403,7 @@ export function useDateRange(
     const handleCalendarRangeSelect = (startDate: any, endDate: any) => {
         if (startDate && !endDate) {
             // 只有開始日期
-            const simpleStart = fromCalendarDate(startDate);
+            const simpleStart = CalendarUtils.convertFromCalendarDate(startDate, calendar);
             startDateTime.inputDateValue.value = formatSimpleDate(simpleStart, dateFormat);
             startDateTime.updateDateTime();
 
@@ -433,8 +415,8 @@ export function useDateRange(
             endDateTime.clearValues();
         } else if (startDate && endDate) {
             // 完整範圍
-            const simpleStart = fromCalendarDate(startDate);
-            const simpleEnd = fromCalendarDate(endDate);
+            const simpleStart = CalendarUtils.convertFromCalendarDate(startDate, calendar);
+            const simpleEnd = CalendarUtils.convertFromCalendarDate(endDate, calendar);
 
             startDateTime.inputDateValue.value = formatSimpleDate(simpleStart, dateFormat);
             endDateTime.inputDateValue.value = formatSimpleDate(simpleEnd, dateFormat);
@@ -574,10 +556,6 @@ export function useDateRange(
 
         // 日曆相關
         ...calendarPopup,
-        calendarStartDate,
-        calendarEndDate,
-        calendarMinDate,
-        calendarMaxDate,
 
         // 快捷選項
         shortcuts,

@@ -1,4 +1,4 @@
-// utils/CalendarUtils.ts - 統一的日曆工具類
+// utils/CalendarUtils.ts - 日曆轉換工具
 import {
     CalendarDate,
     type Calendar,
@@ -43,25 +43,6 @@ export class CalendarUtils {
             console.warn('日曆轉換失敗，返回原始日期:', error);
             return date;
         }
-    }
-
-    /**
-     * 獲取日曆系統的有效年份範圍
-     */
-    static getCalendarYearRange(calendarId: string): { min: number; max: number } {
-        // 基於實際使用情況的合理範圍
-        const ranges: Record<string, { min: number; max: number }> = {
-            'gregory': { min: 1, max: 9999 },        // 西元曆
-            'roc': { min: 1, max: 500 },             // 民國 1年(1912) 到 500年(2411) - 擴大範圍
-            'buddhist': { min: 1000, max: 3500 },    // 佛曆實際使用範圍
-            'japanese': { min: 1, max: 200 },        // 日本年號範圍
-            'islamic': { min: 1, max: 2000 },        // 伊斯蘭曆
-            'persian': { min: 1, max: 2000 },        // 波斯曆
-            'hebrew': { min: 1, max: 8000 },         // 希伯來曆
-            'indian': { min: 1, max: 2000 },         // 印度曆
-        };
-
-        return ranges[calendarId] || { min: 1, max: 9999 };
     }
 
     /**
@@ -118,6 +99,72 @@ export class CalendarUtils {
     };
 
     /**
+     * 安全地生成日曆網格
+     */
+    static generateCalendarDays(
+        year: number,
+        month: number,
+        calendarId: string,
+        locale: string,
+        weekStartsOn: number = 0
+    ): CalendarDate[] {
+        try {
+            const calendar = this.createSafeCalendar(calendarId);
+            const gregorianDate = new CalendarDate(year, month, 1);
+
+            // 然後轉換為目標日曆
+            const firstDayOfMonth = calendarId === 'gregory'
+                ? gregorianDate
+                : this.safeToCalendar(gregorianDate, calendar);
+
+            const weeksInMonth = getWeeksInMonth(firstDayOfMonth, locale) ?? 6;
+
+            let startDay: CalendarDate;
+            try {
+                startDay = startOfWeek(firstDayOfMonth, locale);
+            } catch (error) {
+                // 手動計算週的開始
+                const dayOfWeek = getDayOfWeek(firstDayOfMonth, locale);
+                const daysToSubtract = (dayOfWeek - weekStartsOn + 7) % 7;
+                startDay = firstDayOfMonth.subtract({ days: daysToSubtract });
+            }
+
+            const days: CalendarDate[] = [];
+            let currentDate = startDay;
+
+            const totalCells = weeksInMonth * 7;
+            for (let i = 0; i < totalCells; i++) {
+                days.push(currentDate);
+                currentDate = currentDate.add({ days: 1 });
+            }
+
+            return days;
+        } catch (error) {
+            console.error('生成日曆網格失敗:', error);
+            return [];
+        }
+    }
+
+    /**
+     * 獲取日曆系統的有效年份範圍
+     */
+    static getCalendarYearRange(calendarId: string): { min: number; max: number } {
+        // 基於實際使用情況的合理範圍
+        const ranges: Record<string, { min: number; max: number }> = {
+            'gregory': { min: 1, max: 9999 },        // 西元曆
+            'roc': { min: 1, max: 500 },             // 民國 1年(1912) 到 500年(2411) - 擴大範圍
+            'buddhist': { min: 1000, max: 3500 },    // 佛曆實際使用範圍
+            'japanese': { min: 1, max: 200 },        // 日本年號範圍
+            'islamic': { min: 1, max: 2000 },        // 伊斯蘭曆
+            'persian': { min: 1, max: 2000 },        // 波斯曆
+            'hebrew': { min: 1, max: 8000 },         // 希伯來曆
+            'indian': { min: 1, max: 2000 },         // 印度曆
+        };
+
+        return ranges[calendarId] || { min: 1, max: 9999 };
+    }
+
+    /**
      * 轉換西元年到目標日曆系統年份
      */
     static convertGregorianYear(gregorianYear: number, targetCalendarId: string): {
@@ -163,7 +210,7 @@ export class CalendarUtils {
     }
 
     /**
-     * 獲取月份名稱 - 簡化版本
+     * 獲取月份名稱
      */
     static getMonthNames(locale: string, calendarId: string = 'gregory'): string[] {
         try {
@@ -192,57 +239,6 @@ export class CalendarUtils {
             }
         }
     }
-
-    /**
-     * 安全地生成日曆網格
-     */
-    static generateCalendarDays(
-        year: number,
-        month: number,
-        calendarId: string,
-        locale: string,
-        weekStartsOn: number = 0
-    ): CalendarDate[] {
-        try {
-            // const calendar = this.createSafeCalendar(calendarId);
-            // const firstDayOfMonth = new CalendarDate(calendar, year, month, 1);
-            const calendar = this.createSafeCalendar(calendarId);
-            const gregorianDate = new CalendarDate(year, month, 1);
-
-            // 然後轉換為目標日曆
-            const firstDayOfMonth = calendarId === 'gregory'
-                ? gregorianDate
-                : this.safeToCalendar(gregorianDate, calendar);
-            // console.log('生成日曆網格 - 首日:', firstDayOfMonth.toString());
-
-            const weeksInMonth = getWeeksInMonth(firstDayOfMonth, locale) ?? 6;
-
-            let startDay: CalendarDate;
-            try {
-                startDay = startOfWeek(firstDayOfMonth, locale);
-            } catch (error) {
-                // 手動計算週的開始
-                const dayOfWeek = getDayOfWeek(firstDayOfMonth, locale);
-                const daysToSubtract = (dayOfWeek - weekStartsOn + 7) % 7;
-                startDay = firstDayOfMonth.subtract({ days: daysToSubtract });
-            }
-
-            const days: CalendarDate[] = [];
-            let currentDate = startDay;
-
-            const totalCells = weeksInMonth * 7;
-            for (let i = 0; i < totalCells; i++) {
-                days.push(currentDate);
-                currentDate = currentDate.add({ days: 1 });
-            }
-
-            return days;
-        } catch (error) {
-            console.error('生成日曆網格失敗:', error);
-            return [];
-        }
-    }
-
 
     /**
      * 獲取日曆系統的顯示名稱
@@ -303,6 +299,8 @@ export class CalendarUtils {
         return names[calendarId]?.[locale] || names[calendarId]?.['en-US'] || calendarId;
     }
 
+    // ==================================================================== //
+
     /**
      * 驗證日期在指定日曆系統中是否有效
      */
@@ -330,6 +328,7 @@ export class CalendarUtils {
 
     /**
      * 解析輸入字串為 SimpleDateValue
+     * 解析含日曆系統的格式，如民國XX年XX月XX日 XX時XX分XX秒
      * 執行順序：插件翻譯 → @internationalized/date → dayjs → 回退
      */
     static parseInput(input: string, calendar: string = 'gregory', locale: string = 'zh-TW'): SimpleDateValue | null {
@@ -361,6 +360,7 @@ export class CalendarUtils {
 
     /**
      * 格式化輸出 - 統一執行順序：插件 → @internationalized/date → dayjs → 基本回退
+     * 格式化含日曆系統的格式，如民國XX年XX月XX日 XX時XX分XX秒
      */
     static formatOutput(date: SimpleDateValue, format: string, calendar: string = 'gregory', locale: string = 'zh-TW'): string {
         if (!date) return '';

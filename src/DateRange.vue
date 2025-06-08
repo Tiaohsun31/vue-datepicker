@@ -1,4 +1,4 @@
-<!-- DateRangeV2.vue - 整合錯誤訊息 -->
+<!-- DateRange.vue -->
 <template>
     <div class="date-range-wrapper md:min-w-auto relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[200px]']" v-bind="containerAttributes"
@@ -103,8 +103,9 @@
 
                 <!-- 雙月日曆 -->
                 <div class="calendar-container flex flex-col md:flex-row gap-2 overflow-auto">
-                    <DualMonthCalendar :range-start="calendarStartDate" :range-end="calendarEndDate"
-                        :min-date="calendarMinDate" :max-date="calendarMaxDate" :locale="locale" :week-starts-on="0"
+                    <DualMonthCalendar :range-start="startDateTime.internalDateTime.value"
+                        :range-end="endDateTime.internalDateTime.value" :min-date="ensureSimpleDate(minDate)"
+                        :max-date="ensureSimpleDate(maxDate)" :locale="locale" :week-starts-on="0"
                         @range-select="handleCalendarRangeSelect" />
                 </div>
 
@@ -356,10 +357,6 @@ const {
     showCalendar,
     isValidRange,
     shortcuts,
-    calendarStartDate,
-    calendarEndDate,
-    calendarMinDate,
-    calendarMaxDate,
     startDateTime,
     endDateTime,
     hasRangeValue,

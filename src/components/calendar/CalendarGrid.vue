@@ -150,26 +150,26 @@ const maxCalendarDate = computed(() => {
 const minYear = computed(() => props.minDate?.year || 1900);
 const maxYear = computed(() => props.maxDate?.year || 2100);
 
-// 監聽 props.year 和 props.month 的變化，自動更新當前顯示的年月
-watch(() => [props.year, props.month], ([newYear, newMonth]) => {
-    if (newYear !== undefined) currentYear.value = newYear;
-    if (newMonth !== undefined) currentMonth.value = newMonth;
-}, { immediate: true });
-
-// 監聽選擇模式變化，自動調整顯示月份
-watch(() => props.value, (newValue) => {
-    if (newValue && props.year === undefined && props.month === undefined) {
-        currentYear.value = newValue.year;
-        currentMonth.value = newValue.month;
+// 計算當前應該顯示的年月
+const displayYearMonth = computed(() => {
+    // 1. 優先使用外部指定
+    if (props.year !== undefined && props.month !== undefined) {
+        return { year: props.year, month: props.month };
     }
-}, { immediate: true });
 
-// 監聽範圍開始日期變化，自動調整顯示月份
-watch(() => props.rangeStart, (newValue) => {
-    if (newValue && props.selectionMode === 'range' && props.year === undefined && props.month === undefined) {
-        currentYear.value = newValue.year;
-        currentMonth.value = newValue.month;
+    // 2. 從值推導
+    const sourceDate = props.selectionMode === 'range' ? props.rangeStart : props.value;
+    if (sourceDate) {
+        return { year: sourceDate.year, month: sourceDate.month };
     }
+
+    // 3. 保持當前值
+    return { year: currentYear.value, month: currentMonth.value };
+});
+
+watch(displayYearMonth, ({ year, month }) => {
+    currentYear.value = year;
+    currentMonth.value = month;
 }, { immediate: true });
 
 // 監聽時間值變化

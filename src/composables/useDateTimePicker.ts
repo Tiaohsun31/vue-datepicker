@@ -11,10 +11,9 @@ import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { CalendarUtils } from '../utils/calendarUtils';
 import {
-    ensureSimpleDateWithLocale,
+    parseToSimpleDate,
     formatSimpleDate,
     compareDates,
-    ensureSimpleDate,
     dayjsParseDate,
     type DateTimeValue,
     type SimpleDateValue
@@ -135,7 +134,7 @@ export function useDateTimePicker(
 
     // 轉換為 SimpleDateValue
     const calendarMinDate = computed(() => {
-        const minDateValue = ensureSimpleDateWithLocale(minDate, locale);
+        const minDateValue = parseToSimpleDate(minDate, locale);
         if (!minDateValue) return null;
 
         return minDateValue;
@@ -143,7 +142,7 @@ export function useDateTimePicker(
 
     //  SimpleDateValue
     const calendarMaxDate = computed(() => {
-        const maxDateValue = ensureSimpleDateWithLocale(maxDate, locale);
+        const maxDateValue = parseToSimpleDate(maxDate, locale);
         if (!maxDateValue) return null;
 
         return maxDateValue;
@@ -239,7 +238,7 @@ export function useDateTimePicker(
             };
 
             if (minDate) {
-                const minSimpleDate = ensureSimpleDate(minDate);
+                const minSimpleDate = parseToSimpleDate(minDate);
                 if (minSimpleDate && compareDates(simpleDate, minSimpleDate) < 0) {
                     validation.handleDateValidation(false, {
                         date: 'date.beforeMin'
@@ -251,7 +250,7 @@ export function useDateTimePicker(
             }
 
             if (maxDate) {
-                const maxSimpleDate = ensureSimpleDate(maxDate);
+                const maxSimpleDate = parseToSimpleDate(maxDate);
                 if (maxSimpleDate && compareDates(simpleDate, maxSimpleDate) > 0) {
                     validation.handleDateValidation(false, {
                         date: 'date.afterMax'

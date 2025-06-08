@@ -105,7 +105,8 @@ import {
     ensureSimpleDate,
     isValidDateFormat,
     isValidTimeFormat,
-    ensureSimpleDateWithLocale,
+    // ensureSimpleDateWithLocale,
+    parseToSimpleDate,
     fixDateFormat,
     fixTimeFormat,
     type DateTimeValue,
@@ -219,12 +220,12 @@ const {
 
 // 計算屬性
 const minDateStr = computed(() => {
-    const minDateValue = ensureSimpleDateWithLocale(props.minDate, props.locale);
-    return formatSimpleDate(minDateValue);
+    const maxDateValue = parseToSimpleDate(props.minDate, props.locale);
+    return formatSimpleDate(maxDateValue);
 });
 
 const maxDateStr = computed(() => {
-    const maxDateValue = ensureSimpleDateWithLocale(props.maxDate, props.locale);
+    const maxDateValue = parseToSimpleDate(props.maxDate, props.locale);
     return formatSimpleDate(maxDateValue);
 });
 const dateInputFormat = computed(() => internalDateFormat.value);

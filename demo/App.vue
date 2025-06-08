@@ -24,7 +24,7 @@
 </DatePicker> -->
         </div>
         <div>
-            <!-- <DateRange v-model="selectedDate"></DateRange> -->
+            <DateRange v-model="selectedDate"></DateRange>
         </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">

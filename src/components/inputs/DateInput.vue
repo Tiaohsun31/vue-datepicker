@@ -37,7 +37,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
-import { dayjsParseDate } from '@/utils/dateUtils';
+import { parseInputToSimpleDate } from '@/utils/dateUtils';
 import { type FieldError } from '@/types/internal';
 
 const vAutowidth = {
@@ -173,11 +173,11 @@ watch(() => props.modelValue, (newValue) => {
     }
 
     if (newValue) {
-        const date = dayjsParseDate(newValue, props.dateFormat);
-        if (date.isValid()) {
-            yearValue.value = date.format('YYYY');
-            monthValue.value = date.format('MM');
-            dayValue.value = date.format('DD');
+        const parsedDate = parseInputToSimpleDate(newValue);
+        if (parsedDate) {
+            yearValue.value = parsedDate.year.toString();
+            monthValue.value = parsedDate.month.toString().padStart(2, '0');
+            dayValue.value = parsedDate.day.toString().padStart(2, '0');
         }
     } else {
         yearValue.value = '';
@@ -557,11 +557,11 @@ defineExpose({
     focusLast: focusLastInput,
     setDate: (dateStr: string) => {
         if (dateStr) {
-            const date = dayjs(dateStr);
-            if (date.isValid()) {
-                yearValue.value = date.format('YYYY');
-                monthValue.value = date.format('MM');
-                dayValue.value = date.format('DD');
+            const parsedDate = parseInputToSimpleDate(dateStr);
+            if (parsedDate) {
+                yearValue.value = parsedDate.year.toString();
+                monthValue.value = parsedDate.month.toString().padStart(2, '0');
+                dayValue.value = parsedDate.day.toString().padStart(2, '0');
                 validateAndEmit();
             }
         } else {

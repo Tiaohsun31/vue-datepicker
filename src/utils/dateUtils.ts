@@ -7,6 +7,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import localeData from 'dayjs/plugin/localeData';
 import { parseUserDateInput } from './dateParsingUtils';
+import { CalendarUtils } from './calendarUtils';
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
@@ -16,7 +17,7 @@ dayjs.extend(weekOfYear);
 dayjs.extend(localeData);
 
 /**
- * 內部使用的簡單日期介面，避免 @internationalized/date 的型別問題
+ * 內部使用的簡單日期介面(西元曆)，避免 @internationalized/date 的型別問題
  */
 export interface SimpleDateValue {
     year: number;
@@ -30,12 +31,10 @@ export interface SimpleDateValue {
 /**
  * 支持的日期時間格式 - 限縮 @internationalized/date 的使用
  */
-export type DateTimeValue =
+export type DateTimeInput =
     | string          // ISO 字符串
     | Date            // JavaScript Date
-    | SimpleDateValue // 簡單物件（主要使用）
-    | CalendarDate    // 只在必要時使用
-    | CalendarDateTime // 只在必要時使用
+    | SimpleDateValue // 簡單物件
     | null;
 
 /**
@@ -96,45 +95,30 @@ export function createSimpleDate(
  * 統一的日期解析函數 - 主要返回 SimpleDateValue
  * 返回西元曆格式
  */
-export function parseToSimpleDate(value: DateTimeValue | undefined, locale: string = 'zh-TW'): SimpleDateValue | null {
-    if (!value) return null;
+export function parseInputToSimpleDate(input: DateTimeInput | undefined, locale: string = 'zh-TW', calendar: string = 'gregory'): SimpleDateValue | null {
+    if (!input) return null;
 
     try {
-        if (typeof value === 'object' && 'year' in value) {
-            return value;
+        if (isSimpleDateValue(input)) {
+            return input;
         }
 
         // 是 Date 對象
-        if (value instanceof Date) {
+        if (input instanceof Date && !isNaN(input.getTime())) {
             return {
-                year: value.getFullYear(),
-                month: value.getMonth() + 1,
-                day: value.getDate(),
-                hour: value.getHours(),
-                minute: value.getMinutes(),
-                second: value.getSeconds()
+                year: input.getFullYear(),
+                month: input.getMonth() + 1,
+                day: input.getDate(),
+                hour: input.getHours(),
+                minute: input.getMinutes(),
+                second: input.getSeconds()
             };
         }
 
         // 是字符串
-        if (typeof value === 'string') {
-            const result = parseUserDateInput(value, locale, 'gregory');
-            const parsedDate = result.success ? result.date : null;
-            if (parsedDate) {
-                return parsedDate;
-            }
-            // 如果解析失敗，使用 dayjs 嘗試解析
-            const date = dayjs(value);
-            if (date.isValid()) {
-                return {
-                    year: date.year(),
-                    month: date.month() + 1,
-                    day: date.date(),
-                    hour: date.hour(),
-                    minute: date.minute(),
-                    second: date.second()
-                };
-            }
+        if (typeof input === 'string') {
+            const result = parseUserDateInput(input, locale, calendar);
+            return result.success ? result.date : null;
         }
 
         return null;
@@ -147,8 +131,8 @@ export function parseToSimpleDate(value: DateTimeValue | undefined, locale: stri
 /**
  * 確保值是 SimpleDateValue（只包含日期部分）
  */
-export function ensureSimpleDate(value: DateTimeValue | undefined): SimpleDateValue | null {
-    const parsed = parseToSimpleDate(value);
+export function ensureSimpleDate(value: DateTimeInput | undefined): SimpleDateValue | null {
+    const parsed = parseInputToSimpleDate(value);
     if (!parsed) return null;
 
     // 只返回日期部分
@@ -193,7 +177,7 @@ export function formatOutput(
     date: SimpleDateValue | null,
     outputFormat: OutputFormat = 'iso',
     customFormat?: string
-): DateTimeValue {
+): DateTimeInput {
     if (!date) return null;
 
     switch (outputFormat) {
@@ -340,60 +324,62 @@ export function fixTimeFormat(format: string): string {
  * 智能日期解析函數
  * 優先使用指定格式，回退到常見格式，最後自動解析
  */
-export const dayjsParseDate = (dateStr: string, dateFormat?: string): dayjs.Dayjs => {
-    if (!dateStr || typeof dateStr !== 'string') {
-        return dayjs(''); // 返回無效日期
-    }
+// export const dayjsParseDate = (dateStr: string, dateFormat?: string): dayjs.Dayjs => {
+//     if (!dateStr || typeof dateStr !== 'string') {
+//         return dayjs(''); // 返回無效日期
+//     }
 
-    const trimmedStr = dateStr.trim();
+//     const trimmedStr = dateStr.trim();
 
-    // 1. 如果指定了格式，優先嘗試
-    if (dateFormat) {
-        const date = dayjs(trimmedStr, dateFormat, true); // strict mode
-        if (date.isValid()) {
-            return date;
-        }
-    }
+//     // 1. 如果指定了格式，優先嘗試
+//     if (dateFormat) {
+//         const date = dayjs(trimmedStr, dateFormat, true); // strict mode
 
-    // 2. 嘗試常見格式（按使用頻率排序）
-    const commonFormats = [
-        'YYYY-MM-DD',    // ISO 標準格式
-        'DD/MM/YYYY',    // 歐洲格式
-        'MM/DD/YYYY',    // 美國格式
-        'DD-MM-YYYY',    // 替代分隔符
-        'MM-DD-YYYY',
-        'DD.MM.YYYY',    // 德國格式
-        'MM.DD.YYYY',
-        'YYYY/MM/DD',    // 亞洲格式
-        'YYYY.MM.DD',
-        'DD MMM YYYY',   // 月份縮寫
-        'MMM DD, YYYY',  // 美式月份縮寫
-    ];
+//         if (date.isValid()) {
+//             console.log(`Parsing date with format "${dateFormat}":`, date.isValid() ? date.format() : 'Invalid date');
+//             return date;
+//         }
+//     }
 
-    for (const format of commonFormats) {
-        const date = dayjs(trimmedStr, format, true);
-        if (date.isValid()) {
-            return date;
-        }
-    }
+//     // 2. 嘗試常見格式（按使用頻率排序）
+//     const commonFormats = [
+//         'YYYY-MM-DD',    // ISO 標準格式
+//         'DD/MM/YYYY',    // 歐洲格式
+//         'MM/DD/YYYY',    // 美國格式
+//         'DD-MM-YYYY',    // 替代分隔符
+//         'MM-DD-YYYY',
+//         'DD.MM.YYYY',    // 德國格式
+//         'MM.DD.YYYY',
+//         'YYYY/MM/DD',    // 亞洲格式
+//         'YYYY.MM.DD',
+//         'DD MMM YYYY',   // 月份縮寫
+//         'MMM DD, YYYY',  // 美式月份縮寫
+//     ];
 
-    // 3. 最後嘗試自動解析（寬鬆模式）
-    const autoDate = dayjs(trimmedStr);
-    return autoDate; // 即使無效也返回，讓調用方檢查 isValid()
-};
+//     for (const format of commonFormats) {
+//         const date = dayjs(trimmedStr, format, true);
+//         if (date.isValid()) {
+//             return date;
+//         }
+//     }
+
+//     // 3. 最後嘗試自動解析（寬鬆模式）
+//     const autoDate = dayjs(trimmedStr);
+//     return autoDate; // 即使無效也返回，讓調用方檢查 isValid()
+// };
 
 // ==============================================================
 
 /**
  * 型別守衛：檢查是否為 SimpleDateValue (目前尚未使用)
  */
-// export function isSimpleDateValue(value: any): value is SimpleDateValue {
-//     return value &&
-//         typeof value === 'object' &&
-//         typeof value.year === 'number' &&
-//         typeof value.month === 'number' &&
-//         typeof value.day === 'number';
-// }
+export function isSimpleDateValue(value: any): value is SimpleDateValue {
+    return value &&
+        typeof value === 'object' &&
+        typeof value.year === 'number' &&
+        typeof value.month === 'number' &&
+        typeof value.day === 'number';
+}
 
 // /**
 //  * 型別守衛：檢查是否為 CalendarDate (目前尚未使用)

@@ -330,32 +330,33 @@ export class CalendarUtils {
      * 解析輸入字串為 SimpleDateValue
      * 解析含日曆系統的格式，如民國XX年XX月XX日 XX時XX分XX秒
      * 執行順序：插件翻譯 → @internationalized/date → dayjs → 回退
+     * 使用 dateParsingUtils.parseUserDateInput
      */
-    static parseInput(input: string, calendar: string = 'gregory', locale: string = 'zh-TW'): SimpleDateValue | null {
-        if (!input) return null;
+    // static parseInput(input: string, calendar: string = 'gregory', locale: string = 'zh-TW'): SimpleDateValue | null {
+    //     if (!input) return null;
 
-        const result = parseUserDateInput(input, locale, calendar);
+    //     const result = parseUserDateInput(input, locale, calendar);
+    //     console.log(`解析輸入 "${input}" 為 ${calendar} 日曆系統:`, result);
+    //     if (result.success && result.date) {
+    //         // 如果是非西元曆且解析結果是西元日期，需要進行轉換
+    //         if (calendar !== 'gregory' && result.calendarSystem === 'gregory') {
+    //             // 將西元日期轉換為目標日曆系統的日期
+    //             const gregorianDate = new CalendarDate(result.date.year, result.date.month, result.date.day);
+    //             const targetCalendar = this.createSafeCalendar(calendar);
+    //             const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
+    //             console.log(`轉換日期 ${result.date.year}-${result.date.month}-${result.date.day} 從西元曆到 ${calendar} 成功:`, localDate);
+    //             return {
+    //                 year: localDate.year,
+    //                 month: localDate.month,
+    //                 day: localDate.day
+    //             };
+    //         }
 
-        if (result.success && result.date) {
-            // 如果是非西元曆且解析結果是西元日期，需要進行轉換
-            if (calendar !== 'gregory' && result.calendarSystem === 'gregory') {
-                // 將西元日期轉換為目標日曆系統的日期
-                const gregorianDate = new CalendarDate(result.date.year, result.date.month, result.date.day);
-                const targetCalendar = this.createSafeCalendar(calendar);
-                const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
+    //         return result.date;
+    //     }
 
-                return {
-                    year: localDate.year,
-                    month: localDate.month,
-                    day: localDate.day
-                };
-            }
-
-            return result.date;
-        }
-
-        return null;
-    }
+    //     return null;
+    // }
 
 
     /**
@@ -373,7 +374,7 @@ export class CalendarUtils {
                     return dayjs(new Date(date.year, date.month - 1, date.day,
                         date.hour || 0, date.minute || 0, date.second || 0)).format(format);
                 case 'roc':
-                    if (rocPlugin.supportsFormat(format)) {
+                    if (rocPlugin.supportsFormat(format) && rocPlugin.canParseInput(format)) {
                         return rocPlugin.format(date, format, locale);
                     }
                     break;
@@ -411,36 +412,30 @@ export class CalendarUtils {
             return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
         }
     }
-
-    static formatWithLocale(calendarDate: CalendarDate, locale: string = 'zh-TW'): string {
-        try {
-            const formatter = new DateFormatter(locale, {
-                calendar: calendarDate.calendar.identifier,
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
-            return formatter.format(calendarDate.toDate(Intl.DateTimeFormat().resolvedOptions().timeZone));
-        } catch (error) {
-            console.warn('DateFormatter 格式化失敗:', error);
-            return calendarDate.toString();
-        }
-    }
 }
 
 // 導出便利函數
 export const {
-    createSafeCalendar,
-    safeToCalendar,
-    getCalendarYearRange,
+    // 轉換核心
     convertToCalendarDate,
     convertFromCalendarDate,
+
+    // 日曆基礎
+    createSafeCalendar,
+    safeToCalendar,
+    generateCalendarDays,
+
+    // 年份轉換 (YearSelector)
     convertGregorianYear,
     convertToGregorianYear,
+    getCalendarYearRange,
+
+    // 顯示相關
     getMonthNames,
-    generateCalendarDays,
     getCalendarDisplayName,
+
+    // 日曆系統輸出輸入轉換
     isValidDate,
+    // parseInput,
     formatOutput,
 } = CalendarUtils;

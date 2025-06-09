@@ -35,7 +35,7 @@ export interface CalendarFormatPlugin {
      * 解析輸入字串為 SimpleDateValue
      * @param input 輸入字串
      * @param locale 語言設定
-     * @returns 解析後的日期值或 null
+     * @returns 解析後的日期值(西元曆)或 null
      */
     parseInput(input: string, locale: string): SimpleDateValue | null;
 

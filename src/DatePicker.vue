@@ -106,10 +106,10 @@ import {
     isValidDateFormat,
     isValidTimeFormat,
     // ensureSimpleDateWithLocale,
-    parseToSimpleDate,
+    parseInputToSimpleDate,
     fixDateFormat,
     fixTimeFormat,
-    type DateTimeValue,
+    type DateTimeInput,
 } from './utils/dateUtils';
 import type { DatePickerProps } from './types/DatePickerProps';
 import { localeManager, type LocaleKey } from '@/locale/index';
@@ -158,8 +158,8 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
 });
 
 const emit = defineEmits<{
-    'update:modelValue': [date: DateTimeValue];
-    'change': [date: DateTimeValue];
+    'update:modelValue': [date: DateTimeInput];
+    'change': [date: DateTimeInput];
     'validation': [isValid: boolean, errors: Record<string, string>];
 }>();
 
@@ -220,12 +220,12 @@ const {
 
 // 計算屬性
 const minDateStr = computed(() => {
-    const maxDateValue = parseToSimpleDate(props.minDate, props.locale);
+    const maxDateValue = parseInputToSimpleDate(props.minDate, props.locale);
     return formatSimpleDate(maxDateValue);
 });
 
 const maxDateStr = computed(() => {
-    const maxDateValue = parseToSimpleDate(props.maxDate, props.locale);
+    const maxDateValue = parseInputToSimpleDate(props.maxDate, props.locale);
     return formatSimpleDate(maxDateValue);
 });
 const dateInputFormat = computed(() => internalDateFormat.value);

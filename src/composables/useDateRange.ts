@@ -10,7 +10,7 @@ import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { useInputNavigation } from './useInputNavigation';
 import {
-    parseToSimpleDate,
+    parseInputToSimpleDate,
     formatSimpleDate,
     ensureSimpleDate,
     formatOutput,
@@ -21,7 +21,7 @@ import {
     compareDates,
     addDays,
     type SimpleDateValue,
-    type DateTimeValue,
+    type DateTimeInput,
     type OutputFormat
 } from '../utils/dateUtils';
 import { CalendarUtils } from '@/utils/calendarUtils';
@@ -29,7 +29,7 @@ import { CalendarUtils } from '@/utils/calendarUtils';
 interface DateRangeOptions {
     calendar?: string
     // 基本配置
-    modelValue?: { start: DateTimeValue; end: DateTimeValue } | null;
+    modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
     showTime?: boolean;
     required?: boolean;
     disabled?: boolean;
@@ -43,8 +43,8 @@ interface DateRangeOptions {
     enableSeconds?: boolean;
 
     // 限制配置
-    minDate?: DateTimeValue;
-    maxDate?: DateTimeValue;
+    minDate?: DateTimeInput;
+    maxDate?: DateTimeInput;
     maxRange?: number; // 最大天數限制
     minRange?: number; // 最小天數限制
 }
@@ -153,16 +153,16 @@ export function useDateRange(
     );
 
     // 事件發射器
-    let emitUpdate: ((range: { start: DateTimeValue; end: DateTimeValue } | null) => void) | null = null;
-    let emitChange: ((range: { start: DateTimeValue; end: DateTimeValue } | null) => void) | null = null;
+    let emitUpdate: ((range: { start: DateTimeInput; end: DateTimeInput } | null) => void) | null = null;
+    let emitChange: ((range: { start: DateTimeInput; end: DateTimeInput } | null) => void) | null = null;
     let emitValidation: ((isValid: boolean, errors: Record<string, string>) => void) | null = null;
 
     /**
      * 設置事件發射器
      */
     const setEmitters = (emitters: {
-        update?: (range: { start: DateTimeValue; end: DateTimeValue } | null) => void;
-        change?: (range: { start: DateTimeValue; end: DateTimeValue } | null) => void;
+        update?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
+        change?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
         validation?: (isValid: boolean, errors: Record<string, string>) => void;
     }) => {
         emitUpdate = emitters.update || null;
@@ -491,7 +491,7 @@ export function useDateRange(
     /**
      * 設置範圍值
      */
-    const setRange = (range: { start: DateTimeValue; end: DateTimeValue } | null) => {
+    const setRange = (range: { start: DateTimeInput; end: DateTimeInput } | null) => {
         if (range) {
             startDateTime.setExternalValue(range.start);
             endDateTime.setExternalValue(range.end);

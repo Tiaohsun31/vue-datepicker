@@ -1,12 +1,12 @@
 import { type TailwindColor } from './main';
-import type { DateTimeValue, OutputFormat } from '@/utils/dateUtils';
+import type { DateTimeInput, OutputFormat } from '@/utils/dateUtils';
 import type { CalendarIdentifier } from '@internationalized/date';
 
 //  TODO:
 // 考慮設定props，決定初始化時，是否執行minDate和maxDate的驗證
 // minuteStep
 export interface DatePickerProps {
-    modelValue?: DateTimeValue;
+    modelValue?: DateTimeInput;
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
 
@@ -16,8 +16,8 @@ export interface DatePickerProps {
     outputFormat?: OutputFormat;  // 輸出格式 iso、date、simple 預設為 'iso'
 
     // 日期選項
-    minDate?: DateTimeValue; // 最小日期 預設為 null TODO:目前對calendar無效
-    maxDate?: DateTimeValue; // 最大日期 預設為 null TODO:目前對calendar無效
+    minDate?: DateTimeInput; // 最小日期 預設為 null TODO:目前對calendar無效
+    maxDate?: DateTimeInput; // 最大日期 預設為 null TODO:目前對calendar無效
     dateSeparator?: string; // 日期的分隔符 預設為 '-'
     dateFormat?: string; // 日期格式 預設為 'YYYY-MM-DD' 會依照日期格式輸出
 

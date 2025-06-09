@@ -5,12 +5,13 @@
             <DatePicker v-model="dateTimeutc" locale="en-US" min-date="2002-01-01">
             </DatePicker>
             {{ rocDate }}
-            <DatePicker v-model="rocDate" calendar="roc" date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分"
-                locale="zh-TW" @change="handleDateChange" />
+            <!-- date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" -->
+            <DatePicker v-model="rocDate" calendar="roc" locale="zh-TW" date-format="ROC-YYYY-MM-DD"
+                time-format="A HH時mm分" @change="handleDateChange" />
         </div>
         <div>
-            {{ dateTime2 }}
-            <!-- <DatePicker v-model="dateTime2" min-date="01/03/2000" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
+            <!-- {{ dateTime2 }}
+            <DatePicker v-model="dateTime2" min-date="01/03/2000" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -24,7 +25,7 @@
 </DatePicker> -->
         </div>
         <div>
-            <DateRange v-model="selectedDate"></DateRange>
+            <!-- <DateRange v-model="selectedDate"></DateRange> -->
         </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">
@@ -80,7 +81,7 @@ const rocDate = ref('民國114年06月18日 上午 02時48分');
 const dateTime = ref('');
 const dateTime2 = ref('');
 const dateTime3 = ref('');
-const dateTimeutc = ref(''); // UTC 時間格式
+const dateTimeutc = ref('2022-01-01T12:00:00.000Z'); // UTC 時間格式
 const partialCustomDate = ref();
 const fieldNames = {
     year: '年份',

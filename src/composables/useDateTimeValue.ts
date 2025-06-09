@@ -5,14 +5,14 @@
 
 import { ref, computed, watch } from 'vue';
 import dayjs from 'dayjs';
-import { dayjsParseDate } from '../utils/dateUtils';
+// import { dayjsParseDate } from '../utils/dateUtils';
 import {
-    parseToSimpleDate,
+    parseInputToSimpleDate,
     formatSimpleDate,
     formatOutput,
     createSimpleDate,
     type SimpleDateValue,
-    type DateTimeValue,
+    type DateTimeInput,
     type OutputFormat
 } from '../utils/dateUtils';
 
@@ -68,12 +68,13 @@ export function useDateTimeValue(
     ): SimpleDateValue | null => {
         if (!dateStr) return null;
 
-        const date = dayjsParseDate(dateStr, dateFormat);
-        if (!date.isValid()) return null;
+        const parsedDate = parseInputToSimpleDate(dateStr);
+
+        if (!parsedDate) return null;
 
         if (!timeStr && !showTime) {
             // 如果不需要時間，只返回日期部分
-            return createSimpleDate(date.year(), date.month() + 1, date.date());
+            return createSimpleDate(parsedDate.year, parsedDate.month, parsedDate.day);
         } else if (!timeStr) {
             // 如果需要時間但未提供，使用默認時間
             const timeParts = defaultTime.split(':').map(Number);
@@ -82,9 +83,9 @@ export function useDateTimeValue(
             const second = timeParts[2] || 0;
 
             return createSimpleDate(
-                date.year(),
-                date.month() + 1,
-                date.date(),
+                parsedDate.year,
+                parsedDate.month,
+                parsedDate.day,
                 hour,
                 minute,
                 second
@@ -97,9 +98,9 @@ export function useDateTimeValue(
         const second = timeParts[2] || 0;
 
         return createSimpleDate(
-            date.year(),
-            date.month() + 1,
-            date.date(),
+            parsedDate.year,
+            parsedDate.month,
+            parsedDate.day,
             hour,
             minute,
             second
@@ -109,11 +110,9 @@ export function useDateTimeValue(
     /**
      * 設置外部值
      */
-    const setExternalValue = (value: DateTimeValue) => {
-        const dateTime = parseToSimpleDate(value);
+    const setExternalValue = (value: DateTimeInput) => {
+        const dateTime = parseInputToSimpleDate(value);
         internalDateTime.value = dateTime;
-
-        console.log('Setting external value:', dateTime);
 
         if (dateTime) {
             inputDateValue.value = formatSimpleDate(dateTime, dateFormat);

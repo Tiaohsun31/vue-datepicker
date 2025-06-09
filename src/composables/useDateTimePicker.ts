@@ -1,6 +1,5 @@
 /**
- * useDateTimePicker.ts - 重構版本
- * 移除 calendarSystem 依賴，改用 @internationalized/date + calendarUtils
+ * useDateTimePicker.ts
  */
 
 import { ref, computed, watch, type Ref } from 'vue';
@@ -11,17 +10,17 @@ import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { CalendarUtils } from '../utils/calendarUtils';
 import {
-    parseToSimpleDate,
+    parseInputToSimpleDate,
     formatSimpleDate,
     compareDates,
-    dayjsParseDate,
-    type DateTimeValue,
+    // dayjsParseDate,
+    type DateTimeInput,
     type SimpleDateValue
 } from '../utils/dateUtils';
 
 interface DateTimePickerOptions {
     // 基本配置
-    modelValue?: DateTimeValue;
+    modelValue?: DateTimeInput;
     showTime?: boolean;
     required?: boolean;
     disabled?: boolean;
@@ -40,8 +39,8 @@ interface DateTimePickerOptions {
     autoFocusTimeAfterDate?: boolean;
 
     // 限制配置
-    minDate?: DateTimeValue;
-    maxDate?: DateTimeValue;
+    minDate?: DateTimeInput;
+    maxDate?: DateTimeInput;
 
     // 自動聚焦
     autoFocus?: boolean;
@@ -56,8 +55,8 @@ interface DateTimePickerRefs {
 }
 
 interface UseDateTimePickerEmitters {
-    update: (value: DateTimeValue) => void;
-    change: (value: DateTimeValue) => void;
+    update: (value: DateTimeInput) => void;
+    change: (value: DateTimeInput) => void;
     validation: (isValid: boolean, errors: Record<string, string>) => void;
 }
 
@@ -134,7 +133,7 @@ export function useDateTimePicker(
 
     // 轉換為 SimpleDateValue
     const calendarMinDate = computed(() => {
-        const minDateValue = parseToSimpleDate(minDate, locale);
+        const minDateValue = parseInputToSimpleDate(minDate, locale);
         if (!minDateValue) return null;
 
         return minDateValue;
@@ -142,23 +141,23 @@ export function useDateTimePicker(
 
     //  SimpleDateValue
     const calendarMaxDate = computed(() => {
-        const maxDateValue = parseToSimpleDate(maxDate, locale);
+        const maxDateValue = parseInputToSimpleDate(maxDate, locale);
         if (!maxDateValue) return null;
 
         return maxDateValue;
     });
 
     // 事件發射器
-    let emitUpdate: ((value: DateTimeValue) => void) | null = null;
-    let emitChange: ((value: DateTimeValue) => void) | null = null;
+    let emitUpdate: ((value: DateTimeInput) => void) | null = null;
+    let emitChange: ((value: DateTimeInput) => void) | null = null;
     let emitValidation: ((isValid: boolean, errors: Record<string, string>) => void) | null = null;
 
     /**
      * 設置事件發射器
      */
     const setEmitters = (emitters: {
-        update?: (value: DateTimeValue) => void;
-        change?: (value: DateTimeValue) => void;
+        update?: (value: DateTimeInput) => void;
+        change?: (value: DateTimeInput) => void;
         validation?: (isValid: boolean, errors: Record<string, string>) => void;
     }) => {
         emitUpdate = emitters.update || null;
@@ -175,7 +174,7 @@ export function useDateTimePicker(
      * 發送更新事件
      */
     const emitEvents = async (dateTime = dateTimeValue.internalDateTime.value) => {
-        let formattedOutput: DateTimeValue = null;
+        let formattedOutput: DateTimeInput = null;
         console.log(dateTime, '發送更新事件:', dateTime);
 
         if (dateTime) {
@@ -215,50 +214,33 @@ export function useDateTimePicker(
     };
 
     /**
-     * 驗證日期輸入
+     * 驗證日期區間
      */
-    const validateAndUpdateDate = (dateStr: string): boolean => {
-        const date = dayjsParseDate(dateStr, dateFormat);
-
-        if (!date.isValid()) {
-            validation.handleDateValidation(false, {
-                date: 'date.invalid'
-            }, 'date', {
-                date: { original: dateStr, format: dateFormat }
-            });
-            return false;
-        }
+    const validateDateRange = (parsedDate: SimpleDateValue): boolean => {
+        if (!parsedDate) return false;
 
         // 檢查日期範圍
-        if (minDate || maxDate) {
-            const simpleDate = {
-                year: date.year(),
-                month: date.month() + 1,
-                day: date.date()
-            };
-
-            if (minDate) {
-                const minSimpleDate = parseToSimpleDate(minDate);
-                if (minSimpleDate && compareDates(simpleDate, minSimpleDate) < 0) {
-                    validation.handleDateValidation(false, {
-                        date: 'date.beforeMin'
-                    }, 'date', {
-                        date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
-                    });
-                    return false;
-                }
+        if (minDate) {
+            const minSimpleDate = parseInputToSimpleDate(minDate);
+            if (minSimpleDate && compareDates(parsedDate, minSimpleDate) < 0) {
+                validation.handleDateValidation(false, {
+                    date: 'date.beforeMin'
+                }, 'date', {
+                    date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
+                });
+                return false;
             }
+        }
 
-            if (maxDate) {
-                const maxSimpleDate = parseToSimpleDate(maxDate);
-                if (maxSimpleDate && compareDates(simpleDate, maxSimpleDate) > 0) {
-                    validation.handleDateValidation(false, {
-                        date: 'date.afterMax'
-                    }, 'date', {
-                        date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
-                    });
-                    return false;
-                }
+        if (maxDate) {
+            const maxSimpleDate = parseInputToSimpleDate(maxDate);
+            if (maxSimpleDate && compareDates(parsedDate, maxSimpleDate) > 0) {
+                validation.handleDateValidation(false, {
+                    date: 'date.afterMax'
+                }, 'date', {
+                    date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
+                });
+                return false;
             }
         }
 
@@ -269,26 +251,21 @@ export function useDateTimePicker(
      * 監聽外部值變化 一律嘗試轉換成 SimpleDateValue
      */
     watch(() => modelValue, (newValue) => {
-        if (newValue && typeof newValue === 'string') {
-            const parsedDate = CalendarUtils.parseInput(newValue, calendar, locale);
-            console.log('解析後的日期:', parsedDate);
-            if (parsedDate) {
-                dateTimeValue.setExternalValue(parsedDate);
-                validation.clearFieldErrors('invalidInput');
-                return;
-            }
-            const date = dayjsParseDate(newValue, dateFormat);
-            if (!date.isValid()) {
-                console.warn('無效的日期格式:', newValue);
-                dateTimeValue.setExternalValue(null);
-                validation.handleDateValidation(false, { date: '無效的日期格式' });
-                emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-                return;
-            } else {
-                validation.clearFieldErrors('invalidInput');
-            }
+        const parsedDate = parseInputToSimpleDate(newValue, locale, calendar);
+
+        if (newValue && !parsedDate) {
+            // 有輸入但解析失敗
+            validation.handleDateValidation(false, { date: '無效的日期格式' });
+            dateTimeValue.setExternalValue(null);
+        } else if (parsedDate && !validateDateRange(parsedDate)) {
+            // 解析成功但超出範圍
+            dateTimeValue.setExternalValue(null);
+        } else {
+            // 解析成功且在範圍內，或沒有輸入
+            validation.clearFieldErrors('date');
+            validation.clearFieldErrors('invalidInput');
+            dateTimeValue.setExternalValue(parsedDate);
         }
-        dateTimeValue.setExternalValue(newValue);
     }, { immediate: true });
 
     /**
@@ -319,8 +296,26 @@ export function useDateTimePicker(
      * 處理日期輸入完成
      */
     const handleDateComplete = async (dateStr: string) => {
-        if (!validateAndUpdateDate(dateStr)) {
-            emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+        // const parsedDate = parseInputToSimpleDate(dateStr, locale);
+
+        // if (!parsedDate) {
+        //     validation.handleDateValidation(false, {
+        //         date: 'date.invalid'
+        //     }, 'date', {
+        //         date: { original: dateStr, format: dateFormat }
+        //     });
+        //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+        //     return;
+        // }
+
+        // // 使用共用的區間驗證
+        // if (!validateDateRange(parsedDate)) {
+        //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+        //     return;
+        // }
+        const parsedDate = parseInputToSimpleDate(dateStr, locale);
+
+        if (!parsedDate || !validateDateRange(parsedDate)) {
             return;
         }
 
@@ -405,6 +400,8 @@ export function useDateTimePicker(
             validation.clearFieldErrors(field);
         });
     };
+
+
 
     /**
      * 容器點擊處理

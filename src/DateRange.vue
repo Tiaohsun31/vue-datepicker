@@ -167,13 +167,13 @@ import { useTheme } from './composables/useTheme';
 import {
     formatSimpleDate,
     ensureSimpleDate,
-    type DateTimeValue,
+    type DateTimeInput,
     type OutputFormat
 } from './utils/dateUtils';
 import { type TailwindColor } from './types/main';
 
 interface Props {
-    modelValue?: { start: DateTimeValue; end: DateTimeValue } | null;
+    modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
 
@@ -195,8 +195,8 @@ interface Props {
     // 一般選項
     disabled?: boolean;
     required?: boolean;
-    minDate?: DateTimeValue;
-    maxDate?: DateTimeValue;
+    minDate?: DateTimeInput;
+    maxDate?: DateTimeInput;
     locale?: string;
     separator?: string;
     dateFormat?: string;
@@ -247,8 +247,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    'update:modelValue': [range: { start: DateTimeValue; end: DateTimeValue } | null];
-    'change': [range: { start: DateTimeValue; end: DateTimeValue } | null];
+    'update:modelValue': [range: { start: DateTimeInput; end: DateTimeInput } | null];
+    'change': [range: { start: DateTimeInput; end: DateTimeInput } | null];
     'validation': [isValid: boolean, errors: Record<string, string>];
 }>();
 

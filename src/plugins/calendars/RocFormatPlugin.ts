@@ -70,7 +70,6 @@ export class RocFormatPlugin implements CalendarFormatPlugin {
         const dateResult = this.parseDatePart(datePart);
         if (!dateResult) return null;
 
-        console.log('timePart', timePart);
         // 解析時間部分
         const timeResult = this.parseTimePart(timePart);
         if (!timeResult) return dateResult; // 如果時間解析失敗，至少返回日期
@@ -84,6 +83,7 @@ export class RocFormatPlugin implements CalendarFormatPlugin {
 
     /**
      * 解析日期部分 (如: "114年06月18日")
+     * 統一轉換為公元曆
      */
     private parseDatePart(datePart: string): SimpleDateValue | null {
         const dateMatch = datePart.match(/(\d+)年(\d+)月(\d+)日/);

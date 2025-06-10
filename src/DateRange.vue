@@ -168,9 +168,8 @@ import {
     formatSimpleDate,
     ensureSimpleDate,
     type DateTimeInput,
-    type OutputFormat
 } from './utils/dateUtils';
-import { type TailwindColor } from './types/main';
+import { type TailwindColor, type OutputType } from './types/main';
 
 interface Props {
     modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
@@ -209,7 +208,7 @@ interface Props {
     minRange?: number;
 
     // 輸出格式
-    outputFormat?: OutputFormat;
+    outputType?: OutputType;
 
     // 錯誤處理選項
     showErrorMessage?: boolean;  // 是否顯示錯誤訊息
@@ -269,7 +268,7 @@ const dateRange = useDateRange(
         disabled: props.disabled,
         dateFormat: props.dateFormat,
         timeFormat: props.timeFormat,
-        outputFormat: props.outputFormat,
+        outputType: props.outputType,
         enableSeconds: props.enableSeconds,
         minDate: props.minDate,
         maxDate: props.maxDate,

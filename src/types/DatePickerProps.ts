@@ -1,11 +1,9 @@
-import { type TailwindColor } from './main';
-import type { DateTimeInput, OutputFormat } from '@/utils/dateUtils';
+import { type TailwindColor, type OutputType } from './main';
+import type { DateTimeInput } from '@/utils/dateUtils';
 import type { CalendarIdentifier } from '@internationalized/date';
 
-//  TODO:
-// 考慮設定props，決定初始化時，是否執行minDate和maxDate的驗證
-// minuteStep
 export interface DatePickerProps {
+    // 主題
     modelValue?: DateTimeInput;
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
@@ -13,11 +11,12 @@ export interface DatePickerProps {
     // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
     calendar?: string | CalendarIdentifier; // 日曆系統 預設為 'gregory'
     locale?: string; // 語言環境 預設為 'zh-TW'
-    outputFormat?: OutputFormat;  // 輸出格式 iso、date、simple 預設為 'iso'
+    outputType?: OutputType;  // 輸出格式 預設為 'iso'，如果設置了 outputFormat，則會忽略 dateFormat 和 timeFormat 的設置
+    useStrictISO?: boolean; // 是否使用嚴格的 ISO 8601 格式輸出 預設為 false
 
     // 日期選項
-    minDate?: DateTimeInput; // 最小日期 預設為 null TODO:目前對calendar無效
-    maxDate?: DateTimeInput; // 最大日期 預設為 null TODO:目前對calendar無效
+    minDate?: DateTimeInput; // 最小日期 預設為 null 限定輸入西元曆
+    maxDate?: DateTimeInput; // 最大日期 預設為 null 限定輸入西元曆
     dateSeparator?: string; // 日期的分隔符 預設為 '-'
     dateFormat?: string; // 日期格式 預設為 'YYYY-MM-DD' 會依照日期格式輸出
 

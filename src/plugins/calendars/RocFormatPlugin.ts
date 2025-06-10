@@ -143,7 +143,6 @@ export class RocFormatPlugin implements CalendarFormatPlugin {
             if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
                 return null;
             }
-            console.log('chineseTimeMatch', { hour, minute, second });
             return { hour, minute, second };
         }
 

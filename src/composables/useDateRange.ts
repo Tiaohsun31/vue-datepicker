@@ -19,10 +19,10 @@ import {
     compareDates,
     addDays,
     type SimpleDateValue,
-    type DateTimeInput,
-    type OutputFormat
+    type DateTimeInput
 } from '../utils/dateUtils';
 import { CalendarUtils } from '@/utils/calendarUtils';
+import type { OutputType } from '../types/main';
 
 interface DateRangeOptions {
     calendar?: string
@@ -35,7 +35,7 @@ interface DateRangeOptions {
     // 格式配置
     dateFormat?: string;
     timeFormat?: string;
-    outputFormat?: OutputFormat;
+    outputType?: OutputType;
 
     // 時間配置
     enableSeconds?: boolean;
@@ -75,7 +75,7 @@ export function useDateRange(
         disabled = false,
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
-        outputFormat = 'iso',
+        outputType = 'iso',
         enableSeconds = false,
         minDate,
         maxDate,
@@ -118,7 +118,7 @@ export function useDateRange(
         showTime,
         dateFormat,
         timeFormat,
-        outputFormat,
+        outputType,
         defaultTime: '00:00:00',
         enableSeconds
     });
@@ -128,7 +128,7 @@ export function useDateRange(
         showTime,
         dateFormat,
         timeFormat,
-        outputFormat,
+        outputType,
         defaultTime: '23:59:59',
         enableSeconds
     });
@@ -305,8 +305,8 @@ export function useDateRange(
         }
 
         const range = {
-            start: formatOutput(startDateTime.internalDateTime.value, outputFormat),
-            end: formatOutput(endDateTime.internalDateTime.value, outputFormat)
+            start: formatOutput(startDateTime.internalDateTime.value, outputType),
+            end: formatOutput(endDateTime.internalDateTime.value, outputType)
         };
 
         emitUpdate?.(range);

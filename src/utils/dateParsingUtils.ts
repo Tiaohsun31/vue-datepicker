@@ -2,6 +2,7 @@
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { createRocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
+import type { SimpleDateValue } from './dateUtils';
 
 dayjs.extend(customParseFormat);
 
@@ -9,7 +10,7 @@ const rocPlugin = createRocFormatPlugin();
 
 export interface DateParseResult {
     success: boolean;
-    date: { year: number; month: number; day: number } | null;
+    date: SimpleDateValue | null;
     format: string | null;
     confidence: number;
     calendarSystem?: string;
@@ -102,7 +103,10 @@ export class SmartDateParser {
                     date: {
                         year: parsed.year(),
                         month: parsed.month() + 1,
-                        day: parsed.date()
+                        day: parsed.date(),
+                        hour: parsed.hour() || 0,
+                        minute: parsed.minute() || 0,
+                        second: parsed.second() || 0
                     },
                     format,
                     confidence: 1.0,
@@ -124,7 +128,10 @@ export class SmartDateParser {
                     date: {
                         year: parsed.year(),
                         month: parsed.month() + 1,
-                        day: parsed.date()
+                        day: parsed.date(),
+                        hour: parsed.hour() || 0,
+                        minute: parsed.minute() || 0,
+                        second: parsed.second() || 0
                     },
                     format: 'auto-detected',
                     confidence: 0.6,

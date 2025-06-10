@@ -96,13 +96,10 @@ import ClearIcon from './components/icons/ClearIcon.vue';
 // Composables
 import { useDateTimePicker } from './composables/useDateTimePicker';
 import { useTheme } from './composables/useTheme';
-import { UnifiedCalendarSystem } from './utils/calendarSystem';
-
 
 // Utils
 import {
     formatSimpleDate,
-    ensureSimpleDate,
     isValidDateFormat,
     isValidTimeFormat,
     // ensureSimpleDateWithLocale,
@@ -122,6 +119,8 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     // 預設使用西元曆
     calendar: 'gregory',
     locale: 'zh-TW',
+    outputType: 'iso',
+    useStrictISO: false,
 
     // 日期相關屬性
     dateSeparator: '-',
@@ -151,7 +150,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
         minute: localeManager.getPlaceholderMessage('time.minute'),
         second: localeManager.getPlaceholderMessage('time.second')
     }),
-    outputFormat: 'iso',
+
     showErrorMessage: true,     // 預設顯示錯誤訊息
     useI18n: true,
     customErrorMessages: () => ({})
@@ -184,7 +183,8 @@ const datePicker = useDateTimePicker(
         calendar: props.calendar,
         dateFormat: internalDateFormat.value,
         timeFormat: internalTimeFormat.value,
-        outputFormat: props.outputFormat,
+        outputType: props.outputType,
+        useStrictISO: props.useStrictISO,
         customDefaultTime: props.customDefaultTime,
         enableSeconds: props.enableSeconds,
         autoFocusTimeAfterDate: props.autoFocusTimeAfterDate,

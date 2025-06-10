@@ -29,7 +29,7 @@
 
         <!-- AM/PM 選擇器 (12小時制) -->
         <template v-if="!use24Hour">
-            <button type="button" class="time-period pl-2 text-sm cursor-pointer text-gray-600"
+            <button type="button" class="time-period pl-2 text-sm cursor-pointer text-vdt-content"
                 @click.stop="togglePeriod">
                 {{ displayPeriod }}
             </button>

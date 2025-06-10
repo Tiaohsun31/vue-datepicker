@@ -3,7 +3,7 @@
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
             :max-year="maxYear" :calendar="calendar" />
-        {{ currentYear }} - {{ currentMonth }}
+
         <!-- 星期列 -->
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" :calendar="calendar" />
 

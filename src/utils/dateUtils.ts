@@ -1,5 +1,4 @@
-// dateUtils.ts - 簡化版，限縮 @internationalized/date 使用範圍
-import { CalendarDate, CalendarDateTime } from '@internationalized/date';
+// dateUtils.ts
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -8,6 +7,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import localeData from 'dayjs/plugin/localeData';
 import { parseUserDateInput } from './dateParsingUtils';
 import { CalendarUtils } from './calendarUtils';
+import type { OutputType } from '../types/main';
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
@@ -36,15 +36,6 @@ export type DateTimeInput =
     | Date            // JavaScript Date
     | SimpleDateValue // 簡單物件
     | null;
-
-/**
- * TODO: 確認日曆系統是否有使用該值、以及該值是否有效
- * 輸出格式選項
- * ISO 格式 - 用於 API 或顯示 "2024-06-01 14:30:25"
- * date 格式 - 用於 JavaScript Date 物件
- * simple 格式 - 用於簡單日期物件 { year: 2024, month: 6, day: 1, hour: 14, minute: 30, second: 25 }
- */
-export type OutputFormat = 'iso' | 'date' | 'simple';
 
 /**
  * 獲取今天的日期（SimpleDateValue）
@@ -175,34 +166,53 @@ export function formatSimpleDate(
  */
 export function formatOutput(
     date: SimpleDateValue | null,
-    outputFormat: OutputFormat = 'iso',
-    customFormat?: string
+    outputType: OutputType = 'iso',
+    customFormat?: string,
+    includeTime: boolean = false,
+    calendar: string = 'gregory',
+    locale: string = 'zh-TW',
+    useStrictISO: boolean = false
 ): DateTimeInput {
     if (!date) return null;
 
-    switch (outputFormat) {
-        case 'iso':
-            const format = customFormat || (
-                date.hour !== undefined ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD'
-            );
-            return formatSimpleDate(date, format);
+    try {
+        switch (outputType) {
+            case 'iso':
+                if (includeTime) {
+                    const isoFormat = useStrictISO ? 'YYYY-MM-DDTHH:mm:ss' : 'YYYY-MM-DD HH:mm:ss';
+                    return formatSimpleDate(date, isoFormat);
+                } else {
+                    return formatSimpleDate(date, 'YYYY-MM-DD');
+                }
 
-        case 'date':
-            const jsDate = new Date(
-                date.year,
-                date.month - 1,
-                date.day,
-                date.hour || 0,
-                date.minute || 0,
-                date.second || 0
-            );
-            return jsDate;
+            case 'date':
+                return new Date(
+                    date.year,
+                    date.month - 1,
+                    date.day,
+                    date.hour || 0,
+                    date.minute || 0,
+                    date.second || 0
+                );
 
-        case 'simple':
-            return date;
+            case 'object':
+                return date;
 
-        default:
-            return formatSimpleDate(date, customFormat || 'YYYY-MM-DD HH:mm:ss');
+            case 'custom':
+                if (!customFormat) {
+                    console.warn('Custom 輸出類型需要提供 customFormat，回退到 ISO 格式');
+                    return formatSimpleDate(date, includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
+                }
+                return CalendarUtils.formatOutput(date, customFormat, calendar, locale);
+
+            default:
+                console.warn(`不支援的輸出類型: ${outputType}，回退到 ISO 格式`);
+                return formatSimpleDate(date, 'YYYY-MM-DD');
+        }
+    } catch (error) {
+        console.error('formatOutput 失敗:', error);
+        // 最安全的回退
+        return date;
     }
 }
 

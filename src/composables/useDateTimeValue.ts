@@ -13,14 +13,14 @@ import {
     createSimpleDate,
     type SimpleDateValue,
     type DateTimeInput,
-    type OutputFormat
 } from '../utils/dateUtils';
+import type { OutputType } from '../types/main';
 
 interface DateTimeValueOptions {
     showTime?: boolean;
     dateFormat?: string;
     timeFormat?: string;
-    outputFormat?: OutputFormat;
+    outputType?: OutputType;
     defaultTime?: string;
     enableSeconds?: boolean;
 }
@@ -32,7 +32,7 @@ export function useDateTimeValue(
         showTime = false,
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
-        outputFormat = 'iso',
+        outputType = 'iso',
         defaultTime = '00:00:00',
         enableSeconds = true
     } = options;
@@ -193,7 +193,7 @@ export function useDateTimeValue(
             ? `${dateFormat} ${timeFormat}`
             : dateFormat;
 
-        return formatOutput(targetDateTime, outputFormat, customFormat);
+        return formatOutput(targetDateTime, outputType, customFormat);
     };
 
     /**

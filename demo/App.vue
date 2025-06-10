@@ -1,17 +1,19 @@
 <template>
     <div class="container mx-auto p-4 space-y-6">
         <div>
-            {{ dateTimeutc }}
-            <DatePicker v-model="dateTimeutc" locale="en-US" min-date="2002-01-01">
+            {{ dateTime }}
+            <DatePicker v-model="dateTime" locale="en-US" min-date="2002-01-01">
             </DatePicker>
             {{ rocDate }}
-            <!-- date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" -->
             <DatePicker v-model="rocDate" calendar="roc" locale="zh-TW" date-format="ROC-YYYY-MM-DD"
                 time-format="A HH時mm分" @change="handleDateChange" />
+            <!-- date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" -->
+            <!--
+            {{ dayjs(dateTime).format('YYYY-MM-DDTHH:mm:ss') }} -->
         </div>
         <div>
-            <!-- {{ dateTime2 }}
-            <DatePicker v-model="dateTime2" min-date="01/03/2000" mode="dark" date-format="DD/MM/YYYY" locale="zh-TW">
+            {{ dateTime2 }}
+            <DatePicker v-model="dateTime2" mode="dark" output-type="custom" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -22,7 +24,7 @@
                         </ul>
                     </div>
                 </template>
-</DatePicker> -->
+            </DatePicker>
         </div>
         <div>
             <DateRange v-model="selectedDate"></DateRange>
@@ -62,6 +64,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
+import dayjs from 'dayjs';
 // import ScopeTheme from './views/ScopeTheme.vue';
 // import DatePickerV1 from '@/DatePickerV1.vue';
 // import DatePickerV2 from '@/DatePickerV2.vue';
@@ -78,8 +81,8 @@ const selectedDate = ref({
     end: '',
 });
 const rocDate = ref('民國114年06月18日 上午 02時48分');
-const dateTime = ref('');
-const dateTime2 = ref('');
+const dateTime = ref('2025-05-22 12:22:12'); // ISO 8601 格式
+const dateTime2 = ref('2025-05-22 06:22:12');
 const dateTime3 = ref('');
 const dateTimeutc = ref('2022-01-01T12:00:00.000Z'); // UTC 時間格式
 const partialCustomDate = ref();

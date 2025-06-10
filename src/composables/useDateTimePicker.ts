@@ -9,11 +9,10 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { CalendarUtils } from '../utils/calendarUtils';
+import type { OutputType } from '@/types/main';
 import {
     parseInputToSimpleDate,
-    formatSimpleDate,
-    compareDates,
-    // dayjsParseDate,
+    formatOutput,
     type DateTimeInput,
     type SimpleDateValue
 } from '../utils/dateUtils';
@@ -31,7 +30,8 @@ interface DateTimePickerOptions {
     // 格式配置
     dateFormat?: string;
     timeFormat?: string;
-    outputFormat?: 'iso' | 'date' | 'simple';
+    outputType?: OutputType;
+    useStrictISO?: boolean;
 
     // 時間配置
     customDefaultTime?: string;
@@ -73,7 +73,8 @@ export function useDateTimePicker(
         calendar = 'gregory',          // 日曆系統
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
-        outputFormat = 'iso',
+        outputType = 'iso',
+        useStrictISO = false,
         customDefaultTime = '00:00:00',
         enableSeconds = true,
         autoFocusTimeAfterDate = true,
@@ -100,7 +101,7 @@ export function useDateTimePicker(
         showTime,
         dateFormat,
         timeFormat,
-        outputFormat,
+        outputType,
         defaultTime: customDefaultTime,
         enableSeconds
     });
@@ -126,13 +127,6 @@ export function useDateTimePicker(
         enableSeconds,
         fallbackTime: '00:00:00'
     });
-
-    // 統一的格式化函數
-    const formatDateTimeWithCalendar = (dateTime: SimpleDateValue, formatStr: string): string => {
-        if (!dateTime) return '';
-        // 使用 CalendarUtils 進行格式化
-        return CalendarUtils.formatOutput(dateTime, formatStr, calendar, locale);
-    };
 
     // 轉換為 SimpleDateValue
     const calendarMinDate = computed(() => {
@@ -173,34 +167,10 @@ export function useDateTimePicker(
      */
     const emitEvents = async (dateTime = dateTimeValue.internalDateTime.value) => {
         let formattedOutput: DateTimeInput = null;
-        console.log(dateTime, '發送更新事件:', dateTime);
 
         if (dateTime) {
-            const outputFormatStr = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
-
-            try {
-                if (outputFormat === 'simple') {
-                    formattedOutput = dateTime;
-                } else if (outputFormat === 'date') {
-                    const jsDate = new Date(
-                        dateTime.year,
-                        dateTime.month - 1,
-                        dateTime.day,
-                        dateTime.hour || 0,
-                        dateTime.minute || 0,
-                        dateTime.second || 0
-                    );
-                    formattedOutput = jsDate;
-                } else {
-                    // iso 格式 - 使用統一格式化函數
-                    formattedOutput = formatDateTimeWithCalendar(dateTime, outputFormatStr);
-                }
-
-                console.log('格式化輸出:', { dateTime, formattedOutput, format: outputFormatStr });
-            } catch (error) {
-                console.warn('格式化輸出失敗:', error);
-                formattedOutput = dateTimeValue.getFormattedOutput(dateTime);
-            }
+            const customFormat = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
+            formattedOutput = formatOutput(dateTime, outputType, customFormat, showTime, calendar, locale, useStrictISO);
         }
 
         emitUpdate?.(formattedOutput);
@@ -363,31 +333,44 @@ export function useDateTimePicker(
     };
 
     /**
-     * 驗證當前值
+     * 驗證當前值 提供表單驗證 const isValid = await datePickerRef.value?.validate();
      */
-    const validate = async () => {
-        dateInputRef.value?.validate();
-        if (showTime && timeInputRef.value) {
-            timeInputRef.value.validate();
-        }
+    const validate = async (): Promise<boolean> => {
+        // 1. 觸發子組件驗證
+        const dateValid = await dateInputRef.value?.validate();
+        const timeValid = showTime ? await timeInputRef.value?.validate() : true;
 
-        // 使用 CalendarUtils 進行日曆驗證
+        // 2. 日曆系統驗證
+        let calendarValid = true;
         if (dateTimeValue.internalDateTime.value) {
-            const isCalendarValid = CalendarUtils.isValidDate(
+            calendarValid = CalendarUtils.isValidDate(
                 dateTimeValue.internalDateTime.value.year,
                 dateTimeValue.internalDateTime.value.month,
                 dateTimeValue.internalDateTime.value.day,
                 calendar
             );
-            if (!isCalendarValid) {
-                return false;
+
+            if (!calendarValid) {
+                validation.handleDateValidation(false, {
+                    date: 'date.invalidInCalendar'
+                }, 'calendar', {
+                    calendar: { calendarName: CalendarUtils.getCalendarDisplayName(calendar, locale) }
+                });
             }
         }
 
-        return validation.validateDateTime(
+        // 3. 整體驗證
+        const overallValid = validation.validateDateTime(
             dateTimeValue.inputDateValue.value,
             dateTimeValue.inputTimeValue.value
         );
+
+        const allValid = dateValid && timeValid && calendarValid && overallValid;
+
+        // 4. 發送驗證結果
+        emitValidation?.(allValid, validation.mergedErrors.value);
+
+        return allValid;
     };
 
     /**

@@ -126,20 +126,61 @@ export function useDateTimeValue(
     /**
      * 更新日期時間值
      */
-    const updateDateTime = (dateStr?: string | null, timeStr?: string | null) => {
-        const finalDateStr = dateStr !== undefined ? dateStr : inputDateValue.value;
-        let finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
+    // const updateDateTime = (dateStr?: string | null, timeStr?: string | null) => {
+    //     const finalDateStr = dateStr !== undefined ? dateStr : inputDateValue.value;
+    //     let finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
 
-        // 統一在這裡處理默認時間
-        if (showTime && finalDateStr && !finalTimeStr) {
-            finalTimeStr = defaultTime;
-            inputTimeValue.value = finalTimeStr;
-        }
+    //     // 統一在這裡處理默認時間
+    //     if (showTime && finalDateStr && !finalTimeStr) {
+    //         finalTimeStr = defaultTime;
+    //         inputTimeValue.value = finalTimeStr;
+    //     }
+
+    //     const dateTime = createDateTimeFromInputs(finalDateStr, finalTimeStr);
+    //     internalDateTime.value = dateTime;
+
+    //     return dateTime;
+    // };
+
+    // 輸入解析（適用於 DateInput/TimeInput）
+    const updateFromInputs = (dateStr?: string, timeStr?: string) => {
+        const finalDateStr = dateStr !== undefined ? dateStr : inputDateValue.value;
+        const finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
 
         const dateTime = createDateTimeFromInputs(finalDateStr, finalTimeStr);
         internalDateTime.value = dateTime;
-
         return dateTime;
+    };
+
+    // 直接設置內部值（適用於 Calendar/TimeSelector）
+    const setInternalDateTime = (dateTime: SimpleDateValue | null) => {
+        internalDateTime.value = dateTime;
+
+        // 同步更新顯示值（西元格式）
+        if (dateTime) {
+            inputDateValue.value = formatSimpleDate(dateTime, dateFormat);
+            inputTimeValue.value = getTimeFromDateTime(dateTime);
+        } else {
+            inputDateValue.value = null;
+            inputTimeValue.value = null;
+        }
+    };
+
+    // 只更新時間部分（適用於 TimeSelector）
+    const updateTimeOnly = (timeStr: string) => {
+        if (!internalDateTime.value) return null;
+
+        const timeParts = timeStr.split(':').map(Number);
+        const updatedDateTime: SimpleDateValue = {
+            ...internalDateTime.value,
+            hour: timeParts[0] || 0,
+            minute: timeParts[1] || 0,
+            second: timeParts[2] || 0
+        };
+
+        internalDateTime.value = updatedDateTime;
+        inputTimeValue.value = timeStr;
+        return updatedDateTime;
     };
 
     /**
@@ -203,8 +244,11 @@ export function useDateTimeValue(
         hasValue,
 
         // 主要方法
+        updateFromInputs,
+        setInternalDateTime,
+        updateTimeOnly,
         setExternalValue,
-        updateDateTime,
+        // updateDateTime,
         getFormattedOutput,
         clearValues,
         applyDefaultTime,

@@ -4,14 +4,18 @@
  */
 
 import { ref, computed } from 'vue';
+import { parseInputToSimpleDate, formatSimpleDate, compareDates, type SimpleDateValue, type DateTimeInput } from '../utils/dateUtils';
 
 interface ValidationOptions {
     required?: boolean;
     showTime?: boolean;
+    minDate?: DateTimeInput;
+    maxDate?: DateTimeInput;
+    dateFormat?: string;
 }
 
 export function useDateTimeValidation(options: ValidationOptions = {}) {
-    const { required = true, showTime = false } = options;
+    const { required = true, showTime = false, minDate, maxDate, dateFormat = 'YYYY-MM-DD' } = options;
 
     // 錯誤狀態
     const errors = ref<Record<string, string>>({});
@@ -84,6 +88,40 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         }
 
         return !hasErrors.value;
+    };
+
+    /**
+     * 驗證日期區間
+     */
+    const validateDateRange = (parsedDate: SimpleDateValue): boolean => {
+        if (!parsedDate) return false;
+
+        // 檢查日期範圍
+        if (minDate) {
+            const minSimpleDate = parseInputToSimpleDate(minDate);
+            if (minSimpleDate && compareDates(parsedDate, minSimpleDate) < 0) {
+                handleDateValidation(false, {
+                    date: 'date.beforeMin'
+                }, 'date', {
+                    date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
+                });
+                return false;
+            }
+        }
+
+        if (maxDate) {
+            const maxSimpleDate = parseInputToSimpleDate(maxDate);
+            if (maxSimpleDate && compareDates(parsedDate, maxSimpleDate) > 0) {
+                handleDateValidation(false, {
+                    date: 'date.afterMax'
+                }, 'date', {
+                    date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
+                });
+                return false;
+            }
+        }
+
+        return true;
     };
 
     /**
@@ -175,6 +213,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         handleDateValidation,
         handleTimeValidation,
         validateDateTime,
+        validateDateRange,
 
         // 錯誤管理
         clearFieldErrors,

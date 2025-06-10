@@ -90,7 +90,10 @@ export function useDateTimePicker(
     // 初始化各個 composables
     const validation = useDateTimeValidation({
         required,
-        showTime
+        showTime,
+        minDate,
+        maxDate,
+        dateFormat
     });
 
     const dateTimeValue = useDateTimeValue({
@@ -165,11 +168,6 @@ export function useDateTimePicker(
         emitValidation = emitters.validation || null;
     };
 
-    const wrappedEmitUpdate = async (dateTime = dateTimeValue.internalDateTime.value, source: string) => {
-        console.debug(`發送更新事件，來源: ${source}`, dateTime);
-        await emitEvents(dateTime);
-    }
-
     /**
      * 發送更新事件
      */
@@ -214,40 +212,6 @@ export function useDateTimePicker(
     };
 
     /**
-     * 驗證日期區間
-     */
-    const validateDateRange = (parsedDate: SimpleDateValue): boolean => {
-        if (!parsedDate) return false;
-
-        // 檢查日期範圍
-        if (minDate) {
-            const minSimpleDate = parseInputToSimpleDate(minDate);
-            if (minSimpleDate && compareDates(parsedDate, minSimpleDate) < 0) {
-                validation.handleDateValidation(false, {
-                    date: 'date.beforeMin'
-                }, 'date', {
-                    date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
-                });
-                return false;
-            }
-        }
-
-        if (maxDate) {
-            const maxSimpleDate = parseInputToSimpleDate(maxDate);
-            if (maxSimpleDate && compareDates(parsedDate, maxSimpleDate) > 0) {
-                validation.handleDateValidation(false, {
-                    date: 'date.afterMax'
-                }, 'date', {
-                    date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
-                });
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    /**
      * 監聽外部值變化 一律嘗試轉換成 SimpleDateValue
      */
     watch(() => modelValue, (newValue) => {
@@ -257,7 +221,7 @@ export function useDateTimePicker(
             // 有輸入但解析失敗
             validation.handleDateValidation(false, { date: '無效的日期格式' });
             dateTimeValue.setExternalValue(null);
-        } else if (parsedDate && !validateDateRange(parsedDate)) {
+        } else if (parsedDate && !validation.validateDateRange(parsedDate)) {
             // 解析成功但超出範圍
             dateTimeValue.setExternalValue(null);
         } else {
@@ -296,34 +260,22 @@ export function useDateTimePicker(
      * 處理日期輸入完成
      */
     const handleDateComplete = async (dateStr: string) => {
-        // const parsedDate = parseInputToSimpleDate(dateStr, locale);
-
-        // if (!parsedDate) {
-        //     validation.handleDateValidation(false, {
-        //         date: 'date.invalid'
-        //     }, 'date', {
-        //         date: { original: dateStr, format: dateFormat }
-        //     });
-        //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-        //     return;
-        // }
-
-        // // 使用共用的區間驗證
-        // if (!validateDateRange(parsedDate)) {
-        //     emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
-        //     return;
-        // }
-        const parsedDate = parseInputToSimpleDate(dateStr, locale);
-
-        if (!parsedDate || !validateDateRange(parsedDate)) {
-            return;
-        }
-
         dateTimeValue.inputDateValue.value = dateStr;
 
         // 更新內部值
-        const updatedDateTime = dateTimeValue.updateDateTime();
-        emitEvents(updatedDateTime);
+        const updatedDateTime = dateTimeValue.updateFromInputs();
+
+        if (!updatedDateTime) {
+            validation.handleDateValidation(false, { date: 'date.invalid' });
+            return;
+        }
+
+        // 範圍驗證
+        if (!validation.validateDateRange(updatedDateTime)) {
+            return;
+        }
+
+        await emitEvents(updatedDateTime);
 
         // 清除相關驗證錯誤
         ['date', 'year', 'month', 'day'].forEach(field => {
@@ -344,8 +296,8 @@ export function useDateTimePicker(
      */
     const handleTimeComplete = async (timeStr: string) => {
         dateTimeValue.inputTimeValue.value = timeStr;
-        const updatedDateTime = dateTimeValue.updateDateTime();
-        emitEvents(updatedDateTime);
+        const updatedDateTime = dateTimeValue.updateFromInputs();
+        await emitEvents(updatedDateTime);
 
         // 清除時間相關驗證錯誤
         ['time', 'hour', 'minute', 'second'].forEach(field => {
@@ -354,18 +306,20 @@ export function useDateTimePicker(
     };
 
     /**
-     * 處理日曆選擇 - 使用 CalendarUtils
+     * 處理日曆選擇
      */
     const handleCalendarSelect = async (date: SimpleDateValue, closeCalendar: boolean = true) => {
         try {
-            dateTimeValue.inputDateValue.value = formatSimpleDate(date, dateFormat);
+            if (!validation.validateDateRange(date)) {
+                return;
+            }
+
+            dateTimeValue.setInternalDateTime(date);
+            await emitEvents(date);
 
             ['date', 'year', 'month', 'day'].forEach(field => {
                 validation.clearFieldErrors(field);
             });
-
-            const updatedDateTime = dateTimeValue.updateDateTime();
-            await wrappedEmitUpdate(updatedDateTime, 'handleCalendarSelect');
 
             if (closeCalendar) {
                 calendarPopup.hideCalendar();
@@ -379,20 +333,9 @@ export function useDateTimePicker(
      * 處理時間選擇（來自日曆的時間選擇器）
      */
     const handleTimeSelect = async (timeStr: string) => {
-        console.log('處理時間選擇:', timeStr);
+        const updatedDateTime = dateTimeValue.updateTimeOnly(timeStr);
 
-        if (dateTimeValue.internalDateTime.value) {
-            const timeParts = timeStr.split(':').map(Number);
-            const updatedDateTime: SimpleDateValue = {
-                ...dateTimeValue.internalDateTime.value,
-                hour: timeParts[0] || 0,
-                minute: timeParts[1] || 0,
-                second: timeParts[2] || 0
-            };
-
-            dateTimeValue.internalDateTime.value = updatedDateTime;
-            dateTimeValue.inputTimeValue.value = timeStr;
-
+        if (updatedDateTime) {
             await emitEvents(updatedDateTime);
         }
 
@@ -400,8 +343,6 @@ export function useDateTimePicker(
             validation.clearFieldErrors(field);
         });
     };
-
-
 
     /**
      * 容器點擊處理
@@ -464,24 +405,29 @@ export function useDateTimePicker(
         };
 
         try {
-            const dateStr = formatDateTimeWithCalendar(simpleDate, dateFormat);
-            const timeStr = defaultTime.getCurrentTimeString();
+            // 直接設置內部日期時間值
+            dateTimeValue.setInternalDateTime(simpleDate);
 
-            dateTimeValue.inputDateValue.value = dateStr;
-            dateTimeValue.inputTimeValue.value = timeStr;
+            // 發送更新事件
+            await emitEvents(simpleDate);
 
-            const updatedDateTime = dateTimeValue.updateDateTime();
-            await emitEvents(updatedDateTime);
+            // 清除所有驗證錯誤
+            ['date', 'year', 'month', 'day', 'time', 'hour', 'minute', 'second'].forEach(field => {
+                validation.clearFieldErrors(field);
+            });
         } catch (error) {
             console.warn('設置當前時間失敗:', error);
-            // 回退到原有邏輯
+
+            // 回退邏輯：手動設置輸入值然後更新
             const dateStr = `${simpleDate.year}-${simpleDate.month.toString().padStart(2, '0')}-${simpleDate.day.toString().padStart(2, '0')}`;
-            const timeStr = defaultTime.getCurrentTimeString();
+            const timeStr = showTime ? `${(simpleDate.hour || 0).toString().padStart(2, '0')}:${(simpleDate.minute || 0).toString().padStart(2, '0')}:${(simpleDate.second || 0).toString().padStart(2, '0')}` : null;
 
             dateTimeValue.inputDateValue.value = dateStr;
-            dateTimeValue.inputTimeValue.value = timeStr;
+            if (showTime && timeStr) {
+                dateTimeValue.inputTimeValue.value = timeStr;
+            }
 
-            const updatedDateTime = dateTimeValue.updateDateTime();
+            const updatedDateTime = dateTimeValue.updateFromInputs();
             await emitEvents(updatedDateTime);
         }
     };

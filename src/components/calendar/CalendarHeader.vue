@@ -47,8 +47,8 @@ import { ref, computed, watch } from 'vue';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
 import YearSelector from '../selector/YearSelector.vue';
-import { CalendarUtils } from '@/utils/calendarUtils';
-import { CalendarDate } from '@internationalized/date';
+import { CalendarUtils, } from '@/utils/calendarUtils';
+import { CalendarDate, DateFormatter } from '@internationalized/date';
 
 interface Props {
     month: number;
@@ -94,24 +94,48 @@ const displayYear = computed(() => {
         return selectedYearLocal.value.toString();
     }
 
-    // 對於非西元曆，顯示對應的當地年份
-    const { localYear, isValid } = CalendarUtils.convertGregorianYear(
-        selectedYearLocal.value,
-        props.calendar
-    );
+    try {
+        // 使用 @internationalized/date 格式化，會自動顯示正確年號
+        const gregorianDate = new CalendarDate(selectedYearLocal.value, 6, 1); // 用年中日期
+        const calendarDate = CalendarUtils.safeToCalendar(
+            gregorianDate,
+            CalendarUtils.createSafeCalendar(props.calendar)
+        );
 
-    if (isValid) {
-        const calendarName = CalendarUtils.getCalendarDisplayName(props.calendar, props.locale);
-        // 根據語言決定顯示格式
-        if (props.locale?.startsWith('zh')) {
-            return `${calendarName} ${localYear}年`;
-        } else {
-            return `${calendarName} ${localYear}`;
-        }
+        const formatter = new DateFormatter(props.locale, {
+            calendar: props.calendar,
+            year: 'numeric'
+        });
+
+        return formatter.format(calendarDate.toDate('UTC'));
+    } catch (error) {
+        // 回退
+        return selectedYearLocal.value.toString();
     }
-
-    return selectedYearLocal.value.toString();
 });
+// const displayYear = computed(() => {
+//     if (props.calendar === 'gregory') {
+//         return selectedYearLocal.value.toString();
+//     }
+
+//     // 對於非西元曆，顯示對應的當地年份
+//     const { localYear, isValid } = CalendarUtils.convertGregorianYear(
+//         selectedYearLocal.value,
+//         props.calendar
+//     );
+
+//     if (isValid) {
+//         const calendarName = CalendarUtils.getCalendarDisplayName(props.calendar, props.locale);
+//         // 根據語言決定顯示格式
+//         if (props.locale?.startsWith('zh')) {
+//             return `${calendarName} ${localYear}年`;
+//         } else {
+//             return `${calendarName} ${localYear}`;
+//         }
+//     }
+
+//     return selectedYearLocal.value.toString();
+// });
 
 // 月份名稱
 const monthNames = computed(() => {

@@ -9,7 +9,7 @@ export interface DatePickerProps {
     theme?: TailwindColor | string;
 
     // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
-    calendar?: string | CalendarIdentifier; // 日曆系統 預設為 'gregory'
+    calendar?: CalendarIdentifier; // 日曆系統 預設為 'gregory'
     locale?: string; // 語言環境 預設為 'zh-TW'
     outputType?: OutputType;  // 輸出格式 預設為 'iso'，如果設置了 outputFormat，則會忽略 dateFormat 和 timeFormat 的設置
     useStrictISO?: boolean; // 是否使用嚴格的 ISO 8601 格式輸出 預設為 false

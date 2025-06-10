@@ -99,7 +99,6 @@ const getInitialYearMonth = () => {
 
     // 2. 從 value 中提取
     if (props.value) {
-        console.log('Using value for initial year/month:', props.value);
         return { year: props.value.year, month: props.value.month };
     }
 

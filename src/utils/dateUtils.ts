@@ -199,11 +199,14 @@ export function formatOutput(
                 return date;
 
             case 'custom':
-                if (!customFormat) {
-                    console.warn('Custom 輸出類型需要提供 customFormat，回退到 ISO 格式');
-                    return formatSimpleDate(date, includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
-                }
-                return CalendarUtils.formatOutput(date, customFormat, calendar, locale);
+                // console.log('使用自定義輸出格式:', customFormat);
+                // if (!customFormat ) {
+                //     console.log('Custom 輸出類型需要提供 customFormat，回退到 ISO 格式');
+
+                //     return formatSimpleDate(date, includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
+                // }
+                const format = customFormat || (includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
+                return CalendarUtils.formatOutput(date, format, calendar, locale);
 
             default:
                 console.warn(`不支援的輸出類型: ${outputType}，回退到 ISO 格式`);

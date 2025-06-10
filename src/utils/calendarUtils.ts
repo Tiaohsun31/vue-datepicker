@@ -395,7 +395,7 @@ export class CalendarUtils {
                     calendar: calendar,
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                 });
                 return formatter.format(calendarDate.toDate(Intl.DateTimeFormat().resolvedOptions().timeZone));
             }

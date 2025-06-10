@@ -1,15 +1,13 @@
-// plugins/calendars/RocFormatPlugin.ts - 簡化版 ROC 格式化插件
-import { type CalendarFormatPlugin } from '@/types/calendarFormatPlugin';
+// plugins/calendars/RocFormatPlugin.ts  ROC 格式化插件
+import { type CalendarPlugin } from '@/types/calendarPlugin';
 import { type SimpleDateValue } from '@/utils/dateUtils';
 import dayjs from 'dayjs';
-import { CalendarDate, createCalendar, toCalendar } from '@internationalized/date';
-import { DateFormatter } from '@internationalized/date';
 
 /**
  * 民國曆格式化插件 - 專注於自定義格式輸出
  * 只處理 @internationalized/date 無法處理的特殊格式
  */
-export class RocFormatPlugin implements CalendarFormatPlugin {
+export class RocFormatPlugin implements CalendarPlugin {
     readonly id = 'roc';
 
     readonly yearRange = {
@@ -437,6 +435,6 @@ export class RocFormatPlugin implements CalendarFormatPlugin {
 /**
  * 建立 ROC 格式化插件實例
  */
-export function createRocFormatPlugin(): CalendarFormatPlugin {
+export function createRocFormatPlugin(): CalendarPlugin {
     return new RocFormatPlugin();
 }

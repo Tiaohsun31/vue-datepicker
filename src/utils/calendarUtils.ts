@@ -8,11 +8,11 @@ import {
     getWeeksInMonth,
     startOfWeek,
     getDayOfWeek,
-    DateFormatter
+    DateFormatter,
+    CalendarDateTime
 } from '@internationalized/date';
 
 import type { SimpleDateValue } from './dateUtils';
-import { parseUserDateInput } from './dateParsingUtils';
 import { createRocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 import dayjs from 'dayjs';
 
@@ -46,6 +46,20 @@ export class CalendarUtils {
     }
 
     /**
+     * 智能轉換：根據是否有時間資訊自動選擇類型
+     */
+    static convertToCalendarDateSmart = (simpleDate: SimpleDateValue | null, calendar: string): CalendarDate | CalendarDateTime | null => {
+        if (!simpleDate) return null;
+
+        // 檢查是否包含時間資訊
+        const hasTime = simpleDate.hour !== undefined || simpleDate.minute !== undefined || simpleDate.second !== undefined;
+
+        return hasTime
+            ? this.convertToCalendarDateTime(simpleDate, calendar)
+            : this.convertToCalendarDate(simpleDate, calendar);
+    };
+
+    /**
      * 統一的轉換函數：SimpleDateValue → CalendarDate
      */
     static convertToCalendarDate = (simpleDate: SimpleDateValue | null, calendar: string): CalendarDate | null => {
@@ -63,6 +77,40 @@ export class CalendarUtils {
             }
         } catch (error) {
             console.error('轉換為 CalendarDate 失敗:', error);
+            return null;
+        }
+    };
+
+    /**
+     * 統一的轉換函數：SimpleDateValue → CalendarDateTime (日期+時間)
+     */
+    static convertToCalendarDateTime = (simpleDate: SimpleDateValue | null, calendar: string): CalendarDateTime | null => {
+        if (!simpleDate) return null;
+
+        try {
+            if (calendar === 'gregory') {
+                return new CalendarDateTime(
+                    simpleDate.year,
+                    simpleDate.month,
+                    simpleDate.day,
+                    simpleDate.hour || 0,
+                    simpleDate.minute || 0,
+                    simpleDate.second || 0
+                );
+            } else {
+                const calendarInstance = this.createSafeCalendar(calendar);
+                const gregorianDateTime = new CalendarDateTime(
+                    simpleDate.year,
+                    simpleDate.month,
+                    simpleDate.day,
+                    simpleDate.hour || 0,
+                    simpleDate.minute || 0,
+                    simpleDate.second || 0
+                );
+                return toCalendar(gregorianDateTime, calendarInstance);
+            }
+        } catch (error) {
+            console.error('轉換為 CalendarDateTime 失敗:', error);
             return null;
         }
     };
@@ -389,14 +437,23 @@ export class CalendarUtils {
             }
 
             // 2. 嘗試使用 @internationalized/date 的 DateFormatter
-            const calendarDate = this.convertToCalendarDate(date, calendar);
+            const calendarDate = this.convertToCalendarDateSmart(date, calendar);
             if (calendarDate) {
-                const formatter = new DateFormatter(locale, {
+                const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
+                const formatterOptions: Intl.DateTimeFormatOptions = {
                     calendar: calendar,
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric',
-                });
+                    day: 'numeric'
+                };
+                if (hasTime) {
+                    formatterOptions.hour = 'numeric';
+                    formatterOptions.minute = 'numeric';
+                    if (date.second !== undefined) {
+                        formatterOptions.second = 'numeric';
+                    }
+                }
+                const formatter = new DateFormatter(locale, formatterOptions);
                 return formatter.format(calendarDate.toDate(Intl.DateTimeFormat().resolvedOptions().timeZone));
             }
 
@@ -409,7 +466,16 @@ export class CalendarUtils {
             console.warn('所有格式化方法都失敗，使用基本回退:', error);
 
             // 4. 最基本的回退格式
-            return `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
+            let result = `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
+
+            if (date.hour !== undefined || date.minute !== undefined || date.second !== undefined) {
+                result += ` ${(date.hour || 0).toString().padStart(2, '0')}:${(date.minute || 0).toString().padStart(2, '0')}`;
+                if (date.second !== undefined) {
+                    result += `:${date.second.toString().padStart(2, '0')}`;
+                }
+            }
+
+            return result;
         }
     }
 }

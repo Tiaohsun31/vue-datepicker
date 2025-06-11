@@ -9,8 +9,10 @@
                 time-format="A HH時mm分" @change="handleDateChange" /> -->
             <!-- {{ dateTime3.toLocaleDateString('zh-TW') }} -->
             {{ dateTime3 }}
-            <DatePicker v-model="dateTime3" calendar="roc" output-type="custom" @change="handleDateChange"
+            <DatePicker v-model="rocDate" calendar="roc" output-type="custom" @change="handleDateChange"
                 time-format="A HH時mm分" />
+            <DatePicker v-model="dateTime3" calendar="japanese" mode="dark"></DatePicker>
+
             <!-- date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" -->
             <!--
             {{ dayjs(dateTime).format('YYYY-MM-DDTHH:mm:ss') }} -->
@@ -87,7 +89,7 @@ const selectedDate = ref({
 const rocDate = ref('民國114年06月18日 上午 02時48分');
 const dateTime = ref('2025-05-22 12:22:12'); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
-const dateTime3 = ref('1700-05-22 06:22:12');
+const dateTime3 = ref('1865-05-22 06:22:12');
 const dateTimeutc = ref('2022-01-01T12:00:00.000Z'); // UTC 時間格式
 const partialCustomDate = ref();
 const fieldNames = {

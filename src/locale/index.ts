@@ -80,9 +80,29 @@ export interface PlaceholderMessages {
         clear: string;
     };
 }
+export interface YearSelectorMessages {
+    gregorian: string;
+    gregorianYear: string;
+    gregorianRange: string;
+    jumpToYear: string;
+    yearRange: string;
+    outOfRange: string;
+    inaccurateDisplay: string;
+    conversionFailed: string;
+    calendarEvents: {
+        roc: string;
+        japanese: string;
+        buddhist: string;
+        islamic: string;
+        persian: string;
+        hebrew: string;
+    };
+}
+
 export interface LocaleMessages {
     error: ErrorMessages;
     placeholder: PlaceholderMessages;
+    // yearSelector: YearSelectorMessages;
 }
 
 // 預設語言包 TODO: 這邊能帶參數?
@@ -154,7 +174,8 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 selectTime: '請選擇時間',
                 clear: '清除'
             }
-        }
+        },
+
     },
 
     'zh-CN': {

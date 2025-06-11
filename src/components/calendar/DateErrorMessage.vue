@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { localeManager, type LocaleKey } from '@/locale/index';
+import { useLocale } from '@/composables/useLocale';
 
 type ErrorsType = string | string[] | Record<string, string>;
 
@@ -41,7 +41,7 @@ interface ProcessedError {
 
 interface Props {
     errors?: ErrorsType;
-    errorParams?: Record<string, Record<string, any>>; // ✅ 新增：錯誤參數
+    errorParams?: Record<string, Record<string, any>>;
     locale?: string;
     useI18n?: boolean;
     customMessages?: Record<string, string>;
@@ -51,7 +51,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     errors: undefined,
-    errorParams: () => ({}), // ✅ 新增：預設空物件
+    errorParams: () => ({}),
     locale: 'zh-TW',
     useI18n: true,
     customMessages: () => ({}),
@@ -59,24 +59,15 @@ const props = withDefaults(defineProps<Props>(), {
     debug: false
 });
 
-const tryConvertToLocaleKey = (locale: string): LocaleKey => {
-    const validLocales: LocaleKey[] = ['zh-TW', 'zh-CN', 'en-US', 'ja-JP', 'ko-KR'];
-    return validLocales.includes(locale as LocaleKey) ? (locale as LocaleKey) : 'zh-TW';
-};
-
-// 設置當前語言
-if (props.useI18n && props.locale) {
-    const localeKey = tryConvertToLocaleKey(props.locale);
-    localeManager.setLocale(localeKey);
-}
+// 使用 useLocale composable
+const { currentLocale, setLocale: setInternalLocale, getErrorMessage, formatText } = useLocale(props.locale);
 
 // 監聽語言變化
 watch(() => props.locale, (newLocale) => {
     if (newLocale && props.useI18n) {
-        const localeKey = tryConvertToLocaleKey(newLocale);
-        localeManager.setLocale(localeKey);
+        setInternalLocale(newLocale);
     }
-});
+}, { immediate: true });
 
 // 內部狀態
 const internalCustomMessages = ref<Record<string, string>>({});
@@ -120,7 +111,7 @@ const processedErrors = computed(() => {
             if (error) {
                 errorOriginalKeys.value[field] = error;
 
-                // ✅ 修正：傳遞對應字段的參數
+                // 傳遞對應字段的參數
                 const fieldParams = props.errorParams?.[field] || {};
                 result[field] = translateMessage(error, field, fieldParams);
 
@@ -157,7 +148,7 @@ function getFieldType(field: string): string {
     return 'unknown';
 }
 
-// ✅ 修正：translateMessage 現在正確使用參數
+// 使用 useLocale 的 translateMessage
 function translateMessage(message: string, field?: string, params: Record<string, any> = {}): string {
     if (props.debug) {
         console.log(`翻譯訊息: "${message}", field: "${field}", params:`, params);
@@ -178,7 +169,7 @@ function translateMessage(message: string, field?: string, params: Record<string
 
     if (isLocaleKey) {
         try {
-            const translated = localeManager.getParameterizedErrorMessage(message, params);
+            const translated = getErrorMessage(message, params);
             if (props.debug) {
                 console.log(`Locale key 翻譯: "${message}" -> "${translated}" with params:`, params);
             }
@@ -194,7 +185,7 @@ function translateMessage(message: string, field?: string, params: Record<string
     const i18nKey = props.messageKeyMap[message];
     if (i18nKey) {
         try {
-            const translated = localeManager.getParameterizedErrorMessage(i18nKey, params);
+            const translated = getErrorMessage(i18nKey, params);
             if (props.debug) {
                 console.log(`MessageKeyMap 翻譯: "${message}" -> "${translated}" with params:`, params);
             }
@@ -210,7 +201,7 @@ function translateMessage(message: string, field?: string, params: Record<string
     return smartTranslateError(message, field, params);
 }
 
-// ✅ 修正：smartTranslateError 現在所有地方都使用參數
+// 智能翻譯錯誤
 function smartTranslateError(message: string, field?: string, params: Record<string, any> = {}): string {
     if (props.debug) {
         console.log(`smartTranslateError: "${message}", field: "${field}", params:`, params);
@@ -231,7 +222,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
     // 先檢查直接匹配
     if (directMatches[message]) {
         try {
-            const translated = localeManager.getParameterizedErrorMessage(directMatches[message], params);
+            const translated = getErrorMessage(directMatches[message], params);
             if (props.debug) {
                 console.log(`直接匹配翻譯: "${message}" -> "${translated}" with params:`, params);
             }
@@ -264,7 +255,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
     const smartKey = getI18nKeyByFieldAndMessage(message, field);
     if (smartKey) {
         try {
-            const translated = localeManager.getParameterizedErrorMessage(smartKey, params);
+            const translated = getErrorMessage(smartKey, params);
             if (props.debug) {
                 console.log(`智能匹配翻譯: "${message}" -> "${translated}" with params:`, params);
             }
@@ -320,8 +311,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
             const i18nKey = pattern.handler ? pattern.handler(field) : pattern.key;
             if (i18nKey) {
                 try {
-                    // ✅ 修正：所有模式匹配都使用參數
-                    const translated = localeManager.getParameterizedErrorMessage(i18nKey, params);
+                    const translated = getErrorMessage(i18nKey, params);
                     if (props.debug) {
                         console.log(`模式匹配翻譯: "${message}" -> "${translated}" (key: ${i18nKey}) with params:`, params);
                     }
@@ -350,11 +340,11 @@ defineExpose({
     getSlotName,
     getFieldType,
     setLocale: (locale: string) => {
-        const localeKey = tryConvertToLocaleKey(locale);
-        localeManager.setLocale(localeKey);
+        setInternalLocale(locale);
     },
     addCustomTranslation: (key: string, message: string) => {
         internalCustomMessages.value[key] = message;
-    }
+    },
+    currentLocale
 });
 </script>

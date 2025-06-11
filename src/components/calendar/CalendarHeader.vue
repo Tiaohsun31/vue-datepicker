@@ -1,3 +1,4 @@
+<!-- /src/components/calendar/CalendarHeader.vue -->
 <template>
     <div class="flex justify-between items-center mb-4 gap-2">
         <!-- 上個月按鈕 -->
@@ -28,15 +29,14 @@
 
                 <!-- 年份選擇面板 -->
                 <YearSelector :selected-year="selectedYearLocal" v-model:show-selector="showYearSelector"
-                    :min-year="minYear" :max-year="maxYear" :calendar="calendarId" :locale="locale"
-                    @year-selected="onYearSelected" />
+                    :calendar="calendarId" :locale="locale" @year-selected="onYearSelected" />
             </div>
         </div>
 
         <!-- 下個月按鈕 -->
         <button type="button" @click="nextMonth"
-            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500"
-            aria-label="下個月">
+            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="下個月" :disabled="!canNavigateNext">
             <DatePickerNext class="h-5 w-5" />
         </button>
     </div>
@@ -47,7 +47,7 @@ import { ref, computed, watch } from 'vue';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
 import YearSelector from '../selector/YearSelector.vue';
-import { CalendarUtils, } from '@/utils/calendarUtils';
+import { CalendarUtils } from '@/utils/calendarUtils';
 import { CalendarDate, DateFormatter } from '@internationalized/date';
 
 interface Props {
@@ -56,7 +56,7 @@ interface Props {
     locale?: string;
     minYear?: number;
     maxYear?: number;
-    calendar?: string; // 使用字符串標識符，而非自定義系統
+    calendar?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -78,6 +78,9 @@ const showYearSelector = ref(false);
 
 // 計算當前使用的日曆 ID
 const calendarId = computed(() => props.calendar || 'gregory');
+
+// 日曆年份的範圍
+const calendarRange = computed(() => CalendarUtils.getCalendarRange(props.calendar));
 
 // 監聽 props 變化
 watch(() => props.month, (newMonth) => {
@@ -113,71 +116,46 @@ const displayYear = computed(() => {
         return selectedYearLocal.value.toString();
     }
 });
-// const displayYear = computed(() => {
-//     if (props.calendar === 'gregory') {
-//         return selectedYearLocal.value.toString();
-//     }
-
-//     // 對於非西元曆，顯示對應的當地年份
-//     const { localYear, isValid } = CalendarUtils.convertGregorianYear(
-//         selectedYearLocal.value,
-//         props.calendar
-//     );
-
-//     if (isValid) {
-//         const calendarName = CalendarUtils.getCalendarDisplayName(props.calendar, props.locale);
-//         // 根據語言決定顯示格式
-//         if (props.locale?.startsWith('zh')) {
-//             return `${calendarName} ${localYear}年`;
-//         } else {
-//             return `${calendarName} ${localYear}`;
-//         }
-//     }
-
-//     return selectedYearLocal.value.toString();
-// });
 
 // 月份名稱
 const monthNames = computed(() => {
     return CalendarUtils.getMonthNames(props.locale, props.calendar);
 });
 
-// 獲取當前日曆的年月日期範圍
-const calendarYearRange = computed(() => {
-    return CalendarUtils.getCalendarYearRange(props.calendar);
-});
-
 // 檢查是否可以導航到上個月
 const canNavigatePrevious = computed(() => {
-    if (props.calendar === 'gregory') {
-        return selectedYearLocal.value > props.minYear ||
-            (selectedYearLocal.value === props.minYear && selectedMonthLocal.value > 1);
+    let prevYear = selectedYearLocal.value;
+    let prevMonth = selectedMonthLocal.value - 1;
+
+    // 計算上個月的年份
+    if (prevMonth < 1) {
+        prevMonth = 12;
+        prevYear = selectedYearLocal.value - 1;
     }
 
-    try {
-        // 對於非西元曆，需要檢查轉換後的日期是否在有效範圍內
-        const currentDate = new CalendarDate(selectedYearLocal.value, selectedMonthLocal.value, 1);
-        const targetCalendar = CalendarUtils.createSafeCalendar(props.calendar);
-        const localDate = CalendarUtils.safeToCalendar(currentDate, targetCalendar);
-
-        // 檢查上個月是否會超出日曆系統的最小範圍
-        let prevMonth = localDate.month - 1;
-        let prevYear = localDate.year;
-
-        if (prevMonth < 1) {
-            prevMonth = 12;
-            prevYear -= 1;
-        }
-
-        // 檢查是否超出日曆系統的年份範圍
-        return prevYear >= calendarYearRange.value.min;
-    } catch (error) {
-        console.warn('檢查上月導航失敗:', error);
-        return selectedYearLocal.value > props.minYear;
-    }
+    // 檢查是否會超出日曆年份範圍
+    return prevYear >= calendarRange.value.min;
 });
+
+// 檢查是否可以導航到下個月
+const canNavigateNext = computed(() => {
+    let nextYear = selectedYearLocal.value;
+    let nextMonth = selectedMonthLocal.value + 1;
+
+    // 計算下個月的年份
+    if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear = selectedYearLocal.value + 1;
+    }
+
+    // 檢查是否會超出日曆年份範圍
+    return nextYear <= calendarRange.value.max;
+});
+
 // 月份切換邏輯
 const previousMonth = () => {
+    if (!canNavigatePrevious.value) return;
+
     let newMonth = selectedMonthLocal.value - 1;
     let newYear = selectedYearLocal.value;
 
@@ -186,16 +164,15 @@ const previousMonth = () => {
         newYear -= 1;
     }
 
-    // 檢查年份限制
-    if (newYear < props.minYear) {
-        newYear = props.minYear;
-        newMonth = 1;
+    // 最終安全檢查
+    if (newYear >= calendarRange.value.min) {
+        updateDate(newMonth, newYear);
     }
-
-    updateDate(newMonth, newYear);
 };
 
 const nextMonth = () => {
+    if (!canNavigateNext.value) return;
+
     let newMonth = selectedMonthLocal.value + 1;
     let newYear = selectedYearLocal.value;
 
@@ -204,13 +181,10 @@ const nextMonth = () => {
         newYear += 1;
     }
 
-    // 檢查年份限制
-    if (newYear > props.maxYear) {
-        newYear = props.maxYear;
-        newMonth = 12;
+    // 最終安全檢查
+    if (newYear <= calendarRange.value.max) {
+        updateDate(newMonth, newYear);
     }
-
-    updateDate(newMonth, newYear);
 };
 
 // 處理月份變更
@@ -220,8 +194,11 @@ const onMonthChange = () => {
 
 // 處理年份變更
 const onYearSelected = (year: number) => {
-    selectedYearLocal.value = year;
-    updateDate(selectedMonthLocal.value, year);
+    // 確保年份在有效範圍內
+    if (year >= calendarRange.value.min && year <= calendarRange.value.max) {
+        selectedYearLocal.value = year;
+        updateDate(selectedMonthLocal.value, year);
+    }
 };
 
 // 更新日期並發送事件

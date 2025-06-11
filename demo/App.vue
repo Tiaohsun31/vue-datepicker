@@ -2,7 +2,19 @@
     <div class="container mx-auto p-4 space-y-6">
         <div>
             {{ dateTime }}
-            <DatePicker v-model="dateTime" locale="en-US" min-date="2002-01-01">
+            <DatePicker v-model="dateTime" locale="en-US">
+                <!-- <template #no-years-display="{ calendarRange, goToValidRange }">
+                    <div class="p-4 text-center">
+                        <h3 class="text-lg font-semibold mb-2">No Years Available</h3>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Valid range: {{ calendarRange.min }} - {{ calendarRange.max }}
+                        </p>
+                        <button @click="goToValidRange"
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Go to Current Year
+                        </button>
+                    </div>
+                </template> -->
             </DatePicker>
             <!-- {{ rocDate }}
             <DatePicker v-model="rocDate" calendar="roc" locale="zh-TW" date-format="ROC-YYYY-MM-DD"
@@ -11,7 +23,7 @@
             {{ dateTime3 }}
             <DatePicker v-model="rocDate" calendar="roc" output-type="custom" @change="handleDateChange"
                 time-format="A HH時mm分" />
-            <DatePicker v-model="dateTime3" calendar="japanese" mode="dark"></DatePicker>
+            <!-- <DatePicker v-model="dateTime3" calendar="japanese" mode="dark"></DatePicker> -->
 
             <!-- date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" -->
             <!--
@@ -19,7 +31,7 @@
         </div>
         <div>
             {{ dateTime2 }}
-            <DatePicker v-model="dateTime2" mode="dark" output-type="custom" date-format="DD/MM/YYYY" locale="zh-TW">
+            <!-- <DatePicker v-model="dateTime2" mode="dark" output-type="custom" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -30,10 +42,10 @@
                         </ul>
                     </div>
                 </template>
-            </DatePicker>
+</DatePicker> -->
         </div>
         <div>
-            <DateRange v-model="selectedDate"></DateRange>
+            <!-- <DateRange v-model="selectedDate"></DateRange> -->
         </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">
@@ -65,11 +77,14 @@
             <DateRange v-model="selectedDate" mode="dark"></DateRange>
         </div> -->
         <!-- <RouterView /> -->
+
+
     </div>
     <!-- <ScopeTheme></ScopeTheme> -->
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
+import { CalendarDate, getWeeksInMonth } from '@internationalized/date';
 import dayjs from 'dayjs';
 // import ScopeTheme from './views/ScopeTheme.vue';
 // import DatePickerV1 from '@/DatePickerV1.vue';
@@ -87,9 +102,9 @@ const selectedDate = ref({
     end: '',
 });
 const rocDate = ref('民國114年06月18日 上午 02時48分');
-const dateTime = ref('2025-05-22 12:22:12'); // ISO 8601 格式
+const dateTime = ref('1868-09-22 12:22:12'); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
-const dateTime3 = ref('1865-05-22 06:22:12');
+const dateTime3 = ref('1868-09-22 06:22:12');
 const dateTimeutc = ref('2022-01-01T12:00:00.000Z'); // UTC 時間格式
 const partialCustomDate = ref();
 const fieldNames = {
@@ -121,4 +136,17 @@ const myCustomMessages = {
 const handleDateChange = (date: any) => {
     // console.log('日期變更:', date);
 };
+
+const date1868_09 = new CalendarDate('japanese', 1868, 9, 1);
+const date1868_10 = new CalendarDate('japanese', 1868, 10, 1);
+
+console.log('1868年9月1日:', date1868_09);
+console.log('1868年10月1日:', date1868_10);
+
+// 檢查週的計算
+const weeksIn1868_09 = getWeeksInMonth(date1868_09, 'ja-JP');
+const weeksIn1868_10 = getWeeksInMonth(date1868_10, 'ja-JP');
+
+console.log('1868年9月的週數:', weeksIn1868_09);
+console.log('1868年10月的週數:', weeksIn1868_10);
 </script>

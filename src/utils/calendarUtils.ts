@@ -194,23 +194,39 @@ export class CalendarUtils {
     }
 
     /**
+     * 獲取日曆系統的有效年份範圍 (新版本)
+     */
+    static getCalendarRange(calendar: string): { min: number; max: number } {
+        const currentYear = new Date().getFullYear();
+        const ranges: Record<string, { min: number; max: number }> = {
+            'gregory': { min: 1, max: currentYear + 100 },
+            'japanese': { min: 1868, max: currentYear + 100 },
+            'roc': { min: 1912, max: currentYear + 100 },
+            'buddhist': { min: 544, max: currentYear + 643 },
+            'islamic': { min: 622, max: currentYear + 100 },
+            'persian': { min: 622, max: currentYear + 100 },
+            'hebrew': { min: 1, max: currentYear + 3860 }
+        };
+        return ranges[calendar] || { min: 1, max: currentYear + 100 };
+    }
+    /**
      * 獲取日曆系統的有效年份範圍
      */
-    static getCalendarYearRange(calendarId: string): { min: number; max: number } {
-        // 基於實際使用情況的合理範圍
-        const ranges: Record<string, { min: number; max: number }> = {
-            'gregory': { min: 1, max: 9999 },        // 西元曆
-            'roc': { min: 1, max: 500 },             // 民國 1年(1912) 到 500年(2411) - 擴大範圍
-            'buddhist': { min: 1000, max: 3500 },    // 佛曆實際使用範圍
-            'japanese': { min: 1, max: 200 },        // 日本年號範圍
-            'islamic': { min: 1, max: 2000 },        // 伊斯蘭曆
-            'persian': { min: 1, max: 2000 },        // 波斯曆
-            'hebrew': { min: 1, max: 8000 },         // 希伯來曆
-            'indian': { min: 1, max: 2000 },         // 印度曆
-        };
+    // static getCalendarYearRange(calendarId: string): { min: number; max: number } {
+    //     // 基於實際使用情況的合理範圍
+    //     const ranges: Record<string, { min: number; max: number }> = {
+    //         'gregory': { min: 1, max: 9999 },        // 西元曆
+    //         'roc': { min: 1, max: 500 },             // 民國 1年(1912) 到 500年(2411) - 擴大範圍
+    //         'buddhist': { min: 1000, max: 3500 },    // 佛曆實際使用範圍
+    //         'japanese': { min: 1, max: 200 },        // 日本年號範圍
+    //         'islamic': { min: 1, max: 2000 },        // 伊斯蘭曆
+    //         'persian': { min: 1, max: 2000 },        // 波斯曆
+    //         'hebrew': { min: 1, max: 8000 },         // 希伯來曆
+    //         'indian': { min: 1, max: 2000 },         // 印度曆
+    //     };
 
-        return ranges[calendarId] || { min: 1, max: 9999 };
-    }
+    //     return ranges[calendarId] || { min: 1, max: 9999 };
+    // }
 
     /**
      * 轉換西元年到目標日曆系統年份
@@ -228,7 +244,7 @@ export class CalendarUtils {
             const targetCalendar = this.createSafeCalendar(targetCalendarId);
             const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
 
-            const range = this.getCalendarYearRange(targetCalendarId);
+            const range = this.getCalendarRange(targetCalendarId);
             const isValid = localDate.year >= range.min && localDate.year <= range.max;
 
             return { localYear: localDate.year, isValid };
@@ -263,7 +279,7 @@ export class CalendarUtils {
     static getMonthNames(locale: string, calendarId: string = 'gregory'): string[] {
         try {
             // 對於大多數日曆系統，月份名稱相同
-            const formatter = new Intl.DateTimeFormat(locale, { month: 'long' });
+            const formatter = new Intl.DateTimeFormat(locale, { month: 'short' });
 
             return Array.from({ length: 12 }, (_, i) => {
                 // 使用固定的西元年避免轉換問題
@@ -278,10 +294,10 @@ export class CalendarUtils {
             } else if (locale.startsWith('ja')) {
                 return Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
             } else {
-                // 英文回退
+                // 英文回退 short 月份名稱
                 const monthNames = [
-                    'January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'
+                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
                 ];
                 return monthNames;
             }
@@ -366,7 +382,7 @@ export class CalendarUtils {
             const targetCalendar = this.createSafeCalendar(calendarId);
             const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
 
-            const range = this.getCalendarYearRange(calendarId);
+            const range = this.getCalendarRange(calendarId);
             return localDate.year >= range.min && localDate.year <= range.max;
         } catch (error) {
             console.warn('日期驗證失敗:', error);
@@ -494,7 +510,8 @@ export const {
     // 年份轉換 (YearSelector)
     convertGregorianYear,
     convertToGregorianYear,
-    getCalendarYearRange,
+    getCalendarRange,
+    // getCalendarYearRange,
 
     // 顯示相關
     getMonthNames,

@@ -18,9 +18,9 @@
 
                 <!-- 時間輸入部分 -->
                 <div v-if="showTime">
-                    <TimeInput ref="timeInputRef" v-model="inputTimeValue" :hour-placeholder="placeholderOverrides.hour"
-                        :minute-placeholder="placeholderOverrides.minute"
-                        :second-placeholder="placeholderOverrides.second" :enable-seconds="enableSeconds"
+                    <TimeInput ref="timeInputRef" v-model="inputTimeValue" :hour-placeholder="computedPlaceholders.hour"
+                        :minute-placeholder="computedPlaceholders.minute"
+                        :second-placeholder="computedPlaceholders.second" :enable-seconds="enableSeconds"
                         :use24Hour="use24Hour" :required="required" :locale="locale"
                         :useLocalizedPeriod="useLocalizedPeriod" @validation="validateTimeInput"
                         @complete="handleTimeComplete" @navigate-to-date="handleNavigateToDate" />
@@ -102,14 +102,13 @@ import {
     formatSimpleDate,
     isValidDateFormat,
     isValidTimeFormat,
-    // ensureSimpleDateWithLocale,
     parseInputToSimpleDate,
     fixDateFormat,
     fixTimeFormat,
     type DateTimeInput,
 } from './utils/dateUtils';
 import type { DatePickerProps } from './types/DatePickerProps';
-import { localeManager, type LocaleKey } from '@/locale/index';
+import { useLocale } from '@/composables/useLocale';
 
 const props = withDefaults(defineProps<DatePickerProps>(), {
     modelValue: null,
@@ -141,20 +140,12 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     inputEnabled: true,
     required: true,
 
-    placeholderOverrides: () => ({
-        selectDate: localeManager.getPlaceholderMessage('general.selectDate'),
-        year: localeManager.getPlaceholderMessage('date.year'),
-        month: localeManager.getPlaceholderMessage('date.month'),
-        day: localeManager.getPlaceholderMessage('date.day'),
-        hour: localeManager.getPlaceholderMessage('time.hour'),
-        minute: localeManager.getPlaceholderMessage('time.minute'),
-        second: localeManager.getPlaceholderMessage('time.second')
-    }),
-
     showErrorMessage: true,     // 預設顯示錯誤訊息
     useI18n: true,
     customErrorMessages: () => ({})
 });
+
+const { setLocale, getPlaceholderMessage } = useLocale(props.locale);
 
 const emit = defineEmits<{
     'update:modelValue': [date: DateTimeInput];
@@ -239,13 +230,23 @@ const hasDisplayValue = computed(() => {
 const computedPlaceholders = computed(() => {
     // 從語言包獲取預設值
     const localePlaceholders = {
-        year: localeManager.getPlaceholderMessage('date.year'),
-        month: localeManager.getPlaceholderMessage('date.month'),
-        day: localeManager.getPlaceholderMessage('date.day')
+        selectDate: getPlaceholderMessage('general.selectDate'),
+        year: getPlaceholderMessage('date.year'),
+        month: getPlaceholderMessage('date.month'),
+        day: getPlaceholderMessage('date.day'),
+        hour: getPlaceholderMessage('time.hour'),
+        minute: getPlaceholderMessage('time.minute'),
+        second: getPlaceholderMessage('time.second')
     };
 
     // 允許 props 覆寫
     return {
+        selectDate: props.placeholderOverrides?.selectDate || localePlaceholders.selectDate,
+        // 時間相關
+        hour: props.placeholderOverrides?.hour || localePlaceholders.hour,
+        minute: props.placeholderOverrides?.minute || localePlaceholders.minute,
+        second: props.placeholderOverrides?.second || localePlaceholders.second,
+        // 日期相關
         year: props.placeholderOverrides?.year || localePlaceholders.year,
         month: props.placeholderOverrides?.month || localePlaceholders.month,
         day: props.placeholderOverrides?.day || localePlaceholders.day
@@ -254,7 +255,7 @@ const computedPlaceholders = computed(() => {
 
 const computedSelectDatePlaceholder = computed(() => {
     return props.placeholderOverrides?.selectDate ||
-        localeManager.getPlaceholderMessage('general.selectDate');
+        getPlaceholderMessage('general.selectDate');
 });
 
 
@@ -282,7 +283,7 @@ const hasErrors = computed(() => {
 // 格式驗證和修復
 onBeforeMount(() => {
     if (props.locale) {
-        localeManager.setLocale(props.locale as LocaleKey);
+        setLocale(props.locale);
     }
     // 驗證日期格式
     if (!isValidDateFormat(props.dateFormat)) {
@@ -321,9 +322,9 @@ watch(() => props.mode, (newMode) => {
 // 監聽語言變化
 watch(() => props.locale, (newLocale) => {
     if (newLocale) {
-        localeManager.setLocale(newLocale as LocaleKey);
+        setLocale(newLocale);
     }
-});
+}, { immediate: true });
 
 
 // 公開方法

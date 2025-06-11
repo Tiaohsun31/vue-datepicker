@@ -81,28 +81,17 @@ export interface PlaceholderMessages {
     };
 }
 export interface YearSelectorMessages {
-    gregorian: string;
-    gregorianYear: string;
-    gregorianRange: string;
     jumpToYear: string;
-    yearRange: string;
-    outOfRange: string;
-    inaccurateDisplay: string;
-    conversionFailed: string;
-    calendarEvents: {
-        roc: string;
-        japanese: string;
-        buddhist: string;
-        islamic: string;
-        persian: string;
-        hebrew: string;
-    };
+    inputYearPlaceholder: string;
+    yearRangeInfo: string;
+    noYearsToDisplay: string;
+    returnToValidRange: string;
 }
 
 export interface LocaleMessages {
     error: ErrorMessages;
     placeholder: PlaceholderMessages;
-    // yearSelector: YearSelectorMessages;
+    yearSelector: YearSelectorMessages;
 }
 
 // 預設語言包 TODO: 這邊能帶參數?
@@ -175,9 +164,14 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 clear: '清除'
             }
         },
-
+        yearSelector: {
+            jumpToYear: '跳至年份',
+            inputYearPlaceholder: '輸入西元年...',
+            yearRangeInfo: '{calendar}年範圍: {min} - {max}',
+            noYearsToDisplay: '沒有可顯示的年份',
+            returnToValidRange: '返回有效範圍',
+        }
     },
-
     'zh-CN': {
         error: {
             date: {
@@ -245,6 +239,13 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 selectTime: '请选择时间',
                 clear: '清除'
             }
+        },
+        yearSelector: {
+            jumpToYear: '跳至年份',
+            inputYearPlaceholder: '输入公历年...',
+            yearRangeInfo: '{calendar}年范围: {min} - {max}',
+            noYearsToDisplay: '没有可显示的年份',
+            returnToValidRange: '返回有效范围',
         }
     },
     'en-US': {
@@ -314,6 +315,13 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 selectTime: 'Please select a time',
                 clear: 'Clear'
             }
+        },
+        yearSelector: {
+            jumpToYear: 'Jump to Year',
+            inputYearPlaceholder: 'Enter Gregorian year...',
+            yearRangeInfo: '{calendar} Year Range: {min} - {max}',
+            noYearsToDisplay: 'No years to display',
+            returnToValidRange: 'Return to valid range',
         }
     },
 
@@ -384,6 +392,13 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 selectTime: '時刻を選択してください',
                 clear: 'クリア'
             }
+        },
+        yearSelector: {
+            jumpToYear: '年にジャンプ',
+            inputYearPlaceholder: '西暦年を入力...',
+            yearRangeInfo: '{calendar}年の範囲: {min} - {max}',
+            noYearsToDisplay: '表示する年はありません',
+            returnToValidRange: '有効な範囲に戻る',
         }
     },
 
@@ -454,6 +469,13 @@ export const localeMessages: Record<LocaleKey, LocaleMessages> = {
                 selectTime: '시간을 선택해주세요',
                 clear: '지우기'
             }
+        },
+        yearSelector: {
+            jumpToYear: '연도로 이동',
+            inputYearPlaceholder: '서기 연도를 입력...',
+            yearRangeInfo: '{calendar}년 범위: {min} - {max}',
+            noYearsToDisplay: '표시한 연도는 없습니다',
+            returnToValidRange: '유효한 범위로 이동',
         }
     }
 };

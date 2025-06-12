@@ -3,16 +3,14 @@
         <div>
             {{ dateTime }}
             <DatePicker v-model="dateTime" calendar="japanese" locale="zh-TW">
-                <!-- <template #no-years-display="{ calendarRange, goToValidRange }">
-                    <div class="p-4 text-center">
-                        <h3 class="text-lg font-semibold mb-2">No Years Available</h3>
-                        <p class="text-sm text-gray-600 mb-3">
-                            Valid range: {{ calendarRange.min }} - {{ calendarRange.max }}
-                        </p>
-                        <button @click="goToValidRange"
-                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                            Go to Current Year
-                        </button>
+                <!-- <template #year-display="{ yearData, isSelected }">
+                    <div class="custom-year-display">
+                        <div :class="['font-bold', isSelected ? 'text-white' : 'text-blue-600']">
+                            {{ yearData.displayYear }}
+                        </div>
+                        <div v-if="yearData.showReference" class="text-xs opacity-70">
+                            ({{ yearData.referenceYear }})
+                        </div>
                     </div>
                 </template> -->
             </DatePicker>
@@ -21,7 +19,7 @@
                 time-format="A HH時mm分" @change="handleDateChange" /> -->
             <!-- {{ dateTime3.toLocaleDateString('zh-TW') }} -->
             {{ dateTime3 }}
-            <DatePicker v-model="rocDate" calendar="roc" output-type="custom" @change="handleDateChange"
+            <DatePicker v-model="rocDate" calendar="roc" output-type="custom" mode="dark" @change="handleDateChange"
                 time-format="A HH時mm分" />
             <!-- <DatePicker v-model="dateTime3" calendar="japanese" mode="dark"></DatePicker> -->
 

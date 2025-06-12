@@ -56,13 +56,21 @@
         </div>
 
         <!-- 日曆彈出層 -->
+        <!-- TODO: slot 須明確傳遞  -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="internalDateTime" :min-date="calendarMinDate" :max-date="calendarMaxDate"
                 :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
                 :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale" :calendar="calendar"
-                @select="handleCalendarSelect" @time-select="handleTimeSelect" />
+                @select="handleCalendarSelect" @time-select="handleTimeSelect">
+                <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
+                    <slot :name="slotName" v-bind="slotProps" />
+                </template>
+                <!-- <template #year-display="slotProps">
+                    <slot name="year-display" v-bind="slotProps" />
+                </template> -->
+            </CalendarGrid>
         </div>
     </div>
 

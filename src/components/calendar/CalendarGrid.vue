@@ -2,7 +2,14 @@
     <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
-            :max-year="maxYear" :calendar="calendar" />
+            :max-year="maxYear" :calendar="calendar">
+            <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
+                <slot :name="slotName" v-bind="slotProps" />
+            </template>
+            <!-- <template #year-display="slotProps">
+                <slot name="year-display" v-bind="slotProps" />
+            </template> -->
+        </CalendarHeader>
 
         <!-- 星期列 -->
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" :calendar="calendar" />

@@ -1,7 +1,7 @@
-<!-- 優化版 YearSelector.vue -->
+<!-- src/components/selector/YearSelector.vue -->
 <template>
     <div v-if="showSelector" ref="yearSelectorRef"
-        class="absolute top-full mt-1 right-0 min-w-56 max-h-72 overflow-y-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20 overflow-hidden">
+        class="absolute top-full mt-1 right-0 min-w-56 max-h-72 overflow-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20">
 
         <!-- 年份選擇器頂部導航 -->
         <div class="p-2 flex items-center justify-between border-b border-vdt-outline">
@@ -11,7 +11,10 @@
                 <DatePickerPrev class="h-4 w-4" />
             </button>
             <span class="text-sm font-medium">
-                {{ displayRangeText }}
+                <slot name="range-display" :first-year="firstYear" :last-year="lastYear"
+                    :display-text="displayRangeText">
+                    {{ displayRangeText }}
+                </slot>
             </span>
             <button type="button" @click="nextYearRange"
                 class="p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none" :disabled="!canGoNext"
@@ -30,7 +33,7 @@
                 ]" :title="yearData.warningMessage">
 
                 <!-- 主要顯示年份 -->
-                <slot name="year-display" :year-data="yearData" :is-selected="selectedYear === yearData.gregorianYear">
+                <slot name="year-display" :yearData="yearData" :isSelected="selectedYear === yearData.gregorianYear">
                     <!-- 預設顯示 -->
                     <div class="font-medium">
                         <div v-if="isJapaneseCalendar"> {{ yearData.displayEra }} </div>
@@ -117,6 +120,10 @@ const calendarRange = computed(() => CalendarUtils.getCalendarRange(props.calend
 const calendarDisplayName = computed(() => CalendarUtils.getCalendarDisplayName(props.calendar, props.locale));
 const isGregorianCalendar = computed(() => props.calendar === 'gregory');
 const isJapaneseCalendar = computed(() => props.calendar === 'japanese');
+
+// slot 使用
+const firstYear = computed(() => visibleYears.value[0]);
+const lastYear = computed(() => visibleYears.value[visibleYears.value.length - 1]);
 
 // ===== 年份範圍起始值（簡化邏輯）=====
 const yearRangeStart = ref(0);
@@ -342,7 +349,12 @@ onBeforeUnmount(() => {
     document.removeEventListener('mousedown', handleClickOutside);
 });
 
-
+defineExpose({
+    getLocalizedText,
+    formatText,
+    goToSpecificYear,
+    goToValidRange
+});
 </script>
 
 <style scoped>

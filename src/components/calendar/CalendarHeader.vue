@@ -10,26 +10,39 @@
 
         <div class="grow grid grid-cols-2 gap-2">
             <!-- 月份選擇器 -->
-            <select v-model="selectedMonthLocal" @change="onMonthChange"
-                class="form-select appearance-none bg-none bg-vdt-surface text-vdt-content py-1 pl-2 w-full border border-vdt-outline rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
-                aria-label="選擇月份" role="combobox">
-                <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
-                    {{ month }}
-                </option>
-            </select>
+            <slot name="month-selector" :month-names="monthNames" :selected-month="selectedMonthLocal"
+                :on-month-change="onMonthChange">
+                <select v-model="selectedMonthLocal" @change="onMonthChange"
+                    class="form-select appearance-none bg-none bg-vdt-surface text-vdt-content py-1 pl-2 w-full border border-vdt-outline rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
+                    aria-label="選擇月份" role="combobox">
+                    <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
+                        {{ month }}
+                    </option>
+                </select>
+            </slot>
 
             <!-- 年份輸入/選擇器 -->
             <div class="relative">
                 <!-- 顯示年份的按鈕 -->
-                <button type="button" @click="toggleYearSelector" data-year-selector-button
-                    class="inline-flex items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200"
-                    aria-label="選擇年份">
-                    {{ displayYear }}
-                </button>
+                <slot name="year-selector" :display-year="displayYear" :toggle-year-selector="toggleYearSelector"
+                    :show-year-selector="showYearSelector">
+                    <button type="button" @click="toggleYearSelector" data-year-selector-button
+                        class="inline-flex items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200"
+                        aria-label="選擇年份">
+                        {{ displayYear }}
+                    </button>
+                </slot>
 
                 <!-- 年份選擇面板 -->
                 <YearSelector :selected-year="selectedYearLocal" v-model:show-selector="showYearSelector"
-                    :calendar="calendarId" :locale="locale" @year-selected="onYearSelected" />
+                    :calendar="calendarId" :locale="locale" @year-selected="onYearSelected">
+                    <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
+                        <slot :name="slotName" v-bind="slotProps" />
+                    </template>
+                    <!-- <template #year-display="slotProps">
+                        <slot name="year-display" v-bind="slotProps" />
+                    </template> -->
+                </YearSelector>
             </div>
         </div>
 

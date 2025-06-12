@@ -1,7 +1,7 @@
 <!-- 優化版 YearSelector.vue -->
 <template>
     <div v-if="showSelector" ref="yearSelectorRef"
-        class="absolute top-full mt-1 right-0 w-56 max-h-72 overflow-y-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20 overflow-hidden">
+        class="absolute top-full mt-1 right-0 min-w-56 max-h-72 overflow-y-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20 overflow-hidden">
 
         <!-- 年份選擇器頂部導航 -->
         <div class="p-2 flex items-center justify-between border-b border-vdt-outline">
@@ -33,6 +33,7 @@
                 <slot name="year-display" :year-data="yearData" :is-selected="selectedYear === yearData.gregorianYear">
                     <!-- 預設顯示 -->
                     <div class="font-medium">
+                        <div v-if="isJapaneseCalendar"> {{ yearData.displayEra }} </div>
                         {{ yearData.displayYear }}
                     </div>
                     <!-- 輔助顯示（西元年參考） -->
@@ -115,6 +116,7 @@ const yearInput = ref<number | null>(null);
 const calendarRange = computed(() => CalendarUtils.getCalendarRange(props.calendar));
 const calendarDisplayName = computed(() => CalendarUtils.getCalendarDisplayName(props.calendar, props.locale));
 const isGregorianCalendar = computed(() => props.calendar === 'gregory');
+const isJapaneseCalendar = computed(() => props.calendar === 'japanese');
 
 // ===== 年份範圍起始值（簡化邏輯）=====
 const yearRangeStart = ref(0);
@@ -134,6 +136,7 @@ const initializeYearRange = () => {
 interface YearDisplayData {
     gregorianYear: number;
     displayYear: string;
+    displayEra: string; // 用於非西元曆的年號顯示
     referenceYear?: string;
     showReference: boolean;
     displayWarning: boolean;
@@ -147,7 +150,7 @@ const getDateFormatter = (calendar: string, locale: string): DateFormatter => {
     const key = `${calendar}-${locale}`;
     if (!formatterCache.has(key)) {
         try {
-            formatterCache.set(key, new DateFormatter(locale, { calendar, year: 'numeric' }));
+            formatterCache.set(key, new DateFormatter(locale, { calendar, year: 'numeric', era: 'short' }));
         } catch (error) {
             formatterCache.set(key, new DateFormatter(locale, { year: 'numeric' }));
         }
@@ -159,6 +162,7 @@ const getDateFormatter = (calendar: string, locale: string): DateFormatter => {
 const formatYear = (gregorianYear: number): YearDisplayData => {
     const result: YearDisplayData = {
         gregorianYear,
+        displayEra: '',
         displayYear: gregorianYear.toString(),
         showReference: false,
         displayWarning: false
@@ -174,16 +178,17 @@ const formatYear = (gregorianYear: number): YearDisplayData => {
         const gregorianDate = new CalendarDate(gregorianYear, 6, 1);
         const calendarDate = CalendarUtils.safeToCalendar(gregorianDate, CalendarUtils.createSafeCalendar(props.calendar));
         const formatter = getDateFormatter(props.calendar, props.locale);
-        const formatted = formatter.format(calendarDate.toDate('UTC'));
+        const parts = formatter.formatToParts(calendarDate.toDate('UTC'));
 
         // 提取顯示年份
-        const yearMatch = formatted.match(/\d+/);
-        const hasNonNumeric = /[^\d\s]/.test(formatted.replace(/\d+/, ''));
+        result.displayYear = parts.find(part => part.type === 'year')?.value || gregorianYear.toString();
+        result.displayEra = parts.find(part => part.type === 'era')?.value || '';
 
-        result.displayYear = hasNonNumeric ? formatted : (yearMatch?.[0] || gregorianYear.toString());
+        // 如果有年號或年份與西元年不同，顯示西元年參考
+        const hasEra = Boolean(result.displayEra);
+        const isDifferentYear = result.displayEra !== gregorianYear.toString();
 
-        // 如果不是純數字，顯示西元年參考
-        if (hasNonNumeric) {
+        if (hasEra || isDifferentYear) {
             result.showReference = true;
             result.referenceYear = gregorianYear.toString();
         }
@@ -238,66 +243,20 @@ const displayRangeText = computed(() => {
         return `${firstYear.displayYear} - ${lastYear.displayYear}`;
     }
 
-    // 處理其他日曆系統的年號顯示
-    return formatCalendarRangeText(firstYear, lastYear);
-});
-
-// 格式化日曆範圍文字
-const formatCalendarRangeText = (firstYear: YearDisplayData, lastYear: YearDisplayData): string => {
-    const firstDisplay = firstYear.displayYear;
-    const lastDisplay = lastYear.displayYear;
-
     // 如果只有一個年份
     if (firstYear.gregorianYear === lastYear.gregorianYear) {
-        return firstDisplay;
+        return firstYear.displayYear;
     }
 
-    return formatEraRange(firstDisplay, lastDisplay);
-};
-
-// 格式化年號區間（支援同年號簡化顯示）
-const formatEraRange = (firstDisplay: string, lastDisplay: string): string => {
-    // 提取年號和年份
-    const firstEra = extractEraInfo(firstDisplay);
-    const lastEra = extractEraInfo(lastDisplay);
-
+    const firstEra = firstYear.displayEra;
+    const lastEra = lastYear.displayEra;
     // 如果都是相同年號，使用簡化顯示
-    if (firstEra.eraName && lastEra.eraName && firstEra.eraName === lastEra.eraName) {
-        // 格式：昭和31-42年
-        return `${firstEra.eraName}${firstEra.year} - ${lastEra.year}年`;
+    if (firstEra && lastEra && firstEra === lastEra) {
+        return `${firstEra} ${firstYear.displayYear} - ${lastYear.displayYear}`;
     }
 
-    // 不同年號或無法解析，使用完整顯示
-    // 格式：大正9年-昭和6年
-    return `${firstDisplay} - ${lastDisplay}`;
-};
-
-// 提取年號資訊
-interface EraInfo {
-    eraName: string | null;   // 年號名稱
-    year: string | null;      // 年份數字
-    isValid: boolean;         // 是否成功解析
-}
-
-const extractEraInfo = (displayYear: string): EraInfo => {
-    // 匹配日本年號格式：如"昭和31年"、"令和6年"
-    const eraPattern = /^([^\d]+)(\d+)年?$/;
-    const match = displayYear.match(eraPattern);
-
-    if (match) {
-        return {
-            eraName: match[1],    // 年號名稱（如"昭和"、"令和"）
-            year: match[2],       // 年份數字（如"31"、"6"）
-            isValid: true
-        };
-    }
-
-    return {
-        eraName: null,
-        year: null,
-        isValid: false
-    };
-};
+    return `${firstYear.displayEra} ${firstYear.displayYear} - ${lastYear.displayEra} ${lastYear.displayYear}`;
+});
 
 // ===== 導航控制 =====
 const canGoPrevious = computed(() => yearRangeStart.value > calendarRange.value.min);
@@ -351,7 +310,6 @@ const goToValidRange = () => {
 // ===== 本地化工具 =====
 const getLocalizedText = (key: string): string => {
     const result = getMessage(`yearSelector.${key}`);
-    console.log(`Getting localized text for key: ${key}, result: ${result}`);
     return result;
 };
 

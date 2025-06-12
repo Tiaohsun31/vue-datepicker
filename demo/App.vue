@@ -2,7 +2,7 @@
     <div class="container mx-auto p-4 space-y-6">
         <div>
             {{ dateTime }}
-            <DatePicker v-model="dateTime" locale="en-US">
+            <DatePicker v-model="dateTime" calendar="japanese" locale="zh-TW">
                 <!-- <template #no-years-display="{ calendarRange, goToValidRange }">
                     <div class="p-4 text-center">
                         <h3 class="text-lg font-semibold mb-2">No Years Available</h3>

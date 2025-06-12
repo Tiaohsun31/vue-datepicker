@@ -10,7 +10,7 @@ import { computed } from 'vue';
 
 interface Props {
     locale?: string;
-    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, etc.
+    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
     calendar?: string;
 }
 

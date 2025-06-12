@@ -167,15 +167,9 @@ export class CalendarUtils {
 
             const weeksInMonth = getWeeksInMonth(firstDayOfMonth, locale) ?? 6;
 
-            let startDay: CalendarDate;
-            try {
-                startDay = startOfWeek(firstDayOfMonth, locale);
-            } catch (error) {
-                // 手動計算週的開始
-                const dayOfWeek = getDayOfWeek(firstDayOfMonth, locale);
-                const daysToSubtract = (dayOfWeek - weekStartsOn + 7) % 7;
-                startDay = firstDayOfMonth.subtract({ days: daysToSubtract });
-            }
+            const dayOfWeek = getDayOfWeek(firstDayOfMonth, locale);
+            const daysToSubtract = (dayOfWeek - weekStartsOn + 7) % 7;
+            const startDay = firstDayOfMonth.subtract({ days: daysToSubtract });
 
             const days: CalendarDate[] = [];
             let currentDate = startDay;

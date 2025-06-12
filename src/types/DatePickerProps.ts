@@ -15,6 +15,7 @@ export interface DatePickerProps {
     useStrictISO?: boolean; // 是否使用嚴格的 ISO 8601 格式輸出 預設為 false
 
     // 日期選項
+    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 一週的起始日 預設為 0 (星期日)
     minDate?: DateTimeInput; // 最小日期 預設為 null 限定輸入西元曆
     maxDate?: DateTimeInput; // 最大日期 預設為 null 限定輸入西元曆
     dateSeparator?: string; // 日期的分隔符 預設為 '-'

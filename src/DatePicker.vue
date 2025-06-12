@@ -60,10 +60,10 @@
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
-            <CalendarGrid :value="internalDateTime" :min-date="calendarMinDate" :max-date="calendarMaxDate"
-                :showTimeSelector="showTime" :time-value="inputTimeValue" :use24Hour="use24Hour"
-                :default-time="getValidDefaultTime" :enableSeconds="enableSeconds" :locale="locale" :calendar="calendar"
-                @select="handleCalendarSelect" @time-select="handleTimeSelect">
+            <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
+                :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"
+                :use24Hour="use24Hour" :default-time="getValidDefaultTime" :enableSeconds="enableSeconds"
+                :locale="locale" :calendar="calendar" @select="handleCalendarSelect" @time-select="handleTimeSelect">
                 <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
                     <slot :name="slotName" v-bind="slotProps" />
                 </template>
@@ -130,6 +130,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     useStrictISO: false,
 
     // 日期相關屬性
+    weekStartsOn: 0,
     dateSeparator: '-',
     dateFormat: 'YYYY-MM-DD',
     showClearButton: true,

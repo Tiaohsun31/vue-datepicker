@@ -77,6 +77,10 @@ export interface PlaceholderMessages {
         selectTime: string;
         clear: string;
     };
+    range: {
+        start: string;
+        end: string;
+    };
 }
 export interface YearSelectorMessages {
     jumpToYear: string;

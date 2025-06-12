@@ -65,8 +65,12 @@ export const jaJPLocaleMessages: LocaleMessages = {
         general: {
             selectDate: '日付を選択してください',
             selectTime: '時刻を選択してください',
-            clear: 'クリア'
-        }
+            clear: 'クリア',
+        },
+        range: {
+            start: '開始日を選択してください',
+            end: '終了日を選択してください',
+        },
     },
     yearSelector: {
         jumpToYear: '年にジャンプ',

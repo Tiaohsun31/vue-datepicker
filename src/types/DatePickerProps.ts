@@ -2,9 +2,8 @@ import { type TailwindColor, type OutputType } from './main';
 import type { DateTimeInput } from '@/utils/dateUtils';
 import type { CalendarIdentifier } from '@internationalized/date';
 
-export interface DatePickerProps {
+interface BaseDatePickerProps {
     // 主題
-    modelValue?: DateTimeInput;
     mode?: 'light' | 'dark' | 'auto';
     theme?: TailwindColor | string;
 
@@ -32,9 +31,18 @@ export interface DatePickerProps {
 
     // 一般選項
     disabled?: boolean; // 是否禁用選擇器 預設為 false
-    inputEnabled?: boolean;  // 是否允許使用輸入框 預測為 true
+    inputEnabled?: boolean;  // 是否允許使用輸入框 預測為 true 目前僅在 gregory 中使用
     required?: boolean; // 是否為必填 預設為 false
     showClearButton?: boolean; // 是否顯示清除按鈕 預設為 true
+
+    // 錯誤處理選項
+    showErrorMessage?: boolean;  // 是否顯示錯誤訊息 預設為 true
+    useI18n?: boolean;  // 是否使用內建i18n 預設為 true
+    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息 TODO: 確認使用方式
+}
+
+export interface DatePickerProps extends BaseDatePickerProps {
+    modelValue?: DateTimeInput;
 
     // 輸入框佔位符 預設取locale中的Placeholder
     placeholderOverrides?: {
@@ -46,9 +54,28 @@ export interface DatePickerProps {
         minute?: string;
         second?: string;
     };
+}
 
-    // 錯誤處理選項
-    showErrorMessage?: boolean;  // 是否顯示錯誤訊息 預設為 true
-    useI18n?: boolean;  // 是否使用內建i18n 預設為 true
-    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息 TODO: 確認使用方式
+export interface DateRangeProps extends BaseDatePickerProps {
+    modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
+
+    // 輸入框佔位符 預設取locale中的Placeholder
+    placeholderOverrides?: {
+        start?: string;
+        end?: string;
+        year?: string;
+        month?: string;
+        day?: string;
+        hour?: string;
+        minute?: string;
+        second?: string;
+    };
+
+    separator?: string; // 開始和結束日期之間的分隔符，預設為 '~'
+    showShortcuts?: boolean; // 是否顯示快捷選項 (如今天、昨天、上週等) 預設為 false
+    incomplete?: boolean; // 是否提示不完整的範圍選擇（例如只選擇開始日期而不選結束日期） 預設為 true
+
+    // 範圍特定選項
+    maxRange?: number; // 允許選擇的最大天數（例如設為 7，則只能選 7 天以內的區間）。
+    minRange?: number; // 允許選擇的最小天數（例如設為 2，則至少要選 2 天以上的區間）。
 }

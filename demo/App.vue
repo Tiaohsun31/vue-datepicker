@@ -2,7 +2,7 @@
     <div class="container mx-auto p-4 space-y-6">
         <div>
             {{ dateTime }}
-            <DatePicker v-model="dateTime" calendar="japanese" locale="zh-TW">
+            <DatePicker v-model="dateTime" locale="en-US">
                 <!-- <template #year-display="{ yearData, isSelected }">
                     <div class="custom-year-display">
                         <div :class="['font-bold', isSelected ? 'text-white' : 'text-blue-600']">
@@ -43,7 +43,8 @@
 </DatePicker> -->
         </div>
         <div>
-            <!-- <DateRange v-model="selectedDate"></DateRange> -->
+            {{ selectedDate }}
+            <DateRange v-model="selectedDate"></DateRange>
         </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">

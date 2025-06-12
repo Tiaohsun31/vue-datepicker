@@ -19,7 +19,7 @@
     --color-vdt-light-content: oklch(21% 0.034 264.665);
     --color-vdt-light-content-secondary: oklch(44.6% 0.03 256.802);
     /* --color-vdt-light-content-muted: oklch(70.7% 0.022 261.325); */
-    --color-vdt-dark-content-muted: var(--color-gray-400);
+    --color-vdt-light-content-muted: var(--color-gray-400);
     --color-vdt-light-outline: oklch(92.8% 0.006 264.531);
     --color-vdt-light-outline-strong: oklch(75.2% 0.01 258.338);
     --color-vdt-light-outline-stronger: oklch(65.7% 0.022 261.325);

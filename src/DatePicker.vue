@@ -28,8 +28,6 @@
             </div>
             <!-- 非西元曆或禁用輸入時的顯示區域 -->
             <button v-else type="button" class="flex w-full h-full items-center justify-start gap-1" :class="{
-                'text-gray-400': !hasDisplayValue,
-                'text-gray-900': hasDisplayValue,
                 'cursor-not-allowed opacity-50': disabled
             }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
                 @keydown.space.prevent="!disabled && toggleCalendar?.()">
@@ -44,14 +42,14 @@
 
             <!-- 日曆圖標和清除按鈕 -->
             <button type="button"
-                class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
                 :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
                 <CalendarIcon class="h-5 w-5" />
             </button>
             <button v-if="hasValue && !disabled && showClearButton" type="button"
-                class="date-picker-icon text-gray-400 hover:text-red-500 transition-colors duration-200 ml-1"
+                class="date-picker-icon text-gray-400 hover:text-red-500 transition-colors duration-200 ml-1 cursor-pointer disabled:cursor-not-allowed"
                 @click.stop="reset">
-                <ClearIcon class="h-4 w-4" />
+                <ClearIcon class="h-4 w-4 " />
             </button>
         </div>
 
@@ -91,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, watch, onMounted } from 'vue';
+import { ref, computed, onBeforeMount, watch } from 'vue';
 
 // 組件導入
 import DateInput from './components/inputs/DateInput.vue';
@@ -115,7 +113,7 @@ import {
     fixTimeFormat,
     type DateTimeInput,
 } from './utils/dateUtils';
-import type { DatePickerProps } from './types/DatePickerProps';
+import type { DatePickerProps } from './types/datePickerProps';
 import { useLocale } from '@/composables/useLocale';
 
 const props = withDefaults(defineProps<DatePickerProps>(), {
@@ -123,7 +121,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     mode: 'auto',
     theme: () => 'violet',
 
-    // 預設使用西元曆
+    // 日曆系統
     calendar: 'gregory',
     locale: 'zh-TW',
     outputType: 'iso',
@@ -133,23 +131,27 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     weekStartsOn: 0,
     dateSeparator: '-',
     dateFormat: 'YYYY-MM-DD',
-    showClearButton: true,
 
     // 時間相關屬性
     timeFormat: 'HH:mm:ss',
     showTime: true,
     enableSeconds: true,
     use24Hour: false,
-    minuteStep: 5,
     useLocalizedPeriod: false,
     customDefaultTime: '00:00:00',
     autoFocusTimeAfterDate: false,
 
+    // 一般選項
     disabled: false,
     inputEnabled: true,
-    required: true,
+    required: false,
+    showClearButton: true,
 
-    showErrorMessage: true,     // 預設顯示錯誤訊息
+    // 輸入框佔位符
+    placeholderOverrides: () => ({}),
+
+    // 錯誤處理選項
+    showErrorMessage: true,
     useI18n: true,
     customErrorMessages: () => ({})
 });
@@ -291,9 +293,9 @@ const hasErrors = computed(() => {
 
 // 格式驗證和修復
 onBeforeMount(() => {
-    if (props.locale) {
-        setLocale(props.locale);
-    }
+
+    setLocale(props.locale);
+
     // 驗證日期格式
     if (!isValidDateFormat(props.dateFormat)) {
         const originalFormat = props.dateFormat;

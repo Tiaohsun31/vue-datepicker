@@ -65,7 +65,11 @@ export const enUSLocaleMessages: LocaleMessages = {
         general: {
             selectDate: 'Please select a date',
             selectTime: 'Please select a time',
-            clear: 'Clear'
+            clear: 'Clear',
+        },
+        range: {
+            start: 'Please select start date',
+            end: 'Please select end date',
         }
     },
     yearSelector: {

@@ -10,9 +10,7 @@ import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { useInputNavigation } from './useInputNavigation';
 import {
-    parseInputToSimpleDate,
     formatSimpleDate,
-    ensureSimpleDate,
     formatOutput,
     getNow,
     createSimpleDate,
@@ -21,7 +19,6 @@ import {
     type SimpleDateValue,
     type DateTimeInput
 } from '../utils/dateUtils';
-import { CalendarUtils } from '@/utils/calendarUtils';
 import type { OutputType } from '../types/main';
 
 interface DateRangeOptions {
@@ -31,6 +28,7 @@ interface DateRangeOptions {
     showTime?: boolean;
     required?: boolean;
     disabled?: boolean;
+    incomplete?: boolean;
 
     // 格式配置
     dateFormat?: string;
@@ -73,6 +71,7 @@ export function useDateRange(
         showTime = false,
         required = false,
         disabled = false,
+        incomplete = false,
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
         outputType = 'iso',
@@ -203,10 +202,18 @@ export function useDateRange(
 
     // 合併所有錯誤
     const mergedErrors = computed(() => {
-        return {
+        const errors = {
             ...startValidation.mergedErrors.value,
             ...endValidation.mergedErrors.value
         };
+        // 只選擇 start 未選擇 end 時，補上錯誤
+        if (
+            startDateTime.internalDateTime.value &&
+            !endDateTime.internalDateTime.value && incomplete
+        ) {
+            errors['range.endRequired'] = 'range.endRequired';
+        }
+        return errors;
     });
 
     // 合併所有錯誤參數

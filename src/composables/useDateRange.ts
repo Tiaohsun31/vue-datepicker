@@ -9,6 +9,8 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useInputNavigation } from './useInputNavigation';
 import {
+    parseInputToSimpleDate,
+    formatSimpleDate,
     formatOutput,
     getNow,
     compareDates,
@@ -240,6 +242,36 @@ export function useDateRange(
             getValue: getCurrentMonthRange
         }
     ]);
+
+    // 計算動態的最大/最小日期約束
+    const startDateConstraints = computed(() => {
+        return {
+            minDate: parseInputToSimpleDate(minDate, locale),
+            maxDate: endDateTime.internalDateTime.value || parseInputToSimpleDate(maxDate, locale)
+        };
+    });
+
+    const endDateConstraints = computed(() => {
+        return {
+            minDate: startDateTime.internalDateTime.value || parseInputToSimpleDate(minDate, locale),
+            maxDate: parseInputToSimpleDate(maxDate, locale)
+        };
+    });
+
+    // 格式化約束日期為字符串（供 DateInput 使用）
+    const startDateConstraintsStr = computed(() => {
+        return {
+            minDate: startDateConstraints.value.minDate ? formatSimpleDate(startDateConstraints.value.minDate, dateFormat) : null,
+            maxDate: startDateConstraints.value.maxDate ? formatSimpleDate(startDateConstraints.value.maxDate, dateFormat) : null
+        };
+    });
+
+    const endDateConstraintsStr = computed(() => {
+        return {
+            minDate: endDateConstraints.value.minDate ? formatSimpleDate(endDateConstraints.value.minDate, dateFormat) : null,
+            maxDate: endDateConstraints.value.maxDate ? formatSimpleDate(endDateConstraints.value.maxDate, dateFormat) : null
+        };
+    });
 
     function validateRangeConstraints(start: SimpleDateValue, end: SimpleDateValue): RangeValidationResult {
         const diffDays = calculateDaysDifference(start, end);
@@ -549,9 +581,28 @@ export function useDateRange(
 
     // 監聽外部值變化
     watch(() => modelValue, (newValue) => {
-        if (newValue) {
-            startDateTime.setExternalValue(newValue.start);
-            endDateTime.setExternalValue(newValue.end);
+        if (newValue && newValue.start && newValue.end) {
+            const startDate = parseInputToSimpleDate(newValue.start, locale);
+            const endDate = parseInputToSimpleDate(newValue.end, locale);
+
+            // 檢查日期順序，如果順序錯誤則自動交換
+            if (startDate && endDate && compareDates(startDate, endDate) > 0) {
+                console.warn('Initial date range has start > end, auto-swapping values');
+                startDateTime.setExternalValue(newValue.end);
+                endDateTime.setExternalValue(newValue.start);
+
+                // 發出修正後的值
+                setTimeout(() => {
+                    emitRangeEvents();
+                }, 0);
+            } else {
+                startDateTime.setExternalValue(newValue.start);
+                endDateTime.setExternalValue(newValue.end);
+            }
+        } else if (newValue) {
+            // 只有部分值的情況
+            startDateTime.setExternalValue(newValue.start || null);
+            endDateTime.setExternalValue(newValue.end || null);
         } else {
             startDateTime.clearValues();
             endDateTime.clearValues();
@@ -567,6 +618,11 @@ export function useDateRange(
         mergedErrors,
         mergedErrorParams,
         isValidRange,
+
+        startDateConstraints,
+        endDateConstraints,
+        startDateConstraintsStr,
+        endDateConstraintsStr,
 
         // 日期時間值
         startDateTime,

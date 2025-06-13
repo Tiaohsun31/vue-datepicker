@@ -40,7 +40,6 @@ interface Props {
     showTimeSelector?: boolean;
     startTimeValue?: string | null;
     endTimeValue?: string | null;
-    timeValue?: string | null;
     enableSeconds?: boolean;
     use24Hour?: boolean;
     defaultTime?: string;
@@ -60,7 +59,8 @@ const props = withDefaults(defineProps<Props>(), {
     calendar: 'gregory',
 
     showTimeSelector: false,
-    timeValue: null,
+    startTimeValue: null,
+    endTimeValue: null,
     enableSeconds: true,
     use24Hour: true,
     defaultTime: '00:00:00',
@@ -76,17 +76,14 @@ const emit = defineEmits<{
 
 // 初始化年月 initialYear/Month > rangeStart > 今天
 const getInitialYearMonth = () => {
-    // 1. 優先使用 props 提供的初始年月
     if (props.initialYear && props.initialMonth) {
         return { year: props.initialYear, month: props.initialMonth };
     }
 
-    // 2. 從 rangeStart 中提取
     if (props.rangeStart) {
         return { year: props.rangeStart.year, month: props.rangeStart.month };
     }
 
-    // 3. 使用今天的日期
     const today = getTodaysDate();
     return { year: today.year, month: today.month };
 };
@@ -99,138 +96,96 @@ const leftMonth = ref(displayMonth);
 
 // 右側月份（自動計算，顯示下一個月）
 const rightYear = computed(() => {
-    if (leftMonth.value === 12) {
-        return leftYear.value + 1;
-    }
-    return leftYear.value;
+    return leftMonth.value === 12 ? leftYear.value + 1 : leftYear.value;
 });
 
 const rightMonth = computed(() => {
-    if (leftMonth.value === 12) {
-        return 1;
-    }
-    return leftMonth.value + 1;
+    return leftMonth.value === 12 ? 1 : leftMonth.value + 1;
 });
 
-// 簡化的範圍選擇狀態 - 內部使用 SimpleDateValue 追蹤點擊
-const selectedDates = ref<SimpleDateValue[]>([]);
-
-// 當前時間值狀態
-const currentTimeValue = ref<string | null>(props.timeValue);
-
-// 計算實際的 start 和 end（自動排序）
-const actualStart = computed(() => {
-    // 優先使用外部傳入的範圍
-    if (selectedDates.value.length === 0) return props.rangeStart;
-    if (selectedDates.value.length === 1) {
-        return selectedDates.value[0];
-    }
-
-    // 有兩個日期時，自動排序
-    const [first, second] = selectedDates.value;
-    const firstNum = first.year * 10000 + first.month * 100 + first.day;
-    const secondNum = second.year * 10000 + second.month * 100 + second.day;
-
-    return firstNum <= secondNum ? first : second;
+// 內部狀態：追蹤範圍選擇狀態
+const rangeSelectionState = ref<{
+    isSelecting: boolean;
+    tempStart: SimpleDateValue | null;
+}>({
+    isSelecting: false,
+    tempStart: null
 });
 
-const actualEnd = computed(() => {
-    if (selectedDates.value.length < 2) return props.rangeEnd;
-
-    // 有兩個日期時，自動排序
-    const [first, second] = selectedDates.value;
-    const firstNum = first.year * 10000 + first.month * 100 + first.day;
-    const secondNum = second.year * 10000 + second.month * 100 + second.day;
-
-    return firstNum <= secondNum ? second : first;
-});
-
-// 監聽外部傳入的範圍變化
+// 監聽外部範圍變化，調整顯示月份和選擇狀態
 watch(() => [props.rangeStart, props.rangeEnd], ([newStart, newEnd]) => {
-    if (newStart && newEnd) {
-        // 外部有完整範圍，清空內部選擇
-        selectedDates.value = [];
-    } else if (newStart && !newEnd) {
-        // 外部只有開始日期
-        selectedDates.value = [newStart];
-    } else {
-        // 外部沒有範圍，清空內部選擇
-        selectedDates.value = [];
-    }
-
-    // 如果有開始日期，調整顯示月份
+    // 調整顯示月份
     if (newStart && !props.initialYear && !props.initialMonth) {
         leftYear.value = newStart.year;
         leftMonth.value = newStart.month;
     }
-}, { immediate: true });
 
-// 監聽外部時間值變化
-watch(() => props.timeValue, (newValue) => {
-    currentTimeValue.value = newValue;
-}, { immediate: true });
+    // 重置選擇狀態
+    if (newStart && newEnd) {
+        // 有完整範圍，重置狀態
+        rangeSelectionState.value.isSelecting = false;
+        rangeSelectionState.value.tempStart = null;
+    } else if (newStart && !newEnd) {
+        // 只有開始日期，進入選擇狀態
+        rangeSelectionState.value.isSelecting = true;
+        rangeSelectionState.value.tempStart = newStart;
+    } else {
+        // 沒有範圍，重置狀態
+        rangeSelectionState.value.isSelecting = false;
+        rangeSelectionState.value.tempStart = null;
+    }
+}, { immediate: true, deep: true });
 
-// 處理範圍選擇 - 接收 SimpleDateValue 進行內部管理
+// 處理範圍選擇邏輯
 const handleRangeSelect = (startDate: SimpleDateValue | null, endDate: SimpleDateValue | null) => {
     if (!startDate) {
         // 清空選擇
-        selectedDates.value = [];
+        rangeSelectionState.value.isSelecting = false;
+        rangeSelectionState.value.tempStart = null;
         emit('range-select', null, null);
         return;
     }
 
-    if (selectedDates.value.length === 0) {
+    if (!rangeSelectionState.value.isSelecting) {
         // 第一次點擊 - 設置開始日期
-        selectedDates.value = [startDate];
+        rangeSelectionState.value.isSelecting = true;
+        rangeSelectionState.value.tempStart = startDate;
         emit('range-select', startDate, null);
-    } else if (selectedDates.value.length === 1) {
-        const existing = selectedDates.value[0];
-
-        // 如果沒有開啟時間選項，檢查是否點擊了同一個日期
-        if (startDate.year === existing.year &&
-            startDate.month === existing.month &&
-            startDate.day === existing.day && !props.showTimeSelector) {
-            // 點擊同一個日期，保持單日選擇狀態
-            return;
-        }
-
-        // 第二次點擊不同日期 - 完成範圍選擇
-        selectedDates.value = [existing, startDate];
-
-        // 自動排序並發送事件
-        const sortedStart = actualStart.value;
-        const sortedEnd = actualEnd.value;
-        emit('range-select', sortedStart, sortedEnd);
     } else {
-        // 已有完整範圍 - 檢查點擊的日期
-        const [currentFirst, currentSecond] = selectedDates.value;
+        // 第二次點擊 - 完成範圍選擇
+        const tempStart = rangeSelectionState.value.tempStart;
 
-        // 如果點擊的是範圍內的日期，重新開始選擇
-        if ((startDate.year === currentFirst.year &&
-            startDate.month === currentFirst.month &&
-            startDate.day === currentFirst.day) ||
-            (startDate.year === currentSecond.year &&
-                startDate.month === currentSecond.month &&
-                startDate.day === currentSecond.day)) {
-            // 如果點擊的是起始或結束日期，重新開始選擇
-            selectedDates.value = [startDate];
-            emit('range-select', startDate, null);
+        if (tempStart && (
+            startDate.year !== tempStart.year ||
+            startDate.month !== tempStart.month ||
+            startDate.day !== tempStart.day
+        )) {
+            // 點擊了不同的日期，完成範圍選擇
+            rangeSelectionState.value.isSelecting = false;
+            rangeSelectionState.value.tempStart = null;
+
+            // 自動排序確保 start <= end
+            const startNum = tempStart.year * 10000 + tempStart.month * 100 + tempStart.day;
+            const endNum = startDate.year * 10000 + startDate.month * 100 + startDate.day;
+
+            if (startNum <= endNum) {
+                emit('range-select', tempStart, startDate);
+            } else {
+                emit('range-select', startDate, tempStart);
+            }
         } else {
-            // 如果點擊的是其他日期，重新開始選擇
-            selectedDates.value = [startDate];
+            // 點擊了相同的日期，重新開始選擇
+            rangeSelectionState.value.tempStart = startDate;
             emit('range-select', startDate, null);
         }
     }
 };
 
-// 處理時間選擇事件
 const handleTimeSelect = (timeStr: string, source: 'start' | 'end') => {
-    currentTimeValue.value = timeStr;
     emit('time-select', timeStr, source);
 };
 
-
-// 導航到上個月
+// 月份導航
 const previousMonth = () => {
     if (leftMonth.value === 1) {
         leftMonth.value = 12;
@@ -240,7 +195,6 @@ const previousMonth = () => {
     }
 };
 
-// 導航到下個月
 const nextMonth = () => {
     if (leftMonth.value === 12) {
         leftMonth.value = 1;
@@ -251,11 +205,6 @@ const nextMonth = () => {
 };
 
 defineExpose({
-    // 重置範圍選擇
-    resetRangeSelection: () => {
-        selectedDates.value = [];
-    },
-
     // 獲取當前顯示的月份
     getCurrentDisplay: () => ({
         left: { year: leftYear.value, month: leftMonth.value },
@@ -268,31 +217,17 @@ defineExpose({
         leftMonth.value = month;
     },
 
-    // 手動設置範圍 - 接收 SimpleDateValue
-    setRange: (start: SimpleDateValue | null, end: SimpleDateValue | null) => {
-        if (start && end) {
-            selectedDates.value = [start, end];
-        } else if (start) {
-            selectedDates.value = [start];
-        } else {
-            selectedDates.value = [];
-        }
+    // 重置範圍選擇狀態
+    resetRangeSelection: () => {
+        rangeSelectionState.value.isSelecting = false;
+        rangeSelectionState.value.tempStart = null;
     },
 
     // 獲取當前選擇狀態
     getSelectionState: () => ({
-        selectedDates: selectedDates.value,
-        actualStart: actualStart.value,
-        actualEnd: actualEnd.value
+        isSelecting: rangeSelectionState.value.isSelecting,
+        tempStart: rangeSelectionState.value.tempStart
     }),
-
-    // 設置時間值
-    setTimeValue: (timeStr: string | null) => {
-        currentTimeValue.value = timeStr;
-    },
-
-    // 獲取當前時間值
-    getCurrentTimeValue: () => currentTimeValue.value,
 
     // 月份導航
     previousMonth,

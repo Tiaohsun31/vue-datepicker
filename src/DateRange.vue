@@ -64,7 +64,7 @@
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
                             :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
-                            :max-date="endDateTime.inputDateValue.value" :min-date="minDateStr"
+                            :max-date="startDateConstraintsStr.maxDate" :min-date="startDateConstraintsStr.minDate"
                             :date-format="dateInputFormat" @validation="handleStartDateValidation"
                             @complete="handleStartDateComplete" />
 
@@ -82,7 +82,7 @@
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
                             :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
-                            :min-date="startDateTime.inputDateValue.value" :max-date="maxDateStr"
+                            :min-date="endDateConstraintsStr.minDate" :max-date="endDateConstraintsStr.maxDate"
                             :date-format="dateInputFormat" @validation="handleEndDateValidation"
                             @complete="handleEndDateComplete" />
 
@@ -140,8 +140,10 @@
     <div v-if="showErrorMessage && hasErrors">
         <!-- 讓使用者完全控制錯誤顯示 -->
         <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+            <!-- 預設使用 DateErrorMessage -->
             <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
-                :custom-messages="customErrorMessages">
+                :custom-messages="customErrorMessages" :errorParams="mergedErrorParams">
+                <!-- 將內部的 slot 轉發給使用者 -->
                 <template v-for="(_, slotName) in $slots" :key="slotName" #[slotName]="slotProps">
                     <slot :name="slotName" v-bind="slotProps" />
                 </template>
@@ -307,21 +309,7 @@ const computedPlaceholders = computed(() => {
     };
 });
 
-const minDateStr = computed(() => {
-    const maxDateValue = parseInputToSimpleDate(props.minDate, props.locale);
-    return formatSimpleDate(maxDateValue);
-});
-
-const maxDateStr = computed(() => {
-    const maxDateValue = parseInputToSimpleDate(props.maxDate, props.locale);
-    return formatSimpleDate(maxDateValue);
-});
 const dateInputFormat = computed(() => props.dateFormat);
-
-// 合併所有錯誤
-const mergedErrors = computed(() => {
-    return dateRange.mergedErrors.value;
-});
 
 // 是否有錯誤
 const hasErrors = computed(() => {
@@ -377,10 +365,14 @@ defineExpose({
 const {
     // 狀態
     showCalendar,
+    startDateConstraintsStr,
+    endDateConstraintsStr,
     shortcuts,
     startDateTime,
     endDateTime,
     hasRangeValue,
+    mergedErrors,
+    mergedErrorParams,
 
     // 事件處理方法
     handleStartDateValidation,

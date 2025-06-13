@@ -2,7 +2,7 @@
     <div class="container mx-auto p-4 space-y-6">
         <div>
             {{ dateTime }}
-            <DatePicker v-model="dateTime" locale="en-US">
+            <DatePicker v-model="dateTime" locale="zh-TW" max-date="2025-06-20">
                 <!-- <template #year-display="{ yearData, isSelected }">
                     <div class="custom-year-display">
                         <div :class="['font-bold', isSelected ? 'text-white' : 'text-blue-600']">
@@ -101,7 +101,7 @@ const selectedDate = ref({
     end: '',
 });
 const rocDate = ref('民國114年06月18日 上午 02時48分');
-const dateTime = ref('1868-09-22 12:22:12'); // ISO 8601 格式
+const dateTime = ref(''); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
 const dateTime3 = ref('1868-09-22 06:22:12');
 const dateTimeutc = ref('2022-01-01T12:00:00.000Z'); // UTC 時間格式

@@ -95,7 +95,6 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
      */
     const validateDateRange = (parsedDate: SimpleDateValue): boolean => {
         if (!parsedDate) return false;
-
         // 檢查日期範圍
         if (minDate) {
             const minSimpleDate = parseInputToSimpleDate(minDate);

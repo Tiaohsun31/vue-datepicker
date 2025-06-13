@@ -56,7 +56,7 @@
         <!-- 日曆彈出層 -->
         <!-- TODO: slot 須明確傳遞  -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
+            class="calendar-container absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
                 :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"

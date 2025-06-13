@@ -76,6 +76,7 @@ export interface PlaceholderMessages {
         selectDate: string;
         selectTime: string;
         clear: string;
+        time: string;
     };
     range: {
         start: string;

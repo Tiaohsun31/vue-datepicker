@@ -2,8 +2,10 @@
     <div v-if="show">
         <hr class="my-2 border-vdt-outline" />
         <div class="flex flex-row items-center justify-between">
-            <label class="text-sm font-medium text-vdt-content uppercase">Time:</label>
-            <div class="flex flex-row items-center gap-1">
+            <label class="text-sm font-medium text-vdt-content uppercase">
+                {{ getPlaceholderMessage('general.time') }}:
+            </label>
+            <div v-if="selectionMode === 'single'" class="flex flex-row items-center gap-1">
                 <button type="button" @click="setNowTime"
                     class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
                     Now
@@ -52,11 +54,11 @@
                         class="isolate inline-flex rounded-md border border-vdt-outline bg-vdt-surface overflow-hidden">
                         <button type="button" @click="setPeriod('AM')" class="px-2 py-1 text-sm transition-colors"
                             :class="selectedPeriod === 'AM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
-                            AM
+                            {{ getLocalizedPeriod('AM') }}
                         </button>
                         <button type="button" @click="setPeriod('PM')" class="px-2 py-1 text-sm transition-colors"
                             :class="selectedPeriod === 'PM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
-                            PM
+                            {{ getLocalizedPeriod('PM') }}
                         </button>
                     </div>
                 </div>
@@ -67,13 +69,15 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-
+import { useLocale } from '@/composables/useLocale';
 interface Props {
     show?: boolean;
     timeValue?: string | null;
     enableSeconds?: boolean;
     use24Hour?: boolean;
     defaultTime?: string;
+    locale?: string;
+    selectionMode?: 'single' | 'range';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -82,12 +86,16 @@ const props = withDefaults(defineProps<Props>(), {
     enableSeconds: true,
     use24Hour: false,
     defaultTime: '00:00:00',
+    locale: 'zh-TW',
+    selectionMode: 'single'
 });
 
 const emit = defineEmits<{
     'time-change': [time: string];
     'today-click': [];
 }>();
+
+const { getPlaceholderMessage } = useLocale(props.locale);
 
 // 時間相關狀態
 const selectedHour = ref<number>(0);
@@ -181,6 +189,23 @@ const initializeWithDefaultTime = () => {
 // 設置時間段
 const setPeriod = (period: 'AM' | 'PM') => {
     selectedPeriod.value = period;
+};
+
+const getLocalizedPeriod = (period: 'AM' | 'PM'): string => {
+    // 使用瀏覽器內建的本地化功能
+    const date = new Date();
+    // 設定為對應的時間段來獲取本地化文字
+    date.setHours(period === 'AM' ? 6 : 18, 0, 0, 0);
+
+    const formatter = new Intl.DateTimeFormat(props.locale || navigator.language, {
+        hour12: true,
+        hour: 'numeric'
+    });
+
+    const parts = formatter.formatToParts(date);
+    const dayPeriodPart = parts.find(part => part.type === 'dayPeriod');
+
+    return dayPeriodPart?.value || period;
 };
 
 // 設置為當前時間

@@ -58,7 +58,7 @@
                 <!-- 輸入區域 -->
                 <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
                     <!-- 開始日期輸入 -->
-                    <div @click="focusStartDate"
+                    <div @click.stop="focusStartDate"
                         class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -76,7 +76,7 @@
                     </div>
 
                     <!-- 結束日期輸入 -->
-                    <div @click="focusEndDate"
+                    <div @click.stop="focusEndDate"
                         class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -107,31 +107,15 @@
 
                 <!-- 雙月日曆 -->
                 <div class="calendar-container flex flex-col md:flex-row gap-1 overflow-auto">
-                    <DualMonthCalendar :range-start="startDateTime.internalDateTime.value"
-                        :range-end="endDateTime.internalDateTime.value" :min-date="parseInputToSimpleDate(minDate)"
-                        :max-date="parseInputToSimpleDate(maxDate)" :locale="locale" :week-starts-on="weekStartsOn"
-                        @range-select="handleCalendarRangeSelect" />
+                    <DualMonthCalendar :showTimeSelector="showTime" :calendar="calendar"
+                        :range-start="startDateTime.internalDateTime.value"
+                        :range-end="endDateTime.internalDateTime.value" :enableSeconds="enableSeconds"
+                        :use24Hour="use24Hour" :locale="locale" :week-starts-on="weekStartsOn"
+                        :start-time-value="startDateTime.inputTimeValue.value"
+                        :end-time-value="endDateTime.inputTimeValue.value" :min-date="parseInputToSimpleDate(minDate)"
+                        :max-date="parseInputToSimpleDate(maxDate)" @range-select="handleCalendarRangeSelect"
+                        @time-select="handleTimeSelect" />
                 </div>
-
-                <!-- 操作按鈕 -->
-                <!-- <div class="flex justify-between mt-3 pt-2 border-t border-vdt-outline">
-                    <button type="button" class="px-4 py-1 text-sm text-vdt-content-secondary hover:text-vdt-content"
-                        @click="clearRange">
-                        清除
-                    </button>
-                    <div class="flex gap-2">
-                        <button type="button"
-                            class="px-4 py-1 text-sm border border-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm"
-                            @click="hideCalendar">
-                            取消
-                        </button>
-                        <button type="button"
-                            class="px-4 py-1 text-sm bg-vdt-theme-500 text-white hover:bg-vdt-theme-600 rounded-sm"
-                            :disabled="!isValidRange" @click="confirmRange">
-                            確定
-                        </button>
-                    </div>
-                </div> -->
             </div>
         </div>
     </div>
@@ -166,12 +150,7 @@ import { useDateRange } from './composables/useDateRange';
 import { useTheme } from './composables/useTheme';
 
 // Utils
-import {
-    parseInputToSimpleDate,
-    formatSimpleDate,
-    ensureSimpleDate,
-    type DateTimeInput,
-} from './utils/dateUtils';
+import { parseInputToSimpleDate, formatSimpleDate, type DateTimeInput } from './utils/dateUtils';
 import type { DateRangeProps } from '@/types/datePickerProps';
 import { useLocale } from '@/composables/useLocale';
 
@@ -195,11 +174,10 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 
     // 時間相關屬性
     timeFormat: 'HH:mm:ss',
-    showTime: false,
+    showTime: true,
     enableSeconds: true,
     use24Hour: true,
     useLocalizedPeriod: false,
-    customDefaultTime: '00:00:00',
     autoFocusTimeAfterDate: false,
 
     // 一般選項
@@ -208,13 +186,12 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
     required: false,
     showClearButton: true,
 
-
     // 輸入框佔位符
     placeholderOverrides: () => ({}),
 
     // 範圍特定
     separator: ' ~ ',
-    showShortcuts: false,
+    showShortcuts: true,
     incomplete: true,
 
     maxRange: undefined,
@@ -250,6 +227,7 @@ const dateRange = useDateRange(
         dateFormat: props.dateFormat,
         timeFormat: props.timeFormat,
         outputType: props.outputType,
+        useStrictISO: props.useStrictISO,
         enableSeconds: props.enableSeconds,
         minDate: props.minDate,
         maxDate: props.maxDate,
@@ -312,8 +290,15 @@ const computedPlaceholders = computed(() => {
     };
 });
 
-const minDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.minDate)));
-const maxDateStr = computed(() => formatSimpleDate(ensureSimpleDate(props.maxDate)));
+const minDateStr = computed(() => {
+    const maxDateValue = parseInputToSimpleDate(props.minDate, props.locale);
+    return formatSimpleDate(maxDateValue);
+});
+
+const maxDateStr = computed(() => {
+    const maxDateValue = parseInputToSimpleDate(props.maxDate, props.locale);
+    return formatSimpleDate(maxDateValue);
+});
 const dateInputFormat = computed(() => props.dateFormat);
 
 // 合併所有錯誤
@@ -326,6 +311,18 @@ const hasErrors = computed(() => {
     return Object.keys(mergedErrors.value).length > 0;
 });
 
+// 處理時間選擇事件
+const handleTimeSelect = (timeValue: string, source: 'start' | 'end') => {
+    // 根據 source 直接更新對應的時間
+    if (source === 'start' && startDateTime.internalDateTime.value) {
+        startDateTime.inputTimeValue.value = timeValue;
+        handleStartTimeComplete(timeValue);
+    }
+    if (source === 'end' && endDateTime.internalDateTime.value) {
+        endDateTime.inputTimeValue.value = timeValue;
+        handleEndTimeComplete(timeValue);
+    }
+};
 // 監聽主題變化
 watch(() => props.theme, (newTheme) => {
     if (newTheme) {

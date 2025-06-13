@@ -2,17 +2,23 @@
 <template>
     <div class="dual-month-calendar flex flex-col gap-4 min-w-auto md:min-w-[570px] md:flex-row m-1">
         <!-- 左側月份 -->
-        <div class="month-container flex-1 min-w-auto md:min-w-[275px]">
+        <div class="calendar-container flex-1 min-w-auto md:min-w-[275px]">
             <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'" :year="leftYear"
                 :month="leftMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
-                :week-starts-on="weekStartsOn" :calendar="calendar" @range-select="handleRangeSelect" />
+                :week-starts-on="weekStartsOn" :calendar="calendar" :showTimeSelector="showTimeSelector"
+                :time-value="startTimeValue" :enable-seconds="enableSeconds" :use24-hour="use24Hour"
+                :default-time="defaultTime" @range-select="handleRangeSelect"
+                @time-select="(timeStr) => handleTimeSelect(timeStr, 'start')" />
         </div>
 
         <!-- 右側月份 -->
-        <div class="month-container flex-1 md:min-w-[275px] min-w-auto">
+        <div class="calendar-container flex-1 md:min-w-[275px] min-w-auto">
             <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'" :year="rightYear"
                 :month="rightMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
-                :week-starts-on="weekStartsOn" :calendar="calendar" @range-select="handleRangeSelect" />
+                :week-starts-on="weekStartsOn" :calendar="calendar" :showTimeSelector="showTimeSelector"
+                :time-value="endTimeValue" :enable-seconds="enableSeconds" :use24-hour="use24Hour"
+                :default-time="defaultTime" @range-select="handleRangeSelect"
+                @time-select="(timeStr) => handleTimeSelect(timeStr, 'end')" />
         </div>
     </div>
 </template>
@@ -31,6 +37,14 @@ interface Props {
     weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
     calendar?: string;
 
+    showTimeSelector?: boolean;
+    startTimeValue?: string | null;
+    endTimeValue?: string | null;
+    timeValue?: string | null;
+    enableSeconds?: boolean;
+    use24Hour?: boolean;
+    defaultTime?: string;
+
     // 初始顯示的月份（西元曆）
     initialYear?: number;
     initialMonth?: number;
@@ -44,12 +58,20 @@ const props = withDefaults(defineProps<Props>(), {
     locale: 'en-US',
     weekStartsOn: 0,
     calendar: 'gregory',
+
+    showTimeSelector: false,
+    timeValue: null,
+    enableSeconds: true,
+    use24Hour: true,
+    defaultTime: '00:00:00',
+
     initialYear: () => getTodaysDate().year,
     initialMonth: () => getTodaysDate().month
 });
 
 const emit = defineEmits<{
     'range-select': [startDate: SimpleDateValue | null, endDate: SimpleDateValue | null];
+    'time-select': [timeValue: string, source: 'start' | 'end'];
 }>();
 
 // 初始化年月 initialYear/Month > rangeStart > 今天
@@ -92,6 +114,9 @@ const rightMonth = computed(() => {
 
 // 簡化的範圍選擇狀態 - 內部使用 SimpleDateValue 追蹤點擊
 const selectedDates = ref<SimpleDateValue[]>([]);
+
+// 當前時間值狀態
+const currentTimeValue = ref<string | null>(props.timeValue);
 
 // 計算實際的 start 和 end（自動排序）
 const actualStart = computed(() => {
@@ -140,6 +165,11 @@ watch(() => [props.rangeStart, props.rangeEnd], ([newStart, newEnd]) => {
     }
 }, { immediate: true });
 
+// 監聽外部時間值變化
+watch(() => props.timeValue, (newValue) => {
+    currentTimeValue.value = newValue;
+}, { immediate: true });
+
 // 處理範圍選擇 - 接收 SimpleDateValue 進行內部管理
 const handleRangeSelect = (startDate: SimpleDateValue | null, endDate: SimpleDateValue | null) => {
     if (!startDate) {
@@ -156,10 +186,10 @@ const handleRangeSelect = (startDate: SimpleDateValue | null, endDate: SimpleDat
     } else if (selectedDates.value.length === 1) {
         const existing = selectedDates.value[0];
 
-        // 檢查是否點擊了同一個日期
+        // 如果沒有開啟時間選項，檢查是否點擊了同一個日期
         if (startDate.year === existing.year &&
             startDate.month === existing.month &&
-            startDate.day === existing.day) {
+            startDate.day === existing.day && !props.showTimeSelector) {
             // 點擊同一個日期，保持單日選擇狀態
             return;
         }
@@ -192,6 +222,13 @@ const handleRangeSelect = (startDate: SimpleDateValue | null, endDate: SimpleDat
         }
     }
 };
+
+// 處理時間選擇事件
+const handleTimeSelect = (timeStr: string, source: 'start' | 'end') => {
+    currentTimeValue.value = timeStr;
+    emit('time-select', timeStr, source);
+};
+
 
 // 導航到上個月
 const previousMonth = () => {
@@ -248,6 +285,14 @@ defineExpose({
         actualStart: actualStart.value,
         actualEnd: actualEnd.value
     }),
+
+    // 設置時間值
+    setTimeValue: (timeStr: string | null) => {
+        currentTimeValue.value = timeStr;
+    },
+
+    // 獲取當前時間值
+    getCurrentTimeValue: () => currentTimeValue.value,
 
     // 月份導航
     previousMonth,

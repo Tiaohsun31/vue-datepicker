@@ -21,8 +21,8 @@
             :calendar="calendar" @select="handleSelect" @range-select="handleRangeSelect" />
 
         <!-- 時間選擇器 -->
-        <TimeSelector v-if="selectionMode === 'single'" :show="showTimeSelector" :time-value="timeValue"
-            :enable-seconds="enableSeconds" :use24-hour="use24Hour" :default-time="defaultTime"
+        <TimeSelector :locale="locale" :show="showTimeSelector" :time-value="timeValue" :enable-seconds="enableSeconds"
+            :use24-hour="use24Hour" :default-time="defaultTime" :selectionMode="selectionMode"
             @time-change="emitTimeSelect" @today-click="setTodaysDate" />
     </div>
 </template>
@@ -58,7 +58,7 @@ interface Props {
     locale?: string;
     weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-    // 時間選擇器相關（僅單一日期模式）
+    // 時間選擇器相關
     showTimeSelector?: boolean;
     timeValue?: string | null;
     enableSeconds?: boolean;
@@ -186,9 +186,7 @@ watch(() => props.timeValue, (newValue) => {
 // 處理單一日期選擇
 const handleSelect = (date: CalendarDate) => {
     if (props.selectionMode === 'single') {
-        console.log('Selected date:', date);
         const simpleDate = CalendarUtils.convertFromCalendarDate(date, props.calendar);
-        console.log('Selected date:', simpleDate);
         if (simpleDate) {
             emit('select', simpleDate, true);
 

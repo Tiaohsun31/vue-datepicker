@@ -66,6 +66,7 @@ export const koKRLocaleMessages: LocaleMessages = {
             selectDate: '날짜를 선택해주세요',
             selectTime: '시간을 선택해주세요',
             clear: '지우기',
+            time: '시간',
         },
         range: {
             start: '시작 날짜를 선택해주세요',

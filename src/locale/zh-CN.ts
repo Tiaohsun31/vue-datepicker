@@ -66,6 +66,7 @@ export const zhCNLocaleMessages: LocaleMessages = {
             selectDate: '请选择日期',
             selectTime: '请选择时间',
             clear: '清除',
+            time: '时间',
         },
         range: {
             start: '请选择开始日期',

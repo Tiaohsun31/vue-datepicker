@@ -66,6 +66,7 @@ export const zhTWLocaleMessages: LocaleMessages = {
             selectDate: '請選擇日期',
             selectTime: '請選擇時間',
             clear: '清除',
+            time: '時間',
         },
         range: {
             start: '請選擇開始日期',

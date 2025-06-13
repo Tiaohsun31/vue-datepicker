@@ -66,6 +66,7 @@ export const jaJPLocaleMessages: LocaleMessages = {
             selectDate: '日付を選択してください',
             selectTime: '時刻を選択してください',
             clear: 'クリア',
+            time: '時刻',
         },
         range: {
             start: '開始日を選択してください',

@@ -5,12 +5,12 @@
             <label class="text-sm font-medium text-vdt-content uppercase">
                 {{ getPlaceholderMessage('general.time') }}:
             </label>
-            <div v-if="selectionMode === 'single'" class="flex flex-row items-center gap-1">
+            <div class="flex flex-row items-center gap-1">
                 <button type="button" @click="setNowTime"
                     class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
                     Now
                 </button>
-                <button type="button" @click="emitTodayEvent"
+                <button v-if="selectionMode === 'single'" type="button" @click="emitTodayEvent"
                     class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
                     Today
                 </button>

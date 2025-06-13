@@ -5,14 +5,15 @@
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 "
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
-            <button type="button" class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200"
+            <button type="button"
+                class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="disabled" @click="toggleCalendar">
                 <!-- 開始日期 -->
                 <div class="flex-1 text-center whitespace-nowrap">
-                    <span v-if="displayStartDate" class="text-vdt-content text-sm">
-                        {{ displayStartDate }}
+                    <span v-if="modelValue?.start" class="text-vdt-content text-sm">
+                        {{ modelValue?.start }}
                     </span>
                     <span v-else class="text-vdt-content-muted text-sm">
                         {{ computedPlaceholders.start }}
@@ -26,8 +27,8 @@
 
                 <!-- 結束日期 -->
                 <div class="flex-1 text-center whitespace-nowrap">
-                    <span v-if="displayEndDate" class="text-vdt-content text-sm">
-                        {{ displayEndDate }}
+                    <span v-if="modelValue?.end" class="text-vdt-content text-sm">
+                        {{ modelValue?.end }}
                     </span>
                     <span v-else class="text-vdt-content-muted text-sm">
                         {{ computedPlaceholders.end }}
@@ -36,15 +37,15 @@
             </button>
 
             <!-- 日曆圖標和清除按鈕 -->
-            <button v-if="hasRangeValue && !disabled && showClearButton" type="button"
+            <button v-if="hasRangeValue && !disabled && showClearButton" type="button" :disabled="disabled"
                 class="text-gray-400 hover:text-red-500 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
                 @click="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
-                <ClearIcon class="h-4 w-4 cursor-pointer" />
+                <ClearIcon class="h-4 w-4" />
             </button>
             <button v-else type="button"
                 class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
                 :disabled="disabled" @click="toggleCalendar">
-                <CalendarIcon class="h-5 w-5 cursor-pointer" />
+                <CalendarIcon class="h-5 w-5" />
             </button>
         </div>
 
@@ -56,7 +57,7 @@
             <!-- 範圍選擇器內容 -->
             <div class="p-2 space-y-2">
                 <!-- 輸入區域 -->
-                <div class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
+                <div v-if="inputEnabled" class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
                     <!-- 開始日期輸入 -->
                     <div @click.stop="focusStartDate"
                         class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
@@ -97,11 +98,26 @@
                 <!-- 快捷選項 -->
                 <div v-if="shortcuts.length > 0 && showShortcuts">
                     <div class="flex flex-wrap gap-2">
+                        <!-- 預設快捷選項 -->
                         <button v-for="shortcut in shortcuts" :key="shortcut.label" type="button"
                             class="px-3 py-1 text-xs bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm transition-colors"
                             @click="applyShortcut(shortcut)">
                             {{ shortcut.label }}
                         </button>
+
+                        <!-- 自定義快捷選項 slot -->
+                        <slot name="shortcuts" :apply-shortcut="applyShortcut" :shortcuts="shortcuts"
+                            :current-range="modelValue">
+                        </slot>
+                    </div>
+                </div>
+
+                <!-- 如果只有自定義快捷選項但沒有預設快捷選項 -->
+                <div v-else-if="$slots.shortcuts && showShortcuts">
+                    <div class="flex flex-wrap gap-2">
+                        <slot name="shortcuts" :apply-shortcut="applyShortcut" :shortcuts="shortcuts"
+                            :current-range="modelValue">
+                        </slot>
                     </div>
                 </div>
 
@@ -191,7 +207,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 
     // 範圍特定
     separator: ' ~ ',
-    showShortcuts: true,
+    showShortcuts: false,
     incomplete: true,
 
     maxRange: undefined,
@@ -220,6 +236,7 @@ const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 // 使用日期範圍 composable
 const dateRange = useDateRange(
     {
+        calendar: props.calendar,
         modelValue: props.modelValue,
         showTime: props.showTime,
         required: props.required,
@@ -311,18 +328,7 @@ const hasErrors = computed(() => {
     return Object.keys(mergedErrors.value).length > 0;
 });
 
-// 處理時間選擇事件
-const handleTimeSelect = (timeValue: string, source: 'start' | 'end') => {
-    // 根據 source 直接更新對應的時間
-    if (source === 'start' && startDateTime.internalDateTime.value) {
-        startDateTime.inputTimeValue.value = timeValue;
-        handleStartTimeComplete(timeValue);
-    }
-    if (source === 'end' && endDateTime.internalDateTime.value) {
-        endDateTime.inputTimeValue.value = timeValue;
-        handleEndTimeComplete(timeValue);
-    }
-};
+
 // 監聽主題變化
 watch(() => props.theme, (newTheme) => {
     if (newTheme) {
@@ -370,10 +376,7 @@ defineExpose({
 // 解構賦值暴露 composable 的方法和狀態
 const {
     // 狀態
-    displayStartDate,
-    displayEndDate,
     showCalendar,
-    isValidRange,
     shortcuts,
     startDateTime,
     endDateTime,
@@ -391,15 +394,12 @@ const {
     handleCalendarRangeSelect,
     handleStartNavigateToDate,
     handleEndNavigateToDate,
-    handleContainerClick,
-    handleContainerMouseDown,
+    handleTimeSelect,
 
     // 操作方法
     toggleCalendar,
-    hideCalendar,
     applyShortcut,
     clearRange,
-    confirmRange,
 
     focusStartDate,
     focusEndDate,

@@ -199,12 +199,6 @@ export function formatOutput(
                 return date;
 
             case 'custom':
-                // console.log('使用自定義輸出格式:', customFormat);
-                // if (!customFormat ) {
-                //     console.log('Custom 輸出類型需要提供 customFormat，回退到 ISO 格式');
-
-                //     return formatSimpleDate(date, includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
-                // }
                 const format = customFormat || (includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
                 return CalendarUtils.formatOutput(date, format, calendar, locale);
 
@@ -272,6 +266,31 @@ export function isDateInRange(
     }
 
     return true;
+}
+
+/**
+ * 計算兩個日期之間的天數差異 (Range使用)
+ */
+export function calculateDaysDifference(start: SimpleDateValue, end: SimpleDateValue): number {
+    const startTime = new Date(start.year, start.month - 1, start.day).getTime();
+    const endTime = new Date(end.year, end.month - 1, end.day).getTime();
+    return Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * 獲取當月的日期範圍 (Range使用)
+ */
+export function getCurrentMonthRange(): { start: SimpleDateValue; end: SimpleDateValue } {
+    const now = getNow();
+    const start = createSimpleDate(now.year, now.month, 1, 0, 0, 0);
+
+    // 計算月末
+    const nextMonth = now.month === 12 ? 1 : now.month + 1;
+    const nextYear = now.month === 12 ? now.year + 1 : now.year;
+    const firstDayNextMonth = createSimpleDate(nextYear, nextMonth, 1);
+    const end = addDays(firstDayNextMonth, -1);
+
+    return { start, end };
 }
 
 /**

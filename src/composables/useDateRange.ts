@@ -9,40 +9,34 @@ import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useInputNavigation } from './useInputNavigation';
 import {
-    formatSimpleDate,
     formatOutput,
     getNow,
-    createSimpleDate,
     compareDates,
     addDays,
+    calculateDaysDifference,
+    getCurrentMonthRange,
     type SimpleDateValue,
     type DateTimeInput
 } from '../utils/dateUtils';
 import type { OutputType } from '../types/main';
 
+// 類型定義
 interface DateRangeOptions {
-    calendar?: string
-    // 基本配置
+    calendar?: string;
     modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
     showTime?: boolean;
     required?: boolean;
     disabled?: boolean;
     incomplete?: boolean;
-
-    // 格式配置
     dateFormat?: string;
     timeFormat?: string;
     outputType?: OutputType;
     useStrictISO?: boolean;
-
-    // 時間配置
     enableSeconds?: boolean;
-
-    // 限制配置
     minDate?: DateTimeInput;
     maxDate?: DateTimeInput;
-    maxRange?: number; // 最大天數限制
-    minRange?: number; // 最小天數限制
+    maxRange?: number;
+    minRange?: number;
     locale?: string;
 }
 
@@ -55,16 +49,32 @@ interface DateRangeRefs {
     endTimeInputRef: Ref<any>;
 }
 
-// 日期範圍快捷選項
 interface DateRangeShortcut {
     label: string;
     getValue: () => { start: SimpleDateValue; end: SimpleDateValue };
 }
 
+interface DateRangeEmitters {
+    update?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
+    change?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
+    validation?: (isValid: boolean, errors: Record<string, string>) => void;
+}
+
+interface RangeValidationResult {
+    valid: boolean;
+    error?: string;
+    params?: Record<string, any>;
+}
+
+// 常量定義
+const DEFAULT_START_TIME = '00:00:00';
+const DEFAULT_END_TIME = '23:59:59';
+
 export function useDateRange(
     options: DateRangeOptions = {},
     refs: DateRangeRefs
 ) {
+    // 解構配置選項並設置默認值
     const {
         calendar = 'gregory',
         modelValue = null,
@@ -93,10 +103,11 @@ export function useDateRange(
         endTimeInputRef
     } = refs;
 
-    // 禁用狀態
+    // 狀態管理
     const isDisabled = ref(disabled);
+    let emitters: DateRangeEmitters = {};
 
-    // 驗證 composable
+    // 初始化子 composables
     const startValidation = useDateTimeValidation({
         required,
         showTime,
@@ -113,129 +124,78 @@ export function useDateRange(
         dateFormat
     });
 
-    // 開始日期時間值管理
     const startDateTime = useDateTimeValue({
         showTime,
         dateFormat,
         timeFormat,
         outputType,
-        defaultTime: '00:00:00',
+        defaultTime: DEFAULT_START_TIME,
         enableSeconds
     });
 
-    // 結束日期時間值管理
     const endDateTime = useDateTimeValue({
         showTime,
         dateFormat,
         timeFormat,
         outputType,
-        defaultTime: '23:59:59',
+        defaultTime: DEFAULT_END_TIME,
         enableSeconds
     });
 
-    // 日曆彈窗管理
     const calendarPopup = useCalendarPopup(
         containerRef,
         calendarRef,
         { disabled: isDisabled }
     );
 
-    // 導航管理 - 為開始和結束日期分別創建
     const startNavigation = useInputNavigation(
-        {
-            dateInputRef: startDateInputRef,
-            timeInputRef: startTimeInputRef
-        },
+        { dateInputRef: startDateInputRef, timeInputRef: startTimeInputRef },
         { showTime, autoFocusTimeAfterDate: true }
     );
 
     const endNavigation = useInputNavigation(
-        {
-            dateInputRef: endDateInputRef,
-            timeInputRef: endTimeInputRef
-        },
+        { dateInputRef: endDateInputRef, timeInputRef: endTimeInputRef },
         { showTime, autoFocusTimeAfterDate: true }
     );
 
-    // 事件發射器
-    let emitUpdate: ((range: { start: DateTimeInput; end: DateTimeInput } | null) => void) | null = null;
-    let emitChange: ((range: { start: DateTimeInput; end: DateTimeInput } | null) => void) | null = null;
-    let emitValidation: ((isValid: boolean, errors: Record<string, string>) => void) | null = null;
+    const hasRangeValue = computed(() =>
+        startDateTime.hasValue.value || endDateTime.hasValue.value
+    );
 
-    /**
-     * 設置事件發射器
-     */
-    const setEmitters = (emitters: {
-        update?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
-        change?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
-        validation?: (isValid: boolean, errors: Record<string, string>) => void;
-    }) => {
-        emitUpdate = emitters.update || null;
-        emitChange = emitters.change || null;
-        emitValidation = emitters.validation || null;
-    };
-
-    // 顯示的日期範圍
-    const displayStartDate = computed(() => {
-        if (!startDateTime.internalDateTime.value) return null;
-        const dateStr = formatSimpleDate(startDateTime.internalDateTime.value, dateFormat);
-        const timeStr = showTime && startDateTime.inputTimeValue.value ? ` ${startDateTime.inputTimeValue.value}` : '';
-        return dateStr + timeStr;
-    });
-
-    const displayEndDate = computed(() => {
-        if (!endDateTime.internalDateTime.value) return null;
-        const dateStr = formatSimpleDate(endDateTime.internalDateTime.value, dateFormat);
-        const timeStr = showTime && endDateTime.inputTimeValue.value ? ` ${endDateTime.inputTimeValue.value}` : '';
-        return dateStr + timeStr;
-    });
-
-    // 檢查是否有範圍值
-    const hasRangeValue = computed(() => {
-        return !!(startDateTime.hasValue.value || endDateTime.hasValue.value);
-    });
-
-    // 合併所有錯誤
     const mergedErrors = computed(() => {
         const errors = {
             ...startValidation.mergedErrors.value,
             ...endValidation.mergedErrors.value
         };
-        // 只選擇 start 未選擇 end 時，補上錯誤
-        if (
-            startDateTime.internalDateTime.value &&
-            !endDateTime.internalDateTime.value && incomplete
-        ) {
+
+        // 檢查範圍完整性
+        if (startDateTime.internalDateTime.value &&
+            !endDateTime.internalDateTime.value &&
+            incomplete) {
             errors['range.endRequired'] = 'range.endRequired';
         }
+
         return errors;
     });
 
-    // 合併所有錯誤參數
-    const mergedErrorParams = computed(() => {
-        return {
-            ...startValidation.mergedErrorParams.value,
-            ...endValidation.mergedErrorParams.value
-        };
-    });
+    const mergedErrorParams = computed(() => ({
+        ...startValidation.mergedErrorParams.value,
+        ...endValidation.mergedErrorParams.value
+    }));
 
-    // 是否有錯誤
-    const hasErrors = computed(() => {
-        return Object.keys(mergedErrors.value).length > 0;
-    });
+    const hasErrors = computed(() => Object.keys(mergedErrors.value).length > 0);
 
-    // 驗證範圍是否有效
     const isValidRange = computed(() => {
         if (!startDateTime.internalDateTime.value || !endDateTime.internalDateTime.value) {
             return false;
         }
 
-        // 基本順序檢查
+        // 檢查日期順序
         if (compareDates(startDateTime.internalDateTime.value, endDateTime.internalDateTime.value) > 0) {
             return false;
         }
 
-        // 範圍限制檢查
+        // 檢查範圍限制
         if (maxRange || minRange) {
             const rangeValidation = validateRangeConstraints(
                 startDateTime.internalDateTime.value,
@@ -243,23 +203,9 @@ export function useDateRange(
             );
 
             if (!rangeValidation.valid) {
-                // 將範圍錯誤加入驗證狀態
-                if (rangeValidation.error === 'range.exceedsMaxRange') {
-                    endValidation.handleDateValidation(false, {
-                        range: rangeValidation.error
-                    }, 'endDate', {
-                        range: rangeValidation.params
-                    });
-                } else if (rangeValidation.error === 'range.belowMinRange') {
-                    endValidation.handleDateValidation(false, {
-                        range: rangeValidation.error
-                    }, 'endDate', {
-                        range: rangeValidation.params
-                    });
-                }
+                handleRangeValidationError(rangeValidation);
                 return false;
             } else {
-                // 清除範圍錯誤
                 endValidation.clearFieldErrors('range');
             }
         }
@@ -267,15 +213,35 @@ export function useDateRange(
         return !hasErrors.value;
     });
 
-    // 計算日期差異的輔助函數
-    const calculateDaysDifference = (start: SimpleDateValue, end: SimpleDateValue): number => {
-        const startTime = new Date(start.year, start.month - 1, start.day).getTime();
-        const endTime = new Date(end.year, end.month - 1, end.day).getTime();
-        return Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24));
-    };
+    const shortcuts = computed<DateRangeShortcut[]>(() => [
+        {
+            label: '今天',
+            getValue: () => {
+                const today = getNow();
+                return { start: today, end: today };
+            }
+        },
+        {
+            label: '最近7天',
+            getValue: () => ({
+                start: addDays(getNow(), -6),
+                end: getNow()
+            })
+        },
+        {
+            label: '最近30天',
+            getValue: () => ({
+                start: addDays(getNow(), -29),
+                end: getNow()
+            })
+        },
+        {
+            label: '本月',
+            getValue: getCurrentMonthRange
+        }
+    ]);
 
-    // 範圍驗證函數
-    const validateRangeConstraints = (start: SimpleDateValue, end: SimpleDateValue) => {
+    function validateRangeConstraints(start: SimpleDateValue, end: SimpleDateValue): RangeValidationResult {
         const diffDays = calculateDaysDifference(start, end);
 
         if (maxRange && diffDays > maxRange) {
@@ -295,128 +261,101 @@ export function useDateRange(
         }
 
         return { valid: true };
-    };
+    }
 
+    function handleRangeValidationError(rangeValidation: RangeValidationResult) {
+        if (!rangeValidation.error || !rangeValidation.params) return;
 
-    // 快捷選項
-    const shortcuts = computed<DateRangeShortcut[]>(() => [
-        {
-            label: '今天',
-            getValue: () => {
-                const today = getNow();
-                return { start: today, end: today };
-            }
-        },
-        {
-            label: '最近7天',
-            getValue: () => {
-                const end = getNow();
-                const start = addDays(end, -6);
-                return { start, end };
-            }
-        },
-        {
-            label: '最近30天',
-            getValue: () => {
-                const end = getNow();
-                const start = addDays(end, -29);
-                return { start, end };
-            }
-        },
-        {
-            label: '本月',
-            getValue: () => {
-                const now = getNow();
-                const start = createSimpleDate(now.year, now.month, 1, 0, 0, 0);
-                // 計算月末
-                const nextMonth = now.month === 12 ? 1 : now.month + 1;
-                const nextYear = now.month === 12 ? now.year + 1 : now.year;
-                const firstDayNextMonth = createSimpleDate(nextYear, nextMonth, 1);
-                const end = addDays(firstDayNextMonth, -1);
-                return { start, end };
-            }
-        }
-    ]);
+        endValidation.handleDateValidation(
+            false,
+            { range: rangeValidation.error },
+            'endDate',
+            { range: rangeValidation.params }
+        );
+    }
 
-    /**
-     * 發送範圍更新事件
-     */
-    const emitRangeEvents = () => {
+    function emitRangeEvents() {
         if (!startDateTime.internalDateTime.value || !endDateTime.internalDateTime.value) {
-            emitUpdate?.(null);
-            emitChange?.(null);
+            emitters.update?.(null);
+            emitters.change?.(null);
             return;
         }
+
         const customFormat = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
         const range = {
-            start: formatOutput(startDateTime.internalDateTime.value, outputType, customFormat, showTime, calendar, locale, useStrictISO),
-            end: formatOutput(endDateTime.internalDateTime.value, outputType, customFormat, showTime, calendar, locale, useStrictISO)
+            start: formatOutput(
+                startDateTime.internalDateTime.value,
+                outputType,
+                customFormat,
+                showTime,
+                calendar,
+                locale,
+                useStrictISO
+            ),
+            end: formatOutput(
+                endDateTime.internalDateTime.value,
+                outputType,
+                customFormat,
+                showTime,
+                calendar,
+                locale,
+                useStrictISO
+            )
         };
 
-        emitUpdate?.(range);
-        emitChange?.(range);
+
+        emitters.update?.(range);
+        emitters.change?.(range);
 
         // 發送驗證狀態
         const isValid = isValidRange.value && !hasErrors.value;
-        emitValidation?.(isValid, mergedErrors.value);
+        emitters.validation?.(isValid, mergedErrors.value);
+    }
+
+    function clearFieldErrors(validation: any, fields: string[]) {
+        fields.forEach(field => validation.clearFieldErrors(field));
+    }
+
+    function applyDefaultTimeIfNeeded(dateTime: any, timeValue: string) {
+        if (showTime && !dateTime.inputTimeValue.value) {
+            dateTime.inputTimeValue.value = timeValue;
+            dateTime.updateFromInputs();
+        }
+    }
+
+    // 事件處理函數
+    const setEmitters = (newEmitters: DateRangeEmitters) => {
+        emitters = newEmitters;
     };
 
-    /**
-     * 監聽外部值變化
-     */
-    watch(() => modelValue, (newValue) => {
-        if (newValue) {
-            startDateTime.setExternalValue(newValue.start);
-            endDateTime.setExternalValue(newValue.end);
-        } else {
-            startDateTime.clearValues();
-            endDateTime.clearValues();
-        }
-    }, { immediate: true });
-
-    /**
-     * 處理開始日期驗證
-     */
     const handleStartDateValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
         startValidation.handleDateValidation(isValid, validationErrors, 'startDate');
-        emitValidation?.(!hasErrors.value, mergedErrors.value);
+        emitters.validation?.(!hasErrors.value, mergedErrors.value);
     };
 
-    /**
-     * 處理結束日期驗證
-     */
     const handleEndDateValidation = (isValid: boolean, validationErrors: Record<string, string>) => {
         endValidation.handleDateValidation(isValid, validationErrors, 'endDate');
-        emitValidation?.(!hasErrors.value, mergedErrors.value);
+        emitters.validation?.(!hasErrors.value, mergedErrors.value);
     };
 
-    /**
-     * 處理開始時間驗證
-     */
     const handleStartTimeValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
         errorParams: Record<string, Record<string, any>> = {}
     ) => {
         startValidation.handleTimeValidation(isValid, validationErrors, 'startTime', errorParams);
-        emitValidation?.(!hasErrors.value, mergedErrors.value);
+        emitters.validation?.(!hasErrors.value, mergedErrors.value);
     };
 
-    /**
-     * 處理結束時間驗證
-     */
     const handleEndTimeValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
         errorParams: Record<string, Record<string, any>> = {}
     ) => {
         endValidation.handleTimeValidation(isValid, validationErrors, 'endTime', errorParams);
-        emitValidation?.(!hasErrors.value, mergedErrors.value);
+        emitters.validation?.(!hasErrors.value, mergedErrors.value);
     };
 
-    /**
-     * 處理開始日期完成
-     */
     const handleStartDateComplete = (dateStr: string) => {
         startDateTime.inputDateValue.value = dateStr;
         const updatedDateTime = startDateTime.updateFromInputs();
@@ -430,34 +369,22 @@ export function useDateRange(
             return;
         }
 
-        // 如果啟用時間且沒有時間值，應用默認時間
-        if (showTime && !startDateTime.inputTimeValue.value) {
-            startDateTime.inputTimeValue.value = '00:00:00';
-            startDateTime.updateFromInputs();
-        }
-
+        applyDefaultTimeIfNeeded(startDateTime, DEFAULT_START_TIME);
         emitRangeEvents();
 
-        // 清除錯誤
-        ['startDate', 'date.year', 'date.month', 'date.day'].forEach(field => {
-            startValidation.clearFieldErrors(field);
-        });
+        clearFieldErrors(startValidation, ['startDate', 'date.year', 'date.month', 'date.day']);
 
-        // 自動聚焦到時間輸入或下一個日期輸入
+        // 處理焦點轉移
         if (showTime) {
             startNavigation.autoFocusTimeAfterDateComplete(
                 !!startDateTime.inputTimeValue.value,
-                '00:00:00'
+                DEFAULT_START_TIME
             );
         } else {
-            // 如果不需要時間，聚焦到結束日期
             endNavigation.focusFirstInput();
         }
     };
 
-    /**
-     * 處理結束日期完成
-     */
     const handleEndDateComplete = (dateStr: string) => {
         endDateTime.inputDateValue.value = dateStr;
         const updatedDateTime = endDateTime.updateFromInputs();
@@ -471,31 +398,19 @@ export function useDateRange(
             return;
         }
 
-        // 如果啟用時間且沒有時間值，應用默認時間
-        if (showTime && !endDateTime.inputTimeValue.value) {
-            endDateTime.inputTimeValue.value = '23:59:59';
-            endDateTime.updateFromInputs();
-        }
-
+        applyDefaultTimeIfNeeded(endDateTime, DEFAULT_END_TIME);
         emitRangeEvents();
 
-        // 清除錯誤
-        ['endDate', 'date.year', 'date.month', 'date.day'].forEach(field => {
-            endValidation.clearFieldErrors(field);
-        });
+        clearFieldErrors(endValidation, ['endDate', 'date.year', 'date.month', 'date.day']);
 
-        // 自動聚焦到時間輸入
         if (showTime) {
             endNavigation.autoFocusTimeAfterDateComplete(
                 !!endDateTime.inputTimeValue.value,
-                '23:59:59'
+                DEFAULT_END_TIME
             );
         }
     };
 
-    /**
-     * 處理開始時間完成
-     */
     const handleStartTimeComplete = (timeStr: string) => {
         startDateTime.inputTimeValue.value = timeStr;
         const updatedDateTime = startDateTime.updateFromInputs();
@@ -504,15 +419,9 @@ export function useDateRange(
             emitRangeEvents();
         }
 
-        // 清除時間相關驗證錯誤
-        ['startTime', 'time.hour', 'time.minute', 'time.second'].forEach(field => {
-            startValidation.clearFieldErrors(field);
-        });
+        clearFieldErrors(startValidation, ['startTime', 'time.hour', 'time.minute', 'time.second']);
     };
 
-    /**
-     * 處理結束時間完成
-     */
     const handleEndTimeComplete = (timeStr: string) => {
         endDateTime.inputTimeValue.value = timeStr;
         const updatedDateTime = endDateTime.updateFromInputs();
@@ -521,92 +430,67 @@ export function useDateRange(
             emitRangeEvents();
         }
 
-        // 清除時間相關驗證錯誤
-        ['endTime', 'time.hour', 'time.minute', 'time.second'].forEach(field => {
-            endValidation.clearFieldErrors(field);
-        });
+        clearFieldErrors(endValidation, ['endTime', 'time.hour', 'time.minute', 'time.second']);
     };
 
-    /**
-     * 處理日曆範圍選擇
-     */
     const handleCalendarRangeSelect = (startDate: SimpleDateValue | null, endDate: SimpleDateValue | null) => {
         if (startDate && !endDate) {
-            // 只有開始日期
-            if (!startValidation.validateDateRange(startDate)) {
-                return;
-            }
-
-            startDateTime.setInternalDateTime(startDate);
-
-            ['startDate', 'date.year', 'date.month', 'date.day'].forEach(field => {
-                startValidation.clearFieldErrors(field);
-            });
-
-            // 清除結束日期
-            endDateTime.clearValues();
+            handleSingleDateSelect(startDate);
         } else if (startDate && endDate) {
-            // 完整範圍
-            if (!startValidation.validateDateRange(startDate) || !endValidation.validateDateRange(endDate)) {
-                return;
-            }
-
-            if (maxRange || minRange) {
-                const rangeValidation = validateRangeConstraints(startDate, endDate);
-                if (!rangeValidation.valid) {
-                    if (rangeValidation.error === 'range.exceedsMaxRange') {
-                        endValidation.handleDateValidation(false, {
-                            range: rangeValidation.error
-                        }, 'endDate', {
-                            range: rangeValidation.params
-                        });
-                    } else if (rangeValidation.error === 'range.belowMinRange') {
-                        endValidation.handleDateValidation(false, {
-                            range: rangeValidation.error
-                        }, 'endDate', {
-                            range: rangeValidation.params
-                        });
-                    }
-                    return;
-                }
-            }
-
-            startDateTime.setInternalDateTime(startDate);
-            endDateTime.setInternalDateTime(endDate);
-
-            // 如果沒有設定時間，使用默認時間
-            if (showTime) {
-                if (!startDateTime.inputTimeValue.value) {
-                    startDateTime.inputTimeValue.value = '00:00:00';
-                    startDateTime.updateFromInputs();
-                }
-                if (!endDateTime.inputTimeValue.value) {
-                    endDateTime.inputTimeValue.value = '23:59:59';
-                    endDateTime.updateFromInputs();
-                }
-            }
-
-            ['startDate', 'endDate', 'range', 'date.year', 'date.month', 'date.day'].forEach(field => {
-                startValidation.clearFieldErrors(field);
-                endValidation.clearFieldErrors(field);
-            });
+            handleRangeSelect(startDate, endDate);
         } else {
-            // 清空選擇
-            startDateTime.clearValues();
-            endDateTime.clearValues();
-
-            ['startDate', 'endDate', 'range'].forEach(field => {
-                startValidation.clearFieldErrors(field);
-                endValidation.clearFieldErrors(field);
-            });
+            clearRange();
         }
 
         emitRangeEvents();
     };
 
-    /**
-     * 應用快捷選項
-     */
+    function handleSingleDateSelect(startDate: SimpleDateValue) {
+        if (!startValidation.validateDateRange(startDate)) {
+            return;
+        }
+
+        startDateTime.setInternalDateTime(startDate);
+        clearFieldErrors(startValidation, ['startDate', 'date.year', 'date.month', 'date.day']);
+        endDateTime.clearValues();
+    }
+
+    function handleRangeSelect(startDate: SimpleDateValue, endDate: SimpleDateValue) {
+        if (!startValidation.validateDateRange(startDate) ||
+            !endValidation.validateDateRange(endDate)) {
+            return;
+        }
+
+        if (maxRange || minRange) {
+            const rangeValidation = validateRangeConstraints(startDate, endDate);
+            if (!rangeValidation.valid) {
+                handleRangeValidationError(rangeValidation);
+                return;
+            }
+        }
+
+        startDateTime.setInternalDateTime(startDate);
+        endDateTime.setInternalDateTime(endDate);
+
+        // 應用默認時間
+        if (showTime) {
+            applyDefaultTimeIfNeeded(startDateTime, DEFAULT_START_TIME);
+            applyDefaultTimeIfNeeded(endDateTime, DEFAULT_END_TIME);
+        }
+
+        clearFieldErrors(startValidation, ['startDate', 'endDate', 'range', 'date.year', 'date.month', 'date.day']);
+        clearFieldErrors(endValidation, ['startDate', 'endDate', 'range', 'date.year', 'date.month', 'date.day']);
+    }
+
+    const handleTimeSelect = (timeValue: string, source: 'start' | 'end') => {
+        if (source === 'start' && startDateTime.internalDateTime.value) {
+            handleStartTimeComplete(timeValue);
+        }
+        if (source === 'end' && endDateTime.internalDateTime.value) {
+            handleEndTimeComplete(timeValue);
+        }
+    };
+
     const applyShortcut = (shortcut: DateRangeShortcut) => {
         const range = shortcut.getValue();
 
@@ -614,22 +498,13 @@ export function useDateRange(
         endDateTime.setInternalDateTime(range.end);
 
         if (showTime) {
-            if (!startDateTime.inputTimeValue.value) {
-                startDateTime.inputTimeValue.value = '00:00:00';
-                startDateTime.updateFromInputs();
-            }
-            if (!endDateTime.inputTimeValue.value) {
-                endDateTime.inputTimeValue.value = '23:59:59';
-                endDateTime.updateFromInputs();
-            }
+            applyDefaultTimeIfNeeded(startDateTime, DEFAULT_START_TIME);
+            applyDefaultTimeIfNeeded(endDateTime, DEFAULT_END_TIME);
         }
 
         emitRangeEvents();
     };
 
-    /**
-     * 清除範圍
-     */
     const clearRange = () => {
         startDateTime.clearValues();
         endDateTime.clearValues();
@@ -638,20 +513,6 @@ export function useDateRange(
         emitRangeEvents();
     };
 
-    /**
-     * 確認範圍選擇
-     */
-    const confirmRange = () => {
-        if (!isValidRange.value) return false;
-
-        emitRangeEvents();
-        calendarPopup.hideCalendar();
-        return true;
-    };
-
-    /**
-     * 設置範圍值
-     */
     const setRange = (range: { start: DateTimeInput; end: DateTimeInput } | null) => {
         if (range) {
             startDateTime.setExternalValue(range.start);
@@ -662,9 +523,6 @@ export function useDateRange(
         emitRangeEvents();
     };
 
-    /**
-     * 驗證當前範圍
-     */
     const validate = () => {
         startDateInputRef.value?.validate();
         endDateInputRef.value?.validate();
@@ -677,33 +535,28 @@ export function useDateRange(
         return isValidRange.value;
     };
 
-    /**
-     * 處理導航事件 - 從時間輸入回到日期輸入
-     */
-    const handleStartNavigateToDate = () => {
-        startNavigation.handleNavigateToDate();
-    };
-
-    const handleEndNavigateToDate = () => {
-        endNavigation.handleNavigateToDate();
-    };
-
-    /**
-     * 容器點擊處理
-     */
     const focusStartDate = (event: MouseEvent) => {
         calendarPopup.handleContainerClick(event, () => {
-            // 預設聚焦到開始日期輸入
             startNavigation.focusFirstInput();
         });
     };
 
     const focusEndDate = (event: MouseEvent) => {
         calendarPopup.handleContainerClick(event, () => {
-            // 預設聚焦到開始日期輸入
             endNavigation.focusFirstInput();
         });
     };
+
+    // 監聽外部值變化
+    watch(() => modelValue, (newValue) => {
+        if (newValue) {
+            startDateTime.setExternalValue(newValue.start);
+            endDateTime.setExternalValue(newValue.end);
+        } else {
+            startDateTime.clearValues();
+            endDateTime.clearValues();
+        }
+    }, { immediate: true });
 
     return {
         // 狀態
@@ -720,8 +573,6 @@ export function useDateRange(
         endDateTime,
 
         // 顯示值
-        displayStartDate,
-        displayEndDate,
         hasRangeValue,
 
         // 日曆相關
@@ -747,22 +598,19 @@ export function useDateRange(
 
         // 日曆事件處理
         handleCalendarRangeSelect,
+        handleTimeSelect,
 
         // 導航事件處理
-        handleStartNavigateToDate,
-        handleEndNavigateToDate,
-
-        // 容器事件處理
-        handleContainerMouseDown: calendarPopup.handleContainerMouseDown,
+        handleStartNavigateToDate: startNavigation.handleNavigateToDate,
+        handleEndNavigateToDate: endNavigation.handleNavigateToDate,
 
         // 主要操作
         applyShortcut,
         clearRange,
-        confirmRange,
         setRange,
         validate,
 
-        // 導航方法（直接暴露）
+        // 導航方法
         focusStartDate,
         focusEndDate,
     };

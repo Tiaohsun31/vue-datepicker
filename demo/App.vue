@@ -44,7 +44,7 @@
         </div>
         <div>
             {{ selectedDate }}
-            <DateRange v-model="selectedDate" calendar="roc"></DateRange>
+            <DateRange v-model="selectedDate" calendar="roc" output-type="custom"></DateRange>
         </div>
         <!-- <div>
             <DatePicker v-model="dateTime3">

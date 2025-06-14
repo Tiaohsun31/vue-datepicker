@@ -92,6 +92,11 @@ const errorParams = ref<Record<string, Record<string, any>>>({});
 const focused = ref<DateFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
+// 添加一個標記來追蹤用戶是否手動導航回來
+const userNavigatedBack = ref<boolean>(false);
+// 追蹤最後一次完成的值
+const lastCompletedValue = ref<string | null>(null);
+
 // 使用 Map 來存儲 DOM 引用 - 修復重點
 const inputRefs = ref<Map<DateFieldType, HTMLInputElement>>(new Map());
 
@@ -183,6 +188,11 @@ watch(() => props.modelValue, (newValue) => {
         yearValue.value = '';
         monthValue.value = '';
         dayValue.value = '';
+    }
+
+    if (!newValue) {
+        lastCompletedValue.value = null;
+        userNavigatedBack.value = false;
     }
 }, { immediate: true });
 
@@ -330,6 +340,7 @@ const validateField = (field: DateFieldType, value: string): { valid: boolean; e
     return { valid: true };
 };
 
+
 // 驗證並發送事件
 const validateAndEmit = () => {
     if (!isInitialized.value) return;
@@ -398,11 +409,19 @@ const validateAndEmit = () => {
             // 日期有效，發送更新
             else if (formattedDateString.value) {
                 emit('update:modelValue', formattedDateString.value);
-                emit('complete', formattedDateString.value);
+                // 只在真正新完成時觸發 complete 事件
+                const currentValue = formattedDateString.value;
+                const isNewCompletion = currentValue !== lastCompletedValue.value && !userNavigatedBack.value;
+
+                if (isNewCompletion) {
+                    lastCompletedValue.value = currentValue;
+                    emit('complete', formattedDateString.value);
+                }
             }
         }
     } else if (isInitialized.value && !yearValue.value && !monthValue.value && !dayValue.value) {
         emit('update:modelValue', null);
+        lastCompletedValue.value = null;
     }
 
     // 發送驗證結果
@@ -434,6 +453,10 @@ const handleFieldCompletion = (field: DateFieldType) => {
 // 輸入處理函數
 const handleInputBase = (field: DateFieldType, value: string, maxLength: number, autoFillThreshold?: number) => {
     const cleanValue = value.replace(/\D/g, '');
+
+    if (cleanValue.length === 1 && userNavigatedBack.value) {
+        userNavigatedBack.value = false;
+    }
 
     if (cleanValue.length <= maxLength) {
         if (autoFillThreshold && cleanValue.length === 1 && parseInt(cleanValue) > autoFillThreshold) {
@@ -507,6 +530,7 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
     if (event.key === 'Backspace' && target.value === '') {
         if (prevSegment) {
             event.preventDefault();
+            userNavigatedBack.value = true;
             safelyFocusAndSetCursor(prevSegment, 'end');
         }
     }
@@ -515,6 +539,7 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
     if (event.key === 'ArrowLeft' && target.selectionStart === 0) {
         if (prevSegment) {
             event.preventDefault();
+            userNavigatedBack.value = true;
             safelyFocusAndSetCursor(prevSegment, 'end');
         }
     }
@@ -523,6 +548,7 @@ const handleKeydown = (event: KeyboardEvent, field: string) => {
     if (event.key === 'ArrowRight' && target.selectionStart === target.value.length) {
         if (nextSegment) {
             event.preventDefault();
+            userNavigatedBack.value = true;
             safelyFocusAndSetCursor(nextSegment, 'start');
         }
     }
@@ -568,7 +594,12 @@ defineExpose({
             resetFields();
             emit('update:modelValue', null);
         }
+    },
+    resetCompletionState: () => {
+        userNavigatedBack.value = false;
+        lastCompletedValue.value = null;
     }
+
 });
 </script>
 

@@ -253,12 +253,17 @@ export function useDateTimePicker(
         });
 
         // 自動聚焦到時間輸入
-        if (showTime && autoFocusTimeAfterDate) {
-            navigation.autoFocusTimeAfterDateComplete(
-                !!dateTimeValue.inputTimeValue.value,
-                defaultTime.getValidDefaultTime.value
-            );
-        }
+        navigation.autoFocusTimeAfterDateComplete(
+            dateTimeValue,
+            defaultTime.getValidDefaultTime.value
+        );
+        // if (showTime && autoFocusTimeAfterDate) {
+        //     console.log(!!dateTimeValue.inputTimeValue.value)
+        //     navigation.autoFocusTimeAfterDateComplete(
+        //         !!dateTimeValue.inputTimeValue.value,
+        //         defaultTime.getValidDefaultTime.value
+        //     );
+        // }
     };
 
     /**

@@ -139,7 +139,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     use24Hour: false,
     useLocalizedPeriod: false,
     customDefaultTime: '00:00:00',
-    autoFocusTimeAfterDate: false,
+    autoFocusTimeAfterDate: true,
 
     // 一般選項
     disabled: false,

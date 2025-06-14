@@ -196,7 +196,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
     enableSeconds: true,
     use24Hour: true,
     useLocalizedPeriod: false,
-    autoFocusTimeAfterDate: false,
+    autoFocusTimeAfterDate: true,
 
     // 一般選項
     disabled: false,

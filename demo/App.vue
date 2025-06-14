@@ -29,7 +29,7 @@
         </div>
         <div>
             {{ dateTime2 }}
-            <!-- <DatePicker v-model="dateTime2" mode="dark" output-type="custom" date-format="DD/MM/YYYY" locale="zh-TW">
+            <DatePicker v-model="dateTime2" mode="dark" output-type="custom" date-format="DD/MM/YYYY" locale="zh-TW">
                 <template #error="{ errors }">
                     <div v-if="Object.keys(errors).length > 0" class="mt-2 p-3 bg-red-100 border-l-4 border-red-500">
                         <h4 class="font-bold text-red-800">輸入錯誤：</h4>
@@ -40,7 +40,7 @@
                         </ul>
                     </div>
                 </template>
-</DatePicker> -->
+            </DatePicker>
         </div>
         <div>
             {{ selectedDate }}

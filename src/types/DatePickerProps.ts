@@ -42,7 +42,7 @@ interface BaseDatePickerProps {
 export interface DatePickerProps extends BaseDatePickerProps {
     modelValue?: DateTimeInput;
 
-    customDefaultTime?: string; // 自定義預設時間 預設為 '00:00:00'
+    customDefaultTime?: string; // 自定義預設時間 預設為 undefined
     autoFocusTimeAfterDate?: boolean; // 是否在選擇日期後自動聚焦時間輸入框 預設為 true
 
     // 輸入框佔位符 預設取locale中的Placeholder

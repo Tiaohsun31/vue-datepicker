@@ -75,7 +75,7 @@ export function useDateTimePicker(
         timeFormat = 'HH:mm:ss',
         outputType = 'iso',
         useStrictISO = false,
-        customDefaultTime = '00:00:00',
+        customDefaultTime,
         enableSeconds = true,
         autoFocusTimeAfterDate = true,
         minDate,
@@ -124,8 +124,7 @@ export function useDateTimePicker(
 
     const defaultTime = useDefaultTime({
         customDefaultTime,
-        enableSeconds,
-        fallbackTime: '00:00:00'
+        enableSeconds
     });
 
     // 轉換為 SimpleDateValue
@@ -255,7 +254,7 @@ export function useDateTimePicker(
         // 自動聚焦到時間輸入
         navigation.autoFocusTimeAfterDateComplete(
             dateTimeValue,
-            defaultTime.getValidDefaultTime.value
+            customDefaultTime ? defaultTime.getValidDefaultTime.value : undefined
         );
         // if (showTime && autoFocusTimeAfterDate) {
         //     console.log(!!dateTimeValue.inputTimeValue.value)

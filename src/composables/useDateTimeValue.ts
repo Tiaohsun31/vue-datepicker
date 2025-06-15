@@ -3,9 +3,7 @@
  * 管理日期時間值的轉換和格式化
  */
 
-import { ref, computed, watch } from 'vue';
-import dayjs from 'dayjs';
-// import { dayjsParseDate } from '../utils/dateUtils';
+import { ref, computed } from 'vue';
 import {
     parseInputToSimpleDate,
     formatSimpleDate,
@@ -33,7 +31,7 @@ export function useDateTimeValue(
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
         outputType = 'iso',
-        defaultTime = '00:00:00',
+        defaultTime,
         enableSeconds = true
     } = options;
 
@@ -69,29 +67,35 @@ export function useDateTimeValue(
         if (!dateStr) return null;
 
         const parsedDate = parseInputToSimpleDate(dateStr);
-
         if (!parsedDate) return null;
 
         if (!timeStr && !showTime) {
             // 如果不需要時間，只返回日期部分
             return createSimpleDate(parsedDate.year, parsedDate.month, parsedDate.day);
         } else if (!timeStr) {
-            // 如果需要時間但未提供，使用默認時間
-            const timeParts = defaultTime.split(':').map(Number);
-            const hour = timeParts[0] || 0;
-            const minute = timeParts[1] || 0;
-            const second = timeParts[2] || 0;
+            // 如果需要時間但未提供時間字符串
+            if (defaultTime) {
+                // 有設定預設時間才使用
+                const timeParts = defaultTime.split(':').map(Number);
+                const hour = timeParts[0] || 0;
+                const minute = timeParts[1] || 0;
+                const second = timeParts[2] || 0;
 
-            return createSimpleDate(
-                parsedDate.year,
-                parsedDate.month,
-                parsedDate.day,
-                hour,
-                minute,
-                second
-            );
+                return createSimpleDate(
+                    parsedDate.year,
+                    parsedDate.month,
+                    parsedDate.day,
+                    hour,
+                    minute,
+                    second
+                );
+            } else {
+                // 沒有預設時間，只返回日期部分（不包含時間）
+                return createSimpleDate(parsedDate.year, parsedDate.month, parsedDate.day);
+            }
         }
 
+        // 有提供時間字符串
         const timeParts = timeStr.split(':').map(Number);
         const hour = timeParts[0] || 0;
         const minute = timeParts[1] || 0;
@@ -216,7 +220,7 @@ export function useDateTimeValue(
      * 設置默認時間
      */
     const applyDefaultTime = () => {
-        if (showTime && !inputTimeValue.value) {
+        if (showTime && !inputTimeValue.value && defaultTime) {
             inputTimeValue.value = defaultTime;
             return true;
         }

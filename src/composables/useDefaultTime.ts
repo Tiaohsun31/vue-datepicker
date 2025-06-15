@@ -8,14 +8,12 @@ import { computed } from 'vue';
 interface DefaultTimeOptions {
     customDefaultTime?: string;
     enableSeconds?: boolean;
-    fallbackTime?: string;
 }
 
 export function useDefaultTime(options: DefaultTimeOptions = {}) {
     const {
         customDefaultTime = '00:00:00',
         enableSeconds = true,
-        fallbackTime = '00:00:00'
     } = options;
 
     /**
@@ -65,14 +63,13 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
      * 獲取有效的預設時間
      */
     const getValidDefaultTime = computed(() => {
-        const timeToValidate = customDefaultTime || fallbackTime;
-
-        if (validateTimeFormat(timeToValidate)) {
-            return formatTimeString(timeToValidate, enableSeconds);
-        } else {
-            console.warn(`預設時間無效: ${timeToValidate}，使用回退值: ${fallbackTime}`);
-            return formatTimeString(fallbackTime, enableSeconds);
+        // 優先使用自訂時間
+        if (customDefaultTime && validateTimeFormat(customDefaultTime)) {
+            return formatTimeString(customDefaultTime, enableSeconds);
         }
+
+        // 如果都沒有，返回 undefined
+        return undefined;
     });
 
     /**
@@ -89,21 +86,6 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
         } else {
             return `${hours}:${minutes}`;
         }
-    };
-
-    /**
-     * 創建預設的時間選項
-     */
-    const createTimePresets = () => {
-        const presets = [
-            { label: '00:00', value: enableSeconds ? '00:00:00' : '00:00' },
-            { label: '09:00', value: enableSeconds ? '09:00:00' : '09:00' },
-            { label: '12:00', value: enableSeconds ? '12:00:00' : '12:00' },
-            { label: '18:00', value: enableSeconds ? '18:00:00' : '18:00' },
-            { label: '23:59', value: enableSeconds ? '23:59:59' : '23:59' },
-        ];
-
-        return presets;
     };
 
     /**
@@ -145,8 +127,5 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
         getCurrentTimeString,
         parseTimeString,
         buildTimeString,
-
-        // 預設選項
-        createTimePresets,
     };
 }

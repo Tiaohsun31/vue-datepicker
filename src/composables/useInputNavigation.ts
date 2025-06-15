@@ -76,33 +76,13 @@ export function useInputNavigation(
         });
     };
 
-    /**
-     * 自動聚焦時間輸入（在日期完成後）
-     */
-    // const autoFocusTimeAfterDateComplete = (
-    //     hasTimeValue: boolean,
-    //     defaultTimeValue?: string
-    // ) => {
-    //     if (!showTime || !autoFocusTimeAfterDate) return;
-    //     console.log('自動聚焦時間輸入', hasTimeValue, defaultTimeValue);
-    //     // 如果沒有時間值，可以設置一個默認值
-    //     if (!hasTimeValue && defaultTimeValue) {
-    //         // 這裡需要由調用方處理設置時間值
-    //     }
-
-    //     nextTick(() => {
-    //         if (timeInputRef.value?.focus) {
-    //             timeInputRef.value.focus();
-    //         }
-    //     });
-    // };
     const autoFocusTimeAfterDateComplete = (
         dateTimeRef: any, // dateTime composable 的引用
         defaultTimeValue?: string
     ) => {
         if (!showTime || !autoFocusTimeAfterDate) return;
 
-        // 1. 處理預設時間值設置
+        // 1. 處理預設時間值設置（只有在提供 defaultTimeValue 且沒有現有時間值時才設置）
         if (defaultTimeValue && !dateTimeRef.inputTimeValue.value) {
             dateTimeRef.inputTimeValue.value = defaultTimeValue;
             dateTimeRef.updateFromInputs();

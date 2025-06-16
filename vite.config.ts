@@ -25,8 +25,8 @@ export default defineConfig({
         cssCodeSplit: false,
         lib: {
             entry: './src/index.ts',
-            name: 'VueDatePickerTailwind',
-            fileName: (format) => `vue-datepicker-tailwind.${format}.js`,
+            name: 'VueDatePicker',
+            fileName: (format) => `vue-datepicker.${format}.js`,
             formats: ['es', 'umd']
         },
         rollupOptions: {
@@ -35,7 +35,8 @@ export default defineConfig({
                 globals: {
                     vue: 'Vue',
                     dayjs: 'dayjs'
-                }
+                },
+                exports: 'named',
             }
         }
     },

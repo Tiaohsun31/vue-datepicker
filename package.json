@@ -1,12 +1,26 @@
 {
   "name": "@tiaohsun/vue-datepicker",
   "version": "0.1.0-beta.1",
-  "description": "A Vue 3 DatePicker with multi-calendar support",
+  "description": "A Vue 3 datepicker with multi-calendar support, styled with Tailwind CSS",
+  "license": "MIT",
+  "author": {
+    "name": "tiaohsun",
+    "email": "tiaohsun@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tiaohsun31/vue-datepicker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tiaohsun31/vue-datepicker/issues"
+  },
+  "homepage": "https://github.com/Tiaohsun31/vue-datepicker#readme",
   "keywords": [
     "vue",
     "datepicker",
     "calendar",
-    "typescript"
+    "typescript",
+    "tailwindcss"
   ],
   "type": "module",
   "main": "./dist/vue-datepicker.umd.js",
@@ -15,9 +29,9 @@
   "style": "./dist/vue-datepicker.css",
   "exports": {
     ".": {
+      "types": "./dist/vue-datepicker.d.ts",
       "import": "./dist/vue-datepicker.es.js",
-      "require": "./dist/vue-datepicker.umd.js",
-      "types": "./dist/vue-datepicker.d.ts"
+      "require": "./dist/vue-datepicker.umd.js"
     },
     "./style": "./dist/vue-datepicker.css"
   },

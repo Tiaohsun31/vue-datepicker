@@ -38,7 +38,7 @@ import dayjs from 'dayjs';
 import { isNumeric, isLeapYear } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
 import { parseInputToSimpleDate } from '@/utils/dateUtils';
-import { type FieldError } from '@/types/internal';
+import type { FieldError } from '@/types/internal';
 
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
@@ -47,9 +47,9 @@ const vAutowidth = {
 };
 
 
-type DateFieldType = 'year' | 'month' | 'day';
+export type DateFieldType = 'year' | 'month' | 'day';
 
-interface Props {
+export interface DateInputProps {
     modelValue?: string | null;
     yearPlaceholder?: string;
     monthPlaceholder?: string;
@@ -61,7 +61,7 @@ interface Props {
     dateFormat?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<DateInputProps>(), {
     modelValue: null,
     yearPlaceholder: '',
     monthPlaceholder: '',

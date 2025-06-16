@@ -36,8 +36,8 @@
                 <!-- 年份選擇面板 -->
                 <YearSelector :selected-year="selectedYearLocal" v-model:show-selector="showYearSelector"
                     :calendar="calendarId" :locale="locale" @year-selected="onYearSelected">
-                    <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
-                        <slot :name="slotName" v-bind="slotProps" />
+                    <template v-for="(_, slotName) in $slots" #[slotName]="slotProps" :key="slotName">
+                        <slot :name="slotName" v-bind="slotProps"></slot>
                     </template>
                     <!-- <template #year-display="slotProps">
                         <slot name="year-display" v-bind="slotProps" />

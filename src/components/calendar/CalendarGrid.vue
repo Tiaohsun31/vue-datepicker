@@ -3,7 +3,7 @@
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
             :max-year="maxYear" :calendar="calendar">
-            <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
+            <template v-for="(_, slotName) in $slots" #[slotName]="slotProps" :key="slotName">
                 <slot :name="slotName" v-bind="slotProps" />
             </template>
             <!-- <template #year-display="slotProps">

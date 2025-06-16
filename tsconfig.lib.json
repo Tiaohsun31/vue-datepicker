@@ -6,7 +6,8 @@
     "src/**/*.test.*",
     "src/**/*.spec.*",
     "**/*.stories.*",
-    "**/*.md"
+    "**/*.md",
+    "playground/**/*"
   ],
   "compilerOptions": {
     "baseUrl": ".",
@@ -32,7 +33,7 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strictNullChecks": true,
 
     // Vue 相關

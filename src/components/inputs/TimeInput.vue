@@ -43,8 +43,8 @@ import { isNumeric } from '@/utils/validationUtils';
 import vAutowidthDirective from '@/directives/v-autowidth';
 import { type FieldError } from '@/types/internal';
 
-type TimePeriod = 'AM' | 'PM';
-type TimeFieldType = 'hour' | 'minute' | 'second';
+export type TimePeriod = 'AM' | 'PM';
+export type TimeFieldType = 'hour' | 'minute' | 'second';
 
 // 導入自定義指令
 const vAutowidth = {
@@ -53,7 +53,7 @@ const vAutowidth = {
     beforeUnmount: vAutowidthDirective.beforeUnmount
 };
 
-interface Props {
+export interface TimeInputProps {
     modelValue?: string | null;
     hourPlaceholder?: string;
     minutePlaceholder?: string;
@@ -66,7 +66,7 @@ interface Props {
     minuteStep?: number;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<TimeInputProps>(), {
     modelValue: null,
     hourPlaceholder: 'HH',
     minutePlaceholder: 'MM',

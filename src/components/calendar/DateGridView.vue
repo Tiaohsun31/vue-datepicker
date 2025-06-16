@@ -1,129 +1,234 @@
+<!-- 修正後的 DateGridView.vue - 需要支援 calendar prop -->
 <template>
-    <!-- <div class="grid grid-cols-7 gap-1">
-        <CalendarCell v-for="date in calendarDays" :key="`${date.year}-${date.month}-${date.day}`" :date="date"
-            :current-month="currentMonth" :selected="isSelected(date)" :is-today="isToday(date)" v-memo="[
-                date.month !== currentMonth,
-                isSelected(date),
-                isToday(date),
-                isDateDisabled(date)
-            ]" :disabled="isDateDisabled(date)" :focusable="date.day === 1 && date.month === currentMonth"
-            @select="handleSelect" />
-    </div> -->
     <div class="grid grid-cols-7 gap-1">
-        <CalendarCell v-for="state in cellStates" :key="`${state.date.year}-${state.date.month}-${state.date.day}`"
-            v-memo="[state.isSelected, state.isToday, state.isDisabled, state.isOutsideMonth]" :date="state.date"
-            :current-month="props.month" :selected="state.isSelected" :is-today="state.isToday"
-            :disabled="state.isDisabled" :focusable="state.date.day === 1 && state.date.month === props.month"
-            @select="handleSelect" />
+        <CalendarCell v-for="cellData in optimizedCellStates" :key="cellData.key" v-memo="cellData.memoKey"
+            :date="cellData.date" :current-month="currentDisplayMonth" :selected="cellData.isSelected"
+            :is-today="cellData.isToday" :disabled="cellData.isDisabled" :focusable="cellData.isFocusable"
+            :is-range-start="cellData.isRangeStart" :is-range-end="cellData.isRangeEnd"
+            :is-in-range="cellData.isInRange" :selection-mode="selectionMode" @select="handleSelect"
+            @nav="handleNavigation" />
     </div>
 </template>
+
 <script setup lang="ts">
-import { computed } from 'vue';
-import { CalendarDate, getWeeksInMonth, startOfWeek } from '@internationalized/date';
+import { computed, onMounted } from 'vue';
+import { CalendarDate, today } from '@internationalized/date';
 import CalendarCell from './CalendarCell.vue';
 import { getTodaysDate } from '@/utils/dateUtils';
+import { CalendarUtils } from '@/utils/calendarUtils';
+
+type SelectionMode = 'single' | 'range';
 
 interface Props {
-    year: number;
-    month: number;
-    selectedDate: CalendarDate | null;
-    minDate?: CalendarDate;
-    maxDate?: CalendarDate;
+    year: number;          // 西元曆年份（用於導航顯示）
+    month: number;         // 西元曆月份（用於導航顯示）
+    selectedDate?: CalendarDate | null;
+
+    // 範圍選擇屬性
+    rangeStart?: CalendarDate | null;
+    rangeEnd?: CalendarDate | null;
+    selectionMode?: SelectionMode;
+
+    minDate?: CalendarDate | null;
+    maxDate?: CalendarDate | null;
     locale?: string;
-    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, etc.
+    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+    // 日曆系統
+    calendar?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+    selectedDate: null,
+    rangeStart: null,
+    rangeEnd: null,
+    selectionMode: 'single',
     locale: 'en-US',
     weekStartsOn: 0,
     minDate: undefined,
-    maxDate: undefined
+    maxDate: undefined,
+    calendar: 'gregory'
 });
 
 const emit = defineEmits<{
-    'select': [date: CalendarDate]
+    'select': [date: CalendarDate];
+    'range-select': [startDate: CalendarDate | null, endDate: CalendarDate | null];
+    'navigate': [direction: 'prev-month' | 'next-month' | 'prev-year' | 'next-year'];
 }>();
 
-// // 今天的日期
-// const today = computed(() => getTodaysDate());
+const currentDisplayMonth = computed(() => props.month);
+const currentDisplayYear = computed(() => props.year);
 
-// // 當前月份（用於區分當月和非當月日期）
-// const currentMonth = computed(() => props.month);
-
-// 生成當月的日曆數據
-const calendarDays = computed(() => {
-    // 該月第一天
-    const firstDayOfMonth = new CalendarDate(props.year, props.month, 1);
-
-    // 該月有幾周
-    const weeksInMonth = getWeeksInMonth(firstDayOfMonth, props.locale);
-
-    // 日曆顯示的第一天 (該週的第一天)
-    const startDay = startOfWeek(firstDayOfMonth, props.locale);
-
-    // 生成日曆網格
-    const days: CalendarDate[] = [];
-    let currentDate = startDay;
-
-    // 通常需要 6 周 x 7 天 = 42 天來顯示一個月的日曆
-    for (let i = 0; i < weeksInMonth * 7; i++) {
-        days.push(currentDate);
-        currentDate = currentDate.add({ days: 1 });
-    }
-
-    return days;
-});
-
-// 將日期索引儲存在 Map 中以實現 O(1) 查找
-const selectedDateKey = computed(() => {
-    if (!props.selectedDate) return null;
-    return `${props.selectedDate.year}-${props.selectedDate.month}-${props.selectedDate.day}`;
-});
-
+// 緩存今天的日期鍵值
 const todayKey = computed(() => {
     const today = getTodaysDate();
     return `${today.year}-${today.month}-${today.day}`;
 });
 
-// 預計算每個日期的狀態
-const cellStates = computed(() => {
-    const todayK = todayKey.value;
-    const selectedK = selectedDateKey.value;
+// 生成當月的日曆數據 - 修正版本
+const calendarDays = computed(() => {
+    console.log(`生成 ${props.calendar} 曆 ${props.year}年${props.month}月 的日曆`);     // 生成 roc 曆 2025年6月 的日曆
 
-    return calendarDays.value.map(date => {
+    return CalendarUtils.generateCalendarDays(
+        props.year,          // 西元年
+        props.month,         // 西元月
+        props.calendar,
+        props.locale,
+        props.weekStartsOn
+    );
+});
+
+// 範圍檢查優化
+const isDateInRange = (date: CalendarDate): boolean => {
+    if (!props.rangeStart || !props.rangeEnd) return false;
+
+    try {
+        return date.compare(props.rangeStart) >= 0 && date.compare(props.rangeEnd) <= 0;
+    } catch {
+        return false;
+    }
+};
+
+// 日期比較的輔助函數
+const isDateEqual = (date1: CalendarDate | null, date2: CalendarDate | null): boolean => {
+    if (!date1 || !date2) return false;
+
+    try {
+        return date1.compare(date2) === 0;
+    } catch {
+        return false;
+    }
+};
+
+// 檢查日期是否被禁用
+const isDateDisabled = (date: CalendarDate): boolean => {
+    try {
+        if (props.minDate && date.compare(props.minDate) < 0) return true;
+        if (props.maxDate && date.compare(props.maxDate) > 0) return true;
+        return false;
+    } catch {
+        return true;
+    }
+};
+
+// 檢查是否是今天
+const isToday = (date: CalendarDate): boolean => {
+    try {
+        const todayInCalendar = today(date.calendar.identifier);
+        return date.compare(todayInCalendar) === 0;
+    } catch {
+        return false;
+    }
+};
+
+// 優化的單元格狀態計算
+interface CellData {
+    key: string;
+    memoKey: (string | boolean | number)[];
+    date: CalendarDate;
+    isToday: boolean;
+    isSelected: boolean;
+    isDisabled: boolean;
+    isOutsideMonth: boolean;
+    isRangeStart: boolean;
+    isRangeEnd: boolean;
+    isInRange: boolean;
+    isFocusable: boolean;
+}
+
+const optimizedCellStates = computed((): CellData[] => {
+    return calendarDays.value.map((date, index) => {
+        // 基本狀態
         const dateKey = `${date.year}-${date.month}-${date.day}`;
-        const isOutsideMonth = date.month !== props.month;
+        const isTodayDate = isToday(date);
+        const isOutsideMonth = date.month !== currentDisplayMonth.value;
+        const isDisabled = isDateDisabled(date);
+
+        // 選擇狀態
+        const isSelected = props.selectionMode === 'single' && isDateEqual(date, props.selectedDate);
+
+        // 範圍選擇狀態
+        const isRangeStart = props.selectionMode === 'range' && isDateEqual(date, props.rangeStart);
+        const isRangeEnd = props.selectionMode === 'range' && isDateEqual(date, props.rangeEnd);
+        const isInRange = props.selectionMode === 'range' &&
+            isDateInRange(date) && !isRangeStart && !isRangeEnd && !isDisabled;
+
+        // 焦點狀態
+        const isFocusable = date.day === 1 && date.month === currentDisplayMonth.value;
+
+        // 生成 memo 鍵值
+        const memoKey = [
+            dateKey,
+            isSelected,
+            isTodayDate,
+            isDisabled,
+            isRangeStart,
+            isRangeEnd,
+            isInRange,
+            props.selectionMode,
+            props.calendar
+        ];
 
         return {
+            key: `${props.calendar}-${currentDisplayYear.value}-${currentDisplayMonth.value}-${dateKey}-${index}`,
+            memoKey,
             date,
-            isToday: dateKey === todayK,
-            isSelected: dateKey === selectedK,
-            isDisabled: (props.minDate && date.compare(props.minDate) < 0) ||
-                (props.maxDate && date.compare(props.maxDate) > 0),
-            isOutsideMonth
+            isToday: isTodayDate,
+            isSelected,
+            isDisabled,
+            isOutsideMonth,
+            isRangeStart,
+            isRangeEnd,
+            isInRange,
+            isFocusable
         };
     });
 });
 
-// // 檢查日期是否可選
-// const isDateDisabled = (date: CalendarDate) => {
-//     if (props.minDate && date.compare(props.minDate) < 0) return true;
-//     if (props.maxDate && date.compare(props.maxDate) > 0) return true;
-//     return false;
-// };
-
-// // 檢查日期是否是今天
-// const isToday = (date: CalendarDate) => {
-//     return date.compare(today.value) === 0;
-// };
-
-// // 檢查日期是否被選中
-// const isSelected = (date: CalendarDate) => {
-//     return props.selectedDate?.compare(date) === 0;
-// };
-
 // 處理日期選擇
 const handleSelect = (date: CalendarDate) => {
-    emit('select', date);
+    if (props.selectionMode === 'single') {
+        emit('select', date);
+    } else if (props.selectionMode === 'range') {
+        emit('range-select', date, null);
+    }
 };
+
+// 處理鍵盤導航
+const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
+    const cellStates = optimizedCellStates.value;
+    if (cellStates.length === 0) return;
+
+    const firstCell = cellStates[0];
+    const lastCell = cellStates[cellStates.length - 1];
+
+    switch (direction) {
+        case 'left':
+            if (firstCell.date.day < 15 && firstCell.date.month !== currentDisplayMonth.value) {
+                emit('navigate', 'prev-month');
+            }
+            break;
+        case 'right':
+            if (lastCell.date.day > 15 && lastCell.date.month !== currentDisplayMonth.value) {
+                emit('navigate', 'next-month');
+            }
+            break;
+        case 'up':
+            // 上一週導航邏輯
+            break;
+        case 'down':
+            // 下一週導航邏輯
+            break;
+    }
+};
+onMounted(() => {
+    // 初始化時可以進行一些必要的設置或檢查
+    console.log(props.selectedDate)
+});
+
+// 公開方法
+defineExpose({
+    getCalendarDays: () => calendarDays.value,
+    getCellStates: () => optimizedCellStates.value,
+});
 </script>

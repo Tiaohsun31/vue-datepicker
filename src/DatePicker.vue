@@ -54,7 +54,7 @@
         </div>
 
         <!-- 日曆彈出層 -->
-        <!-- TODO: slot 須明確傳遞  -->
+
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="calendar-container absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
@@ -62,9 +62,10 @@
                 :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"
                 :use24Hour="use24Hour" :default-time="getValidDefaultTime" :enableSeconds="enableSeconds"
                 :locale="locale" :calendar="calendar" @select="handleCalendarSelect" @time-select="handleTimeSelect">
-                <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
+                <template v-for="(_, slotName) in calendarSlotNames" #[slotName]="slotProps">
                     <slot :name="slotName" v-bind="slotProps" />
                 </template>
+                <!-- TODO: slot 須明確傳遞  -->
                 <!-- <template #year-display="slotProps">
                     <slot name="year-display" v-bind="slotProps" />
                 </template> -->
@@ -89,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, watch } from 'vue';
+import { ref, computed, onBeforeMount, watch, useSlots } from 'vue';
 
 // 組件導入
 import DateInput from './components/inputs/DateInput.vue';
@@ -162,6 +163,23 @@ const emit = defineEmits<{
     'change': [date: DateTimeInput];
     'validation': [isValid: boolean, errors: Record<string, string>];
 }>();
+
+// Slot
+const slots = useSlots();
+const calendarSlotNames = computed(() => {
+    const calendarSlots: Record<string, any> = {};
+    ['no-years-display', 'month-selector'].forEach(name => {
+        if (slots[name]) {
+            calendarSlots[name] = slots[name];
+        }
+    });
+    Object.keys(slots).forEach(name => {
+        if (name.startsWith('year-')) {
+            calendarSlots[name] = slots[name];
+        }
+    });
+    return calendarSlots;
+});
 
 // DOM 引用
 const containerRef = ref<HTMLElement | null>(null);

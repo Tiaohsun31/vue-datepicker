@@ -168,7 +168,7 @@ import { useDateRange } from './composables/useDateRange';
 import { useTheme } from './composables/useTheme';
 
 // Utils
-import { parseInputToSimpleDate, formatSimpleDate, type DateTimeInput } from './utils/dateUtils';
+import { parseInputToSimpleDate, type DateTimeInput } from './utils/dateUtils';
 import type { DateRangeProps } from '@/types/datePickerProps';
 import { useLocale } from '@/composables/useLocale';
 

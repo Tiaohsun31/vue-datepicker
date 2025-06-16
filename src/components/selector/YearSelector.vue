@@ -11,7 +11,7 @@
                 <DatePickerPrev class="h-4 w-4" />
             </button>
             <span class="text-sm font-medium">
-                <slot name="range-display" :first-year="firstYear" :last-year="lastYear"
+                <slot name="year-range-display" :first-year="firstYear" :last-year="lastYear"
                     :display-text="displayRangeText">
                     {{ displayRangeText }}
                 </slot>

@@ -40,9 +40,7 @@ export function useDateTimeValue(
     const inputDateValue = ref<string | null>(null);
     const inputTimeValue = ref<string | null>(null);
 
-    /**
-     * 從 SimpleDateValue 獲取時間部分字符串
-     */
+    //從 SimpleDateValue 獲取時間部分字符串
     const getTimeFromDateTime = (dateTime: SimpleDateValue | null): string | null => {
         if (!dateTime || dateTime.hour === undefined) return null;
 
@@ -57,9 +55,7 @@ export function useDateTimeValue(
         }
     };
 
-    /**
-     * 從日期和時間字符串創建 SimpleDateValue
-     */
+    // 從日期和時間字符串創建 SimpleDateValue
     const createDateTimeFromInputs = (
         dateStr: string | null,
         timeStr: string | null
@@ -111,9 +107,7 @@ export function useDateTimeValue(
         );
     };
 
-    /**
-     * 設置外部值
-     */
+    // 設置外部值
     const setExternalValue = (value: DateTimeInput) => {
         const dateTime = parseInputToSimpleDate(value);
         internalDateTime.value = dateTime;
@@ -126,25 +120,6 @@ export function useDateTimeValue(
             inputTimeValue.value = null;
         }
     };
-
-    /**
-     * 更新日期時間值
-     */
-    // const updateDateTime = (dateStr?: string | null, timeStr?: string | null) => {
-    //     const finalDateStr = dateStr !== undefined ? dateStr : inputDateValue.value;
-    //     let finalTimeStr = timeStr !== undefined ? timeStr : inputTimeValue.value;
-
-    //     // 統一在這裡處理默認時間
-    //     if (showTime && finalDateStr && !finalTimeStr) {
-    //         finalTimeStr = defaultTime;
-    //         inputTimeValue.value = finalTimeStr;
-    //     }
-
-    //     const dateTime = createDateTimeFromInputs(finalDateStr, finalTimeStr);
-    //     internalDateTime.value = dateTime;
-
-    //     return dateTime;
-    // };
 
     // 輸入解析（適用於 DateInput/TimeInput）
     const updateFromInputs = (dateStr?: string, timeStr?: string) => {

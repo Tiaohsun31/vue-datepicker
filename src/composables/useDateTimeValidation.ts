@@ -37,9 +37,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         return Object.keys(mergedErrors.value).length > 0;
     });
 
-    /**
-     * 處理日期輸入驗證
-     */
+    // 處理日期輸入驗證
     const handleDateValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
@@ -62,9 +60,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         }
     };
 
-    /**
-     * 處理時間輸入驗證
-     */
+    // 處理時間輸入驗證
     const handleTimeValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
@@ -90,9 +86,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         return !hasErrors.value;
     };
 
-    /**
-     * 驗證日期區間
-     */
+    // 驗證日期區間
     const validateDateRange = (parsedDate: SimpleDateValue): boolean => {
         if (!parsedDate) return false;
         // 檢查日期範圍
@@ -123,9 +117,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         return true;
     };
 
-    /**
-     * 清除特定字段的錯誤
-     */
+    // 清除特定字段的錯誤
     const clearFieldErrors = (fieldPrefix: string) => {
         Object.keys(errors.value).forEach(key => {
             if (key.startsWith(fieldPrefix)) {
@@ -134,9 +126,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         });
     };
 
-    /**
-     * 清除特定字段的錯誤參數
-     */
+    // 清除特定字段的錯誤參數
     const clearFieldParams = (fieldPrefix: string) => {
         Object.keys(errorParams.value).forEach(key => {
             if (key.startsWith(fieldPrefix)) {
@@ -145,32 +135,24 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         });
     };
 
-    /**
-     * 清除所有錯誤
-     */
+    // 清除所有錯誤
     const clearAllErrors = () => {
         errors.value = {};
         formatErrors.value = {};
         errorParams.value = {};
     };
 
-    /**
-     * 設置格式錯誤
-     */
+    // 設置格式錯誤
     const setFormatError = (key: string, message: string) => {
         formatErrors.value[key] = message;
     };
 
-    /**
-     * 清除格式錯誤
-     */
+    // 清除格式錯誤
     const clearFormatError = (key: string) => {
         delete formatErrors.value[key];
     };
 
-    /**
-     * 驗證完整的日期時間
-     */
+    // 驗證完整的日期時間
     const validateDateTime = (
         dateValue: string | null,
         timeValue: string | null

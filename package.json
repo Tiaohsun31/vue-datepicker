@@ -1,6 +1,6 @@
 {
   "name": "@tiaohsun/vue-datepicker",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "description": "A Vue 3 datepicker with multi-calendar support, styled with Tailwind CSS",
   "license": "MIT",
   "author": {
@@ -33,7 +33,7 @@
       "import": "./dist/vue-datepicker.es.js",
       "require": "./dist/vue-datepicker.umd.js"
     },
-    "./style": "./dist/vue-datepicker.css"
+    "./theme": "./dist/theme.css"
   },
   "files": [
     "dist",

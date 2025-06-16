@@ -6,8 +6,6 @@ import DateRange from './DateRange.vue';
 // 個別組件導出
 export { DatePicker, DateRange };
 
-import './styles/theme.css';
-
 // 類型導出
 export type { DatePickerProps, DateRangeProps } from './types/datePickerProps';
 export type { TailwindColor, OutputType } from './types/main';

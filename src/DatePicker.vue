@@ -3,7 +3,7 @@
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
         ref="containerRef">
         <!-- 日期時間輸入容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 bg-vdt-surface text-vdt-content rounded-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <div v-if="isGregoryCalendar && inputEnabled" class=" flex w-full items-center justify-start gap-2"
                 :class="[disabled ? 'cursor-not-allowed cursor-event-none opacity-50' : '']"

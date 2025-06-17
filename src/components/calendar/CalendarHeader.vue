@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center mb-4 gap-2">
         <!-- 上個月按鈕 -->
         <button type="button" @click="previousMonth"
-            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-2 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="上個月" :disabled="!canNavigatePrevious">
             <DatePickerPrev class="h-5 w-5" />
         </button>
@@ -13,7 +13,7 @@
             <slot name="month-selector" :month-names="monthNames" :selected-month="selectedMonthLocal"
                 :on-month-change="onMonthChange">
                 <select v-model="selectedMonthLocal" @change="onMonthChange"
-                    class="form-select appearance-none bg-none bg-vdt-surface text-vdt-content py-1 pl-2 w-full border border-vdt-outline rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
+                    class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
                     aria-label="選擇月份" role="combobox">
                     <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
                         {{ month }}
@@ -48,7 +48,7 @@
 
         <!-- 下個月按鈕 -->
         <button type="button" @click="nextMonth"
-            class="p-2 hover:bg-gray-100 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-2 text-vdt-content-secondary hover:bg-vdt-interactive-hover rounded-full focus:outline-none focus:ring-2 focus:ring-vdt-theme-500 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="下個月" :disabled="!canNavigateNext">
             <DatePickerNext class="h-5 w-5" />
         </button>
@@ -228,16 +228,3 @@ const toggleYearSelector = () => {
     showYearSelector.value = !showYearSelector.value;
 };
 </script>
-
-<style scoped>
-/* 取消 Select 箭頭 */
-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-}
-
-select::-ms-expand {
-    display: none;
-}
-</style>

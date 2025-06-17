@@ -7,11 +7,11 @@
             </label>
             <div class="flex flex-row items-center gap-1">
                 <button type="button" @click="setNowTime"
-                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
+                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-active cursor-pointer">
                     Now
                 </button>
                 <button v-if="selectionMode === 'single'" type="button" @click="emitTodayEvent"
-                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover cursor-pointer">
+                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-active cursor-pointer">
                     Today
                 </button>
             </div>
@@ -22,7 +22,7 @@
                 <!-- 小時選擇器 -->
                 <div class="flex-1">
                     <select v-model="selectedHour"
-                        class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
+                        class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
                         <option v-for="hour in hourOptions" :key="hour" :value="hour">
                             {{ formatHour(hour) }}
                         </option>
@@ -32,7 +32,7 @@
                 <!-- 分鐘選擇器 -->
                 <div class="flex-1">
                     <select v-model="selectedMinute"
-                        class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
+                        class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
                         <option v-for="minute in minuteOptions" :key="minute" :value="minute">
                             {{ formatNumber(minute) }}
                         </option>
@@ -42,7 +42,7 @@
                 <!-- 秒鐘選擇器 -->
                 <div class="flex-1" v-if="enableSeconds">
                     <select v-model="selectedSecond"
-                        class="w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
+                        class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
                         <option v-for="second in secondOptions" :key="second" :value="second">
                             {{ formatNumber(second) }}
                         </option>

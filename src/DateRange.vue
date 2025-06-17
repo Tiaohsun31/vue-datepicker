@@ -5,7 +5,7 @@
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 border border-gray-200 bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200 "
+        <div class="date-picker-container flex w-full items-center px-2 py-1 rounded-sm transition-all duration-200 "
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <button type="button"
                 class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

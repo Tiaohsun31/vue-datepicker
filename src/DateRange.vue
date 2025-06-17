@@ -139,7 +139,7 @@
     <!-- 錯誤訊息顯示 - 可選且可自定義 -->
     <div v-if="showErrorMessage && hasErrors">
         <!-- 讓使用者完全控制錯誤顯示 -->
-        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+        <slot name="error" :errors="errors" :hasErrors="hasErrors">
             <!-- 預設使用 DateErrorMessage -->
             <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
                 :custom-messages="customErrorMessages" :errorParams="mergedErrorParams">
@@ -154,6 +154,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeMount } from 'vue';
+import { CalendarUtils } from './utils/calendarUtils';
 
 // 組件導入
 import DateInput from './components/inputs/DateInput.vue';
@@ -235,6 +236,8 @@ const endDateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
 const startTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 
+const formatErrors = ref<Record<string, string>>({});
+
 // 使用日期範圍 composable
 const dateRange = useDateRange(
     {
@@ -311,6 +314,14 @@ const computedPlaceholders = computed(() => {
 
 const dateInputFormat = computed(() => props.dateFormat);
 
+// 合併所有錯誤（格式錯誤 + 驗證錯誤）
+const errors = computed(() => {
+    return {
+        ...dateRange.mergedErrors.value,
+        ...formatErrors.value
+    };
+});
+
 // 是否有錯誤
 const hasErrors = computed(() => {
     return Object.keys(mergedErrors.value).length > 0;
@@ -337,6 +348,10 @@ watch(() => props.locale, (newLocale) => {
 onBeforeMount(() => {
     // 初始化語言環境
     setLocale(props.locale);
+
+    if (!CalendarUtils.isCalendarSupported(props.calendar)) {
+        formatErrors.value.calendar = `不支援的日曆系統: "${props.calendar}"`;
+    }
 });
 
 // 公開方法

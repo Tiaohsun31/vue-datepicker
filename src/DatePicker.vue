@@ -91,6 +91,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, watch, useSlots } from 'vue';
+import { CalendarUtils } from './utils/calendarUtils';
 
 // 組件導入
 import DateInput from './components/inputs/DateInput.vue';
@@ -313,8 +314,12 @@ onBeforeMount(() => {
 
     setLocale(props.locale);
 
+    if (!CalendarUtils.isCalendarSupported(props.calendar)) {
+        formatErrors.value.calendar = `不支援的日曆系統: "${props.calendar}"`;
+    }
+
     // 驗證日期格式
-    if (!isValidDateFormat(props.dateFormat)) {
+    if (!isValidDateFormat(props.dateFormat) && props.calendar === 'gregory') {
         const originalFormat = props.dateFormat;
         const fixedFormat = fixDateFormat(props.dateFormat);
 

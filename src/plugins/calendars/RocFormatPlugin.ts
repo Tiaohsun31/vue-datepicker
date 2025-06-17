@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
  * 民國曆格式化插件 - 專注於自定義格式輸出
  * 只處理 @internationalized/date 無法處理的特殊格式
  */
-export class RocFormatPlugin implements CalendarPlugin {
+class RocFormatPlugin implements CalendarPlugin {
     readonly id = 'roc';
 
     readonly yearRange = {
@@ -41,7 +41,13 @@ export class RocFormatPlugin implements CalendarPlugin {
         if (hasTime) {
             return this.parseDateTime(cleaned);
         } else {
-            // 原有的純日期解析邏輯
+            // 當沒有時間時，直接嘗試解析日期部分
+            // 首先檢查是否為中文日期格式（如：114年06月18日）
+            if (/\d+年\d+月\d+日/.test(cleaned)) {
+                return this.parseDatePart(cleaned);
+            }
+
+            // 如果不是中文格式，嘗試用分隔符解析
             const dateOnly = cleaned.replace(/[年月日時分秒]/g, '');
             const separators = ['-', '/', '.', ' '];
             for (const sep of separators) {
@@ -173,12 +179,15 @@ export class RocFormatPlugin implements CalendarPlugin {
      */
     private tryParseWithSeparator(input: string, separator: string): SimpleDateValue | null {
         const parts = input.split(separator).map(p => p.trim()).filter(Boolean);
+        console.log('使用分隔符解析:', { input, separator, parts });
 
         if (parts.length < 3) return null;
 
         const year = parseInt(parts[0]);
         const month = parseInt(parts[1]);
         const day = parseInt(parts[2]);
+
+        console.log('解析日期部分:', { year, month, day });
 
         if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
 
@@ -432,9 +441,13 @@ export class RocFormatPlugin implements CalendarPlugin {
     }
 }
 
-/**
- * 建立 ROC 格式化插件實例
- */
-export function createRocFormatPlugin(): CalendarPlugin {
-    return new RocFormatPlugin();
-}
+// // 建立插件實例並導出
+// const rocFormatPlugin = new RocFormatPlugin();
+
+// // 導出函數版本
+// export function createRocFormatPlugin(): CalendarPlugin {
+//     return rocFormatPlugin;
+// }
+
+// 同時導出類別，以防需要創建多個實例
+export { RocFormatPlugin };

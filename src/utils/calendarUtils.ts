@@ -1,4 +1,5 @@
 // utils/CalendarUtils.ts - 日曆轉換工具
+import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 import {
     CalendarDate,
     type Calendar,
@@ -9,14 +10,14 @@ import {
     startOfWeek,
     getDayOfWeek,
     DateFormatter,
-    CalendarDateTime
+    CalendarDateTime,
+    type CalendarIdentifier
 } from '@internationalized/date';
 
 import type { SimpleDateValue } from './dateUtils';
-import { createRocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 import dayjs from 'dayjs';
 
-const rocPlugin = createRocFormatPlugin();
+// const rocPlugin = new RocFormatPlugin();
 /**
  * 統一的日曆工具類 - 基於 @internationalized/date
  */
@@ -64,6 +65,11 @@ export class CalendarUtils {
      */
     static convertToCalendarDate = (simpleDate: SimpleDateValue | null, calendar: string): CalendarDate | null => {
         if (!simpleDate) return null;
+
+        if (simpleDate.year <= 0 || simpleDate.month <= 0 || simpleDate.day <= 0 ||
+            simpleDate.month > 12 || simpleDate.day > 31) {
+            return null;
+        }
 
         try {
             if (calendar === 'gregory') {
@@ -157,6 +163,11 @@ export class CalendarUtils {
         weekStartsOn: number = 0
     ): CalendarDate[] {
         try {
+            if (!this.isCalendarSupported(calendarId)) {
+                console.warn(`不支持的日曆系統: ${calendarId}`);
+                return [];
+            }
+
             const calendar = this.createSafeCalendar(calendarId);
             const gregorianDate = new CalendarDate(year, month, 1);
 
@@ -203,24 +214,6 @@ export class CalendarUtils {
         };
         return ranges[calendar] || { min: 1, max: currentYear + 100 };
     }
-    /**
-     * 獲取日曆系統的有效年份範圍
-     */
-    // static getCalendarYearRange(calendarId: string): { min: number; max: number } {
-    //     // 基於實際使用情況的合理範圍
-    //     const ranges: Record<string, { min: number; max: number }> = {
-    //         'gregory': { min: 1, max: 9999 },        // 西元曆
-    //         'roc': { min: 1, max: 500 },             // 民國 1年(1912) 到 500年(2411) - 擴大範圍
-    //         'buddhist': { min: 1000, max: 3500 },    // 佛曆實際使用範圍
-    //         'japanese': { min: 1, max: 200 },        // 日本年號範圍
-    //         'islamic': { min: 1, max: 2000 },        // 伊斯蘭曆
-    //         'persian': { min: 1, max: 2000 },        // 波斯曆
-    //         'hebrew': { min: 1, max: 8000 },         // 希伯來曆
-    //         'indian': { min: 1, max: 2000 },         // 印度曆
-    //     };
-
-    //     return ranges[calendarId] || { min: 1, max: 9999 };
-    // }
 
     /**
      * 轉換西元年到目標日曆系統年份
@@ -239,7 +232,7 @@ export class CalendarUtils {
             const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
 
             const range = this.getCalendarRange(targetCalendarId);
-            const isValid = localDate.year >= range.min && localDate.year <= range.max;
+            const isValid = gregorianYear >= range.min && gregorianYear <= range.max;
 
             return { localYear: localDate.year, isValid };
         } catch (error) {
@@ -357,32 +350,33 @@ export class CalendarUtils {
         return names[calendarId]?.[locale] || names[calendarId]?.['en-US'] || calendarId;
     }
 
+
     // ==================================================================== //
 
     /**
      * 驗證日期在指定日曆系統中是否有效
      */
-    static isValidDate(
-        gregorianYear: number,
-        gregorianMonth: number,
-        gregorianDay: number,
-        calendarId: string
-    ): boolean {
-        try {
-            const gregorianDate = new CalendarDate(gregorianYear, gregorianMonth, gregorianDay);
+    // static isValidDate(
+    //     gregorianYear: number,
+    //     gregorianMonth: number,
+    //     gregorianDay: number,
+    //     calendarId: string
+    // ): boolean {
+    //     try {
+    //         const gregorianDate = new CalendarDate(gregorianYear, gregorianMonth, gregorianDay);
 
-            if (calendarId === 'gregory') return true;
+    //         if (calendarId === 'gregory') return true;
 
-            const targetCalendar = this.createSafeCalendar(calendarId);
-            const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
+    //         const targetCalendar = this.createSafeCalendar(calendarId);
+    //         const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
 
-            const range = this.getCalendarRange(calendarId);
-            return localDate.year >= range.min && localDate.year <= range.max;
-        } catch (error) {
-            console.warn('日期驗證失敗:', error);
-            return false;
-        }
-    }
+    //         const range = this.getCalendarRange(calendarId);
+    //         return localDate.year >= range.min && localDate.year <= range.max;
+    //     } catch (error) {
+    //         console.warn('日期驗證失敗:', error);
+    //         return false;
+    //     }
+    // }
 
     /**
      * 解析輸入字串為 SimpleDateValue
@@ -416,6 +410,15 @@ export class CalendarUtils {
     //     return null;
     // }
 
+    static isCalendarSupported(calendar: string | CalendarIdentifier): boolean {
+        const validCalendars = [
+            'gregory', 'buddhist', 'ethiopic', 'ethioaa', 'coptic', 'hebrew',
+            'indian', 'islamic-civil', 'islamic-tbla', 'islamic-umalqura',
+            'japanese', 'persian', 'roc'
+        ];
+        return validCalendars.includes(calendar);
+    }
+
 
     /**
      * 格式化輸出 - 統一執行順序：插件 → @internationalized/date → dayjs → 基本回退
@@ -429,9 +432,14 @@ export class CalendarUtils {
             switch (calendar) {
                 case 'gregory':
                     // 西元曆直接使用 dayjs
+                    const gregorianFormat = format || 'YYYY-MM-DD HH:mm:ss';
+                    const result = dayjs(new Date(date.year, date.month - 1, date.day,
+                        date.hour || 0, date.minute || 0, date.second || 0)).format(gregorianFormat);
+                    console.log(`格式化西元曆日期 ${date.year}-${date.month}-${date.day} 成功:`, result);
                     return dayjs(new Date(date.year, date.month - 1, date.day,
-                        date.hour || 0, date.minute || 0, date.second || 0)).format(format);
+                        date.hour || 0, date.minute || 0, date.second || 0)).format(gregorianFormat);
                 case 'roc':
+                    const rocPlugin = new RocFormatPlugin();
                     if (rocPlugin.supportsFormat(format) && rocPlugin.canParseInput(format)) {
                         return rocPlugin.format(date, format, locale);
                     }
@@ -512,7 +520,8 @@ export const {
     getCalendarDisplayName,
 
     // 日曆系統輸出輸入轉換
-    isValidDate,
+    // isValidDate,
     // parseInput,
+    isCalendarSupported,
     formatOutput,
 } = CalendarUtils;

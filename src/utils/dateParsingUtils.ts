@@ -1,12 +1,13 @@
 // utils/dateParsingUtils.ts - 主要的輸入解析工具（支援多日曆系統）
+import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { createRocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 import type { SimpleDateValue } from './dateUtils';
 
 dayjs.extend(customParseFormat);
 
-const rocPlugin = createRocFormatPlugin();
+// const rocPlugin = createRocFormatPlugin();
+// const rocPlugin = new RocFormatPlugin();
 
 export interface DateParseResult {
     success: boolean;
@@ -80,6 +81,7 @@ export class SmartDateParser {
     private tryParseWithPlugins(input: string): DateParseResult {
         switch (this.calendar) {
             case 'roc':
+                const rocPlugin = new RocFormatPlugin();
                 if (rocPlugin.canParseInput(input)) {
                     const result = rocPlugin.parseInput(input, this.locale);
                     if (result) {
@@ -122,6 +124,7 @@ export class SmartDateParser {
     private fallbackParse(input: string): DateParseResult {
         try {
             const parsed = dayjs(input);
+            console.log('自動解析結果:', parsed);
             if (parsed.isValid()) {
                 return {
                     success: true,

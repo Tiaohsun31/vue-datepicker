@@ -8,7 +8,7 @@ import localeData from 'dayjs/plugin/localeData';
 import { parseUserDateInput } from './dateParsingUtils';
 import { CalendarUtils } from './calendarUtils';
 import type { OutputType } from '../types/main';
-import { CalendarDate, today, getLocalTimeZone, toCalendar } from '@internationalized/date';
+import { CalendarDate, today, getLocalTimeZone, toCalendar, type CalendarIdentifier } from '@internationalized/date';
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
@@ -307,21 +307,33 @@ export function getCurrentMonthRange(): { start: SimpleDateValue; end: SimpleDat
  */
 export function isValidDateFormat(format: string): boolean {
     const validTokens = ['YYYY', 'YY', 'MM', 'M', 'DD', 'D'];
-    const formatClean = format.replace(/[^\w]/g, ' ');
+    const validSeparators = ['-', '/', '.', ' '];
 
-    const hasYear = formatClean.includes('YYYY') || formatClean.includes('YY');
-    const hasMonth = formatClean.includes('MM') || formatClean.includes('M');
-    const hasDay = formatClean.includes('DD') || formatClean.includes('D');
-
-    const tokens = formatClean.split(/\s+/).filter(Boolean);
-    const hasInvalidToken = tokens.some(token => {
-        if (/^[yY]{1,4}$/.test(token) && !validTokens.includes(token)) return true;
-        if (/^[mM]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
-        if (/^[dD]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
-        return false;
+    // 移除有效的分隔符，然後檢查剩餘的 tokens
+    let cleanFormat = format;
+    validSeparators.forEach(sep => {
+        cleanFormat = cleanFormat.replace(new RegExp(`\\${sep}`, 'g'), ' ');
     });
 
-    return hasYear && hasMonth && hasDay && !hasInvalidToken;
+    const tokens = cleanFormat.split(/\s+/).filter(Boolean);
+
+    // 檢查是否只包含有效的 tokens
+    const hasOnlyValidTokens = tokens.every(token => validTokens.includes(token));
+    if (!hasOnlyValidTokens) return false;
+
+    // 檢查必要的組件
+    const hasYear = tokens.some(token => token === 'YYYY' || token === 'YY');
+    const hasMonth = tokens.some(token => token === 'MM' || token === 'M');
+    const hasDay = tokens.some(token => token === 'DD' || token === 'D');
+
+    // 檢查是否有重複的組件
+    const yearCount = tokens.filter(token => token === 'YYYY' || token === 'YY').length;
+    const monthCount = tokens.filter(token => token === 'MM' || token === 'M').length;
+    const dayCount = tokens.filter(token => token === 'DD' || token === 'D').length;
+
+    if (yearCount > 1 || monthCount > 1 || dayCount > 1) return false;
+
+    return hasYear && hasMonth && hasDay;
 }
 
 /**
@@ -429,9 +441,14 @@ export function fixTimeFormat(format: string): string {
  * 型別守衛：檢查是否為 SimpleDateValue (目前尚未使用)
  */
 export function isSimpleDateValue(value: any): value is SimpleDateValue {
-    return value &&
-        typeof value === 'object' &&
-        typeof value.year === 'number' &&
+    // 明確檢查 falsy 值
+    if (!value) return false;
+
+    // 檢查是否為物件（排除 null，因為 typeof null === 'object'）
+    if (typeof value !== 'object') return false;
+
+    // 檢查必要屬性
+    return typeof value.year === 'number' &&
         typeof value.month === 'number' &&
         typeof value.day === 'number';
 }

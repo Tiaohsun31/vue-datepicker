@@ -127,12 +127,36 @@
         background-color: var(--color-vdt-theme-200);
     }
 
+    .bg-vdt-theme-300 {
+        background-color: var(--color-vdt-theme-300);
+    }
+
+    .bg-vdt-theme-400 {
+        background-color: var(--color-vdt-theme-400);
+    }
+
     .bg-vdt-theme-500 {
         background-color: var(--color-vdt-theme-500);
     }
 
     .bg-vdt-theme-600 {
         background-color: var(--color-vdt-theme-600);
+    }
+
+    .bg-vdt-theme-700 {
+        background-color: var(--color-vdt-theme-700);
+    }
+
+    .bg-vdt-theme-800 {
+        background-color: var(--color-vdt-theme-800);
+    }
+
+    .bg-vdt-theme-900 {
+        background-color: var(--color-vdt-theme-900);
+    }
+
+    .bg-vdt-theme-950 {
+        background-color: var(--color-vdt-theme-950);
     }
 
     /* 透明背景 */
@@ -158,12 +182,48 @@
     }
 
     /* 主題色文字 */
+    .text-vdt-theme-50 {
+        color: var(--color-vdt-theme-50);
+    }
+
+    .text-vdt-theme-100 {
+        color: var(--color-vdt-theme-100);
+    }
+
+    .text-vdt-theme-200 {
+        color: var(--color-vdt-theme-200);
+    }
+
+    .text-vdt-theme-300 {
+        color: var(--color-vdt-theme-300);
+    }
+
+    .text-vdt-theme-400 {
+        color: var(--color-vdt-theme-400);
+    }
+
     .text-vdt-theme-500 {
         color: var(--color-vdt-theme-500);
     }
 
     .text-vdt-theme-600 {
         color: var(--color-vdt-theme-600);
+    }
+
+    .text-vdt-theme-700 {
+        color: var(--color-vdt-theme-700);
+    }
+
+    .text-vdt-theme-800 {
+        color: var(--color-vdt-theme-800);
+    }
+
+    .text-vdt-theme-900 {
+        color: var(--color-vdt-theme-900);
+    }
+
+    .text-vdt-theme-950 {
+        color: var(--color-vdt-theme-950);
     }
 
     /* 白色文字 */
@@ -193,12 +253,48 @@
     }
 
     /* 主題色邊框 */
+    .border-vdt-theme-50 {
+        border-color: var(--color-vdt-theme-50);
+    }
+
+    .border-vdt-theme-100 {
+        border-color: var(--color-vdt-theme-100);
+    }
+
     .border-vdt-theme-200 {
         border-color: var(--color-vdt-theme-200);
     }
 
+    .border-vdt-theme-300 {
+        border-color: var(--color-vdt-theme-300);
+    }
+
+    .border-vdt-theme-400 {
+        border-color: var(--color-vdt-theme-400);
+    }
+
     .border-vdt-theme-500 {
         border-color: var(--color-vdt-theme-500);
+    }
+
+    .border-vdt-theme-600 {
+        border-color: var(--color-vdt-theme-600);
+    }
+
+    .border-vdt-theme-700 {
+        border-color: var(--color-vdt-theme-700);
+    }
+
+    .border-vdt-theme-800 {
+        border-color: var(--color-vdt-theme-800);
+    }
+
+    .border-vdt-theme-900 {
+        border-color: var(--color-vdt-theme-900);
+    }
+
+    .border-vdt-theme-950 {
+        border-color: var(--color-vdt-theme-950);
     }
 
     /* 環形邊框色 (ring) */
@@ -233,6 +329,42 @@
 
     .hover\:bg-vdt-theme-100:hover {
         background-color: var(--color-vdt-theme-100);
+    }
+
+    .hover\:bg-vdt-theme-200:hover {
+        background-color: var(--color-vdt-theme-200);
+    }
+
+    .hover\:bg-vdt-theme-300:hover {
+        background-color: var(--color-vdt-theme-300);
+    }
+
+    .hover\:bg-vdt-theme-400:hover {
+        background-color: var(--color-vdt-theme-400);
+    }
+
+    .hover\:bg-vdt-theme-500:hover {
+        background-color: var(--color-vdt-theme-500);
+    }
+
+    .hover\:bg-vdt-theme-600:hover {
+        background-color: var(--color-vdt-theme-600);
+    }
+
+    .hover\:bg-vdt-theme-700:hover {
+        background-color: var(--color-vdt-theme-700);
+    }
+
+    .hover\:bg-vdt-theme-800:hover {
+        background-color: var(--color-vdt-theme-800);
+    }
+
+    .hover\:bg-vdt-theme-900:hover {
+        background-color: var(--color-vdt-theme-900);
+    }
+
+    .hover\:bg-vdt-theme-950:hover {
+        background-color: var(--color-vdt-theme-950);
     }
 
     /* Hover 邊框色 */
@@ -343,6 +475,29 @@
 
     .focus-within\:ring-vdt-theme-200:focus-within {
         --tw-ring-color: var(--color-vdt-theme-200);
+        box-shadow: var(--tw-ring-inset) 0 0 0 calc(var(--tw-ring-offset-width) + var(--tw-ring-width)) var(--tw-ring-color);
+    }
+
+    /* 更完整的 focus-within 系列 */
+    .focus-within\:border-vdt-theme-300:focus-within {
+        border-color: var(--color-vdt-theme-300);
+    }
+
+    .focus-within\:border-vdt-theme-400:focus-within {
+        border-color: var(--color-vdt-theme-400);
+    }
+
+    .focus-within\:border-vdt-theme-600:focus-within {
+        border-color: var(--color-vdt-theme-600);
+    }
+
+    .focus-within\:ring-vdt-theme-100:focus-within {
+        --tw-ring-color: var(--color-vdt-theme-100);
+        box-shadow: var(--tw-ring-inset) 0 0 0 calc(var(--tw-ring-offset-width) + var(--tw-ring-width)) var(--tw-ring-color);
+    }
+
+    .focus-within\:ring-vdt-theme-300:focus-within {
+        --tw-ring-color: var(--color-vdt-theme-300);
         box-shadow: var(--tw-ring-inset) 0 0 0 calc(var(--tw-ring-offset-width) + var(--tw-ring-width)) var(--tw-ring-color);
     }
 

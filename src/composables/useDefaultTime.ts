@@ -19,7 +19,7 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
     /**
      * 驗證時間字符串格式
      */
-    const validateTimeFormat = (timeStr: string): boolean => {
+    const isValidTimeValue = (timeStr: string): boolean => {
         if (!timeStr) return false;
 
         // 檢查基本格式 HH:mm:ss 或 HH:mm
@@ -64,7 +64,7 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
      */
     const getValidDefaultTime = computed(() => {
         // 優先使用自訂時間
-        if (customDefaultTime && validateTimeFormat(customDefaultTime)) {
+        if (customDefaultTime && isValidTimeValue(customDefaultTime)) {
             return formatTimeString(customDefaultTime, enableSeconds);
         }
 
@@ -120,7 +120,7 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
         getValidDefaultTime,
 
         // 驗證方法
-        validateTimeFormat,
+        isValidTimeValue,
 
         // 格式化方法
         formatTimeString,

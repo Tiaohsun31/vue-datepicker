@@ -12,9 +12,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { CalendarDate, today } from '@internationalized/date';
+import { CalendarDate } from '@internationalized/date';
 import CalendarCell from './CalendarCell.vue';
-import { getTodaysDate } from '@/utils/dateUtils';
+import { getTodaysDate, isTodayDate } from '@/utils/dateUtils';
 import { CalendarUtils } from '@/utils/calendarUtils';
 
 type SelectionMode = 'single' | 'range';
@@ -67,8 +67,6 @@ const todayKey = computed(() => {
 
 // 生成當月的日曆數據 - 修正版本
 const calendarDays = computed(() => {
-    console.log(`生成 ${props.calendar} 曆 ${props.year}年${props.month}月 的日曆`);     // 生成 roc 曆 2025年6月 的日曆
-
     return CalendarUtils.generateCalendarDays(
         props.year,          // 西元年
         props.month,         // 西元月
@@ -113,12 +111,7 @@ const isDateDisabled = (date: CalendarDate): boolean => {
 
 // 檢查是否是今天
 const isToday = (date: CalendarDate): boolean => {
-    try {
-        const todayInCalendar = today(date.calendar.identifier);
-        return date.compare(todayInCalendar) === 0;
-    } catch {
-        return false;
-    }
+    return isTodayDate(date);
 };
 
 // 優化的單元格狀態計算
@@ -221,10 +214,6 @@ const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
             break;
     }
 };
-onMounted(() => {
-    // 初始化時可以進行一些必要的設置或檢查
-    console.log(props.selectedDate)
-});
 
 // 公開方法
 defineExpose({

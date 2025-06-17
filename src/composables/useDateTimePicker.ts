@@ -256,13 +256,6 @@ export function useDateTimePicker(
             dateTimeValue,
             customDefaultTime ? defaultTime.getValidDefaultTime.value : undefined
         );
-        // if (showTime && autoFocusTimeAfterDate) {
-        //     console.log(!!dateTimeValue.inputTimeValue.value)
-        //     navigation.autoFocusTimeAfterDateComplete(
-        //         !!dateTimeValue.inputTimeValue.value,
-        //         defaultTime.getValidDefaultTime.value
-        //     );
-        // }
     };
 
     /**

@@ -8,6 +8,7 @@ import localeData from 'dayjs/plugin/localeData';
 import { parseUserDateInput } from './dateParsingUtils';
 import { CalendarUtils } from './calendarUtils';
 import type { OutputType } from '../types/main';
+import { CalendarDate, today, getLocalTimeZone, toCalendar } from '@internationalized/date';
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
@@ -47,6 +48,29 @@ export function getTodaysDate(): SimpleDateValue {
         month: today.getMonth() + 1,
         day: today.getDate()
     };
+}
+
+/**
+ * 檢查給定日期是否為今天
+ * @param date 要檢查的日期
+ * @returns 是否為今天
+ */
+export function isTodayDate(date: CalendarDate): boolean {
+    try {
+        const timeZone = getLocalTimeZone();
+        const todayDate = today(timeZone);
+
+        // 如果日曆系統不同，將今天的日期轉換到目標日曆系統
+        if (date.calendar.identifier !== todayDate.calendar.identifier) {
+            const convertedToday = toCalendar(todayDate, date.calendar);
+            return date.compare(convertedToday) === 0;
+        }
+
+        return date.compare(todayDate) === 0;
+    } catch (error) {
+        console.error('Error checking if date is today:', error);
+        return false;
+    }
 }
 
 /**
@@ -117,21 +141,6 @@ export function parseInputToSimpleDate(input: DateTimeInput | undefined, locale:
         console.error('Failed to parse date:', error);
         return null;
     }
-}
-
-/**
- * 確保值是 SimpleDateValue（只包含日期部分）
- */
-export function ensureSimpleDate(value: DateTimeInput | undefined): SimpleDateValue | null {
-    const parsed = parseInputToSimpleDate(value);
-    if (!parsed) return null;
-
-    // 只返回日期部分
-    return {
-        year: parsed.year,
-        month: parsed.month,
-        day: parsed.day
-    };
 }
 
 /**
@@ -318,7 +327,7 @@ export function isValidDateFormat(format: string): boolean {
 /**
  * 驗證時間格式
  */
-export function isValidTimeFormat(format: string): boolean {
+export function isValidTimeFormatPattern(format: string): boolean {
     const validTokens = ['HH', 'H', 'mm', 'm', 'ss', 's', 'a', 'A'];
     const formatClean = format.replace(/[^\w]/g, ' ');
 
@@ -351,6 +360,20 @@ export function fixTimeFormat(format: string): string {
     return format.replace(/hh/g, 'HH');
 }
 
+/**
+ * 確保值是 SimpleDateValue（只包含日期部分）
+ */
+// export function ensureSimpleDate(value: DateTimeInput | undefined): SimpleDateValue | null {
+//     const parsed = parseInputToSimpleDate(value);
+//     if (!parsed) return null;
+
+//     // 只返回日期部分
+//     return {
+//         year: parsed.year,
+//         month: parsed.month,
+//         day: parsed.day
+//     };
+// }
 
 /**
  * 智能日期解析函數

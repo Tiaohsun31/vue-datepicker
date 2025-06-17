@@ -1,4 +1,5 @@
 // src/index.ts
+import './styles/theme.css';
 import type { App } from 'vue';
 import DatePicker from './DatePicker.vue';
 import DateRange from './DateRange.vue';

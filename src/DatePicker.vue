@@ -108,7 +108,7 @@ import { useTheme } from './composables/useTheme';
 import {
     formatSimpleDate,
     isValidDateFormat,
-    isValidTimeFormat,
+    isValidTimeFormatPattern,
     parseInputToSimpleDate,
     fixDateFormat,
     fixTimeFormat,
@@ -325,7 +325,7 @@ onBeforeMount(() => {
     }
 
     // 驗證時間格式
-    if (props.showTime && !isValidTimeFormat(props.timeFormat)) {
+    if (props.showTime && !isValidTimeFormatPattern(props.timeFormat)) {
         const originalFormat = props.timeFormat;
         const fixedFormat = fixTimeFormat(props.timeFormat);
 

@@ -118,6 +118,21 @@ app.mount('#app')
 
 ### 自訂樣式
 
+```css
+/* 在您的 CSS 文件中覆寫變數 */
+:root {
+  --color-vdt-theme-500: #3b82f6; /* 藍色主題 */
+  --color-vdt-theme-600: #2563eb;
+  /* ... 其他顏色 */
+}
+```
+
+```javascript
+// 引入順序很重要
+import '@tiaohsun/vue-datepicker/style' // 先引入基礎樣式
+import './my-theme.css' // 再引入自定義主題
+```
+
 ```vue
 <template>
   <DatePicker

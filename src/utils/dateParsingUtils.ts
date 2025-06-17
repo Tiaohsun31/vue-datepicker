@@ -6,9 +6,6 @@ import type { SimpleDateValue } from './dateUtils';
 
 dayjs.extend(customParseFormat);
 
-// const rocPlugin = createRocFormatPlugin();
-// const rocPlugin = new RocFormatPlugin();
-
 export interface DateParseResult {
     success: boolean;
     date: SimpleDateValue | null;
@@ -124,7 +121,6 @@ export class SmartDateParser {
     private fallbackParse(input: string): DateParseResult {
         try {
             const parsed = dayjs(input);
-            console.log('自動解析結果:', parsed);
             if (parsed.isValid()) {
                 return {
                     success: true,

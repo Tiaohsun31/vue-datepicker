@@ -15,6 +15,7 @@ import {
 } from '@internationalized/date';
 
 import type { SimpleDateValue } from './dateUtils';
+import { isValidFormatForDayjs } from './dateUtils';
 import dayjs from 'dayjs';
 
 // const rocPlugin = new RocFormatPlugin();
@@ -432,12 +433,17 @@ export class CalendarUtils {
             switch (calendar) {
                 case 'gregory':
                     // 西元曆直接使用 dayjs
-                    const gregorianFormat = format || 'YYYY-MM-DD HH:mm:ss';
-                    const result = dayjs(new Date(date.year, date.month - 1, date.day,
-                        date.hour || 0, date.minute || 0, date.second || 0)).format(gregorianFormat);
-                    console.log(`格式化西元曆日期 ${date.year}-${date.month}-${date.day} 成功:`, result);
-                    return dayjs(new Date(date.year, date.month - 1, date.day,
-                        date.hour || 0, date.minute || 0, date.second || 0)).format(gregorianFormat);
+                    let gregorianFormat = format || 'YYYY-MM-DD HH:mm:ss';
+
+                    // 使用 dateUtils 的格式驗證
+                    if (!isValidFormatForDayjs(gregorianFormat)) {
+                        const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
+                        gregorianFormat = hasTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
+                    }
+
+                    const jsDate = new Date(date.year, date.month - 1, date.day,
+                        date.hour || 0, date.minute || 0, date.second || 0);
+                    return dayjs(jsDate).format(gregorianFormat);
                 case 'roc':
                     const rocPlugin = new RocFormatPlugin();
                     if (rocPlugin.supportsFormat(format) && rocPlugin.canParseInput(format)) {

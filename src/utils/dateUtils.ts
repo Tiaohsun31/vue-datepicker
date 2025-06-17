@@ -8,7 +8,8 @@ import localeData from 'dayjs/plugin/localeData';
 import { parseUserDateInput } from './dateParsingUtils';
 import { CalendarUtils } from './calendarUtils';
 import type { OutputType } from '../types/main';
-import { CalendarDate, today, getLocalTimeZone, toCalendar, type CalendarIdentifier } from '@internationalized/date';
+import { CalendarDate, today, getLocalTimeZone, toCalendar } from '@internationalized/date';
+
 
 // 擴展 dayjs 功能
 dayjs.extend(utc);
@@ -300,6 +301,34 @@ export function getCurrentMonthRange(): { start: SimpleDateValue; end: SimpleDat
     const end = addDays(firstDayNextMonth, -1);
 
     return { start, end };
+}
+
+export function isValidFormatForDayjs(format: string): boolean {
+    if (!format || typeof format !== 'string') {
+        return false;
+    }
+
+    // 1. 首先檢查是否包含基本的日期組件（使用 dateUtils 的邏輯）
+    const hasBasicDateStructure = isValidDateFormat(format);
+
+    // 2. 檢查是否包含時間組件
+    const hasTimeComponents = isValidTimeFormatPattern(format);
+
+    // 3. 至少要有日期結構
+    if (!hasBasicDateStructure && !hasTimeComponents) {
+        return false;
+    }
+
+    // 4. 最後用實際格式化測試
+    try {
+        const testDate = dayjs('2000-12-31 23:59:59');
+        const formatted = testDate.format(format);
+
+        // 檢查格式化是否成功且有意義
+        return formatted !== format && formatted.length > 0;
+    } catch (error) {
+        return false;
+    }
 }
 
 /**

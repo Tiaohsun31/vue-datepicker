@@ -357,27 +357,55 @@ export class CalendarUtils {
     /**
      * 驗證日期在指定日曆系統中是否有效
      */
-    // static isValidDate(
-    //     gregorianYear: number,
-    //     gregorianMonth: number,
-    //     gregorianDay: number,
-    //     calendarId: string
-    // ): boolean {
-    //     try {
-    //         const gregorianDate = new CalendarDate(gregorianYear, gregorianMonth, gregorianDay);
+    static isValidDate(
+        year: number,
+        month: number,
+        day: number,
+        calendarId: string
+    ): boolean {
+        try {
 
-    //         if (calendarId === 'gregory') return true;
+            if (!this.isCalendarSupported(calendarId)) {
+                console.warn(`不支持的日曆系統: ${calendarId}`);
+                return false;
+            }
 
-    //         const targetCalendar = this.createSafeCalendar(calendarId);
-    //         const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
+            // 1. 基本日期格式驗證
+            if (year <= 0 || month <= 0 || day <= 0 || month > 12 || day > 31) {
+                return false;
+            }
 
-    //         const range = this.getCalendarRange(calendarId);
-    //         return localDate.year >= range.min && localDate.year <= range.max;
-    //     } catch (error) {
-    //         console.warn('日期驗證失敗:', error);
-    //         return false;
-    //     }
-    // }
+            // 2. 嘗試創建該日曆系統的日期來驗證實際有效性
+            let testDate: CalendarDate;
+
+            if (calendarId === 'gregory') {
+                // 西元曆直接驗證
+                testDate = new CalendarDate(year, month, day);
+            } else {
+                // 其他日曆系統：直接在該日曆系統中創建日期
+                const targetCalendar = this.createSafeCalendar(calendarId);
+                testDate = new CalendarDate(targetCalendar, year, month, day);
+            }
+
+            console.log(`驗證日期 ${year}-${month}-${day} 在 ${calendarId} 日曆系統中:`, testDate);
+
+            // 3. 驗證創建的日期是否與輸入一致（防止無效日期被自動調整）
+            // 這會自動處理：
+            // - 年份範圍（如果年份超出日曆系統範圍，創建時會失敗）
+            // - 閏年規則（如 2023/2/29 會被調整為 2023/3/1）
+            // - 月份天數（如 4/31 會被調整為 5/1）
+            const isConsistent = testDate.year === year &&
+                testDate.month === month &&
+                testDate.day === day;
+
+            return isConsistent;
+
+        } catch (error) {
+            // 4. 如果日期創建失敗（例如年份超出範圍），則返回 false
+            console.warn(`日期驗證失敗 ${year}-${month}-${day} in ${calendarId}:`, error);
+            return false;
+        }
+    }
 
     /**
      * 解析輸入字串為 SimpleDateValue

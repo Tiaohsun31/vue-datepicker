@@ -337,21 +337,20 @@ export function useDateTimePicker(
         const dateValid = await dateInputRef.value?.validate();
         const timeValid = showTime ? await timeInputRef.value?.validate() : true;
 
-        // 2. 日曆系統驗證
+
+        // 2. 西元曆系統驗證（只驗證西元曆）
         let calendarValid = true;
         if (dateTimeValue.internalDateTime.value) {
             calendarValid = CalendarUtils.isValidDate(
                 dateTimeValue.internalDateTime.value.year,
                 dateTimeValue.internalDateTime.value.month,
                 dateTimeValue.internalDateTime.value.day,
-                calendar
+                'gregory'  // 固定使用西元曆驗證
             );
 
             if (!calendarValid) {
                 validation.handleDateValidation(false, {
-                    date: 'date.invalidInCalendar'
-                }, 'calendar', {
-                    calendar: { calendarName: CalendarUtils.getCalendarDisplayName(calendar, locale) }
+                    date: 'date.invalid'  // 簡化錯誤信息
                 });
             }
         }

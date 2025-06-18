@@ -36,6 +36,7 @@ export function useDateTimeValue(
     } = options;
 
     // 內部狀態
+    // internalDateTime 統一使用西元曆，所有的日期計算、範圍驗證都基於西元曆，轉換當地日曆交由CalendarGrid處理
     const internalDateTime = ref<SimpleDateValue | null>(null);
     const inputDateValue = ref<string | null>(null);
     const inputTimeValue = ref<string | null>(null);

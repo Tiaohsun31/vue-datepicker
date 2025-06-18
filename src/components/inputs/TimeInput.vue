@@ -71,7 +71,7 @@ const props = withDefaults(defineProps<TimeInputProps>(), {
     hourPlaceholder: 'HH',
     minutePlaceholder: 'MM',
     secondPlaceholder: 'SS',
-    enableSeconds: false,
+    enableSeconds: true,
     use24Hour: true,
     required: false,
     locale: 'zh-TW',
@@ -197,8 +197,8 @@ watch(() => props.modelValue, (newValue) => {
     if (newValue) {
         const timeParts = newValue.split(':');
         let hours = parseInt(timeParts[0] || '0', 10);
-        const minutes = timeParts[1] || '';
-        const seconds = timeParts[2] || '';
+        const minutes = (timeParts[1] || '').replace(/\D/g, '');
+        const seconds = (timeParts[2] || '').replace(/\D/g, '');
 
         if (!props.use24Hour) {
             if (hours >= 12) {

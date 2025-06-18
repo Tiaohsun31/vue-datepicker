@@ -179,15 +179,12 @@ class RocFormatPlugin implements CalendarPlugin {
      */
     private tryParseWithSeparator(input: string, separator: string): SimpleDateValue | null {
         const parts = input.split(separator).map(p => p.trim()).filter(Boolean);
-        console.log('使用分隔符解析:', { input, separator, parts });
 
         if (parts.length < 3) return null;
 
         const year = parseInt(parts[0]);
         const month = parseInt(parts[1]);
         const day = parseInt(parts[2]);
-
-        console.log('解析日期部分:', { year, month, day });
 
         if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
 

@@ -386,9 +386,6 @@ export class CalendarUtils {
                 const targetCalendar = this.createSafeCalendar(calendarId);
                 testDate = new CalendarDate(targetCalendar, year, month, day);
             }
-
-            console.log(`驗證日期 ${year}-${month}-${day} 在 ${calendarId} 日曆系統中:`, testDate);
-
             // 3. 驗證創建的日期是否與輸入一致（防止無效日期被自動調整）
             // 這會自動處理：
             // - 年份範圍（如果年份超出日曆系統範圍，創建時會失敗）

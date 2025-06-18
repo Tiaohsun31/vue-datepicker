@@ -1,4 +1,4 @@
-// tests/utils/dateUtils.test.ts
+// tests/units/utils/dateUtils.test.ts
 import { describe, it, expect } from 'vitest'
 import {
     parseInputToSimpleDate,

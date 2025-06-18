@@ -1,5 +1,5 @@
 
-// tests/composables/useTheme.test.ts
+// tests/units/composables/useTheme.test.ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'

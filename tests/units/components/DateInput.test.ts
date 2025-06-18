@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, fireEvent, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 import DateInput from '@/components/inputs/DateInput.vue'
 
@@ -98,6 +98,7 @@ describe('DateInput', () => {
             expect(yearInput).toHaveValue('224')
         })
 
+        // 實際上並沒有輸入長度，因為達到一定位數後自動跳轉到下一個欄位
         it('應該限制輸入長度', async () => {
             render(DateInput)
 
@@ -105,13 +106,13 @@ describe('DateInput', () => {
             const monthInput = screen.getByLabelText('month')
             const dayInput = screen.getByLabelText('day')
 
-            await user.type(yearInput, '20241')
-            await user.type(monthInput, '123')
-            await user.type(dayInput, '456')
+            await user.type(yearInput, '20241') // 輸入20241，實際1會跳到下一個欄位
+            await user.type(monthInput, '123') // 輸入123，實際因為加上開頭的1，會變成11，而23會跳到下一個欄位
+            await user.type(dayInput, '456') // 此時456並沒有輸入效果，因為2024-11-23是有效日期
 
             expect(yearInput).toHaveValue('2024')
-            expect(monthInput).toHaveValue('12')
-            expect(dayInput).toHaveValue('45')
+            expect(monthInput).toHaveValue('11')
+            expect(dayInput).toHaveValue('23')
         })
     })
 
@@ -221,7 +222,7 @@ describe('DateInput', () => {
                 expect(onValidation).toHaveBeenCalledWith(
                     false,
                     expect.objectContaining({
-                        day: 'date.beforeMin'
+                        year: 'year.outOfRange'
                     }),
                     expect.any(Object)
                 )

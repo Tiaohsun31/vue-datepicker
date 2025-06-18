@@ -1,5 +1,5 @@
 
-// tests/utils/calendarUtils.test.ts
+// tests/units/utils/calendarUtils.test.ts
 import { describe, it, expect } from 'vitest'
 import { CalendarUtils } from '@/utils/calendarUtils'
 

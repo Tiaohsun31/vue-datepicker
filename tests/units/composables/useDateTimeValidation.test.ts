@@ -1,4 +1,4 @@
-// tests/composables/useDateTimeValidation.test.ts
+// tests/units/composables/useDateTimeValidation.test.ts
 import { describe, it, expect } from 'vitest'
 import { useDateTimeValidation } from '@/composables/useDateTimeValidation'
 import { createSimpleDate } from '@/utils/dateUtils'

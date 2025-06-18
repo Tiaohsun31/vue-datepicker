@@ -44,6 +44,8 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
+    "test:watch": "vitest --watch",
+    "test:e2e": "playwright test",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
@@ -69,6 +71,7 @@
     "dayjs": "^1.11.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.0",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/vite": "^4.1.10",
     "@testing-library/jest-dom": "^6.6.3",

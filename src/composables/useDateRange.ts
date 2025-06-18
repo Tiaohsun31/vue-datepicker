@@ -18,7 +18,8 @@ import {
     calculateDaysDifference,
     getCurrentMonthRange,
     type SimpleDateValue,
-    type DateTimeInput
+    type DateTimeInput,
+    createSimpleDate
 } from '../utils/dateUtils';
 import type { OutputType } from '../types/main';
 
@@ -230,7 +231,10 @@ export function useDateRange(
             label: '今天',
             getValue: () => {
                 const today = getNow();
-                return { start: today, end: today };
+                return {
+                    start: createSimpleDate(today.year, today.month, today.day, 0, 0, 0),
+                    end: createSimpleDate(today.year, today.month, today.day, 23, 59, 59)
+                };
             }
         },
         {
@@ -355,14 +359,6 @@ export function useDateRange(
 
     function clearFieldErrors(validation: any, fields: string[]) {
         fields.forEach(field => validation.clearFieldErrors(field));
-    }
-
-
-    function applyDefaultTimeIfNeeded(dateTime: any, timeValue: string) {
-        if (showTime && !dateTime.inputTimeValue.value) {
-            dateTime.inputTimeValue.value = timeValue;
-            dateTime.updateFromInputs();
-        }
     }
 
     // 事件處理函數
@@ -626,28 +622,38 @@ export function useDateRange(
 
     // 監聽外部值變化並驗證日期順序
     watch(() => modelValue, (newValue) => {
-        if (newValue && newValue.start && newValue.end) {
-            const startDate = parseInputToSimpleDate(newValue.start, locale);
-            const endDate = parseInputToSimpleDate(newValue.end, locale);
+        if (newValue && (newValue.start || newValue.end)) {
+            const startDate = newValue.start ? parseInputToSimpleDate(newValue.start, locale) : null;
+            const endDate = newValue.end ? parseInputToSimpleDate(newValue.end, locale) : null;
 
-            // 檢查日期順序，如果順序錯誤則自動交換
-            if (startDate && endDate && compareDates(startDate, endDate) > 0) {
-                console.warn('Initial date range has start > end, auto-swapping values');
-                startDateTime.setExternalValue(newValue.end);
-                endDateTime.setExternalValue(newValue.start);
-
-                // 發出修正後的值
-                setTimeout(() => {
-                    emitRangeEvents();
-                }, 0);
-            } else {
-                startDateTime.setExternalValue(newValue.start);
-                endDateTime.setExternalValue(newValue.end);
+            // 檢查無效輸入
+            if (newValue.start && !startDate) {
+                console.warn(`Invalid start date provided: ${newValue.start}`);
+                startValidation.handleDateValidation(false, { date: 'date.invalid' }, 'startDate');
             }
-        } else if (newValue) {
-            // 只有部分值的情況
-            startDateTime.setExternalValue(newValue.start || null);
-            endDateTime.setExternalValue(newValue.end || null);
+
+            if (newValue.end && !endDate) {
+                console.warn(`Invalid end date provided: ${newValue.end}`);
+                endValidation.handleDateValidation(false, { date: 'date.invalid' }, 'endDate');
+            }
+
+            // 只有在兩個日期都有效時才檢查順序
+            if (startDate && endDate) {
+                if (compareDates(startDate, endDate) > 0) {
+                    console.warn('Initial date range has start > end, auto-swapping values');
+                    startDateTime.setExternalValue(newValue.end);
+                    endDateTime.setExternalValue(newValue.start);
+
+                    setTimeout(() => {
+                        emitRangeEvents();
+                    }, 0);
+                    return;
+                }
+            }
+
+            // 設置有效的值，無效的值會被忽略或設為 null
+            startDateTime.setExternalValue(startDate ? newValue.start : null);
+            endDateTime.setExternalValue(endDate ? newValue.end : null);
         } else {
             startDateTime.clearValues();
             endDateTime.clearValues();

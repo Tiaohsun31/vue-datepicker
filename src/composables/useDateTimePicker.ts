@@ -54,16 +54,9 @@ interface DateTimePickerRefs {
     timeInputRef: Ref<any>;
 }
 
-interface UseDateTimePickerEmitters {
-    update: (value: DateTimeInput) => void;
-    change: (value: DateTimeInput) => void;
-    validation: (isValid: boolean, errors: Record<string, string>) => void;
-}
-
 export function useDateTimePicker(
     options: DateTimePickerOptions = {},
     refs: DateTimePickerRefs,
-    emitters?: UseDateTimePickerEmitters
 ) {
     const {
         modelValue = null,

@@ -98,26 +98,7 @@ class RocFormatPlugin implements CalendarPlugin {
         const month = parseInt(monthStr);
         const day = parseInt(dayStr);
 
-        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
-
-        // 驗證 ROC 年份範圍
-        if (year < this.yearRange.min || year > this.yearRange.max) return null;
-
-        // 轉換為西元年
-        const gregorianYear = year + this.YEAR_OFFSET;
-
-        // 基本驗證
-        if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-
-        // 使用 dayjs 驗證日期有效性
-        const jsDate = dayjs(`${gregorianYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-        if (!jsDate.isValid()) return null;
-
-        return {
-            year: gregorianYear,
-            month,
-            day
-        };
+        return this.validateAndConvertRocDate(year, month, day);
     }
 
     /**
@@ -186,29 +167,42 @@ class RocFormatPlugin implements CalendarPlugin {
         const month = parseInt(parts[1]);
         const day = parseInt(parts[2]);
 
-        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+        return this.validateAndConvertRocDate(year, month, day);
+    }
+
+    /**
+ * 通用的 ROC 日期驗證和轉換方法
+ */
+    private validateAndConvertRocDate(rocYear: number, month: number, day: number): SimpleDateValue | null {
+        if (isNaN(rocYear) || isNaN(month) || isNaN(day)) return null;
 
         // 驗證 ROC 年份範圍
-        if (year < this.yearRange.min || year > this.yearRange.max) return null;
+        if (rocYear < this.yearRange.min || rocYear > this.yearRange.max) return null;
 
         // 轉換為西元年
-        const gregorianYear = year + this.YEAR_OFFSET;
+        const gregorianYear = rocYear + this.YEAR_OFFSET;
 
         // 基本驗證
         if (month < 1 || month > 12 || day < 1 || day > 31) return null;
 
-        // 建立西元曆日期進行進一步驗證
-        const gregorianDate: SimpleDateValue = {
+        // 使用 dayjs 進行嚴格的日期有效性驗證
+        const dateStr = `${gregorianYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        const jsDate = dayjs(dateStr, 'YYYY-MM-DD', true); // strict mode
+
+        if (!jsDate.isValid()) return null;
+
+        // 額外檢查：確保解析的日期與輸入完全匹配
+        if (jsDate.year() !== gregorianYear ||
+            jsDate.month() + 1 !== month ||
+            jsDate.date() !== day) {
+            return null;
+        }
+
+        return {
             year: gregorianYear,
             month,
             day
         };
-
-        // 使用 dayjs 驗證日期有效性
-        const jsDate = dayjs(`${gregorianYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-        if (!jsDate.isValid()) return null;
-
-        return gregorianDate;
     }
 
     /**

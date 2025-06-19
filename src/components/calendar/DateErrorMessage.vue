@@ -1,6 +1,6 @@
 <!-- DateErrorMessage.vue -->
 <template>
-    <div v-if="hasErrors" class="mt-1 text-sm text-red-500">
+    <div v-if="hasErrors" class="date-error-message mt-1 text-sm text-red-500">
         <!-- 預設的錯誤顯示邏輯 -->
         <div v-if="Array.isArray(processedErrors)">
             <div v-for="(error, index) in processedErrors" :key="index">

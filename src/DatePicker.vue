@@ -43,7 +43,6 @@
             <!-- 日曆圖標和清除按鈕 -->
             <div class="date-picker-icon-container relative group cursor-pointer"
                 :class="{ 'cursor-not-allowed': disabled }">
-                <!-- 日曆圖標 (預設顯示) -->
                 <button type="button"
                     class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"
                     :class="{ 'group-hover:opacity-0': hasValue && !disabled && showClearButton }" :disabled="disabled"

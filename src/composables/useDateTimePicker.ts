@@ -311,6 +311,7 @@ export function useDateTimePicker(
         calendarPopup.handleContainerClick(event, () => {
             navigation.focusFirstInput();
         });
+        calendarPopup.toggleCalendar();
     };
 
     /**

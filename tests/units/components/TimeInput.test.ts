@@ -493,20 +493,6 @@ describe('TimeInput', () => {
     });
 
     describe('特殊情況測試', () => {
-        // it('應該處理複製貼上的時間格式', async () => {
-        //     renderTimeInput();
-        //     const hourInput = screen.getByLabelText('hour');
-
-        //     // 模擬貼上完整時間
-        //     await user.click(hourInput);
-        //     await user.paste('15:30:45');
-
-        //     await waitFor(() => {
-        //         expect(screen.getByLabelText('hour')).toHaveValue('15');
-        //         expect(screen.getByLabelText('minute')).toHaveValue('30');
-        //     });
-        // });
-
         it('modelValue為空時應該清空所有輸入框', async () => {
             const { rerender } = renderTimeInput({ modelValue: '12:30' });
 

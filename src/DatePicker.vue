@@ -41,20 +41,26 @@
             </button>
 
             <!-- 日曆圖標和清除按鈕 -->
-            <button type="button"
-                class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
-                :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
-                <CalendarIcon class="h-5 w-5" />
-            </button>
-            <button v-if="hasValue && !disabled && showClearButton" type="button"
-                class="date-picker-icon text-gray-400 hover:text-red-500 transition-colors duration-200 ml-1 cursor-pointer disabled:cursor-not-allowed"
-                @click.stop="reset">
-                <ClearIcon class="h-4 w-4 " />
-            </button>
+            <div class="date-picker-icon-container relative group cursor-pointer"
+                :class="{ 'cursor-not-allowed': disabled }">
+                <!-- 日曆圖標 (預設顯示) -->
+                <button type="button"
+                    class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"
+                    :class="{ 'group-hover:opacity-0': hasValue && !disabled && showClearButton }" :disabled="disabled"
+                    aria-label="開啟日曆" @click.stop.prevent="toggleCalendar?.()">
+                    <CalendarIcon class="h-5 w-5" />
+                </button>
+
+                <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
+                <button v-if="hasValue && !disabled && showClearButton" type="button"
+                    class="date-picker-icon absolute inset-0 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                    aria-label="清除日期" @click.stop.prevent="reset">
+                    <ClearIcon class="h-4 w-4" />
+                </button>
+            </div>
         </div>
 
         <!-- 日曆彈出層 -->
-
         <div v-if="showCalendar && !disabled" ref="calendarRef"
             class="calendar-container absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">

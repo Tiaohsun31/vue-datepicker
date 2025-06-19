@@ -37,16 +37,24 @@
             </button>
 
             <!-- 日曆圖標和清除按鈕 -->
-            <button v-if="hasRangeValue && !disabled && showClearButton" type="button" :disabled="disabled"
-                class="text-gray-400 hover:text-red-500 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
-                @click="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
-                <ClearIcon class="h-4 w-4" />
-            </button>
-            <button v-else type="button"
-                class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer disabled:cursor-not-allowed"
-                :disabled="disabled" @click="toggleCalendar">
-                <CalendarIcon class="h-5 w-5" />
-            </button>
+
+            <div class="date-picker-icon-container relative group cursor-pointer"
+                :class="{ 'cursor-not-allowed': disabled }">
+                <!-- 日曆圖標 (預設顯示) -->
+                <button type="button"
+                    class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"
+                    :class="{ 'group-hover:opacity-0': hasRangeValue && !disabled && showClearButton }"
+                    :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
+                    <CalendarIcon class="h-5 w-5" />
+                </button>
+
+                <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
+                <button v-if="hasRangeValue && !disabled && showClearButton" type="button"
+                    class="date-picker-icon absolute inset-0 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                    @click.stop="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
+                    <ClearIcon class="h-4 w-4" />
+                </button>
+            </div>
         </div>
 
         <!-- 日期範圍選擇彈窗 -->

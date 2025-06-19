@@ -9,7 +9,7 @@
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <button type="button"
                 class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="disabled" @click="toggleCalendar">
+                :disabled="disabled" @click="toggleCalendar" aria-label="選擇日期範圍">
                 <!-- 開始日期 -->
                 <div class="flex-1 text-center whitespace-nowrap">
                     <span v-if="modelValue?.start" class="text-vdt-content text-sm">
@@ -21,7 +21,7 @@
                 </div>
 
                 <!-- 分隔符 -->
-                <div class="text-vdt-content-muted text-sm px-1">
+                <div class="text-vdt-content-muted text-sm px-1" aria-label="日期範圍分隔符" data-testid="separator">
                     {{ separator }}
                 </div>
 
@@ -41,7 +41,7 @@
             <div class="date-picker-icon-container relative group cursor-pointer"
                 :class="{ 'cursor-not-allowed': disabled }">
                 <!-- 日曆圖標 (預設顯示) -->
-                <button type="button"
+                <button type="button" aria-label="開啟日曆"
                     class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"
                     :class="{ 'group-hover:opacity-0': hasRangeValue && !disabled && showClearButton }"
                     :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
@@ -49,7 +49,7 @@
                 </button>
 
                 <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
-                <button v-if="hasRangeValue && !disabled && showClearButton" type="button"
+                <button v-if="hasRangeValue && !disabled && showClearButton" type="button" aria-label="清除日期"
                     class="date-picker-icon absolute inset-0 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
                     @click.stop="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
                     <ClearIcon class="h-4 w-4" />

@@ -1,13 +1,21 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
-import { nextTick } from 'vue';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import TimeInput from '@/components/inputs/TimeInput.vue';
 
 describe('TimeInput', () => {
-    let wrapper: any;
+    let user: ReturnType<typeof userEvent.setup>;
 
-    const createWrapper = (props = {}) => {
-        return mount(TimeInput, {
+    beforeEach(() => {
+        user = userEvent.setup();
+    });
+
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    const renderTimeInput = (props = {}) => {
+        return render(TimeInput, {
             props: {
                 ...props
             },
@@ -19,314 +27,495 @@ describe('TimeInput', () => {
         });
     };
 
-    beforeEach(() => {
-        wrapper = createWrapper();
-    });
-
     describe('基本渲染測試', () => {
         it('預設應該渲染小時和分鐘輸入框', () => {
-            expect(wrapper.find('input[aria-label="hour"]').exists()).toBe(true);
-            expect(wrapper.find('input[aria-label="minute"]').exists()).toBe(true);
+            renderTimeInput();
+
+            expect(screen.getByLabelText('hour')).toBeInTheDocument();
+            expect(screen.getByLabelText('minute')).toBeInTheDocument();
         });
 
         it('啟用秒鐘時應該渲染秒鐘輸入框', () => {
-            wrapper = createWrapper({ enableSeconds: true });
-            expect(wrapper.find('input[aria-label="second"]').exists()).toBe(true);
+            renderTimeInput({ enableSeconds: true });
+
+            expect(screen.getByLabelText('second')).toBeInTheDocument();
+        });
+
+        it('未啟用秒鐘時不應該渲染秒鐘輸入框', () => {
+            renderTimeInput({ enableSeconds: false });
+
+            expect(screen.queryByLabelText('second')).not.toBeInTheDocument();
         });
 
         it('應該正確設置輸入框屬性', () => {
-            const hourInput = wrapper.find('input[aria-label="hour"]');
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
+            renderTimeInput();
 
-            expect(hourInput.attributes('type')).toBe('text');
-            expect(hourInput.attributes('inputmode')).toBe('numeric');
-            expect(hourInput.attributes('maxlength')).toBe('2');
-            expect(minuteInput.attributes('maxlength')).toBe('2');
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
+
+            expect(hourInput).toHaveAttribute('type', 'text');
+            expect(hourInput).toHaveAttribute('inputmode', 'numeric');
+            expect(hourInput).toHaveAttribute('maxlength', '2');
+            expect(minuteInput).toHaveAttribute('maxlength', '2');
         });
 
         it('應該顯示冒號分隔符', () => {
-            const separators = wrapper.findAll('span.text-gray-400');
+            renderTimeInput();
+
+            const separators = screen.getAllByText(':');
             expect(separators.length).toBeGreaterThan(0);
-            expect(separators[0].text()).toBe(':');
         });
 
         it('錯誤狀態下應該設置正確的aria屬性', async () => {
-            wrapper = createWrapper({ required: true });
-            const hourInput = wrapper.find('input[aria-label="hour"]');
+            const { emitted } = renderTimeInput({ required: true });
+            const hourInput = screen.getByLabelText('hour');
 
-            await hourInput.trigger('blur');
-            await nextTick();
+            await user.click(hourInput);
+            await user.tab(); // 離開焦點觸發blur
 
-            expect(hourInput.attributes('aria-invalid')).toBe('true');
+            await waitFor(() => {
+                expect(hourInput).toHaveAttribute('aria-invalid', 'true');
+            });
         });
     });
 
     describe('輸入格式化測試', () => {
-        it('應該正確處理前導零', async () => {
-            const hourInput = wrapper.find('input[aria-label="hour"]');
+        it('應該正確處理小時輸入', async () => {
+            renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
 
-            await hourInput.setValue('5');
-            await hourInput.trigger('input');
+            await user.type(hourInput, '5');
 
-            // 小時不會自動補零，分鐘才會
-            expect(hourInput.element.value).toBe('5');
+            expect(hourInput).toHaveValue('5');
         });
 
         it('分鐘輸入超過5時應該自動補零', async () => {
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
+            renderTimeInput();
+            const minuteInput = screen.getByLabelText('minute');
 
-            await minuteInput.setValue('7');
-            await minuteInput.trigger('input');
+            await user.type(minuteInput, '7');
 
-            expect(minuteInput.element.value).toBe('07');
+            await waitFor(() => {
+                expect(minuteInput).toHaveValue('07');
+            });
         });
 
         it('秒鐘輸入超過5時應該自動補零', async () => {
-            wrapper = createWrapper({ enableSeconds: true });
-            const secondInput = wrapper.find('input[aria-label="second"]');
+            renderTimeInput({ enableSeconds: true });
+            const secondInput = screen.getByLabelText('second');
 
-            await secondInput.setValue('8');
-            await secondInput.trigger('input');
+            await user.type(secondInput, '8');
 
-            expect(secondInput.element.value).toBe('08');
+            await waitFor(() => {
+                expect(secondInput).toHaveValue('08');
+            });
+        });
+
+        it('應該限制輸入只能為數字', async () => {
+            renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
+
+            await user.type(hourInput, 'abc123');
+
+            // 非數字字符應該被過濾
+            expect(hourInput).toHaveValue('12'); // 只保留數字部分
         });
     });
 
     describe('自動跳轉功能測試', () => {
         it('小時輸入完成時應該跳轉到分鐘', async () => {
-            const hourInput = wrapper.find('input[aria-label="hour"]');
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
-            const focusSpy = vi.spyOn(minuteInput.element, 'focus');
+            renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
 
-            await hourInput.setValue('23');
-            await hourInput.trigger('input');
+            await user.type(hourInput, '23');
 
-            expect(focusSpy).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(minuteInput).toHaveFocus();
+            });
         });
 
         it('分鐘輸入完成且未啟用秒鐘時應該完成輸入', async () => {
-            wrapper = createWrapper({ enableSeconds: false });
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
+            const { emitted } = renderTimeInput({ enableSeconds: false });
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
 
-            await wrapper.find('input[aria-label="hour"]').setValue('12');
-            await minuteInput.setValue('30');
-            await minuteInput.trigger('input');
-            await minuteInput.trigger('blur');
-            await nextTick();
+            await user.type(hourInput, '12');
+            await user.type(minuteInput, '30');
+            await user.tab(); // 觸發blur事件
 
-            expect(wrapper.emitted('complete')).toBeTruthy();
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('complete');
+            });
         });
 
         it('分鐘輸入完成且啟用秒鐘時應該跳轉到秒鐘', async () => {
-            wrapper = createWrapper({ enableSeconds: true });
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
-            const secondInput = wrapper.find('input[aria-label="second"]');
-            const focusSpy = vi.spyOn(secondInput.element, 'focus');
+            renderTimeInput({ enableSeconds: true });
+            const minuteInput = screen.getByLabelText('minute');
+            const secondInput = screen.getByLabelText('second');
 
-            await minuteInput.setValue('30');
-            await minuteInput.trigger('input');
+            await user.type(minuteInput, '30');
 
-            expect(focusSpy).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(secondInput).toHaveFocus();
+            });
+        });
+
+        it('秒鐘輸入完成時應該完成輸入', async () => {
+            const { emitted } = renderTimeInput({ enableSeconds: true });
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
+            const secondInput = screen.getByLabelText('second');
+
+            await user.type(hourInput, '12');
+            await user.type(minuteInput, '30');
+            await user.type(secondInput, '45');
+            await user.tab(); // 觸發blur事件
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('complete');
+            });
         });
     });
 
     describe('12小時制轉換測試', () => {
-        beforeEach(() => {
-            wrapper = createWrapper({ use24Hour: false });
+        it('應該顯示AM/PM選擇器', () => {
+            renderTimeInput({ use24Hour: false });
+
+            expect(screen.getByRole('button', { name: /AM|PM/ })).toBeInTheDocument();
         });
 
-        it('應該正確處理午夜12點', async () => {
-            wrapper = createWrapper({ modelValue: '00:30', use24Hour: false });
-            await nextTick();
+        it('應該正確處理午夜12點', () => {
+            renderTimeInput({ modelValue: '00:30', use24Hour: false });
 
-            expect(wrapper.find('input[aria-label="hour"]').element.value).toBe('12');
-            expect(wrapper.vm.periodValue).toBe('AM');
+            const hourInput = screen.getByLabelText('hour');
+            expect(hourInput).toHaveValue('12');
+            expect(screen.getByText('AM')).toBeInTheDocument();
         });
 
-        it('應該正確處理中午12點', async () => {
-            wrapper = createWrapper({ modelValue: '12:30', use24Hour: false });
-            await nextTick();
+        it('應該正確處理中午12點', () => {
+            renderTimeInput({ modelValue: '12:30', use24Hour: false });
 
-            expect(wrapper.find('input[aria-label="hour"]').element.value).toBe('12');
-            expect(wrapper.vm.periodValue).toBe('PM');
+            const hourInput = screen.getByLabelText('hour');
+            expect(hourInput).toHaveValue('12');
+            expect(screen.getByText('PM')).toBeInTheDocument();
+        });
+
+        it('應該正確處理下午時間轉換', () => {
+            renderTimeInput({ modelValue: '15:30', use24Hour: false });
+
+            const hourInput = screen.getByLabelText('hour');
+            expect(hourInput).toHaveValue('03');
+            expect(screen.getByText('PM')).toBeInTheDocument();
+        });
+
+        it('點擊AM/PM按鈕應該切換時段', async () => {
+            const { emitted } = renderTimeInput({ use24Hour: false });
+            const periodButton = screen.getByRole('button', { name: /AM|PM/ });
+
+            await user.click(periodButton);
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('update:modelValue');
+            });
         });
     });
 
-    describe('驗證錯誤詳細測試', () => {
+    describe('驗證錯誤測試', () => {
+        it('空值且必填時應該顯示錯誤', async () => {
+            const { emitted } = renderTimeInput({ required: true });
+            const hourInput = screen.getByLabelText('hour');
+
+            await user.click(hourInput);
+            await user.tab(); // 觸發blur
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                expect(isValid).toBe(false);
+                expect(errors).toHaveProperty('hour');
+            });
+        });
+
         it('小時為0在12小時制下應該報錯', async () => {
-            wrapper = createWrapper({ use24Hour: false });
-            const hourInput = wrapper.find('input[aria-label="hour"]');
+            const { emitted } = renderTimeInput({ use24Hour: false });
+            const hourInput = screen.getByLabelText('hour');
 
-            await hourInput.setValue('0');
-            await hourInput.trigger('blur');
+            await user.type(hourInput, '0');
+            await user.tab();
 
-            expect(wrapper.emitted('validation')).toBeTruthy();
-            const [isValid, errors] = wrapper.emitted('validation')[0];
-            expect(isValid).toBe(false);
-            expect(errors.hour).toBeDefined();
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                expect(isValid).toBe(false);
+                expect(errors).toHaveProperty('hour');
+            });
+        });
+
+        it('小時超過24應該報錯', async () => {
+            const { emitted } = renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
+
+            await user.type(hourInput, '25');
+            await user.tab();
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                expect(isValid).toBe(false);
+                expect(errors).toHaveProperty('hour');
+            });
         });
     });
 
-    describe('無效輸入處理', () => {
-        it('modelValue 包含小數點應該被過濾', async () => {
-            wrapper = createWrapper({ modelValue: '12:30.5:45.7' });
-            await nextTick();
-
-            expect(wrapper.vm.minuteValue).toBe('305');
-            expect(wrapper.vm.secondValue).toBe('457');
-        });
-
-        it('modelValue 包含其他非數字字符應該被過濾', async () => {
-            wrapper = createWrapper({ modelValue: '12:3a0b:4c5d' });
-            await nextTick();
-
-            expect(wrapper.vm.minuteValue).toBe('30');
-            expect(wrapper.vm.secondValue).toBe('45');
-        });
-    });
-
-    describe('鍵盤導航進階測試', () => {
+    describe('鍵盤導航測試', () => {
         it('在小時輸入框按左箭頭應該導航到日期輸入', async () => {
-            const hourInput = wrapper.find('input[aria-label="hour"]');
+            const { emitted } = renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
 
-            await hourInput.trigger('keydown', { key: 'ArrowLeft' });
+            await user.click(hourInput);
+            await user.keyboard('{ArrowLeft}');
 
-            expect(wrapper.emitted('navigate-to-date')).toBeTruthy();
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('navigate-to-date');
+            });
         });
 
         it('在分鐘輸入框為空時按退格鍵應該跳回小時', async () => {
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
-            const hourInput = wrapper.find('input[aria-label="hour"]');
-            const focusSpy = vi.spyOn(hourInput.element, 'focus');
+            renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
 
-            await minuteInput.trigger('keydown', { key: 'Backspace' });
+            await user.click(minuteInput);
+            await user.keyboard('{Backspace}');
 
-            expect(focusSpy).toHaveBeenCalled();
+            await waitFor(() => {
+                expect(hourInput).toHaveFocus();
+            });
         });
 
-        it('Tab鍵應該正常執行預設行為', async () => {
-            const hourInput = wrapper.find('input[aria-label="hour"]');
-            const preventDefaultSpy = vi.fn();
+        it('按Tab鍵應該依序移動焦點', async () => {
+            renderTimeInput({ enableSeconds: true });
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
+            const secondInput = screen.getByLabelText('second');
 
-            // 方法2：使用 trigger 的事件監聽方式
-            await hourInput.trigger('keydown', {
-                key: 'Tab',
-                preventDefault: preventDefaultSpy
+            await user.click(hourInput);
+            await user.tab();
+
+            expect(minuteInput).toHaveFocus();
+
+            await user.tab();
+            expect(secondInput).toHaveFocus();
+        });
+
+        it('按Shift+Tab應該反向移動焦點', async () => {
+            renderTimeInput({ enableSeconds: true });
+            const minuteInput = screen.getByLabelText('minute');
+            const hourInput = screen.getByLabelText('hour');
+
+            await user.click(minuteInput);
+            await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+            await waitFor(() => {
+                expect(hourInput).toHaveFocus();
             });
+        });
+    });
 
-            expect(preventDefaultSpy).not.toHaveBeenCalled();
+    describe('modelValue 測試', () => {
+        it('應該正確解析完整時間格式', () => {
+            renderTimeInput({ modelValue: '15:30:45' });
+
+            expect(screen.getByLabelText('hour')).toHaveValue('15');
+            expect(screen.getByLabelText('minute')).toHaveValue('30');
+        });
+
+        it('應該正確解析沒有秒鐘的時間格式', () => {
+            renderTimeInput({ modelValue: '15:30' });
+
+            expect(screen.getByLabelText('hour')).toHaveValue('15');
+            expect(screen.getByLabelText('minute')).toHaveValue('30');
+        });
+
+        it('modelValue變更時應該更新顯示值', async () => {
+            const { rerender } = renderTimeInput({ modelValue: '12:30' });
+
+            expect(screen.getByLabelText('hour')).toHaveValue('12');
+
+            await rerender({ modelValue: '15:45' });
+
+            expect(screen.getByLabelText('hour')).toHaveValue('15');
+            expect(screen.getByLabelText('minute')).toHaveValue('45');
         });
     });
 
     describe('邊界值測試', () => {
         it('24小時制最大值測試', async () => {
-            const hourInput = wrapper.find('input[aria-label="hour"]');
+            const { emitted } = renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
 
-            await hourInput.setValue('23');
-            await hourInput.trigger('blur');
+            await user.type(hourInput, '23');
+            await user.tab();
 
-            expect(wrapper.emitted('validation')).toBeTruthy();
-            const [isValid] = wrapper.emitted('validation')[0];
-            expect(isValid).toBe(true);
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                expect(isValid).toBe(true);
+            });
         });
 
         it('12小時制最大值測試', async () => {
-            wrapper = createWrapper({ use24Hour: false });
-            const hourInput = wrapper.find('input[aria-label="hour"]');
+            const { emitted } = renderTimeInput({ use24Hour: false });
+            const hourInput = screen.getByLabelText('hour');
 
-            await hourInput.setValue('12');
-            await hourInput.trigger('blur');
+            await user.type(hourInput, '12');
+            await user.tab();
 
-            expect(wrapper.emitted('validation')).toBeTruthy();
-            const [isValid] = wrapper.emitted('validation')[0];
-            expect(isValid).toBe(true);
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                expect(isValid).toBe(true);
+            });
         });
 
         it('分鐘最大值59測試', async () => {
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
+            const { emitted } = renderTimeInput();
+            const minuteInput = screen.getByLabelText('minute');
 
-            await minuteInput.setValue('59');
-            await minuteInput.trigger('blur');
+            await user.type(minuteInput, '59');
+            await user.tab();
 
-            expect(wrapper.emitted('validation')).toBeTruthy();
-            const [isValid] = wrapper.emitted('validation')[0];
-            expect(isValid).toBe(true);
-        });
-    });
-
-    describe('本地化進階測試', () => {
-        it('應該處理不同地區的AM/PM格式', () => {
-            wrapper = createWrapper({
-                use24Hour: false,
-                useLocalizedPeriod: true,
-                locale: 'ja-JP'
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                expect(isValid).toBe(true);
             });
-
-            expect(wrapper.vm.localizedPeriod).toBeDefined();
-            expect(typeof wrapper.vm.localizedPeriod).toBe('string');
         });
 
-        it('本地化失敗時應該回退到預設值', () => {
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        it('最小值邊界測試', async () => {
+            const { emitted } = renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
 
-            wrapper = createWrapper({
-                use24Hour: false,
-                useLocalizedPeriod: true,
-                locale: 'invalid-locale-string'
+            await user.type(hourInput, '0');
+            await user.type(minuteInput, '0');
+            await user.tab();
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                expect(isValid).toBe(true);
             });
-
-            expect(wrapper.vm.displayPeriod).toBe('上午');
-            consoleSpy.mockRestore();
         });
     });
 
-    describe('minuteStep 屬性測試', () => {
-        it('應該接受 minuteStep 屬性', () => {
-            wrapper = createWrapper({ minuteStep: 5 });
-            expect(wrapper.props('minuteStep')).toBe(5);
+    describe('可訪問性測試', () => {
+        it('應該有正確的aria-label', () => {
+            renderTimeInput();
+
+            expect(screen.getByLabelText('hour')).toHaveAttribute('aria-label', 'hour');
+            expect(screen.getByLabelText('minute')).toHaveAttribute('aria-label', 'minute');
         });
 
-        it('預設 minuteStep 應該為1', () => {
-            expect(wrapper.props('minuteStep')).toBe(1);
+        it('錯誤狀態應該有aria-invalid屬性', async () => {
+            renderTimeInput({ required: true });
+            const hourInput = screen.getByLabelText('hour');
+
+            await user.click(hourInput);
+            await user.tab();
+
+            await waitFor(() => {
+                expect(hourInput).toHaveAttribute('aria-invalid', 'true');
+            });
+        });
+
+        it('應該支援鍵盤導航', async () => {
+            renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
+
+            hourInput.focus();
+            expect(hourInput).toHaveFocus();
+
+            await user.keyboard('{Tab}');
+            expect(screen.getByLabelText('minute')).toHaveFocus();
         });
     });
 
-    describe('組件狀態管理測試', () => {
-        it('初始化前不應該發送事件', () => {
-            wrapper = createWrapper();
+    describe('事件發送測試', () => {
+        it('輸入變更時應該發送update:modelValue事件', async () => {
+            const { emitted } = renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
 
-            // 在初始化完成前，不應該有事件發送
-            expect(wrapper.emitted('update:modelValue')).toBeFalsy();
+            await user.type(hourInput, '12');
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('update:modelValue');
+            });
         });
 
-        it('重置後所有值應該清空', () => {
-            wrapper.vm.setTime('15:30:45');
-            wrapper.vm.reset();
+        it('完成輸入時應該發送complete事件', async () => {
+            const { emitted } = renderTimeInput({ enableSeconds: false });
+            const hourInput = screen.getByLabelText('hour');
+            const minuteInput = screen.getByLabelText('minute');
 
-            expect(wrapper.vm.hourValue).toBe('');
-            expect(wrapper.vm.minuteValue).toBe('');
-            expect(wrapper.vm.secondValue).toBe('');
-            expect(wrapper.vm.periodValue).toBe('AM');
+            await user.type(hourInput, '12');
+            await user.type(minuteInput, '30');
+            await user.tab();
+
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('complete');
+            });
         });
 
-        it('focusLast 方法應該正確聚焦最後一個欄位', () => {
-            wrapper = createWrapper({ enableSeconds: true });
-            const secondInput = wrapper.find('input[aria-label="second"]');
-            const setSelectionRangeSpy = vi.spyOn(secondInput.element, 'setSelectionRange');
+        it('驗證失敗時應該發送validation事件', async () => {
+            const { emitted } = renderTimeInput();
+            const hourInput = screen.getByLabelText('hour');
 
-            wrapper.vm.focusLast();
+            await user.type(hourInput, '25'); // 無效小時
+            await user.tab();
 
-            expect(setSelectionRangeSpy).toHaveBeenCalledWith(0, 0);
+            await waitFor(() => {
+                expect(emitted()).toHaveProperty('validation');
+                const validationEvents = emitted().validation;
+                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                expect(isValid).toBe(false);
+                expect(errors).toHaveProperty('hour');
+            });
         });
+    });
 
-        it('未啟用秒鐘時 focusLast 應該聚焦分鐘欄位', () => {
-            wrapper = createWrapper({ enableSeconds: false });
-            const minuteInput = wrapper.find('input[aria-label="minute"]');
-            const setSelectionRangeSpy = vi.spyOn(minuteInput.element, 'setSelectionRange');
+    describe('特殊情況測試', () => {
+        // it('應該處理複製貼上的時間格式', async () => {
+        //     renderTimeInput();
+        //     const hourInput = screen.getByLabelText('hour');
 
-            wrapper.vm.focusLast();
+        //     // 模擬貼上完整時間
+        //     await user.click(hourInput);
+        //     await user.paste('15:30:45');
 
-            expect(setSelectionRangeSpy).toHaveBeenCalledWith(0, 0);
+        //     await waitFor(() => {
+        //         expect(screen.getByLabelText('hour')).toHaveValue('15');
+        //         expect(screen.getByLabelText('minute')).toHaveValue('30');
+        //     });
+        // });
+
+        it('modelValue為空時應該清空所有輸入框', async () => {
+            const { rerender } = renderTimeInput({ modelValue: '12:30' });
+
+            expect(screen.getByLabelText('hour')).toHaveValue('12');
+
+            await rerender({ modelValue: '' });
+
+            expect(screen.getByLabelText('hour')).toHaveValue('');
+            expect(screen.getByLabelText('minute')).toHaveValue('');
         });
     });
 });

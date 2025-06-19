@@ -76,12 +76,12 @@ const emit = defineEmits<{
 
 // 初始化年月 initialYear/Month > rangeStart > 今天
 const getInitialYearMonth = () => {
-    if (props.initialYear && props.initialMonth) {
-        return { year: props.initialYear, month: props.initialMonth };
-    }
-
     if (props.rangeStart) {
         return { year: props.rangeStart.year, month: props.rangeStart.month };
+    }
+
+    if (props.initialYear && props.initialMonth) {
+        return { year: props.initialYear, month: props.initialMonth };
     }
 
     const today = getTodaysDate();

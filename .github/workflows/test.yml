@@ -11,6 +11,9 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
 
+    env:
+      TZ: Asia/Taipei # 設置為台北時區
+
     steps:
       - uses: actions/checkout@v4
 

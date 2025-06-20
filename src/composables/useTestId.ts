@@ -5,7 +5,7 @@ export function useTestId() {
     const attrs = useAttrs()
 
     const baseTestId = computed(() => {
-        if (import.meta.env.NODE_ENV === 'production') return null
+        // if (import.meta.env.NODE_ENV === 'production') return null
         return attrs['data-testid'] || null
     })
 

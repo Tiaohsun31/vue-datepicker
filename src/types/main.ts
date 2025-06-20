@@ -1,3 +1,4 @@
+import { type SimpleDateValue } from '@/utils/dateUtils';
 export type TailwindColor =
     | 'slate'
     | 'gray'
@@ -30,3 +31,9 @@ export type TailwindColor =
  * - 'custom': 自定義格式字符串 (使用 dateFormat 和 timeFormat) 2024年06月18日 下午2時30分 或 民國113年06月18日
  */
 export type OutputType = 'iso' | 'date' | 'object' | 'custom';
+
+// 快捷日期範圍選擇器類型
+export interface DateRangeShortcut {
+    label: string;
+    getValue: () => { start: SimpleDateValue; end: SimpleDateValue };
+}

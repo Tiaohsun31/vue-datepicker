@@ -21,7 +21,7 @@ import {
     type DateTimeInput,
     createSimpleDate
 } from '../utils/dateUtils';
-import type { OutputType } from '../types/main';
+import type { OutputType, DateRangeShortcut } from '../types/main';
 
 // 類型定義
 interface DateRangeOptions {
@@ -50,11 +50,6 @@ interface DateRangeRefs {
     endDateInputRef: Ref<any>;
     startTimeInputRef: Ref<any>;
     endTimeInputRef: Ref<any>;
-}
-
-interface DateRangeShortcut {
-    label: string;
-    getValue: () => { start: SimpleDateValue; end: SimpleDateValue };
 }
 
 interface DateRangeEmitters {

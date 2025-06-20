@@ -5,7 +5,7 @@
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 rounded-sm transition-all duration-200 "
+        <div class="date-picker-container flex w-full items-center px-2 py-1 rounded-sm transition-all duration-200 bg-vdt-surface text-vdt-content disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <button type="button"
                 class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -67,8 +67,9 @@
                 <!-- 輸入區域 -->
                 <div v-if="inputEnabled" class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
                     <!-- 開始日期輸入 -->
-                    <div @click.stop="focusStartDate"
+                    <div data-testid="start-date-inputs" aria-label="開始日期輸入區域" @click.stop="focusStartDate"
                         class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
                             :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
@@ -76,17 +77,20 @@
                             :date-format="dateInputFormat" @validation="handleStartDateValidation"
                             @complete="handleStartDateComplete" />
 
-                        <TimeInput v-if="showTime" ref="startTimeInputRef" v-model="startDateTime.inputTimeValue.value"
-                            :hour-placeholder="computedPlaceholders.hour"
-                            :minute-placeholder="computedPlaceholders.minute"
-                            :second-placeholder="computedPlaceholders.second" :enable-seconds="enableSeconds"
-                            :use24Hour="use24Hour" :locale="locale" @validation="handleStartTimeValidation"
-                            @complete="handleStartTimeComplete" @navigate-to-date="handleStartNavigateToDate" />
+                        <div v-if="showTime" data-testid="start-time-inputs" aria-label="開始時間輸入區域">
+                            <TimeInput ref="startTimeInputRef" v-model="startDateTime.inputTimeValue.value"
+                                :hour-placeholder="computedPlaceholders.hour"
+                                :minute-placeholder="computedPlaceholders.minute"
+                                :second-placeholder="computedPlaceholders.second" :enable-seconds="enableSeconds"
+                                :use24Hour="use24Hour" :locale="locale" @validation="handleStartTimeValidation"
+                                @complete="handleStartTimeComplete" @navigate-to-date="handleStartNavigateToDate" />
+                        </div>
                     </div>
 
                     <!-- 結束日期輸入 -->
-                    <div @click.stop="focusEndDate"
+                    <div data-testid="end-date-inputs" aria-label="結束日期輸入區域" @click.stop="focusEndDate"
                         class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
                             :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
@@ -94,20 +98,24 @@
                             :date-format="dateInputFormat" @validation="handleEndDateValidation"
                             @complete="handleEndDateComplete" />
 
-                        <TimeInput v-if="showTime" ref="endTimeInputRef" v-model="endDateTime.inputTimeValue.value"
-                            :hour-placeholder="computedPlaceholders.hour"
-                            :minute-placeholder="computedPlaceholders.minute"
-                            :second-placeholder="computedPlaceholders.second" :enable-seconds="enableSeconds"
-                            :use24Hour="use24Hour" :locale="locale" @validation="handleEndTimeValidation"
-                            @complete="handleEndTimeComplete" @navigate-to-date="handleEndNavigateToDate" />
+                        <div v-if="showTime" data-testid="end-time-inputs" aria-label="結束時間輸入區域">
+                            <TimeInput ref="endTimeInputRef" v-model="endDateTime.inputTimeValue.value"
+                                :hour-placeholder="computedPlaceholders.hour"
+                                :minute-placeholder="computedPlaceholders.minute"
+                                :second-placeholder="computedPlaceholders.second" :enable-seconds="enableSeconds"
+                                :use24Hour="use24Hour" :locale="locale" @validation="handleEndTimeValidation"
+                                @complete="handleEndTimeComplete" @navigate-to-date="handleEndNavigateToDate" />
+                        </div>
                     </div>
                 </div>
 
                 <!-- 快捷選項 -->
-                <div v-if="shortcuts.length > 0 && showShortcuts">
+                <div v-if="shortcuts.length > 0 && showShortcuts" aria-label="日期範圍快捷選項">
                     <div class="flex flex-wrap gap-2">
                         <!-- 預設快捷選項 -->
                         <button v-for="shortcut in shortcuts" :key="shortcut.label" type="button"
+                            :aria-label="`選擇${shortcut.label}範圍`"
+                            :data-testid="`shortcut-${shortcut.label.toLowerCase().replace(/\s+/g, '-')}`"
                             class="px-3 py-1 text-xs bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm transition-colors"
                             @click="applyShortcut(shortcut)">
                             {{ shortcut.label }}

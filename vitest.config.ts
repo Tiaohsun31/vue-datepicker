@@ -24,13 +24,13 @@ export default mergeConfig(
                     'tests/',
                     'src/components/icons/',
                     'src/index.ts',
+                    'src/composables/useTestId.ts',
                     // 設定檔案
                     '**/eslint.config.ts',
                     '**/playwright.config.ts',
                     '**/vite.config.ts',
                     '**/vitest.config.ts',
                     '**/tailwind.config.js',
-                    '**/postcss.config.js',
                     // 暫時忽略
                     'src/TimePicker.vue',
                 ],

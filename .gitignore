@@ -30,3 +30,5 @@ coverage
 *.tsbuildinfo
 
 playground
+test-results
+playwright-report

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('DatePicker E2E Tests', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/') // 假設你有一個 demo 頁面
+        await page.goto('/')
     })
 
     test('應該能完整的日期選擇流程', async ({ page }) => {

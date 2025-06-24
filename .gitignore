@@ -29,5 +29,7 @@ coverage
 
 *.tsbuildinfo
 
-test-results
-playwright-report
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

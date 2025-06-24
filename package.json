@@ -1,108 +1,30 @@
 {
-  "name": "@tiaohsun/vue-datepicker",
-  "version": "0.1.0-beta.5",
-  "description": "A Vue 3 datepicker with multi-calendar support, styled with Tailwind CSS",
-  "license": "MIT",
-  "author": {
-    "name": "tiaohsun",
-    "email": "tiaohsun@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Tiaohsun31/vue-datepicker.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Tiaohsun31/vue-datepicker/issues"
-  },
-  "homepage": "https://github.com/Tiaohsun31/vue-datepicker#readme",
+  "name": "vue-datepicker-workspace",
+  "private": true,
+  "description": "A powerful and flexible Vue 3 DatePicker component with TypeScript and Tailwind CSS",
   "keywords": [
     "vue",
+    "vue3",
     "datepicker",
-    "calendar",
     "typescript",
-    "tailwindcss"
+    "tailwindcss",
+    "internationalization",
+    "calendar"
   ],
-  "type": "module",
-  "main": "./dist/vue-datepicker.umd.js",
-  "module": "./dist/vue-datepicker.es.js",
-  "types": "./dist/vue-datepicker.d.ts",
-  "style": "./dist/vue-datepicker.css",
-  "exports": {
-    ".": {
-      "types": "./dist/vue-datepicker.d.ts",
-      "import": "./dist/vue-datepicker.es.js",
-      "require": "./dist/vue-datepicker.umd.js"
-    },
-    "./style": "./dist/vue-datepicker.css"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tiaohsun31/vue-datepicker.git"
   },
-  "files": [
-    "dist",
-    "types"
-  ],
   "scripts": {
-    "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
-    "preview": "vite preview",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --build",
-    "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
-    "lint:eslint": "eslint . --fix",
-    "lint": "run-s lint:*",
-    "format": "prettier --write src/",
-    "prepublishOnly": "npm run build-only",
-    "test:unit": "vitest",
-    "test:watch": "vitest --watch",
-    "test:e2e": "playwright test",
-    "test:coverage": "vitest --coverage"
-  },
-  "peerDependencies": {
-    "tailwindcss": "^4.1.0",
-    "vue": "^3.4.0"
-  },
-  "peerDependenciesMeta": {
-    "tailwindcss": {
-      "optional": false
-    },
-    "vue": {
-      "optional": false
-    }
-  },
-  "dependencies": {
-    "@internationalized/date": "^3.8.2",
-    "dayjs": "^1.11.13"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.53.0",
-    "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/vite": "^4.1.10",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/user-event": "^14.6.1",
-    "@testing-library/vue": "^8.1.0",
-    "@tsconfig/node22": "^22.0.2",
-    "@types/jsdom": "^21.1.7",
-    "@types/node": "^24.0.3",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "@vitest/coverage-v8": "^3.2.4",
-    "@vitest/eslint-plugin": "^1.2.7",
-    "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/eslint-config-typescript": "^14.5.0",
-    "@vue/test-utils": "^2.4.6",
-    "@vue/tsconfig": "^0.7.0",
-    "eslint": "^9.29.0",
-    "eslint-plugin-oxlint": "^1.1.0",
-    "eslint-plugin-vue": "~10.2.0",
-    "jiti": "^2.4.2",
-    "jsdom": "^26.1.0",
-    "npm-run-all2": "^8.0.4",
-    "oxlint": "^1.1.0",
-    "prettier": "3.5.3",
-    "tailwindcss": "^4.1.10",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5",
-    "vite-plugin-dts": "^4.5.4",
-    "vite-plugin-vue-devtools": "^7.7.7",
-    "vitest": "^3.2.3",
-    "vue": "^3.5.16",
-    "vue-tsc": "^2.2.10"
+    "dev:component": "pnpm --filter @tiaohsun/vue-datepicker dev",
+    "dev:docs": "pnpm --filter docs dev",
+    "build": "pnpm build:component && pnpm build:docs",
+    "build:component": "pnpm --filter @tiaohsun/vue-datepicker build",
+    "build:docs": "pnpm --filter docs build",
+    "test": "pnpm --filter @tiaohsun/vue-datepicker test",
+    "test:unit": "pnpm --filter @tiaohsun/vue-datepicker test:unit",
+    "test:e2e": "pnpm --filter @tiaohsun/vue-datepicker test:e2e",
+    "test:coverage": "pnpm --filter @tiaohsun/vue-datepicker test:coverage",
+    "type-check": "pnpm --filter @tiaohsun/vue-datepicker type-check"
   }
 }

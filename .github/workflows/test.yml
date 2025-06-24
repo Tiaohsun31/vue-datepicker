@@ -25,19 +25,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Run unit tests with coverage
-        run: pnpm run test:coverage
+        run: pnpm run test:coverage --filter=@tiaohsun/vue-datepicker
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          file: ./coverage/lcov.info
+          file: ./packages/vue-datepicker/coverage/lcov.info
           fail_ci_if_error: false # 不因覆蓋率失敗而中斷 CI
 
       - name: Check coverage threshold
@@ -63,17 +63,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm --filter @tiaohsun/vue-datepicker exec playwright install --with-deps
 
       - name: Build project
-        run: pnpm run build
+        run: pnpm run build:component
 
       - name: Run E2E tests with proper server
         run: pnpm run test:e2e
@@ -83,7 +83,7 @@ jobs:
         if: always()
         with:
           name: playwright-report-${{ github.run_number }}
-          path: playwright-report/
+          path: packages/vue-datepicker/playwright-report/
           retention-days: 30
 
       - name: Upload test results (if failed)
@@ -91,7 +91,7 @@ jobs:
         if: failure()
         with:
           name: test-results-${{ github.run_number }}
-          path: test-results/
+          path: packages/vue-datepicker/test-results/
           retention-days: 30
 
   type-check:
@@ -108,8 +108,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install

@@ -141,7 +141,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
 
     // 時間相關屬性
     timeFormat: 'HH:mm:ss',
-    showTime: true,
+    showTime: false,
     enableSeconds: true,
     use24Hour: false,
     useLocalizedPeriod: false,

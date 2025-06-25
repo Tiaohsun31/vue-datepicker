@@ -618,8 +618,8 @@ export function useDateRange(
     // 監聽外部值變化並驗證日期順序
     watch(() => modelValue, (newValue) => {
         if (newValue && (newValue.start || newValue.end)) {
-            const startDate = newValue.start ? parseInputToSimpleDate(newValue.start, locale) : null;
-            const endDate = newValue.end ? parseInputToSimpleDate(newValue.end, locale) : null;
+            const startDate = newValue.start ? parseInputToSimpleDate(newValue.start, locale, calendar) : null;
+            const endDate = newValue.end ? parseInputToSimpleDate(newValue.end, locale, calendar) : null;
 
             // 檢查無效輸入
             if (newValue.start && !startDate) {
@@ -647,6 +647,7 @@ export function useDateRange(
             }
 
             // 設置有效的值，無效的值會被忽略或設為 null
+
             startDateTime.setExternalValue(startDate ? newValue.start : null);
             endDateTime.setExternalValue(endDate ? newValue.end : null);
         } else {

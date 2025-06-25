@@ -3,15 +3,19 @@
         <h3>E2E Test區域</h3>
         <div class="space-y-4">
             <!-- 基本日期選擇器 -->
-            <DatePicker v-model="dateTime" :required="true"></DatePicker>
+            <DatePicker v-model="dateTime" :required="true" :showTime="true"></DatePicker>
 
             <!-- 使用 disabled 來禁用日期選擇器 -->
             <DatePicker data-testid="disabled-date-picker" v-model="dateTime2" calendar="japanese" mode="dark"
-                :disabled="true"></DatePicker>
+                :disabled="true" :showTime="true"></DatePicker>
 
             <!-- 使用roc日期選擇器 -->
             <DatePicker data-testid="roc-date-picker" v-model="rocDate" calendar="roc" locale="zh-TW"
                 date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" />
+
+            <!-- 自定義格式 -->
+            {{ dateTime }}
+            <DatePicker v-model="dateTime" date-format="DD/MM/YYYY" output-type="custom"></DatePicker>
 
             <!-- 基本日期範圍選擇器 -->
             <DateRange v-model="selectedDate" :showTime="true" />

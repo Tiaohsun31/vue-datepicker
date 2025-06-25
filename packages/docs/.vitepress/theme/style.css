@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@plugin '@tailwindcss/forms';
+
+@source '../../**/*.{vue,js,ts,md}';
+/* 掃描 npm 包的樣式 */
+@source '../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,css}';

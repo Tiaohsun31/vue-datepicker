@@ -209,7 +209,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 
     // 時間相關屬性
     timeFormat: 'HH:mm:ss',
-    showTime: true,
+    showTime: false,
     enableSeconds: true,
     use24Hour: true,
     useLocalizedPeriod: false,

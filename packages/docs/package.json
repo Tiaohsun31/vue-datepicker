@@ -1,0 +1,21 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "Documentation for vue-datepicker",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "postcss": "^8.5.6",
+    "vitepress": "2.0.0-alpha.7"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.10",
+    "@tiaohsun/vue-datepicker": "workspace:*",
+    "tailwindcss": "^4.1.10"
+  }
+}

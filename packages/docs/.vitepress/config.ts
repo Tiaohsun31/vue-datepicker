@@ -24,8 +24,8 @@ export default defineConfig({
             {
                 text: 'Getting Started',
                 items: [
-                    { text: '安裝指南', link: '/guide/installation' },
-                    { text: '基礎使用', link: '/guide/basic-usage' }
+                    { text: '安裝指南', link: '/pages/guide/installation' },
+                    { text: '基礎使用', link: '/pages/guide/basic-usage' }
                 ]
             },
             {
@@ -34,6 +34,10 @@ export default defineConfig({
                     { text: 'Props', link: '/api/props' },
                     { text: 'Events', link: '/api/events' },
                     { text: 'Slots', link: '/api/slots' }
+                ]
+            }, {
+                items: [
+                    { text: 'Theme & Mode', link: '/pages/theming' },
                 ]
             }
         ],

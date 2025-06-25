@@ -10,12 +10,14 @@
 
 <div class="demo-container space-y-2">
   <DatePicker v-model="basicDate" />
-  <div class="py-1 px-2 bg-gray-100 rounded">
+  <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800">
       v-model: {{ basicDate }}
   </div>
 </div>
 
 :::
+
+<code> v-model: {{ basicDate }} </code>
 
 ```vue
 <template>
@@ -37,7 +39,7 @@ const date = ref("");
 
 <div class="demo-container space-y-2">
   <DateRange v-model="dateRange" />
-  <div class="py-1 px-2 bg-gray-100 rounded">
+  <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800">
       v-model: {{ dateRange }}
   </div>
 </div>

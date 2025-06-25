@@ -59,6 +59,35 @@ export function hexToRgb(hex: string): RgbColor {
 }
 
 /**
+ * 解析 RGB 顏色格式
+ */
+export function parseRgb(color: string): RgbColor | null {
+    // 處理 rgb(255, 0, 0) 格式
+    const rgbMatch = color.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
+    if (rgbMatch) {
+        const [_, r, g, b] = rgbMatch.map(Number);
+        return {
+            r: Math.max(0, Math.min(255, r)) / 255,
+            g: Math.max(0, Math.min(255, g)) / 255,
+            b: Math.max(0, Math.min(255, b)) / 255
+        };
+    }
+
+    // 處理 rgba(255, 0, 0, 0.5) 格式
+    const rgbaMatch = color.match(/^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*([0-9]*\.?[0-9]+)\s*\)$/);
+    if (rgbaMatch) {
+        const [_, r, g, b] = rgbaMatch.map(Number);
+        return {
+            r: Math.max(0, Math.min(255, r)) / 255,
+            g: Math.max(0, Math.min(255, g)) / 255,
+            b: Math.max(0, Math.min(255, b)) / 255
+        };
+    }
+
+    return null;
+}
+
+/**
  * RGB 轉 Lab 顏色空間
  */
 export function rgbToLab(rgb: RgbColor): LabColor {
@@ -110,10 +139,36 @@ export function hexToOklch(hex: string): OklchColor {
     const lab = rgbToLab(rgb);
     const lch = labToLch(lab);
 
+    // 調整色相映射以更接近 OKLCH
+    let adjustedHue = lch.h;
+    if (adjustedHue > 0 && adjustedHue < 60) {
+        adjustedHue = adjustedHue * 0.7; // 壓縮紅-橙區間
+    }
+
     return {
         lightness: lch.l,
         chroma: Math.min(lch.c / 150, 0.4),
-        hue: lch.h
+        hue: adjustedHue
+    };
+}
+
+/**
+ * RGB 轉 OKLCH（通過 Lab）
+ */
+export function rgbToOklch(rgb: RgbColor): OklchColor {
+    const lab = rgbToLab(rgb);
+    const lch = labToLch(lab);
+
+    // 調整色相映射以更接近 OKLCH
+    let adjustedHue = lch.h;
+    if (adjustedHue > 0 && adjustedHue < 60) {
+        adjustedHue = adjustedHue * 0.7; // 壓縮紅-橙區間
+    }
+
+    return {
+        lightness: lch.l,
+        chroma: Math.min(lch.c / 150, 0.4),
+        hue: adjustedHue
     };
 }
 
@@ -150,6 +205,10 @@ export function isTailwindColor(color: string): boolean {
     return color in tailwindColors;
 }
 
+export function isRGB(color: string): boolean {
+    return color.startsWith('rgb(') || color.startsWith('rgba(');
+}
+
 /**
  * 查找最接近的 Tailwind 顏色
  */
@@ -168,6 +227,11 @@ export function findClosestTailwindColor(inputColor: string): TailwindColor {
         targetOklch = parseOklch(inputColor);
     } else if (isHex(inputColor)) {
         targetOklch = hexToOklch(inputColor);
+    } else if (isRGB(inputColor)) {
+        const rgb = parseRgb(inputColor);
+        if (rgb) {
+            targetOklch = rgbToOklch(rgb);
+        }
     }
 
     if (!targetOklch) return defaultColor;

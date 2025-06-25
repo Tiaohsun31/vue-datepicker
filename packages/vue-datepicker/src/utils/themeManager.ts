@@ -188,11 +188,31 @@ class ThemeManager {
             return;
         }
 
-        // 動態更新主題色變數（僅在該容器內）
+        // 檢查是否有全域 CSS 變數覆寫
+        const rootStyle = getComputedStyle(document.documentElement);
+        const hasGlobalOverride = rootStyle.getPropertyValue('--color-vdt-theme-500').trim() !== '';
+
+        // 如果有全域覆寫，就不設置內聯樣式
+        if (hasGlobalOverride) {
+            // 清除現有的內聯樣式
+            const colorShades = getColorShades(state.color);
+            Object.keys(colorShades).forEach(shade => {
+                container.style.removeProperty(`--color-vdt-theme-${shade}`);
+            });
+            return;
+        }
+
+        // 否則照常設置內聯樣式
         const colorShades = getColorShades(state.color);
         Object.entries(colorShades).forEach(([shade, value]) => {
             container.style.setProperty(`--color-vdt-theme-${shade}`, value);
         });
+
+        // 動態更新主題色變數（僅在該容器內）
+        // const colorShades = getColorShades(state.color);
+        // Object.entries(colorShades).forEach(([shade, value]) => {
+        //     container.style.setProperty(`--color-vdt-theme-${shade}`, value);
+        // });
     }
 
     /**

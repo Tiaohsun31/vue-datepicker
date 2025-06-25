@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/installation
+      link: /pages/guide/installation
     - theme: alt
       text: View on GitHub
       link: https://github.com/Tiaohsun31/vue-datepicker

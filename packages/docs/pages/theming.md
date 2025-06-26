@@ -2,7 +2,7 @@
 
 Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿足不同的設計需求。您可以透過多種方式來自訂顏色主題和明暗模式。
 
-::: warning Tailwind CSS 4 使用者
+::: warning Tailwind CSS 4 配置
 如果您使用 Tailwind CSS 4，需要在您的 CSS 文件中添加以下配置以支援 `mode` 功能：
 
 ```css
@@ -257,9 +257,10 @@ Vue Datepicker 也支援使用 Class 選擇器來進行更精確的樣式控制�
 2. 使用 CSS 變數進行精細調整
 3. 使用 class 選擇器進行複雜自訂
 4. 測試不同裝置和模式的顯示效果
+5. 每個 DatePicker 組件都有獨立的主題設置，不會互相影響
    :::
 
 <script setup lang="ts">
 import { ref } from "vue";
-const date = ref(new Date());
+const date = ref(null);
 </script>

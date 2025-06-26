@@ -2,6 +2,9 @@ import type { LocaleMessages } from '@/types/locale';
 
 export const koKRLocaleMessages: LocaleMessages = {
     error: {
+        calendar: {
+            unsupported: '지원하지 않는 달력 ID입니다',
+        },
         date: {
             required: '날짜를 선택해주세요',
             invalid: '유효하지 않은 날짜',

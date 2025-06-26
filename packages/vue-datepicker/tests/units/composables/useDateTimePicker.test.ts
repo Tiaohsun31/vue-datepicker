@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, toRef } from 'vue'
 import { useDateTimePicker } from '@/composables/useDateTimePicker'
 import { createSimpleDate } from '@/utils/dateUtils'
 import { withSetup, cleanupSetup } from '../test-helpers'
@@ -290,8 +290,8 @@ describe('useDateTimePicker Integration Tests', () => {
             const refs = createMockRefs()
             const [datePicker, testWrapper] = withSetup(() =>
                 useDateTimePicker({
-                    calendar: 'roc',
-                    locale: 'zh-TW'
+                    calendar: toRef('roc'),
+                    locale: toRef('zh-TW')
                 }, refs)
             )
             wrapper = testWrapper

@@ -36,7 +36,7 @@
                     {{ modelValue }}
                 </span>
                 <span v-else class="text-vdt-content-muted">
-                    {{ computedSelectDatePlaceholder }}
+                    {{ computedPlaceholders.selectDate }}
                 </span>
             </button>
 
@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, watch, useSlots } from 'vue';
+import { ref, computed, onBeforeMount, watch, useSlots, toRef } from 'vue';
 import { CalendarUtils } from './utils/calendarUtils';
 
 // 組件導入
@@ -205,17 +205,17 @@ const datePicker = useDateTimePicker(
         showTime: props.showTime,
         required: props.required,
         disabled: props.disabled,
-        calendar: props.calendar,
+        calendar: toRef(props, 'calendar'),
         dateFormat: internalDateFormat.value,
         timeFormat: internalTimeFormat.value,
-        outputType: props.outputType,
+        outputType: toRef(props, 'outputType'),
         useStrictISO: props.useStrictISO,
         customDefaultTime: props.customDefaultTime,
         enableSeconds: props.enableSeconds,
         autoFocusTimeAfterDate: props.autoFocusTimeAfterDate,
         minDate: props.minDate,
         maxDate: props.maxDate,
-        locale: props.locale,
+        locale: toRef(props, 'locale'),
     },
     {
         containerRef,
@@ -260,8 +260,10 @@ const hasDisplayValue = computed(() => {
     return !!(inputDateValue.value && inputDateValue.value.trim());
 });
 
+
 // 日曆系統相關計算屬性
 const computedPlaceholders = computed(() => {
+    const currentLocale = props.locale;
     // 從語言包獲取預設值
     const localePlaceholders = {
         selectDate: getPlaceholderMessage('general.selectDate'),
@@ -287,12 +289,6 @@ const computedPlaceholders = computed(() => {
     };
 });
 
-const computedSelectDatePlaceholder = computed(() => {
-    return props.placeholderOverrides?.selectDate ||
-        getPlaceholderMessage('general.selectDate');
-});
-
-
 // 合併所有錯誤（格式錯誤 + 驗證錯誤）
 const mergedErrors = computed(() => {
     return {
@@ -316,19 +312,12 @@ const hasErrors = computed(() => {
 
 // 格式驗證和修復
 onBeforeMount(() => {
-
-    setLocale(props.locale);
-
-    if (!CalendarUtils.isCalendarSupported(props.calendar)) {
-        formatErrors.value.calendar = `不支援的日曆系統: "${props.calendar}"`;
-    }
-
     // 驗證日期格式
     if (!isValidDateFormat(props.dateFormat) && props.calendar === 'gregory') {
         const originalFormat = props.dateFormat;
         const fixedFormat = fixDateFormat(props.dateFormat);
 
-        formatErrors.value.dateFormat = `日期格式不正確: "${originalFormat}" 已自動修復為 "${fixedFormat}"`;
+        formatErrors.value.dateFormat = 'format.invalid';
         console.warn(`日期格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
 
         internalDateFormat.value = fixedFormat;
@@ -339,11 +328,12 @@ onBeforeMount(() => {
         const originalFormat = props.timeFormat;
         const fixedFormat = fixTimeFormat(props.timeFormat);
 
-        formatErrors.value.timeFormat = `時間格式不正確: "${originalFormat}" 已自動修復為 "${fixedFormat}"`;
+        formatErrors.value.timeFormat = 'format.invalid';
         console.warn(`時間格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
 
         internalTimeFormat.value = fixedFormat;
     }
+
 });
 
 // 監聽主題變化
@@ -364,6 +354,13 @@ watch(() => props.locale, (newLocale) => {
     }
 }, { immediate: true });
 
+watch(() => props.calendar, (newCalendar) => {
+    if (!CalendarUtils.isCalendarSupported(newCalendar)) {
+        formatErrors.value.calendar = 'calendar.unsupported';
+    } else {
+        delete formatErrors.value.calendar;
+    }
+}, { immediate: true });
 
 // 公開方法
 defineExpose({

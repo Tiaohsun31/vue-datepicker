@@ -8,6 +8,21 @@ export default defineConfig({
         ],
         resolve: {
             preserveSymlinks: true,
+        },
+        server: {
+            hmr: {
+                overlay: false
+            }
+        },
+        optimizeDeps: {
+            force: true
+        },
+        build: {
+            rollupOptions: {
+                output: {
+                    manualChunks: undefined
+                }
+            }
         }
     },
 
@@ -26,6 +41,13 @@ export default defineConfig({
                 items: [
                     { text: '安裝指南', link: '/pages/guide/installation' },
                     { text: '基礎使用', link: '/pages/guide/basic-usage' }
+                ]
+            },
+            {
+                text: 'Calendar Systems',
+                items: [
+                    { text: '日曆系統', link: '/pages/calendars/basic' },
+                    { text: 'Roc Plugin', link: '/pages/calendars/roc-plugin' },
                 ]
             },
             {

@@ -4,10 +4,6 @@ import './style.css'
 import { DatePicker, DateRange } from '@tiaohsun/vue-datepicker';
 import '@tiaohsun/vue-datepicker/style'
 
-// import { DatePicker, DateRange } from '@tiaohsun/vue-datepicker';
-// // import '@tiaohsun/vue-datepicker/style'
-// import '@tiaohsun/vue-datepicker/style'
-
 export default {
     extends: DefaultTheme,
     enhanceApp({ app }) {

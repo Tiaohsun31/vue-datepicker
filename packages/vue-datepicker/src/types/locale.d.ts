@@ -1,5 +1,8 @@
 
 export interface ErrorMessages {
+    calendar: {
+        unsupported: string;
+    }
     // 日期相關錯誤
     date: {
         required: string;

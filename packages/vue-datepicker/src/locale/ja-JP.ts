@@ -2,6 +2,9 @@ import type { LocaleMessages } from '@/types/locale';
 
 export const jaJPLocaleMessages: LocaleMessages = {
     error: {
+        calendar: {
+            unsupported: 'サポートされていないカレンダーIDです',
+        },
         date: {
             required: '日付を選択してください',
             invalid: '無効な日付',

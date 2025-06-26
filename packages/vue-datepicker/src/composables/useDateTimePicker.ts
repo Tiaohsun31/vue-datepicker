@@ -2,7 +2,7 @@
  * useDateTimePicker.ts
  */
 
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
 import { useInputNavigation } from './useInputNavigation';
 import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
@@ -25,12 +25,12 @@ interface DateTimePickerOptions {
     disabled?: boolean;
 
     // 日曆系統支援
-    calendar?: string;              // 日曆系統 ID
+    calendar?: Ref<string>;              // 日曆系統 ID
 
     // 格式配置
     dateFormat?: string;
     timeFormat?: string;
-    outputType?: OutputType;
+    outputType?: Ref<OutputType>;
     useStrictISO?: boolean;
 
     // 時間配置
@@ -44,7 +44,7 @@ interface DateTimePickerOptions {
 
     // 自動聚焦
     autoFocus?: boolean;
-    locale?: string;
+    locale?: Ref<string>;
 }
 
 interface DateTimePickerRefs {
@@ -63,20 +63,24 @@ export function useDateTimePicker(
         showTime = false,
         required = true,
         disabled = false,
-        calendar = 'gregory',          // 日曆系統
+        // calendar = 'gregory',          // 日曆系統
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
-        outputType = 'iso',
+        // outputType = 'iso',
         useStrictISO = false,
         customDefaultTime,
         enableSeconds = true,
         autoFocusTimeAfterDate = true,
         minDate,
         maxDate,
-        locale = 'zh-TW'
+        // locale = 'zh-TW'
     } = options;
 
     const { containerRef, calendarRef, dateInputRef, timeInputRef } = refs;
+
+    const calendar = computed(() => options.calendar?.value || 'gregory'); // 默認使用西元曆
+    const locale = computed(() => options.locale?.value || 'zh-TW'); // 默認語言為中文（台灣）
+    const outputType = computed(() => options.outputType?.value || 'iso'); // 默認輸出類型為 ISO
 
     // 創建禁用狀態的響應式引用
     const isDisabled = ref(disabled);
@@ -94,7 +98,7 @@ export function useDateTimePicker(
         showTime,
         dateFormat,
         timeFormat,
-        outputType,
+        outputType: outputType.value,
         defaultTime: customDefaultTime,
         enableSeconds
     });
@@ -122,7 +126,7 @@ export function useDateTimePicker(
 
     // 轉換為 SimpleDateValue
     const calendarMinDate = computed(() => {
-        const minDateValue = parseInputToSimpleDate(minDate, locale);
+        const minDateValue = parseInputToSimpleDate(minDate, locale.value);
         if (!minDateValue) return null;
 
         return minDateValue;
@@ -130,7 +134,7 @@ export function useDateTimePicker(
 
     //  SimpleDateValue
     const calendarMaxDate = computed(() => {
-        const maxDateValue = parseInputToSimpleDate(maxDate, locale);
+        const maxDateValue = parseInputToSimpleDate(maxDate, locale.value);
         if (!maxDateValue) return null;
 
         return maxDateValue;
@@ -159,10 +163,9 @@ export function useDateTimePicker(
      */
     const emitEvents = async (dateTime = dateTimeValue.internalDateTime.value) => {
         let formattedOutput: DateTimeInput = null;
-
         if (dateTime) {
             const customFormat = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
-            formattedOutput = formatOutput(dateTime, outputType, customFormat, showTime, calendar, locale, useStrictISO);
+            formattedOutput = formatOutput(dateTime, outputType.value, customFormat, showTime, calendar.value, locale.value, useStrictISO);
         }
 
         emitUpdate?.(formattedOutput);
@@ -177,7 +180,7 @@ export function useDateTimePicker(
      * 監聽外部值變化 一律嘗試轉換成 SimpleDateValue
      */
     watch(() => modelValue, (newValue) => {
-        const parsedDate = parseInputToSimpleDate(newValue, locale, calendar);
+        const parsedDate = parseInputToSimpleDate(newValue, locale.value, calendar.value);
 
         if (newValue && !parsedDate) {
             // 有輸入但解析失敗
@@ -417,7 +420,7 @@ export function useDateTimePicker(
         isDisabled,
 
         // 日曆系統相關
-        calendar: ref(calendar),
+        calendar: calendar,
 
         // 從各個 composables 暴露的狀態
         ...validation,

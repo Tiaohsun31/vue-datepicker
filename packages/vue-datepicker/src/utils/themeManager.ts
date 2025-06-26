@@ -188,31 +188,100 @@ class ThemeManager {
             return;
         }
 
-        // 檢查是否有全域 CSS 變數覆寫
-        const rootStyle = getComputedStyle(document.documentElement);
-        const hasGlobalOverride = rootStyle.getPropertyValue('--color-vdt-theme-500').trim() !== '';
+        const colorShades = getColorShades(state.color);
 
-        // 如果有全域覆寫，就不設置內聯樣式
-        if (hasGlobalOverride) {
-            // 清除現有的內聯樣式
-            const colorShades = getColorShades(state.color);
+        // 檢查用戶是否有 CSS 覆蓋（通過檢查計算樣式與預期值的差異）
+        const hasUserOverride = this.checkForUserOverride(container, colorShades);
+
+        if (hasUserOverride) {
+            // 用戶有 CSS 覆蓋，清除內聯樣式讓 CSS 生效
             Object.keys(colorShades).forEach(shade => {
                 container.style.removeProperty(`--color-vdt-theme-${shade}`);
             });
-            return;
+        } else {
+            // 沒有用戶覆蓋，設置內聯樣式
+            Object.entries(colorShades).forEach(([shade, value]) => {
+                container.style.setProperty(`--color-vdt-theme-${shade}`, value);
+            });
         }
-
-        // 否則照常設置內聯樣式
-        const colorShades = getColorShades(state.color);
-        Object.entries(colorShades).forEach(([shade, value]) => {
-            container.style.setProperty(`--color-vdt-theme-${shade}`, value);
-        });
 
         // 動態更新主題色變數（僅在該容器內）
         // const colorShades = getColorShades(state.color);
         // Object.entries(colorShades).forEach(([shade, value]) => {
         //     container.style.setProperty(`--color-vdt-theme-${shade}`, value);
         // });
+    }
+
+    /**
+     * 檢查用戶是否有 CSS 覆蓋
+     */
+    private checkForUserOverride(container: HTMLElement, expectedShades: Record<string, string>): boolean {
+        // 臨時清除內聯樣式以檢查 CSS 設定
+        const inlineBackup: Record<string, string> = {};
+
+        // 備份並清除現有內聯樣式
+        Object.keys(expectedShades).forEach(shade => {
+            const property = `--color-vdt-theme-${shade}`;
+            inlineBackup[property] = container.style.getPropertyValue(property);
+            container.style.removeProperty(property);
+        });
+
+        // 檢查計算樣式
+        const computedStyle = getComputedStyle(container);
+        const theme500FromCSS = computedStyle.getPropertyValue('--color-vdt-theme-500').trim();
+
+        // 恢復內聯樣式
+        Object.entries(inlineBackup).forEach(([property, value]) => {
+            if (value) {
+                container.style.setProperty(property, value);
+            }
+        });
+
+        // 如果 CSS 中沒有值，肯定沒有覆蓋
+        if (!theme500FromCSS) return false;
+
+        // 預設 violet 500 值
+        const defaultViolet500 = 'oklch(60.6% 0.25 292.717)';
+        const expectedValue = expectedShades['500'];
+
+        // 使用數值比較
+        const isDefaultColor = this.isOklchEqual(theme500FromCSS, defaultViolet500);
+        const isExpectedColor = this.isOklchEqual(theme500FromCSS, expectedValue);
+
+        // 如果既不是預設值也不是期待值，才認為是用戶覆蓋
+        const hasOverride = !isDefaultColor && !isExpectedColor;
+
+        return hasOverride;
+    }
+
+    /**
+     * 解析 OKLCH 值為數值以便比較
+     */
+    private parseOklchForComparison(color: string): { l: number, c: number, h: number } | null {
+        const match = color.match(/oklch\(\s*([0-9.]+)%?\s+([0-9.]+)\s+([0-9.]+)\s*\)/);
+        if (!match) return null;
+
+        return {
+            l: parseFloat(match[1]),
+            c: parseFloat(match[2]),
+            h: parseFloat(match[3])
+        };
+    }
+
+    /**
+     * 比較兩個 OKLCH 顏色是否相等（容許小數點誤差）
+     */
+    private isOklchEqual(color1: string, color2: string, tolerance = 0.001): boolean {
+        const parsed1 = this.parseOklchForComparison(color1);
+        const parsed2 = this.parseOklchForComparison(color2);
+
+        if (!parsed1 || !parsed2) {
+            return color1.trim() === color2.trim();
+        }
+
+        return Math.abs(parsed1.l - parsed2.l) < tolerance &&
+            Math.abs(parsed1.c - parsed2.c) < tolerance &&
+            Math.abs(parsed1.h - parsed2.h) < tolerance;
     }
 
     /**

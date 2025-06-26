@@ -2,6 +2,9 @@ import type { LocaleMessages } from '@/types/locale';
 
 export const enUSLocaleMessages: LocaleMessages = {
     error: {
+        calendar: {
+            unsupported: 'Unsupported calendar',
+        },
         date: {
             required: 'Please select a date',
             invalid: 'Invalid date',

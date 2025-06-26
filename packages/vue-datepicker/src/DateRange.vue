@@ -361,13 +361,17 @@ watch(() => props.locale, (newLocale) => {
     }
 }, { immediate: true });
 
+watch(() => props.calendar, (newCalendar) => {
+    if (!CalendarUtils.isCalendarSupported(newCalendar)) {
+        formatErrors.value.calendar = 'calendar.unsupported';
+    } else {
+        delete formatErrors.value.calendar;
+    }
+}, { immediate: true });
+
 onBeforeMount(() => {
     // 初始化語言環境
     setLocale(props.locale);
-
-    if (!CalendarUtils.isCalendarSupported(props.calendar)) {
-        formatErrors.value.calendar = `不支援的日曆系統: "${props.calendar}"`;
-    }
 });
 
 // 公開方法

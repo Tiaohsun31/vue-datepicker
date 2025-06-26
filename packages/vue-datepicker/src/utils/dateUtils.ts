@@ -184,7 +184,6 @@ export function formatOutput(
     useStrictISO: boolean = false
 ): DateTimeInput {
     if (!date) return null;
-
     try {
         switch (outputType) {
             case 'iso':

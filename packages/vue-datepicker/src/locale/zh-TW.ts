@@ -2,6 +2,9 @@ import type { LocaleMessages } from '@/types/locale';
 
 export const zhTWLocaleMessages: LocaleMessages = {
     error: {
+        calendar: {
+            unsupported: '不支援的日曆',
+        },
         date: {
             required: '請選擇日期',
             invalid: '無效的日期',

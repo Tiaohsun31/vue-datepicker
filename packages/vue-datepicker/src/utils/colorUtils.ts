@@ -51,11 +51,15 @@ export function hexToRgb(hex: string): RgbColor {
         hex = hex.split('').map(c => c + c).join('');
     }
 
-    const r = parseInt(hex.slice(0, 2), 16) / 255;
-    const g = parseInt(hex.slice(2, 4), 16) / 255;
-    const b = parseInt(hex.slice(4, 6), 16) / 255;
+    const rVal = parseInt(hex.slice(0, 2), 16);
+    const gVal = parseInt(hex.slice(2, 4), 16);
+    const bVal = parseInt(hex.slice(4, 6), 16);
 
-    return { r, g, b };
+    return {
+        r: rVal / 255,
+        g: gVal / 255,
+        b: bVal / 255
+    };
 }
 
 /**
@@ -65,22 +69,22 @@ export function parseRgb(color: string): RgbColor | null {
     // 處理 rgb(255, 0, 0) 格式
     const rgbMatch = color.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
     if (rgbMatch) {
-        const [_, r, g, b] = rgbMatch.map(Number);
+        const [_, rVal, gVal, bVal] = rgbMatch.map(Number);
         return {
-            r: Math.max(0, Math.min(255, r)) / 255,
-            g: Math.max(0, Math.min(255, g)) / 255,
-            b: Math.max(0, Math.min(255, b)) / 255
+            r: Math.max(0, Math.min(255, rVal)) / 255,
+            g: Math.max(0, Math.min(255, gVal)) / 255,
+            b: Math.max(0, Math.min(255, bVal)) / 255
         };
     }
 
     // 處理 rgba(255, 0, 0, 0.5) 格式
     const rgbaMatch = color.match(/^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*([0-9]*\.?[0-9]+)\s*\)$/);
     if (rgbaMatch) {
-        const [_, r, g, b] = rgbaMatch.map(Number);
+        const [_, rVal, gVal, bVal] = rgbaMatch.map(Number);
         return {
-            r: Math.max(0, Math.min(255, r)) / 255,
-            g: Math.max(0, Math.min(255, g)) / 255,
-            b: Math.max(0, Math.min(255, b)) / 255
+            r: Math.max(0, Math.min(255, rVal)) / 255,
+            g: Math.max(0, Math.min(255, gVal)) / 255,
+            b: Math.max(0, Math.min(255, bVal)) / 255
         };
     }
 

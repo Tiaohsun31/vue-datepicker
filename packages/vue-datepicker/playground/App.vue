@@ -13,6 +13,10 @@
             <DatePicker data-testid="roc-date-picker" v-model="rocDate" calendar="roc" locale="zh-TW"
                 date-format="ROC-YYYY-MM-DD" time-format="A HH時mm分" />
 
+            <!-- 使用roc日期選擇器並啟用時間 但不使用插件 -->
+            <DatePicker v-model="rocDate1" calendar="roc" locale="zh-TW" :showTime="true" output-type="custom"
+                customDefaultTime="00:00:00" />
+
             <!-- 自定義格式 -->
             {{ dateTime }}
             <DatePicker v-model="dateTime" date-format="DD/MM/YYYY" output-type="custom"></DatePicker>
@@ -98,9 +102,11 @@ import { ref } from 'vue';
 import DatePicker from '@/DatePicker.vue';
 import DateRange from '@/DateRange.vue';
 import type { OutputType } from '@/types/main';
+import { RocFormatPlugin } from '@tiaohsun/vue-datepicker';
 
 // 民國113年6月15日
-const rocDate = ref('民國114年06月18日');
+const rocDate = ref(null);
+const rocDate1 = ref(null);
 const dateTime = ref(''); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
 
@@ -138,4 +144,54 @@ const darkSelectedDate = ref({
 const locale = ref('zh-TW');
 const calendar = ref('gregory');
 const outputType = ref<OutputType>('iso');
+
+
+
+const rocPlugin = new RocFormatPlugin();
+
+// 檢查是否可以解析輸入
+const canParse = rocPlugin.canParseInput("民國113年12月25日");
+console.log(canParse); // true
+
+// 解析輸入
+const parsed = rocPlugin.parseInput("民國113年12月25日", "zh-TW");
+console.log(parsed);
+// { year: 2024, month: 12, day: 25 }
+
+// 格式化輸出
+const date = {
+    year: 2024,
+    month: 12,
+    day: 25,
+    hour: 14,
+    minute: 30,
+    second: 0,
+};
+const formatted = rocPlugin.format(
+    date,
+    "ROC-YYYY-MM-DD HH時mm分ss秒",
+    "zh-TW"
+);
+console.log(formatted);
+// 民國113年12月25日 14時30分00秒
+
+const isSupported = rocPlugin.supportsFormat("ROC-YYYY-MM-DD");
+console.log(isSupported); // true
+
+const isNotSupported = rocPlugin.supportsFormat("YYYY-MM-DD");
+console.log(isNotSupported); // false
+
+// 無效輸入處理
+const invalidInput = rocPlugin.parseInput("無效日期", "zh-TW");
+console.log(invalidInput); // null
+
+// 超出範圍的年份
+const outOfRange = rocPlugin.parseInput("民國300年01月01日", "zh-TW");
+console.log(outOfRange); // null
+
+// 無效日期（如2月30日）
+const invalidDate = rocPlugin.parseInput("民國113年02月30日", "zh-TW");
+console.log(invalidDate); // null
+
+
 </script>

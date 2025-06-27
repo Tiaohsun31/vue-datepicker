@@ -323,7 +323,7 @@ var import_dayjs = __toESM(require_dayjs_min());
 var Zr = Object.defineProperty;
 var Gr = (r, e, t) => e in r ? Zr(r, e, { enumerable: true, configurable: true, writable: true, value: t }) : r[e] = t;
 var be = (r, e, t) => Gr(r, typeof e != "symbol" ? e + "" : e, t);
-function yt(r) {
+function gt(r) {
   return r && r.__esModule && Object.prototype.hasOwnProperty.call(r, "default") ? r.default : r;
 }
 var Rt = { exports: {} };
@@ -365,16 +365,16 @@ function rn() {
             S === void 0 && (S = "");
             var T = S.match(a);
             if (!T) return null;
-            var u = ("" + T[0]).match(n) || ["-", 0, 0], y = u[0], $ = 60 * +u[1] + +u[2];
-            return $ === 0 ? 0 : y === "+" ? $ : -$;
+            var u = ("" + T[0]).match(n) || ["-", 0, 0], g = u[0], $ = 60 * +u[1] + +u[2];
+            return $ === 0 ? 0 : g === "+" ? $ : -$;
           }(h), h === null)) return this;
-          var b = Math.abs(h) <= 16 ? 60 * h : h, g = this;
-          if (f) return g.$offset = b, g.$u = h === 0, g;
+          var b = Math.abs(h) <= 16 ? 60 * h : h, y = this;
+          if (f) return y.$offset = b, y.$u = h === 0, y;
           if (h !== 0) {
             var x = this.$u ? this.toDate().getTimezoneOffset() : -1 * this.utcOffset();
-            (g = this.local().add(b + x, t)).$offset = b, g.$x.$localOffset = x;
-          } else g = this.utc();
-          return g;
+            (y = this.local().add(b + x, t)).$offset = b, y.$x.$localOffset = x;
+          } else y = this.utc();
+          return y;
         };
         var m = i.format;
         i.format = function(h) {
@@ -397,15 +397,15 @@ function rn() {
         var M = i.diff;
         i.diff = function(h, f, d) {
           if (h && this.$u === h.$u) return M.call(this, h, f, d);
-          var b = this.local(), g = s(h).local();
-          return M.call(b, g, f, d);
+          var b = this.local(), y = s(h).local();
+          return M.call(b, y, f, d);
         };
       };
     });
   }(Rt)), Rt.exports;
 }
 var nn = rn();
-var on = yt(nn);
+var on = gt(nn);
 var Et = { exports: {} };
 var ln = Et.exports;
 var Ia;
@@ -420,23 +420,23 @@ function sn() {
           M === void 0 && (M = {});
           var h = new Date(m), f = function(d, b) {
             b === void 0 && (b = {});
-            var g = b.timeZoneName || "short", x = d + "|" + g, S = a[x];
-            return S || (S = new Intl.DateTimeFormat("en-US", { hour12: false, timeZone: d, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: g }), a[x] = S), S;
+            var y = b.timeZoneName || "short", x = d + "|" + y, S = a[x];
+            return S || (S = new Intl.DateTimeFormat("en-US", { hour12: false, timeZone: d, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: y }), a[x] = S), S;
           }(w, M);
           return f.formatToParts(h);
         }, c = function(m, w) {
           for (var M = i(m, w), h = [], f = 0; f < M.length; f += 1) {
-            var d = M[f], b = d.type, g = d.value, x = t[b];
-            x >= 0 && (h[x] = parseInt(g, 10));
+            var d = M[f], b = d.type, y = d.value, x = t[b];
+            x >= 0 && (h[x] = parseInt(y, 10));
           }
-          var S = h[3], T = S === 24 ? 0 : S, u = h[0] + "-" + h[1] + "-" + h[2] + " " + T + ":" + h[4] + ":" + h[5] + ":000", y = +m;
-          return (l.utc(u).valueOf() - (y -= y % 1e3)) / 6e4;
+          var S = h[3], T = S === 24 ? 0 : S, u = h[0] + "-" + h[1] + "-" + h[2] + " " + T + ":" + h[4] + ":" + h[5] + ":000", g = +m;
+          return (l.utc(u).valueOf() - (g -= g % 1e3)) / 6e4;
         }, v = o.prototype;
         v.tz = function(m, w) {
           m === void 0 && (m = s);
-          var M, h = this.utcOffset(), f = this.toDate(), d = f.toLocaleString("en-US", { timeZone: m }), b = Math.round((f - new Date(d)) / 1e3 / 60), g = 15 * -Math.round(f.getTimezoneOffset() / 15) - b;
-          if (!Number(g)) M = this.utcOffset(0, w);
-          else if (M = l(d, { locale: this.$L }).$set("millisecond", this.$ms).utcOffset(g, true), w) {
+          var M, h = this.utcOffset(), f = this.toDate(), d = f.toLocaleString("en-US", { timeZone: m }), b = Math.round((f - new Date(d)) / 1e3 / 60), y = 15 * -Math.round(f.getTimezoneOffset() / 15) - b;
+          if (!Number(y)) M = this.utcOffset(0, w);
+          else if (M = l(d, { locale: this.$L }).$set("millisecond", this.$ms).utcOffset(y, true), w) {
             var x = M.utcOffset();
             M = M.add(h - x, "minute");
           }
@@ -455,12 +455,12 @@ function sn() {
         }, l.tz = function(m, w, M) {
           var h = M && w, f = M || w || s, d = c(+l(), f);
           if (typeof m != "string") return l(m).tz(f);
-          var b = function(T, u, y) {
-            var $ = T - 60 * u * 1e3, N = c($, y);
-            if (u === N) return [$, u];
-            var H = c($ -= 60 * (N - u) * 1e3, y);
-            return N === H ? [$, N] : [T - 60 * Math.min(N, H) * 1e3, Math.max(N, H)];
-          }(l.utc(m, h).valueOf(), d, f), g = b[0], x = b[1], S = l(g).utcOffset(x);
+          var b = function(T, u, g) {
+            var $ = T - 60 * u * 1e3, H = c($, g);
+            if (u === H) return [$, u];
+            var L = c($ -= 60 * (H - u) * 1e3, g);
+            return H === L ? [$, H] : [T - 60 * Math.min(H, L) * 1e3, Math.max(H, L)];
+          }(l.utc(m, h).valueOf(), d, f), y = b[0], x = b[1], S = l(y).utcOffset(x);
           return S.$x.$timezone = f, S;
         }, l.tz.guess = function() {
           return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -472,7 +472,7 @@ function sn() {
   }(Et)), Et.exports;
 }
 var un = sn();
-var cn = yt(un);
+var cn = gt(un);
 var It = { exports: {} };
 var dn = It.exports;
 var Oa;
@@ -490,16 +490,16 @@ function fn() {
       }, p = [/[+-]\d\d:?(\d\d)?|Z/, function(f) {
         (this.zone || (this.zone = {})).offset = function(d) {
           if (!d || d === "Z") return 0;
-          var b = d.match(/([+-]|\d\d)/g), g = 60 * b[1] + (+b[2] || 0);
-          return g === 0 ? 0 : b[0] === "+" ? -g : g;
+          var b = d.match(/([+-]|\d\d)/g), y = 60 * b[1] + (+b[2] || 0);
+          return y === 0 ? 0 : b[0] === "+" ? -y : y;
         }(f);
       }], m = function(f) {
         var d = i[f];
         return d && (d.indexOf ? d : d.s.concat(d.f));
       }, w = function(f, d) {
-        var b, g = i.meridiem;
-        if (g) {
-          for (var x = 1; x <= 24; x += 1) if (f.indexOf(g(x, 0, d)) > -1) {
+        var b, y = i.meridiem;
+        if (y) {
+          for (var x = 1; x <= 24; x += 1) if (f.indexOf(y(x, 0, d)) > -1) {
             b = x > 12;
             break;
           }
@@ -519,10 +519,10 @@ function fn() {
         this.milliseconds = +f;
       }], s: [l, v("seconds")], ss: [l, v("seconds")], m: [l, v("minutes")], mm: [l, v("minutes")], H: [l, v("hours")], h: [l, v("hours")], HH: [l, v("hours")], hh: [l, v("hours")], D: [l, v("day")], DD: [o, v("day")], Do: [s, function(f) {
         var d = i.ordinal, b = f.match(/\d+/);
-        if (this.day = b[0], d) for (var g = 1; g <= 31; g += 1) d(g).replace(/\[|\]/g, "") === f && (this.day = g);
+        if (this.day = b[0], d) for (var y = 1; y <= 31; y += 1) d(y).replace(/\[|\]/g, "") === f && (this.day = y);
       }], w: [l, v("week")], ww: [o, v("week")], M: [l, v("month")], MM: [o, v("month")], MMM: [s, function(f) {
-        var d = m("months"), b = (m("monthsShort") || d.map(function(g) {
-          return g.slice(0, 3);
+        var d = m("months"), b = (m("monthsShort") || d.map(function(y) {
+          return y.slice(0, 3);
         })).indexOf(f) + 1;
         if (b < 1) throw new Error();
         this.month = b % 12 || b;
@@ -536,22 +536,22 @@ function fn() {
       function h(f) {
         var d, b;
         d = f, b = i && i.formats;
-        for (var g = (f = d.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, function(N, H, _) {
+        for (var y = (f = d.replace(/(\[[^\]]+])|(LTS?|l{1,4}|L{1,4})/g, function(H, L, _) {
           var z = _ && _.toUpperCase();
-          return H || b[_] || t[_] || b[z].replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, function(re, X, I) {
+          return L || b[_] || t[_] || b[z].replace(/(\[[^\]]+])|(MMMM|MM|DD|dddd)/g, function(re, X, I) {
             return X || I.slice(1);
           });
-        })).match(a), x = g.length, S = 0; S < x; S += 1) {
-          var T = g[S], u = M[T], y = u && u[0], $ = u && u[1];
-          g[S] = $ ? { regex: y, parser: $ } : T.replace(/^\[|\]$/g, "");
+        })).match(a), x = y.length, S = 0; S < x; S += 1) {
+          var T = y[S], u = M[T], g = u && u[0], $ = u && u[1];
+          y[S] = $ ? { regex: g, parser: $ } : T.replace(/^\[|\]$/g, "");
         }
-        return function(N) {
-          for (var H = {}, _ = 0, z = 0; _ < x; _ += 1) {
-            var re = g[_];
+        return function(H) {
+          for (var L = {}, _ = 0, z = 0; _ < x; _ += 1) {
+            var re = y[_];
             if (typeof re == "string") z += re.length;
             else {
-              var X = re.regex, I = re.parser, R = N.slice(z), D = X.exec(R)[0];
-              I.call(H, D), N = N.replace(D, "");
+              var X = re.regex, I = re.parser, R = H.slice(z), D = X.exec(R)[0];
+              I.call(L, D), H = H.replace(D, "");
             }
           }
           return function(U) {
@@ -560,32 +560,32 @@ function fn() {
               var te = U.hours;
               P ? te < 12 && (U.hours += 12) : te === 12 && (U.hours = 0), delete U.afternoon;
             }
-          }(H), H;
+          }(L), L;
         };
       }
       return function(f, d, b) {
         b.p.customParseFormat = true, f && f.parseTwoDigitYear && (c = f.parseTwoDigitYear);
-        var g = d.prototype, x = g.parse;
-        g.parse = function(S) {
-          var T = S.date, u = S.utc, y = S.args;
+        var y = d.prototype, x = y.parse;
+        y.parse = function(S) {
+          var T = S.date, u = S.utc, g = S.args;
           this.$u = u;
-          var $ = y[1];
+          var $ = g[1];
           if (typeof $ == "string") {
-            var N = y[2] === true, H = y[3] === true, _ = N || H, z = y[2];
-            H && (z = y[2]), i = this.$locale(), !N && z && (i = b.Ls[z]), this.$d = function(R, D, U, P) {
+            var H = g[2] === true, L = g[3] === true, _ = H || L, z = g[2];
+            L && (z = g[2]), i = this.$locale(), !H && z && (i = b.Ls[z]), this.$d = function(R, D, U, P) {
               try {
                 if (["x", "X"].indexOf(D) > -1) return new Date((D === "X" ? 1e3 : 1) * R);
-                var te = h(D)(R), ce = te.year, le = te.month, Y = te.day, k = te.hours, q = te.minutes, ee = te.seconds, J = te.milliseconds, A = te.zone, K = te.week, ne = /* @__PURE__ */ new Date(), ye = Y || (ce || le ? 1 : ne.getDate()), V = ce || ne.getFullYear(), ae = 0;
+                var te = h(D)(R), ce = te.year, le = te.month, Y = te.day, k = te.hours, N = te.minutes, ee = te.seconds, J = te.milliseconds, A = te.zone, K = te.week, ne = /* @__PURE__ */ new Date(), ge = Y || (ce || le ? 1 : ne.getDate()), V = ce || ne.getFullYear(), ae = 0;
                 ce && !le || (ae = le > 0 ? le - 1 : ne.getMonth());
-                var $e, E = k || 0, Z = q || 0, ie = ee || 0, Q = J || 0;
-                return A ? new Date(Date.UTC(V, ae, ye, E, Z, ie, Q + 60 * A.offset * 1e3)) : U ? new Date(Date.UTC(V, ae, ye, E, Z, ie, Q)) : ($e = new Date(V, ae, ye, E, Z, ie, Q), K && ($e = P($e).week(K).toDate()), $e);
+                var $e, E = k || 0, Z = N || 0, ie = ee || 0, Q = J || 0;
+                return A ? new Date(Date.UTC(V, ae, ge, E, Z, ie, Q + 60 * A.offset * 1e3)) : U ? new Date(Date.UTC(V, ae, ge, E, Z, ie, Q)) : ($e = new Date(V, ae, ge, E, Z, ie, Q), K && ($e = P($e).week(K).toDate()), $e);
               } catch {
                 return /* @__PURE__ */ new Date("");
               }
             }(T, $, u, b), this.init(), z && z !== true && (this.$L = this.locale(z).$L), _ && T != this.format($) && (this.$d = /* @__PURE__ */ new Date("")), i = {};
           } else if ($ instanceof Array) for (var re = $.length, X = 1; X <= re; X += 1) {
-            y[1] = $[X - 1];
-            var I = b.apply(this, y);
+            g[1] = $[X - 1];
+            var I = b.apply(this, g);
             if (I.isValid()) {
               this.$d = I.$d, this.$L = I.$L, this.init();
               break;
@@ -599,7 +599,7 @@ function fn() {
   }(It)), It.exports;
 }
 var mn = fn();
-var ur = yt(mn);
+var ur = gt(mn);
 var Ot = { exports: {} };
 var hn = Ot.exports;
 var Va;
@@ -628,26 +628,26 @@ function vn() {
   }(Ot)), Ot.exports;
 }
 var pn = vn();
-var gn = yt(pn);
+var yn = gt(pn);
 var Vt = { exports: {} };
-var yn = Vt.exports;
+var gn = Vt.exports;
 var Fa;
 function $n() {
   return Fa || (Fa = 1, function(r, e) {
     (function(t, a) {
       r.exports = a();
-    })(yn, function() {
+    })(gn, function() {
       return function(t, a, n) {
         var o = a.prototype, l = function(p) {
           return p && (p.indexOf ? p : p.s);
         }, s = function(p, m, w, M, h) {
-          var f = p.name ? p : p.$locale(), d = l(f[m]), b = l(f[w]), g = d || b.map(function(S) {
+          var f = p.name ? p : p.$locale(), d = l(f[m]), b = l(f[w]), y = d || b.map(function(S) {
             return S.slice(0, M);
           });
-          if (!h) return g;
+          if (!h) return y;
           var x = f.weekStart;
-          return g.map(function(S, T) {
-            return g[(T + (x || 0)) % 7];
+          return y.map(function(S, T) {
+            return y[(T + (x || 0)) % 7];
           });
         }, i = function() {
           return n.Ls[n.locale()];
@@ -710,7 +710,7 @@ function $n() {
   }(Vt)), Vt.exports;
 }
 var Dn = $n();
-var bn = yt(Dn);
+var bn = gt(Dn);
 import_dayjs.default.extend(ur);
 var Aa = {
   "en-US": ["MM/DD/YYYY", "M/D/YYYY"],
@@ -839,15 +839,15 @@ var cr = 1721426;
 function Je(r, e, t, a) {
   e = $t(r, e);
   let n = e - 1, o = -2;
-  return t <= 2 ? o = 0 : Ue(e) && (o = -1), cr - 1 + 365 * n + Math.floor(n / 4) - Math.floor(n / 100) + Math.floor(n / 400) + Math.floor((367 * t - 362) / 12 + o + a);
+  return t <= 2 ? o = 0 : ze(e) && (o = -1), cr - 1 + 365 * n + Math.floor(n / 4) - Math.floor(n / 100) + Math.floor(n / 400) + Math.floor((367 * t - 362) / 12 + o + a);
 }
-function Ue(r) {
+function ze(r) {
   return r % 4 === 0 && (r % 100 !== 0 || r % 400 === 0);
 }
 function $t(r, e) {
   return r === "BC" ? 1 - e : e;
 }
-function Wt(r) {
+function jt(r) {
   let e = "AD";
   return r <= 0 && (e = "BC", r = 1 - r), [
     e,
@@ -886,8 +886,8 @@ var wn = {
 };
 var Ee = class {
   fromJulianDay(e) {
-    let t = e, a = t - cr, n = Math.floor(a / 146097), o = Ge(a, 146097), l = Math.floor(o / 36524), s = Ge(o, 36524), i = Math.floor(s / 1461), c = Ge(s, 1461), v = Math.floor(c / 365), p = n * 400 + l * 100 + i * 4 + v + (l !== 4 && v !== 4 ? 1 : 0), [m, w] = Wt(p), M = t - Je(m, w, 1, 1), h = 2;
-    t < Je(m, w, 3, 1) ? h = 0 : Ue(w) && (h = 1);
+    let t = e, a = t - cr, n = Math.floor(a / 146097), o = Ge(a, 146097), l = Math.floor(o / 36524), s = Ge(o, 36524), i = Math.floor(s / 1461), c = Ge(s, 1461), v = Math.floor(c / 365), p = n * 400 + l * 100 + i * 4 + v + (l !== 4 && v !== 4 ? 1 : 0), [m, w] = jt(p), M = t - Je(m, w, 1, 1), h = 2;
+    t < Je(m, w, 3, 1) ? h = 0 : ze(w) && (h = 1);
     let f = Math.floor(((M + h) * 12 + 373) / 367), d = t - Je(m, w, f, 1) + 1;
     return new ue(m, w, f, d);
   }
@@ -895,14 +895,14 @@ var Ee = class {
     return Je(e.era, e.year, e.month, e.day);
   }
   getDaysInMonth(e) {
-    return wn[Ue(e.year) ? "leapyear" : "standard"][e.month - 1];
+    return wn[ze(e.year) ? "leapyear" : "standard"][e.month - 1];
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getMonthsInYear(e) {
     return 12;
   }
   getDaysInYear(e) {
-    return Ue(e.year) ? 366 : 365;
+    return ze(e.year) ? 366 : 365;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getYearsInEra(e) {
@@ -1030,7 +1030,7 @@ function dr(r, e, t) {
   return o < 0 && (o += 7), o;
 }
 function xn(r) {
-  return He(Date.now(), r);
+  return qe(Date.now(), r);
 }
 function Yn(r) {
   return An(xn(r));
@@ -1045,7 +1045,7 @@ function La(r) {
   return r.hour * 36e5 + r.minute * 6e4 + r.second * 1e3 + r.millisecond;
 }
 var Qt = null;
-function ya() {
+function ga() {
   return Qt == null && (Qt = new Intl.DateTimeFormat().resolvedOptions().timeZone), Qt;
 }
 function Rn(r) {
@@ -1081,7 +1081,7 @@ function mr(r, e, t, a, n, o, l) {
 }
 function aa(r, e) {
   if (e === "UTC") return 0;
-  if (r > 0 && e === ya()) return new Date(r).getTimezoneOffset() * -6e4;
+  if (r > 0 && e === ga()) return new Date(r).getTimezoneOffset() * -6e4;
   let { year: t, month: a, day: n, hour: o, minute: l, second: s } = hr(r, e);
   return mr(t, a, n, o, l, s, 0) - Math.floor(r / 1e3) * 1e3;
 }
@@ -1127,7 +1127,7 @@ function Fn(r, e, t) {
 function Be(r, e, t = "compatible") {
   let a = ot(r);
   if (e === "UTC") return nt(a);
-  if (e === ya() && t === "compatible") {
+  if (e === ga() && t === "compatible") {
     a = Ce(a, new Ee());
     let i = /* @__PURE__ */ new Date(), c = $t(a.era, a.year);
     return i.setFullYear(c, a.month - 1, a.day), i.setHours(a.hour, a.minute, a.second, a.millisecond), i.getTime();
@@ -1158,9 +1158,9 @@ function Be(r, e, t = "compatible") {
 function vr(r, e, t = "compatible") {
   return new Date(Be(r, e, t));
 }
-function He(r, e) {
+function qe(r, e) {
   let t = aa(r, e), a = new Date(r + t), n = a.getUTCFullYear(), o = a.getUTCMonth() + 1, l = a.getUTCDate(), s = a.getUTCHours(), i = a.getUTCMinutes(), c = a.getUTCSeconds(), v = a.getUTCMilliseconds();
-  return new gt(n < 1 ? "BC" : "AD", n < 1 ? -n + 1 : n, o, l, e, t, s, i, c, v);
+  return new yt(n < 1 ? "BC" : "AD", n < 1 ? -n + 1 : n, o, l, e, t, s, i, c, v);
 }
 function An(r) {
   return new ue(r.calendar, r.era, r.year, r.month, r.day);
@@ -1177,10 +1177,10 @@ function Ce(r, e) {
   return a.calendar = e, a.era = t.era, a.year = t.year, a.month = t.month, a.day = t.day, Ke(a), a;
 }
 function Pn(r, e, t) {
-  if (r instanceof gt)
+  if (r instanceof yt)
     return r.timeZone === e ? r : Bn(r, e);
   let a = Be(r, e, t);
-  return He(a, e);
+  return qe(a, e);
 }
 function Ln(r) {
   let e = nt(r) - r.offset;
@@ -1188,7 +1188,7 @@ function Ln(r) {
 }
 function Bn(r, e) {
   let t = nt(r) - r.offset;
-  return Ce(He(t, e), r.calendar);
+  return Ce(qe(t, e), r.calendar);
 }
 var ut = 36e5;
 function Jt(r, e) {
@@ -1227,13 +1227,13 @@ function pr(r) {
 function Ke(r) {
   r.calendar.constrainDate && r.calendar.constrainDate(r), r.year = Math.max(1, Math.min(r.calendar.getYearsInEra(r), r.year)), pr(r);
 }
-function gr(r) {
+function yr(r) {
   let e = {};
   for (let t in r) typeof r[t] == "number" && (e[t] = -r[t]);
   return e;
 }
-function yr(r, e) {
-  return Jt(r, gr(e));
+function gr(r, e) {
+  return Jt(r, yr(e));
 }
 function $a(r, e) {
   let t = r.copy();
@@ -1264,18 +1264,18 @@ function Da(r, e, t, a) {
     case "era": {
       let s = r.calendar.getEras(), i = s.indexOf(r.era);
       if (i < 0) throw new Error("Invalid era: " + r.era);
-      i = qe(i, t, 0, s.length - 1, a == null ? void 0 : a.round), n.era = s[i], Ke(n);
+      i = Ne(i, t, 0, s.length - 1, a == null ? void 0 : a.round), n.era = s[i], Ke(n);
       break;
     }
     case "year":
       var o, l;
-      !((o = (l = n.calendar).isInverseEra) === null || o === void 0) && o.call(l, n) && (t = -t), n.year = qe(r.year, t, -1 / 0, 9999, a == null ? void 0 : a.round), n.year === -1 / 0 && (n.year = 1), n.calendar.balanceYearMonth && n.calendar.balanceYearMonth(n, r);
+      !((o = (l = n.calendar).isInverseEra) === null || o === void 0) && o.call(l, n) && (t = -t), n.year = Ne(r.year, t, -1 / 0, 9999, a == null ? void 0 : a.round), n.year === -1 / 0 && (n.year = 1), n.calendar.balanceYearMonth && n.calendar.balanceYearMonth(n, r);
       break;
     case "month":
-      n.month = qe(r.month, t, 1, r.calendar.getMonthsInYear(r), a == null ? void 0 : a.round);
+      n.month = Ne(r.month, t, 1, r.calendar.getMonthsInYear(r), a == null ? void 0 : a.round);
       break;
     case "day":
-      n.day = qe(r.day, t, 1, r.calendar.getDaysInMonth(r), a == null ? void 0 : a.round);
+      n.day = Ne(r.day, t, 1, r.calendar.getDaysInMonth(r), a == null ? void 0 : a.round);
       break;
     default:
       throw new Error("Unsupported field " + e);
@@ -1291,24 +1291,24 @@ function $r(r, e, t, a) {
         let i = o >= 12;
         l = i ? 12 : 0, s = i ? 23 : 11;
       }
-      n.hour = qe(o, t, l, s, a == null ? void 0 : a.round);
+      n.hour = Ne(o, t, l, s, a == null ? void 0 : a.round);
       break;
     }
     case "minute":
-      n.minute = qe(r.minute, t, 0, 59, a == null ? void 0 : a.round);
+      n.minute = Ne(r.minute, t, 0, 59, a == null ? void 0 : a.round);
       break;
     case "second":
-      n.second = qe(r.second, t, 0, 59, a == null ? void 0 : a.round);
+      n.second = Ne(r.second, t, 0, 59, a == null ? void 0 : a.round);
       break;
     case "millisecond":
-      n.millisecond = qe(r.millisecond, t, 0, 999, a == null ? void 0 : a.round);
+      n.millisecond = Ne(r.millisecond, t, 0, 999, a == null ? void 0 : a.round);
       break;
     default:
       throw new Error("Unsupported field " + e);
   }
   return n;
 }
-function qe(r, e, t, a, n = false) {
+function Ne(r, e, t, a, n = false) {
   if (n) {
     r += Math.sign(e), r < t && (r = a);
     let o = Math.abs(e);
@@ -1330,13 +1330,13 @@ function Dr(r, e) {
   } else
     t = nt(r) - r.offset;
   t += e.milliseconds || 0, t += (e.seconds || 0) * 1e3, t += (e.minutes || 0) * 6e4, t += (e.hours || 0) * 36e5;
-  let a = He(t, r.timeZone);
+  let a = qe(t, r.timeZone);
   return Ce(a, r.calendar);
 }
 function zn(r, e) {
-  return Dr(r, gr(e));
+  return Dr(r, yr(e));
 }
-function jn(r, e, t, a) {
+function Wn(r, e, t, a) {
   switch (e) {
     case "hour": {
       let n = 0, o = 23;
@@ -1349,13 +1349,13 @@ function jn(r, e, t, a) {
       }), new Ee()), i = [
         Be(s, r.timeZone, "earlier"),
         Be(s, r.timeZone, "later")
-      ].filter((M) => He(M, r.timeZone).day === s.day)[0], c = Ce(Lt(l, {
+      ].filter((M) => qe(M, r.timeZone).day === s.day)[0], c = Ce(Lt(l, {
         hour: o
       }), new Ee()), v = [
         Be(c, r.timeZone, "earlier"),
         Be(c, r.timeZone, "later")
-      ].filter((M) => He(M, r.timeZone).day === c.day).pop(), p = nt(r) - r.offset, m = Math.floor(p / ut), w = p % ut;
-      return p = qe(m, t, Math.floor(i / ut), Math.floor(v / ut), a == null ? void 0 : a.round) * ut + w, Ce(He(p, r.timeZone), r.calendar);
+      ].filter((M) => qe(M, r.timeZone).day === c.day).pop(), p = nt(r) - r.offset, m = Math.floor(p / ut), w = p % ut;
+      return p = Ne(m, t, Math.floor(i / ut), Math.floor(v / ut), a == null ? void 0 : a.round) * ut + w, Ce(qe(p, r.timeZone), r.calendar);
     }
     case "minute":
     case "second":
@@ -1366,17 +1366,17 @@ function jn(r, e, t, a) {
     case "month":
     case "day": {
       let n = Da(ot(r), e, t, a), o = Be(n, r.timeZone);
-      return Ce(He(o, r.timeZone), r.calendar);
+      return Ce(qe(o, r.timeZone), r.calendar);
     }
     default:
       throw new Error("Unsupported field " + e);
   }
 }
-function Wn(r, e, t) {
+function jn(r, e, t) {
   let a = ot(r), n = Lt($a(a, e), e);
   if (n.compare(a) === 0) return r;
   let o = Be(n, r.timeZone, t);
-  return Ce(He(o, r.timeZone), r.calendar);
+  return Ce(qe(o, r.timeZone), r.calendar);
 }
 function Jn(r) {
   return `${String(r.hour).padStart(2, "0")}:${String(r.minute).padStart(2, "0")}:${String(r.second).padStart(2, "0")}${r.millisecond ? String(r.millisecond / 1e3).slice(1) : ""}`;
@@ -1432,7 +1432,7 @@ var ue = class _ue {
   }
   /** Returns a new `CalendarDate` with the given duration subtracted from it. */
   subtract(e) {
-    return yr(this, e);
+    return gr(this, e);
   }
   /** Returns a new `CalendarDate` with the given fields set to the provided values. Other fields will be constrained accordingly. */
   set(e) {
@@ -1478,7 +1478,7 @@ var lt = class _lt {
   }
   /** Returns a new `CalendarDateTime` with the given duration subtracted from it. */
   subtract(e) {
-    return yr(this, e);
+    return gr(this, e);
   }
   /** Returns a new `CalendarDateTime` with the given fields set to the provided values. Other fields will be constrained accordingly. */
   set(e) {
@@ -1522,10 +1522,10 @@ var lt = class _lt {
   }
 };
 var Xn = /* @__PURE__ */ new WeakMap();
-var gt = class _gt {
+var yt = class _yt {
   /** Returns a copy of this date. */
   copy() {
-    return this.era ? new _gt(this.calendar, this.era, this.year, this.month, this.day, this.timeZone, this.offset, this.hour, this.minute, this.second, this.millisecond) : new _gt(this.calendar, this.year, this.month, this.day, this.timeZone, this.offset, this.hour, this.minute, this.second, this.millisecond);
+    return this.era ? new _yt(this.calendar, this.era, this.year, this.month, this.day, this.timeZone, this.offset, this.hour, this.minute, this.second, this.millisecond) : new _yt(this.calendar, this.year, this.month, this.day, this.timeZone, this.offset, this.hour, this.minute, this.second, this.millisecond);
   }
   /** Returns a new `ZonedDateTime` with the given duration added to it. */
   add(e) {
@@ -1537,14 +1537,14 @@ var gt = class _gt {
   }
   /** Returns a new `ZonedDateTime` with the given fields set to the provided values. Other fields will be constrained accordingly. */
   set(e, t) {
-    return Wn(this, e, t);
+    return jn(this, e, t);
   }
   /**
   * Returns a new `ZonedDateTime` with the given field adjusted by a specified amount.
   * When the resulting value reaches the limits of the field, it wraps around.
   */
   cycle(e, t, a) {
-    return jn(this, e, t, a);
+    return Wn(this, e, t, a);
   }
   /** Converts the date to a native JavaScript Date object. */
   toDate() {
@@ -1627,7 +1627,7 @@ var Ft = [
   1988,
   2018
 ];
-var Ne = [
+var Ue = [
   "meiji",
   "taisho",
   "showa",
@@ -1639,24 +1639,24 @@ function Na(r) {
   return e === -1 ? Xe.length - 1 : e === 0 ? 0 : e - 1;
 }
 function Zt(r) {
-  let e = Ft[Ne.indexOf(r.era)];
+  let e = Ft[Ue.indexOf(r.era)];
   if (!e) throw new Error("Unknown era: " + r.era);
   return new ue(r.year + e, r.month, r.day);
 }
 var to = class extends Ee {
   fromJulianDay(e) {
     let t = super.fromJulianDay(e), a = Na(t);
-    return new ue(this, Ne[a], t.year - Ft[a], t.month, t.day);
+    return new ue(this, Ue[a], t.year - Ft[a], t.month, t.day);
   }
   toJulianDay(e) {
     return super.toJulianDay(Zt(e));
   }
   balanceDate(e) {
     let t = Zt(e), a = Na(t);
-    Ne[a] !== e.era && (e.era = Ne[a], e.year = t.year - Ft[a]), this.constrainDate(e);
+    Ue[a] !== e.era && (e.era = Ue[a], e.year = t.year - Ft[a]), this.constrainDate(e);
   }
   constrainDate(e) {
-    let t = Ne.indexOf(e.era), a = eo[t];
+    let t = Ue.indexOf(e.era), a = eo[t];
     if (a != null) {
       let [n, o, l] = a, s = n - Ft[t];
       e.year = Math.max(1, Math.min(s, e.year)), e.year === s && (e.month = Math.min(o, e.month), e.month === o && (e.day = Math.min(l, e.day)));
@@ -1667,10 +1667,10 @@ var to = class extends Ee {
     }
   }
   getEras() {
-    return Ne;
+    return Ue;
   }
   getYearsInEra(e) {
-    let t = Ne.indexOf(e.era), a = Xe[t], n = Xe[t + 1];
+    let t = Ue.indexOf(e.era), a = Xe[t], n = Xe[t + 1];
     if (n == null)
       return 9999 - a[0] + 1;
     let o = n[0] - a[0];
@@ -1693,7 +1693,7 @@ var to = class extends Ee {
 };
 function Ua(r) {
   if (r.year === 1) {
-    let e = Ne.indexOf(r.era);
+    let e = Ue.indexOf(r.era);
     return Xe[e];
   }
 }
@@ -1721,14 +1721,14 @@ var ao = class extends Ee {
   }
 };
 function za(r) {
-  let [e, t] = Wt(r.year + Sr);
+  let [e, t] = jt(r.year + Sr);
   return new ue(e, t, r.month, r.day);
 }
 var Bt = 1911;
 function wr(r) {
   return r.era === "minguo" ? r.year + Bt : 1 - r.year + Bt;
 }
-function ja(r) {
+function Wa(r) {
   let e = r - Bt;
   return e > 0 ? [
     "minguo",
@@ -1740,11 +1740,11 @@ function ja(r) {
 }
 var ro = class extends Ee {
   fromJulianDay(e) {
-    let t = super.fromJulianDay(e), a = $t(t.era, t.year), [n, o] = ja(a);
+    let t = super.fromJulianDay(e), a = $t(t.era, t.year), [n, o] = Wa(a);
     return new ue(this, n, o, t.month, t.day);
   }
   toJulianDay(e) {
-    return super.toJulianDay(Wa(e));
+    return super.toJulianDay(ja(e));
   }
   getEras() {
     return [
@@ -1753,14 +1753,14 @@ var ro = class extends Ee {
     ];
   }
   balanceDate(e) {
-    let [t, a] = ja(wr(e));
+    let [t, a] = Wa(wr(e));
     e.era = t, e.year = a;
   }
   isInverseEra(e) {
     return e.era === "before_minguo";
   }
   getDaysInMonth(e) {
-    return super.getDaysInMonth(Wa(e));
+    return super.getDaysInMonth(ja(e));
   }
   getYearsInEra(e) {
     return e.era === "before_minguo" ? 9999 : 9999 - Bt;
@@ -1769,8 +1769,8 @@ var ro = class extends Ee {
     super(...e), this.identifier = "roc";
   }
 };
-function Wa(r) {
-  let [e, t] = Wt(wr(r));
+function ja(r) {
+  let [e, t] = jt(wr(r));
   return new ue(e, t, r.month, r.day);
 }
 var Ja = 1948320;
@@ -1821,7 +1821,7 @@ var Ka = 80;
 var oo = class extends Ee {
   fromJulianDay(e) {
     let t = super.fromJulianDay(e), a = t.year - Gt, n = e - Je(t.era, t.year, 1, 1), o;
-    n < Ka ? (a--, o = Ue(t.year - 1) ? 31 : 30, n += o + 155 + 90 + 10) : (o = Ue(t.year) ? 31 : 30, n -= Ka);
+    n < Ka ? (a--, o = ze(t.year - 1) ? 31 : 30, n += o + 155 + 90 + 10) : (o = ze(t.year) ? 31 : 30, n -= Ka);
     let l, s;
     if (n < o)
       l = 1, s = n + 1;
@@ -1832,11 +1832,11 @@ var oo = class extends Ee {
     return new ue(this, a, l, s);
   }
   toJulianDay(e) {
-    let t = e.year + Gt, [a, n] = Wt(t), o, l;
-    return Ue(n) ? (o = 31, l = Je(a, n, 3, 21)) : (o = 30, l = Je(a, n, 3, 22)), e.month === 1 ? l + e.day - 1 : (l += o + Math.min(e.month - 2, 5) * 31, e.month >= 8 && (l += (e.month - 7) * 30), l += e.day - 1, l);
+    let t = e.year + Gt, [a, n] = jt(t), o, l;
+    return ze(n) ? (o = 31, l = Je(a, n, 3, 21)) : (o = 30, l = Je(a, n, 3, 22)), e.month === 1 ? l + e.day - 1 : (l += o + Math.min(e.month - 2, 5) * 31, e.month >= 8 && (l += (e.month - 7) * 30), l += e.day - 1, l);
   }
   getDaysInMonth(e) {
-    return e.month === 1 && Ue(e.year + Gt) || e.month >= 2 && e.month <= 6 ? 31 : 30;
+    return e.month === 1 && ze(e.year + Gt) || e.month >= 2 && e.month <= 6 ? 31 : 30;
   }
   getYearsInEra() {
     return 9919;
@@ -1973,7 +1973,7 @@ var xr = 24 * Tr;
 var co = 29;
 var fo = 12 * Tr + 793;
 var mo = co * xr + fo;
-function We(r) {
+function je(r) {
   return Ge(r * 7 + 1, 19) < 7;
 }
 function Pt(r) {
@@ -2004,9 +2004,9 @@ function vo(r) {
   }
 }
 function kt(r, e) {
-  if (e >= 6 && !We(r) && e++, e === 4 || e === 7 || e === 9 || e === 11 || e === 13) return 29;
+  if (e >= 6 && !je(r) && e++, e === 4 || e === 7 || e === 9 || e === 11 || e === 13) return 29;
   let t = vo(r);
-  return e === 2 ? t === 2 ? 30 : 29 : e === 3 ? t === 0 ? 29 : 30 : e === 6 ? We(r) ? 30 : 0 : 30;
+  return e === 2 ? t === 2 ? 30 : 29 : e === 3 ? t === 0 ? 29 : 30 : e === 6 ? je(r) ? 30 : 0 : 30;
 }
 var po = class {
   fromJulianDay(e) {
@@ -2029,7 +2029,7 @@ var po = class {
     return kt(e.year, e.month);
   }
   getMonthsInYear(e) {
-    return We(e.year) ? 13 : 12;
+    return je(e.year) ? 13 : 12;
   }
   getDaysInYear(e) {
     return Yr(e.year);
@@ -2043,7 +2043,7 @@ var po = class {
     ];
   }
   balanceYearMonth(e, t) {
-    t.year !== e.year && (We(t.year) && !We(e.year) && t.month > 6 ? e.month-- : !We(t.year) && We(e.year) && t.month > 6 && e.month++);
+    t.year !== e.year && (je(t.year) && !je(e.year) && t.month > 6 ? e.month-- : !je(t.year) && je(e.year) && t.month > 6 && e.month++);
   }
   constructor() {
     this.identifier = "hebrew";
@@ -2100,7 +2100,7 @@ var ka = class {
     this.identifier = "ethiopic";
   }
 };
-var go = class extends ka {
+var yo = class extends ka {
   fromJulianDay(e) {
     let [t, a, n] = wa(la, e);
     return t += sa, new ue(this, "AA", t, a, n);
@@ -2117,7 +2117,7 @@ var go = class extends ka {
     super(...e), this.identifier = "ethioaa";
   }
 };
-var yo = class extends ka {
+var go = class extends ka {
   fromJulianDay(e) {
     let [t, a, n] = wa(tr, e), o = "CE";
     return t <= 0 && (o = "BCE", t = 1 - t), new ue(this, o, t, a, n);
@@ -2156,9 +2156,9 @@ function $o(r) {
     case "ethiopic":
       return new ka();
     case "ethioaa":
-      return new go();
-    case "coptic":
       return new yo();
+    case "coptic":
+      return new go();
     case "hebrew":
       return new po();
     case "indian":
@@ -2279,7 +2279,7 @@ function So(r, e) {
 import_dayjs.default.extend(on);
 import_dayjs.default.extend(cn);
 import_dayjs.default.extend(ur);
-import_dayjs.default.extend(gn);
+import_dayjs.default.extend(yn);
 import_dayjs.default.extend(bn);
 function tt() {
   const r = /* @__PURE__ */ new Date();
@@ -2291,7 +2291,7 @@ function tt() {
 }
 function wo(r) {
   try {
-    const e = ya(), t = Yn(e);
+    const e = ga(), t = Yn(e);
     if (r.calendar.identifier !== t.calendar.identifier) {
       const a = Ce(t, r.calendar);
       return r.compare(a) === 0;
@@ -2312,11 +2312,11 @@ function Ze() {
     second: r.getSeconds()
   };
 }
-function ze(r, e, t, a, n, o) {
+function He(r, e, t, a, n, o) {
   const l = { year: r, month: e, day: t };
   return a !== void 0 && (l.hour = a), n !== void 0 && (l.minute = n), o !== void 0 && (l.second = o), l;
 }
-function ge(r, e = "zh-TW", t = "gregory") {
+function ye(r, e = "zh-TW", t = "gregory") {
   if (!r) return null;
   try {
     if (Co(r))
@@ -2374,7 +2374,7 @@ function zt(r, e = "iso", t, a = false, n = "gregory", o = "zh-TW", l = false) {
     return console.error("formatOutput 失敗:", s), r;
   }
 }
-function jt(r, e) {
+function Wt(r, e) {
   const t = r.year * 1e4 + r.month * 100 + r.day, a = e.year * 1e4 + e.month * 100 + e.day;
   return t < a ? -1 : t > a ? 1 : 0;
 }
@@ -2394,7 +2394,7 @@ function ar(r, e) {
   return Math.ceil((a - t) / (1e3 * 60 * 60 * 24));
 }
 function ko() {
-  const r = Ze(), e = ze(r.year, r.month, 1, 0, 0, 0), t = r.month === 12 ? 1 : r.month + 1, a = r.month === 12 ? r.year + 1 : r.year, n = ze(a, t, 1), o = ia(n, -1);
+  const r = Ze(), e = He(r.year, r.month, 1, 0, 0, 0), t = r.month === 12 ? 1 : r.month + 1, a = r.month === 12 ? r.year + 1 : r.year, n = He(a, t, 1), o = ia(n, -1);
   return { start: e, end: o };
 }
 function To(r) {
@@ -2549,12 +2549,12 @@ var Vr = class {
   format(e, t, a) {
     if (!this.supportsFormat(t))
       throw new Error(`RocFormatPlugin 不支援格式: ${t}`);
-    const n = t.split(" "), o = n[0], l = n.slice(1).join(" "), s = this.formatDatePart(e, o, a);
-    if (l) {
-      const i = this.detectTimeFormat(l), c = this.formatTimePart(e, l, i);
-      return `${s} ${c}`;
+    const n = e.hour !== void 0 && e.hour !== null, o = t.split(" "), l = o[0], s = o.slice(1).join(" "), i = this.formatDatePart(e, l, a);
+    if (s && n) {
+      const c = this.detectTimeFormat(s), v = this.formatTimePart(e, s, c);
+      return `${i} ${v}`;
     }
-    return s;
+    return i;
   }
   /**
    * 透過格式字串偵測時間制式
@@ -2568,12 +2568,10 @@ var Vr = class {
   formatDatePart(e, t, a) {
     const n = e.year - this.YEAR_OFFSET, o = e.month, l = e.day, s = {
       "ROC-YYYY": `民國${n}年`,
-      "ROC-YY": `民國${n.toString().slice(-2)}年`,
       "ROC-YYYY-MM-DD": `民國${n}年${o.toString().padStart(2, "0")}月${l.toString().padStart(2, "0")}日`,
-      "ROC-YY-MM-DD": `民國${n.toString().slice(-2)}年${o.toString().padStart(2, "0")}月${l.toString().padStart(2, "0")}日`,
+      "ROC-YYYY/MM/DD": `民國${n}/${o.toString().padStart(2, "0")}/${l.toString().padStart(2, "0")}`,
       "ROC-NUM-YYYY-MM-DD": `${n}-${o.toString().padStart(2, "0")}-${l.toString().padStart(2, "0")}`,
-      "ROC-NUM-YY-MM-DD": `${n.toString().slice(-2)}-${o.toString().padStart(2, "0")}-${l.toString().padStart(2, "0")}`,
-      "ROC-YYYY/MM/DD": `民國${n}/${o.toString().padStart(2, "0")}/${l.toString().padStart(2, "0")}`
+      "ROC-NUM-YYYY/MM/DD": `${n}/${o.toString().padStart(2, "0")}/${l.toString().padStart(2, "0")}`
     };
     if (s[t])
       return s[t];
@@ -3120,10 +3118,10 @@ var Po = defineComponent({
       Y && Y instanceof HTMLInputElement ? h.value.set(k, Y) : h.value.delete(k);
     }, d = (Y) => h.value.get(Y), b = computed(() => {
       const Y = {};
-      return Object.entries(c.value).forEach(([k, q]) => {
-        Y[k] = q.key;
+      return Object.entries(c.value).forEach(([k, N]) => {
+        Y[k] = N.key;
       }), Y;
-    }), g = computed(() => Object.keys(c.value).length > 0), x = computed(() => Object.values(b.value)), S = computed(() => {
+    }), y = computed(() => Object.keys(c.value).length > 0), x = computed(() => Object.values(b.value)), S = computed(() => {
       const Y = n.dateFormat.toUpperCase(), k = [];
       return Y.split(/[^A-Z]+/).filter(Boolean).forEach((ee) => {
         ee.includes("Y") ? k.push("year") : ee.includes("M") ? k.push("month") : ee.includes("D") && k.push("day");
@@ -3131,8 +3129,8 @@ var Po = defineComponent({
     }), T = computed(() => {
       if (!l.value || !s.value || !i.value)
         return null;
-      const Y = l.value.padStart(4, "0"), k = s.value.padStart(2, "0"), q = i.value.padStart(2, "0");
-      return `${Y}-${k}-${q}`;
+      const Y = l.value.padStart(4, "0"), k = s.value.padStart(2, "0"), N = i.value.padStart(2, "0");
+      return `${Y}-${k}-${N}`;
     }), u = computed(() => {
       if (!T.value) return null;
       const Y = (0, import_dayjs.default)(T.value);
@@ -3140,24 +3138,24 @@ var Po = defineComponent({
     });
     watch(() => n.modelValue, (Y) => {
       if (m.value || (m.value = true), Y) {
-        const k = ge(Y);
+        const k = ye(Y);
         k && (l.value = k.year.toString(), s.value = k.month.toString().padStart(2, "0"), i.value = k.day.toString().padStart(2, "0"));
       } else
         l.value = "", s.value = "", i.value = "";
       Y || (M.value = null, w.value = false);
     }, { immediate: true });
-    const y = () => {
+    const g = () => {
       if (S.value.length === 0) return;
       const Y = S.value[0], k = d(Y);
       if (k && typeof k.focus == "function")
         try {
           k.focus();
-        } catch (q) {
-          console.warn("無法聚焦到輸入框:", q);
+        } catch (N) {
+          console.warn("無法聚焦到輸入框:", N);
         }
       else
-        for (const q of S.value) {
-          const ee = d(q);
+        for (const N of S.value) {
+          const ee = d(N);
           if (ee && typeof ee.focus == "function")
             try {
               ee.focus();
@@ -3171,51 +3169,51 @@ var Po = defineComponent({
       if (k && typeof k.focus == "function")
         try {
           k.focus();
-        } catch (q) {
-          console.warn(`無法聚焦到 ${Y} 輸入框:`, q);
+        } catch (N) {
+          console.warn(`無法聚焦到 ${Y} 輸入框:`, N);
         }
-    }, N = (Y, k) => {
-      const q = d(Y);
-      if (q)
+    }, H = (Y, k) => {
+      const N = d(Y);
+      if (N)
         try {
-          if (typeof q.focus == "function" && q.focus(), typeof q.setSelectionRange == "function") {
-            const ee = k === "end" ? q.value.length : 0;
-            q.setSelectionRange(ee, ee);
+          if (typeof N.focus == "function" && N.focus(), typeof N.setSelectionRange == "function") {
+            const ee = k === "end" ? N.value.length : 0;
+            N.setSelectionRange(ee, ee);
           }
         } catch (ee) {
           console.warn(`無法聚焦或設置游標位置到 ${Y} 輸入框:`, ee);
         }
-    }, H = (Y, k) => {
-      const q = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-      return k === 2 ? rr(Y) ? 29 : 28 : q[k];
+    }, L = (Y, k) => {
+      const N = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      return k === 2 ? rr(Y) ? 29 : 28 : N[k];
     }, _ = (Y, k) => {
       if (!k) return { valid: true };
-      const q = parseInt(k);
+      const N = parseInt(k);
       switch (Y) {
         case "year":
           if (k.length < 4) return { valid: true };
           const ee = n.maxDate ? (0, import_dayjs.default)(n.maxDate).year() : (/* @__PURE__ */ new Date()).getFullYear() + 50, J = n.minDate ? (0, import_dayjs.default)(n.minDate).year() : 1;
-          if (!at(k) || q < J || q > ee)
+          if (!at(k) || N < J || N > ee)
             return { valid: false, error: { key: "year.outOfRange", params: { min: J, max: ee } } };
-          if (s.value === "02" && i.value === "29" && !rr(q))
-            return { valid: false, error: { key: "year.notLeapYear", params: { year: q } } };
+          if (s.value === "02" && i.value === "29" && !rr(N))
+            return { valid: false, error: { key: "year.notLeapYear", params: { year: N } } };
           break;
         case "month":
-          if (!at(k) || q < 1 || q > 12)
+          if (!at(k) || N < 1 || N > 12)
             return { valid: false, error: { key: "month.outOfRange" } };
           if (i.value && l.value) {
-            const A = parseInt(l.value), K = H(A, q);
+            const A = parseInt(l.value), K = L(A, N);
             if (parseInt(i.value) > K)
               return { valid: false, error: { key: "day.notExistInMonth", params: { month: k, maxDays: K } } };
           }
           break;
         case "day":
-          if (!at(k) || q < 1 || q > 31)
+          if (!at(k) || N < 1 || N > 31)
             return { valid: false, error: { key: "day.outOfRange" } };
           if (l.value && s.value) {
-            const A = parseInt(l.value), K = parseInt(s.value), ne = H(A, K);
-            if (q > ne)
-              return K === 2 && q === 29 ? { valid: false, error: { key: "year.notLeapYear", params: { year: A } } } : { valid: false, error: { key: "day.notExistInMonth", params: { month: s.value, maxDays: ne } } };
+            const A = parseInt(l.value), K = parseInt(s.value), ne = L(A, K);
+            if (N > ne)
+              return K === 2 && N === 29 ? { valid: false, error: { key: "year.notLeapYear", params: { year: A } } } : { valid: false, error: { key: "day.notExistInMonth", params: { month: s.value, maxDays: ne } } };
           }
           break;
       }
@@ -3223,8 +3221,8 @@ var Po = defineComponent({
     }, z = () => {
       if (!m.value) return;
       c.value = {}, v.value = {};
-      const Y = _("year", l.value), k = _("month", s.value), q = _("day", i.value);
-      if (!Y.valid && Y.error && (c.value.year = Y.error, Y.error.params && (v.value.year = Y.error.params)), !k.valid && k.error && (c.value.month = k.error, k.error.params && (v.value.month = k.error.params)), !q.valid && q.error && (c.value.day = q.error, q.error.params && (v.value.day = q.error.params)), n.required && (l.value || (c.value.year = { key: "year.required" }), s.value || (c.value.month = { key: "month.required" }), i.value || (c.value.day = { key: "day.required" })), T.value && Object.keys(c.value).length === 0) {
+      const Y = _("year", l.value), k = _("month", s.value), N = _("day", i.value);
+      if (!Y.valid && Y.error && (c.value.year = Y.error, Y.error.params && (v.value.year = Y.error.params)), !k.valid && k.error && (c.value.month = k.error, k.error.params && (v.value.month = k.error.params)), !N.valid && N.error && (c.value.day = N.error, N.error.params && (v.value.day = N.error.params)), n.required && (l.value || (c.value.year = { key: "year.required" }), s.value || (c.value.month = { key: "month.required" }), i.value || (c.value.day = { key: "day.required" })), T.value && Object.keys(c.value).length === 0) {
         const ee = (0, import_dayjs.default)(T.value);
         if (!ee.isValid())
           c.value.day = { key: "day.invalid" };
@@ -3244,23 +3242,23 @@ var Po = defineComponent({
           J !== M.value && !w.value && (M.value = J, o("complete", u.value));
         }
       } else m.value && !l.value && !s.value && !i.value && (o("update:modelValue", null), M.value = null);
-      o("validation", !g.value, b.value, v.value);
+      o("validation", !y.value, b.value, v.value);
     }, re = () => {
       l.value = "", s.value = "", i.value = "", c.value = {};
     }, X = (Y) => {
-      const k = S.value.findIndex((ee) => ee === Y), q = k < S.value.length - 1 ? S.value[k + 1] : null;
-      q ? nextTick(() => {
-        $(q);
+      const k = S.value.findIndex((ee) => ee === Y), N = k < S.value.length - 1 ? S.value[k + 1] : null;
+      N ? nextTick(() => {
+        $(N);
       }) : z();
-    }, I = (Y, k, q, ee) => {
+    }, I = (Y, k, N, ee) => {
       const J = k.replace(/\D/g, "");
-      if (J.length === 1 && w.value && (w.value = false), J.length <= q) {
+      if (J.length === 1 && w.value && (w.value = false), J.length <= N) {
         if (ee && J.length === 1 && parseInt(J) > ee) {
           const A = J.padStart(2, "0");
           Y === "year" ? l.value = A : Y === "month" ? s.value = A : Y === "day" && (i.value = A), X(Y);
         } else
           Y === "year" ? l.value = J : Y === "month" ? s.value = J : Y === "day" && (i.value = J);
-        J.length === q && X(Y);
+        J.length === N && X(Y);
       }
     }, R = (Y) => {
       const k = Y.target;
@@ -3278,15 +3276,15 @@ var Po = defineComponent({
         if (k && typeof k.focus == "function")
           try {
             k.focus();
-            const q = k.value.length;
-            k.setSelectionRange(q, q);
-          } catch (q) {
-            console.warn("無法聚焦到最後一個輸入框:", q);
+            const N = k.value.length;
+            k.setSelectionRange(N, N);
+          } catch (N) {
+            console.warn("無法聚焦到最後一個輸入框:", N);
           }
       });
     }, te = (Y, k) => {
-      const q = Y.target, ee = S.value.findIndex((K) => K === k), J = ee > 0 ? S.value[ee - 1] : null, A = ee < S.value.length - 1 ? S.value[ee + 1] : null;
-      Y.key === "Backspace" && q.value === "" && J && (Y.preventDefault(), w.value = true, N(J, "end")), Y.key === "ArrowLeft" && q.selectionStart === 0 && J && (Y.preventDefault(), w.value = true, N(J, "end")), Y.key === "ArrowRight" && q.selectionStart === q.value.length && A && (Y.preventDefault(), w.value = true, N(A, "start")), Y.key === "Enter" && z();
+      const N = Y.target, ee = S.value.findIndex((K) => K === k), J = ee > 0 ? S.value[ee - 1] : null, A = ee < S.value.length - 1 ? S.value[ee + 1] : null;
+      Y.key === "Backspace" && N.value === "" && J && (Y.preventDefault(), w.value = true, H(J, "end")), Y.key === "ArrowLeft" && N.selectionStart === 0 && J && (Y.preventDefault(), w.value = true, H(J, "end")), Y.key === "ArrowRight" && N.selectionStart === N.value.length && A && (Y.preventDefault(), w.value = true, H(A, "start")), Y.key === "Enter" && z();
     }, ce = (Y) => {
       p.value = Y;
     }, le = (Y) => {
@@ -3298,13 +3296,13 @@ var Po = defineComponent({
         re(), o("update:modelValue", null);
       },
       getErrors: () => ({ ...c.value }),
-      hasErrors: () => g.value,
+      hasErrors: () => y.value,
       errorMessages: () => x.value,
-      focus: y,
+      focus: g,
       focusLast: P,
       setDate: (Y) => {
         if (Y) {
-          const k = ge(Y);
+          const k = ye(Y);
           k && (l.value = k.year.toString(), s.value = k.month.toString().padStart(2, "0"), i.value = k.day.toString().padStart(2, "0"), z());
         } else
           re(), o("update:modelValue", null);
@@ -3313,8 +3311,8 @@ var Po = defineComponent({
         w.value = false, M.value = null;
       }
     }), (Y, k) => (openBlock(), createElementBlock("div", Io, [
-      (openBlock(true), createElementBlock(Fragment, null, renderList(S.value, (q, ee) => (openBlock(), createElementBlock(Fragment, { key: q }, [
-        q === "year" ? withDirectives((openBlock(), createElementBlock("input", {
+      (openBlock(true), createElementBlock(Fragment, null, renderList(S.value, (N, ee) => (openBlock(), createElementBlock(Fragment, { key: N }, [
+        N === "year" ? withDirectives((openBlock(), createElementBlock("input", {
           key: 0,
           ref_for: true,
           ref: (J) => f(J, "year"),
@@ -3334,7 +3332,7 @@ var Po = defineComponent({
         }, null, 40, Oo)), [
           [vModelText, l.value],
           [a, 20]
-        ]) : q === "month" ? withDirectives((openBlock(), createElementBlock("input", {
+        ]) : N === "month" ? withDirectives((openBlock(), createElementBlock("input", {
           key: 1,
           ref_for: true,
           ref: (J) => f(J, "month"),
@@ -3354,7 +3352,7 @@ var Po = defineComponent({
         }, null, 40, Vo)), [
           [vModelText, s.value],
           [a, 20]
-        ]) : q === "day" ? withDirectives((openBlock(), createElementBlock("input", {
+        ]) : N === "day" ? withDirectives((openBlock(), createElementBlock("input", {
           key: 2,
           ref_for: true,
           ref: (J) => f(J, "day"),
@@ -3380,13 +3378,13 @@ var Po = defineComponent({
     ]));
   }
 });
-var je = (r, e) => {
+var We = (r, e) => {
   const t = r.__vccOpts || r;
   for (const [a, n] of e)
     t[a] = n;
   return t;
 };
-var ca = je(Po, [["__scopeId", "data-v-917a492c"]]);
+var ca = We(Po, [["__scopeId", "data-v-917a492c"]]);
 var Lo = { class: "time-input-container flex items-center justify-center" };
 var Bo = ["placeholder", "aria-invalid", "aria-errormessage"];
 var Ho = ["placeholder", "aria-invalid", "aria-errormessage"];
@@ -3416,7 +3414,7 @@ var No = defineComponent({
       return Object.entries(v.value).forEach(([R, D]) => {
         I[R] = D.key;
       }), I;
-    }), g = () => {
+    }), y = () => {
       l.value = "", s.value = "", i.value = "", c.value = "AM";
     }, x = computed(() => {
       var I, R;
@@ -3453,7 +3451,7 @@ var No = defineComponent({
         const U = (R[1] || "").replace(/\D/g, ""), P = (R[2] || "").replace(/\D/g, "");
         n.use24Hour || (D >= 12 ? (c.value = "PM", D = D === 12 ? 12 : D - 12) : (c.value = "AM", D = D === 0 ? 12 : D)), l.value = D.toString().padStart(2, "0"), s.value = U, n.enableSeconds && (i.value = P);
       } else
-        g();
+        y();
     }, { immediate: true });
     const u = (I, R) => {
       if (!R) return { valid: true };
@@ -3476,14 +3474,14 @@ var No = defineComponent({
           break;
       }
       return v.value[I] && (delete v.value[I], delete p.value[I]), { valid: true };
-    }, y = () => {
+    }, g = () => {
       c.value = c.value === "AM" ? "PM" : "AM", $();
     }, $ = () => {
       if (!w.value) return;
       v.value = {}, p.value = {};
       const I = u("hour", l.value), R = u("minute", s.value), D = n.enableSeconds ? u("second", i.value) : { valid: true };
       !I.valid && I.error && (v.value.hour = I.error, I.error.params && (p.value.hour = I.error.params)), !R.valid && R.error && (v.value.minute = R.error, R.error.params && (p.value.minute = R.error.params)), !D.valid && D.error && (v.value.second = D.error, D.error.params && (p.value.second = D.error.params)), n.required && (l.value || (v.value.hour = { key: "time.hourRequired" }), s.value || (v.value.minute = { key: "time.minuteRequired" }), n.enableSeconds && !i.value && (v.value.second = { key: "time.secondRequired" })), o("validation", !d.value, b.value, p.value), T.value ? (o("update:modelValue", T.value), o("complete", T.value)) : w.value && o("update:modelValue", null);
-    }, N = (I) => {
+    }, H = (I) => {
       const D = I.target.value.replace(/\D/g, "");
       if (D.length <= 2) {
         if (l.value = D, !u("hour", D).valid) return;
@@ -3492,7 +3490,7 @@ var No = defineComponent({
           (P = h.value) == null || P.focus();
         });
       }
-    }, H = (I) => {
+    }, L = (I) => {
       const D = I.target.value.replace(/\D/g, "");
       if (D.length <= 2) {
         if (D.length === 1 && parseInt(D) > 5 ? (s.value = D.padStart(2, "0"), nextTick(() => {
@@ -3509,7 +3507,7 @@ var No = defineComponent({
         D.length === 2 && $();
       }
     }, z = (I, R) => {
-      var U, P, te, ce, le, Y, k, q, ee, J, A, K;
+      var U, P, te, ce, le, Y, k, N, ee, J, A, K;
       const D = I.target;
       if (I.key === "Backspace" && D.value === "")
         switch (R) {
@@ -3532,7 +3530,7 @@ var No = defineComponent({
             I.preventDefault(), (le = M.value) == null || le.focus(), (Y = M.value) == null || Y.setSelectionRange(-1, -1);
             break;
           case "second":
-            I.preventDefault(), (k = h.value) == null || k.focus(), (q = h.value) == null || q.setSelectionRange(-1, -1);
+            I.preventDefault(), (k = h.value) == null || k.focus(), (N = h.value) == null || N.setSelectionRange(-1, -1);
             break;
         }
       if (I.key === "ArrowRight" && D.selectionStart === D.value.length)
@@ -3553,7 +3551,7 @@ var No = defineComponent({
     return e({
       validate: $,
       reset: () => {
-        g(), v.value = {}, p.value = {}, o("update:modelValue", null);
+        y(), v.value = {}, p.value = {}, o("update:modelValue", null);
       },
       getErrors: () => b.value,
       hasErrors: d,
@@ -3563,7 +3561,7 @@ var No = defineComponent({
           let P = parseInt(R);
           n.use24Hour || (P >= 12 ? (c.value = "PM", P = P === 12 ? 12 : P - 12) : (c.value = "AM", P = P === 0 ? 12 : P)), l.value = P.toString().padStart(2, "0"), s.value = D, n.enableSeconds && U && (i.value = U), $();
         } else
-          g(), o("update:modelValue", null);
+          y(), o("update:modelValue", null);
       },
       focus: () => {
         var I;
@@ -3582,7 +3580,7 @@ var No = defineComponent({
         placeholder: I.hourPlaceholder,
         maxlength: 2,
         class: "time-input text-sm text-center",
-        onInput: N,
+        onInput: H,
         onKeydown: R[1] || (R[1] = (D) => z(D, "hour")),
         onFocus: R[2] || (R[2] = (D) => re("hour")),
         onBlur: R[3] || (R[3] = (D) => X()),
@@ -3603,7 +3601,7 @@ var No = defineComponent({
         placeholder: I.minutePlaceholder,
         maxlength: 2,
         class: "time-input text-sm text-center",
-        onInput: H,
+        onInput: L,
         onKeydown: R[5] || (R[5] = (D) => z(D, "minute")),
         onFocus: R[6] || (R[6] = (D) => re("minute")),
         onBlur: R[7] || (R[7] = (D) => X()),
@@ -3641,12 +3639,12 @@ var No = defineComponent({
         key: 1,
         type: "button",
         class: normalizeClass(["time-period pl-2 text-sm cursor-pointer", l.value ? "text-vdt-content" : "text-gray-400"]),
-        onClick: withModifiers(y, ["stop"])
+        onClick: withModifiers(g, ["stop"])
       }, toDisplayString(S.value), 3))
     ]));
   }
 });
-var da = je(No, [["__scopeId", "data-v-fb3720c7"]]);
+var da = We(No, [["__scopeId", "data-v-fb3720c7"]]);
 var Uo = {
   error: {
     calendar: {
@@ -3815,7 +3813,7 @@ var zo = {
     returnToValidRange: "返回有效范围"
   }
 };
-var jo = {
+var Wo = {
   error: {
     calendar: {
       unsupported: "Unsupported calendar"
@@ -3899,7 +3897,7 @@ var jo = {
     returnToValidRange: "Return to valid range"
   }
 };
-var Wo = {
+var jo = {
   error: {
     calendar: {
       unsupported: "サポートされていないカレンダーIDです"
@@ -4070,8 +4068,8 @@ var Jo = {
 var Tt = {
   "zh-TW": Uo,
   "zh-CN": zo,
-  "en-US": jo,
-  "ja-JP": Wo,
+  "en-US": Wo,
+  "ja-JP": jo,
   "ko-KR": Jo
 };
 function Fr(r, e) {
@@ -4187,10 +4185,10 @@ var Ar = defineComponent({
       if (typeof t.errors == "object") {
         const f = {};
         return Object.entries(t.errors).forEach(([d, b]) => {
-          var g;
+          var y;
           if (b) {
             s.value[d] = b;
-            const x = ((g = t.errorParams) == null ? void 0 : g[d]) || {};
+            const x = ((y = t.errorParams) == null ? void 0 : y[d]) || {};
             f[d] = M(b, d, x), t.debug && console.log(`Processing error for field "${d}":`, {
               original: b,
               params: x,
@@ -4238,7 +4236,7 @@ var Ar = defineComponent({
     }
     function h(f, d, b = {}) {
       t.debug && console.log(`smartTranslateError: "${f}", field: "${d}", params:`, b);
-      const g = {
+      const y = {
         請選擇日期: "date.required",
         請選擇時間: "time.required",
         請選擇開始日期: "range.startRequired",
@@ -4248,26 +4246,26 @@ var Ar = defineComponent({
         "Please select start date": "range.startRequired",
         "Please select end date": "range.endRequired"
       };
-      if (g[f])
+      if (y[f])
         try {
-          const u = o(g[f], b);
-          if (t.debug && console.log(`直接匹配翻譯: "${f}" -> "${u}" with params:`, b), u && u !== g[f])
+          const u = o(y[f], b);
+          if (t.debug && console.log(`直接匹配翻譯: "${f}" -> "${u}" with params:`, b), u && u !== y[f])
             return u;
         } catch (u) {
-          t.debug && console.warn(`直接匹配翻譯失敗: ${g[f]}`, u);
+          t.debug && console.warn(`直接匹配翻譯失敗: ${y[f]}`, u);
         }
-      function x(u, y) {
+      function x(u, g) {
         if (/請輸入|please enter|required/i.test(u)) {
-          if (y != null && y.includes("year") || u.includes("年份")) return "year.required";
-          if (y != null && y.includes("month") || u.includes("月份")) return "month.required";
-          if (y != null && y.includes("day") || u.includes("日期")) return "day.required";
-          if (y != null && y.includes("hour") || u.includes("小時")) return "time.hourRequired";
-          if (y != null && y.includes("minute") || u.includes("分鐘")) return "time.minuteRequired";
-          if (y != null && y.includes("second") || u.includes("秒鐘")) return "time.secondRequired";
-          if (y != null && y.includes("startDate") || u.includes("開始日期")) return "range.startRequired";
-          if (y != null && y.includes("endDate") || u.includes("結束日期")) return "range.endRequired";
-          if (y != null && y.includes("time") || u.includes("時間")) return "time.required";
-          if (y != null && y.includes("date") || u.includes("日期")) return "date.required";
+          if (g != null && g.includes("year") || u.includes("年份")) return "year.required";
+          if (g != null && g.includes("month") || u.includes("月份")) return "month.required";
+          if (g != null && g.includes("day") || u.includes("日期")) return "day.required";
+          if (g != null && g.includes("hour") || u.includes("小時")) return "time.hourRequired";
+          if (g != null && g.includes("minute") || u.includes("分鐘")) return "time.minuteRequired";
+          if (g != null && g.includes("second") || u.includes("秒鐘")) return "time.secondRequired";
+          if (g != null && g.includes("startDate") || u.includes("開始日期")) return "range.startRequired";
+          if (g != null && g.includes("endDate") || u.includes("結束日期")) return "range.endRequired";
+          if (g != null && g.includes("time") || u.includes("時間")) return "time.required";
+          if (g != null && g.includes("date") || u.includes("日期")) return "date.required";
         }
         return null;
       }
@@ -4313,14 +4311,14 @@ var Ar = defineComponent({
       ];
       for (const u of T)
         if (u.regex.test(f)) {
-          const y = u.handler ? u.handler(d) : u.key;
-          if (y)
+          const g = u.handler ? u.handler(d) : u.key;
+          if (g)
             try {
-              const $ = o(y, b);
-              if (t.debug && console.log(`模式匹配翻譯: "${f}" -> "${$}" (key: ${y}) with params:`, b), $ && $ !== y)
+              const $ = o(g, b);
+              if (t.debug && console.log(`模式匹配翻譯: "${f}" -> "${$}" (key: ${g}) with params:`, b), $ && $ !== g)
                 return $;
             } catch ($) {
-              t.debug && console.warn(`模式匹配翻譯失敗: ${y}`, $);
+              t.debug && console.warn(`模式匹配翻譯失敗: ${g}`, $);
             }
         }
       return t.debug && console.log(`無法翻譯，返回原始訊息: "${f}"`), f;
@@ -4341,7 +4339,7 @@ var Ar = defineComponent({
       currentLocale: a
     }), (f, d) => c.value ? (openBlock(), createElementBlock("div", Ko, [
       Array.isArray(v.value) ? (openBlock(), createElementBlock("div", Qo, [
-        (openBlock(true), createElementBlock(Fragment, null, renderList(v.value, (b, g) => (openBlock(), createElementBlock("div", { key: g }, [
+        (openBlock(true), createElementBlock(Fragment, null, renderList(v.value, (b, y) => (openBlock(), createElementBlock("div", { key: y }, [
           renderSlot(f.$slots, `error-${b.field}`, {
             error: b,
             message: b.message,
@@ -4358,13 +4356,13 @@ var Ar = defineComponent({
           createBaseVNode("span", null, toDisplayString(v.value), 1)
         ])
       ])) : typeof v.value == "object" ? (openBlock(), createElementBlock("div", Go, [
-        (openBlock(true), createElementBlock(Fragment, null, renderList(v.value, (b, g) => (openBlock(), createElementBlock("div", { key: g }, [
-          renderSlot(f.$slots, m(g), {
-            field: g,
+        (openBlock(true), createElementBlock(Fragment, null, renderList(v.value, (b, y) => (openBlock(), createElementBlock("div", { key: y }, [
+          renderSlot(f.$slots, m(y), {
+            field: y,
             error: b,
             message: b,
-            originalKey: p(g),
-            fieldType: w(g)
+            originalKey: p(y),
+            fieldType: w(y)
           }, () => [
             createBaseVNode("span", null, toDisplayString(b), 1)
           ])
@@ -4390,7 +4388,7 @@ function tl(r, e) {
     }, null, -1)
   ]));
 }
-var Pr = je(Xo, [["render", tl]]);
+var Pr = We(Xo, [["render", tl]]);
 var al = {};
 var rl = {
   xmlns: "http://www.w3.org/2000/svg",
@@ -4406,7 +4404,7 @@ function nl(r, e) {
     }, null, -1)
   ]));
 }
-var Lr = je(al, [["render", nl]]);
+var Lr = We(al, [["render", nl]]);
 var ol = {};
 var ll = {
   xmlns: "http://www.w3.org/2000/svg",
@@ -4422,7 +4420,7 @@ function sl(r, e) {
     }, null, -1)
   ]));
 }
-var Br = je(ol, [["render", sl]]);
+var Br = We(ol, [["render", sl]]);
 var il = { class: "p-2 flex items-center justify-between border-b border-vdt-outline" };
 var ul = ["disabled"];
 var cl = { class: "text-sm font-medium" };
@@ -4438,11 +4436,11 @@ var pl = {
   key: 0,
   class: "text-xs opacity-60 mt-0.5"
 };
-var gl = {
+var yl = {
   key: 1,
   class: "p-4 text-center text-sm text-vdt-content-muted"
 };
-var yl = { class: "mb-2" };
+var gl = { class: "mb-2" };
 var $l = { class: "p-2 border-t border-vdt-outline" };
 var Dl = { class: "text-xs text-gray-400 mb-1" };
 var bl = ["placeholder", "min", "max"];
@@ -4463,7 +4461,7 @@ var Sl = defineComponent({
       return Math.max(U, c.value.min);
     }, d = () => {
       h.value = f(a.selectedYear);
-    }, b = /* @__PURE__ */ new Map(), g = (D, U) => {
+    }, b = /* @__PURE__ */ new Map(), y = (D, U) => {
       const P = `${D}-${U}`;
       if (!b.has(P))
         try {
@@ -4484,10 +4482,10 @@ var Sl = defineComponent({
       if (p.value)
         return U;
       try {
-        const ce = new ue(D, 6, 1), le = me.safeToCalendar(ce, me.createSafeCalendar(a.calendar)), k = g(a.calendar, a.locale).formatToParts(le.toDate("UTC"));
+        const ce = new ue(D, 6, 1), le = me.safeToCalendar(ce, me.createSafeCalendar(a.calendar)), k = y(a.calendar, a.locale).formatToParts(le.toDate("UTC"));
         U.displayYear = ((P = k.find((J) => J.type === "year")) == null ? void 0 : P.value) || D.toString(), U.displayEra = ((te = k.find((J) => J.type === "era")) == null ? void 0 : te.value) || "";
-        const q = !!U.displayEra, ee = U.displayEra !== D.toString();
-        (q || ee) && (U.showReference = true, U.referenceYear = D.toString());
+        const N = !!U.displayEra, ee = U.displayEra !== D.toString();
+        (N || ee) && (U.showReference = true, U.referenceYear = D.toString());
       } catch {
         if (U.displayWarning = true, U.warningMessage = `無法轉換為${v.value}`, a.calendar === "roc") {
           const le = D - 1911;
@@ -4513,12 +4511,12 @@ var Sl = defineComponent({
         return U.displayYear;
       const te = U.displayEra, ce = P.displayEra;
       return te && ce && te === ce ? `${te} ${U.displayYear} - ${P.displayYear}` : `${U.displayEra} ${U.displayYear} - ${P.displayEra} ${P.displayYear}`;
-    }), y = computed(() => h.value > c.value.min), $ = computed(() => h.value + a.pageSize <= c.value.max), N = () => {
-      y.value && (h.value = Math.max(
+    }), g = computed(() => h.value > c.value.min), $ = computed(() => h.value + a.pageSize <= c.value.max), H = () => {
+      g.value && (h.value = Math.max(
         h.value - a.pageSize,
         c.value.min
       ));
-    }, H = () => {
+    }, L = () => {
       $.value && (h.value = Math.min(
         h.value + a.pageSize,
         c.value.max
@@ -4558,9 +4556,9 @@ var Sl = defineComponent({
       createBaseVNode("div", il, [
         createBaseVNode("button", {
           type: "button",
-          onClick: N,
-          class: normalizeClass(["p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none", { "opacity-50 cursor-not-allowed": !y.value }]),
-          disabled: !y.value,
+          onClick: H,
+          class: normalizeClass(["p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none", { "opacity-50 cursor-not-allowed": !g.value }]),
+          disabled: !g.value,
           "aria-label": "previous year"
         }, [
           createVNode(Lr, { class: "h-4 w-4" })
@@ -4576,7 +4574,7 @@ var Sl = defineComponent({
         ]),
         createBaseVNode("button", {
           type: "button",
-          onClick: H,
+          onClick: L,
           class: normalizeClass(["p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none", { "opacity-50 cursor-not-allowed": !$.value }]),
           disabled: !$.value,
           "aria-label": "next year"
@@ -4607,12 +4605,12 @@ var Sl = defineComponent({
             P.showReference ? (openBlock(), createElementBlock("div", pl, toDisplayString(P.referenceYear), 1)) : createCommentVNode("", true)
           ], true)
         ], 10, ml))), 128))
-      ])) : (openBlock(), createElementBlock("div", gl, [
+      ])) : (openBlock(), createElementBlock("div", yl, [
         renderSlot(D.$slots, "no-years-display", {
           calendarRange: c.value,
           goToValidRange: re
         }, () => [
-          createBaseVNode("div", yl, toDisplayString(X("noYearsToDisplay")), 1),
+          createBaseVNode("div", gl, toDisplayString(X("noYearsToDisplay")), 1),
           createBaseVNode("button", {
             type: "button",
             onClick: re,
@@ -4651,7 +4649,7 @@ var Sl = defineComponent({
     ], 512)) : createCommentVNode("", true);
   }
 });
-var wl = je(Sl, [["__scopeId", "data-v-f14c8987"]]);
+var wl = We(Sl, [["__scopeId", "data-v-f14c8987"]]);
 var kl = { class: "flex justify-between items-center mb-4 gap-2" };
 var Tl = ["disabled"];
 var xl = { class: "grow grid grid-cols-2 gap-2" };
@@ -4671,17 +4669,17 @@ var El = defineComponent({
   emits: ["update:month", "update:year"],
   setup(r, { emit: e }) {
     const t = r, a = e, n = ref(t.month), o = ref(t.year), l = ref(false), s = computed(() => t.calendar || "gregory"), i = computed(() => me.getCalendarRange(t.calendar));
-    watch(() => t.month, (g) => {
-      n.value = g;
-    }, { immediate: true }), watch(() => t.year, (g) => {
-      o.value = g;
+    watch(() => t.month, (y) => {
+      n.value = y;
+    }, { immediate: true }), watch(() => t.year, (y) => {
+      o.value = y;
     }, { immediate: true });
     const c = computed(() => {
       if (t.calendar === "gregory")
         return o.value.toString();
       try {
-        const g = new ue(o.value, 6, 1), x = me.safeToCalendar(
-          g,
+        const y = new ue(o.value, 6, 1), x = me.safeToCalendar(
+          y,
           me.createSafeCalendar(t.calendar)
         );
         return new Ut(t.locale, {
@@ -4692,29 +4690,29 @@ var El = defineComponent({
         return o.value.toString();
       }
     }), v = computed(() => me.getMonthNames(t.locale, t.calendar)), p = computed(() => {
-      let g = o.value, x = n.value - 1;
-      return x < 1 && (x = 12, g = o.value - 1), g >= i.value.min;
+      let y = o.value, x = n.value - 1;
+      return x < 1 && (x = 12, y = o.value - 1), y >= i.value.min;
     }), m = computed(() => {
-      let g = o.value, x = n.value + 1;
-      return x > 12 && (x = 1, g = o.value + 1), g <= i.value.max;
+      let y = o.value, x = n.value + 1;
+      return x > 12 && (x = 1, y = o.value + 1), y <= i.value.max;
     }), w = () => {
       if (!p.value) return;
-      let g = n.value - 1, x = o.value;
-      g < 1 && (g = 12, x -= 1), x >= i.value.min && d(g, x);
+      let y = n.value - 1, x = o.value;
+      y < 1 && (y = 12, x -= 1), x >= i.value.min && d(y, x);
     }, M = () => {
       if (!m.value) return;
-      let g = n.value + 1, x = o.value;
-      g > 12 && (g = 1, x += 1), x <= i.value.max && d(g, x);
+      let y = n.value + 1, x = o.value;
+      y > 12 && (y = 1, x += 1), x <= i.value.max && d(y, x);
     }, h = () => {
       d(n.value, o.value);
-    }, f = (g) => {
-      g >= i.value.min && g <= i.value.max && (o.value = g, d(n.value, g));
-    }, d = (g, x) => {
-      n.value = g, o.value = x, a("update:month", g), a("update:year", x);
+    }, f = (y) => {
+      y >= i.value.min && y <= i.value.max && (o.value = y, d(n.value, y));
+    }, d = (y, x) => {
+      n.value = y, o.value = x, a("update:month", y), a("update:year", x);
     }, b = () => {
       l.value = !l.value;
     };
-    return (g, x) => (openBlock(), createElementBlock("div", kl, [
+    return (y, x) => (openBlock(), createElementBlock("div", kl, [
       createBaseVNode("button", {
         type: "button",
         onClick: w,
@@ -4725,7 +4723,7 @@ var El = defineComponent({
         createVNode(Lr, { class: "h-5 w-5" })
       ], 8, Tl),
       createBaseVNode("div", xl, [
-        renderSlot(g.$slots, "month-selector", {
+        renderSlot(y.$slots, "month-selector", {
           monthNames: v.value,
           selectedMonth: n.value,
           onMonthChange: h
@@ -4746,7 +4744,7 @@ var El = defineComponent({
           ])
         ]),
         createBaseVNode("div", Cl, [
-          renderSlot(g.$slots, "year-selector", {
+          renderSlot(y.$slots, "year-selector", {
             displayYear: c.value,
             toggleYearSelector: b,
             showYearSelector: l.value
@@ -4764,13 +4762,13 @@ var El = defineComponent({
             "show-selector": l.value,
             "onUpdate:showSelector": x[1] || (x[1] = (S) => l.value = S),
             calendar: s.value,
-            locale: g.locale,
+            locale: y.locale,
             onYearSelected: f
           }, createSlots({ _: 2 }, [
-            renderList(g.$slots, (S, T) => ({
+            renderList(y.$slots, (S, T) => ({
               name: T,
               fn: withCtx((u) => [
-                renderSlot(g.$slots, T, normalizeProps(guardReactiveProps(u)))
+                renderSlot(y.$slots, T, normalizeProps(guardReactiveProps(u)))
               ])
             }))
           ]), 1032, ["selected-year", "show-selector", "calendar", "locale"])
@@ -4862,7 +4860,7 @@ var Al = defineComponent({
     ]));
   }
 });
-var Pl = je(Al, [["__scopeId", "data-v-9018b2ca"]]);
+var Pl = We(Al, [["__scopeId", "data-v-9018b2ca"]]);
 var Ll = { class: "grid grid-cols-7 gap-1" };
 var Bl = defineComponent({
   __name: "DateGridView",
@@ -4915,28 +4913,28 @@ var Bl = defineComponent({
         return true;
       }
     }, p = (h) => wo(h), m = computed(() => s.value.map((h, f) => {
-      const d = `${h.year}-${h.month}-${h.day}`, b = p(h), g = h.month !== o.value, x = v(h), S = a.selectionMode === "single" && c(h, a.selectedDate), T = a.selectionMode === "range" && c(h, a.rangeStart), u = a.selectionMode === "range" && c(h, a.rangeEnd), y = a.selectionMode === "range" && i(h) && !T && !u && !x, $ = h.day === 1 && h.month === o.value, N = [
+      const d = `${h.year}-${h.month}-${h.day}`, b = p(h), y = h.month !== o.value, x = v(h), S = a.selectionMode === "single" && c(h, a.selectedDate), T = a.selectionMode === "range" && c(h, a.rangeStart), u = a.selectionMode === "range" && c(h, a.rangeEnd), g = a.selectionMode === "range" && i(h) && !T && !u && !x, $ = h.day === 1 && h.month === o.value, H = [
         d,
         S,
         b,
         x,
         T,
         u,
-        y,
+        g,
         a.selectionMode,
         a.calendar
       ];
       return {
         key: `${a.calendar}-${l.value}-${o.value}-${d}-${f}`,
-        memoKey: N,
+        memoKey: H,
         date: h,
         isToday: b,
         isSelected: S,
         isDisabled: x,
-        isOutsideMonth: g,
+        isOutsideMonth: y,
         isRangeStart: T,
         isRangeEnd: u,
-        isInRange: y,
+        isInRange: g,
         isFocusable: $
       };
     })), w = (h) => {
@@ -4958,7 +4956,7 @@ var Bl = defineComponent({
       getCalendarDays: () => s.value,
       getCellStates: () => m.value
     }), (h, f) => (openBlock(), createElementBlock("div", Ll, [
-      (openBlock(true), createElementBlock(Fragment, null, renderList(m.value, (d, b, g, x) => {
+      (openBlock(true), createElementBlock(Fragment, null, renderList(m.value, (d, b, y, x) => {
         const S = d.memoKey;
         if (x && x.key === d.key && isMemoSame(x, S)) return x;
         const T = (openBlock(), createBlock(Pl, {
@@ -4986,8 +4984,8 @@ var ql = { class: "flex flex-row items-center justify-between" };
 var Nl = { class: "text-sm font-medium text-vdt-content uppercase" };
 var Ul = { class: "flex flex-row items-center gap-1" };
 var zl = { class: "time-selector-container pt-1" };
-var jl = { class: "flex flex-row items-center gap-1" };
-var Wl = { class: "flex-1" };
+var Wl = { class: "flex flex-row items-center gap-1" };
+var jl = { class: "flex-1" };
 var Jl = ["value"];
 var _l = { class: "flex-1" };
 var Kl = ["value"];
@@ -5014,39 +5012,39 @@ var es = defineComponent({
   },
   emits: ["time-change", "today-click"],
   setup(r, { expose: e, emit: t }) {
-    const a = r, n = t, { getPlaceholderMessage: o } = Dt(a.locale), l = ref(0), s = ref(0), i = ref(0), c = ref("AM"), v = ref(false), p = computed(() => a.use24Hour ? Array.from({ length: 24 }, (u, y) => y) : Array.from({ length: 12 }, (u, y) => y + 1)), m = computed(() => Array.from({ length: 60 }, (u, y) => y)), w = computed(() => Array.from({ length: 60 }, (u, y) => y)), M = computed(() => {
+    const a = r, n = t, { getPlaceholderMessage: o } = Dt(a.locale), l = ref(0), s = ref(0), i = ref(0), c = ref("AM"), v = ref(false), p = computed(() => a.use24Hour ? Array.from({ length: 24 }, (u, g) => g) : Array.from({ length: 12 }, (u, g) => g + 1)), m = computed(() => Array.from({ length: 60 }, (u, g) => g)), w = computed(() => Array.from({ length: 60 }, (u, g) => g)), M = computed(() => {
       let u = l.value;
       a.use24Hour || (c.value === "PM" && u < 12 ? u += 12 : c.value === "AM" && u === 12 && (u = 0));
-      const y = h(u), $ = h(s.value);
+      const g = h(u), $ = h(s.value);
       if (a.enableSeconds) {
-        const N = h(i.value);
-        return `${y}:${$}:${N}`;
+        const H = h(i.value);
+        return `${g}:${$}:${H}`;
       } else
-        return `${y}:${$}`;
+        return `${g}:${$}`;
     }), h = (u) => u.toString().padStart(2, "0"), f = (u) => h(u), d = (u) => {
       if (!u) return;
-      const [y, $, N] = u.split(":");
-      let H = parseInt(y) || 0;
-      a.use24Hour || (H >= 12 ? (c.value = "PM", H = H === 12 ? 12 : H - 12) : (c.value = "AM", H = H === 0 ? 12 : H)), l.value = H, s.value = parseInt($) || 0, a.enableSeconds && N && (i.value = parseInt(N) || 0), v.value = true;
+      const [g, $, H] = u.split(":");
+      let L = parseInt(g) || 0;
+      a.use24Hour || (L >= 12 ? (c.value = "PM", L = L === 12 ? 12 : L - 12) : (c.value = "AM", L = L === 0 ? 12 : L)), l.value = L, s.value = parseInt($) || 0, a.enableSeconds && H && (i.value = parseInt(H) || 0), v.value = true;
     }, b = () => {
       d(a.defaultTime);
-    }, g = (u) => {
+    }, y = (u) => {
       c.value = u;
     }, x = (u) => {
-      const y = /* @__PURE__ */ new Date();
-      y.setHours(u === "AM" ? 6 : 18, 0, 0, 0);
-      const H = new Intl.DateTimeFormat(a.locale || navigator.language, {
+      const g = /* @__PURE__ */ new Date();
+      g.setHours(u === "AM" ? 6 : 18, 0, 0, 0);
+      const L = new Intl.DateTimeFormat(a.locale || navigator.language, {
         hour12: true,
         hour: "numeric"
-      }).formatToParts(y).find((_) => _.type === "dayPeriod");
-      return (H == null ? void 0 : H.value) || u;
+      }).formatToParts(g).find((_) => _.type === "dayPeriod");
+      return (L == null ? void 0 : L.value) || u;
     }, S = () => {
       const u = /* @__PURE__ */ new Date();
       if (a.use24Hour)
         l.value = u.getHours();
       else {
-        const y = u.getHours();
-        c.value = y >= 12 ? "PM" : "AM", l.value = y % 12 || 12;
+        const g = u.getHours();
+        c.value = g >= 12 ? "PM" : "AM", l.value = g % 12 || 12;
       }
       s.value = u.getMinutes(), a.enableSeconds && (i.value = u.getSeconds()), v.value = true;
     }, T = () => {
@@ -5066,8 +5064,8 @@ var es = defineComponent({
       setTime: (u) => d(u),
       // 重置為預設時間
       resetToDefault: () => b()
-    }), (u, y) => u.show ? (openBlock(), createElementBlock("div", Hl, [
-      y[5] || (y[5] = createBaseVNode("hr", { class: "my-2 border-vdt-outline" }, null, -1)),
+    }), (u, g) => u.show ? (openBlock(), createElementBlock("div", Hl, [
+      g[5] || (g[5] = createBaseVNode("hr", { class: "my-2 border-vdt-outline" }, null, -1)),
       createBaseVNode("div", ql, [
         createBaseVNode("label", Nl, toDisplayString(unref(o)("general.time")) + ": ", 1),
         createBaseVNode("div", Ul, [
@@ -5085,10 +5083,10 @@ var es = defineComponent({
         ])
       ]),
       createBaseVNode("div", zl, [
-        createBaseVNode("div", jl, [
-          createBaseVNode("div", Wl, [
+        createBaseVNode("div", Wl, [
+          createBaseVNode("div", jl, [
             withDirectives(createBaseVNode("select", {
-              "onUpdate:modelValue": y[0] || (y[0] = ($) => l.value = $),
+              "onUpdate:modelValue": g[0] || (g[0] = ($) => l.value = $),
               class: "appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
             }, [
               (openBlock(true), createElementBlock(Fragment, null, renderList(p.value, ($) => (openBlock(), createElementBlock("option", {
@@ -5101,7 +5099,7 @@ var es = defineComponent({
           ]),
           createBaseVNode("div", _l, [
             withDirectives(createBaseVNode("select", {
-              "onUpdate:modelValue": y[1] || (y[1] = ($) => s.value = $),
+              "onUpdate:modelValue": g[1] || (g[1] = ($) => s.value = $),
               class: "appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
             }, [
               (openBlock(true), createElementBlock(Fragment, null, renderList(m.value, ($) => (openBlock(), createElementBlock("option", {
@@ -5114,7 +5112,7 @@ var es = defineComponent({
           ]),
           u.enableSeconds ? (openBlock(), createElementBlock("div", Ql, [
             withDirectives(createBaseVNode("select", {
-              "onUpdate:modelValue": y[2] || (y[2] = ($) => i.value = $),
+              "onUpdate:modelValue": g[2] || (g[2] = ($) => i.value = $),
               class: "appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
             }, [
               (openBlock(true), createElementBlock(Fragment, null, renderList(w.value, ($) => (openBlock(), createElementBlock("option", {
@@ -5129,12 +5127,12 @@ var es = defineComponent({
             createBaseVNode("div", Xl, [
               createBaseVNode("button", {
                 type: "button",
-                onClick: y[3] || (y[3] = ($) => g("AM")),
+                onClick: g[3] || (g[3] = ($) => y("AM")),
                 class: normalizeClass(["px-2 py-1 text-sm transition-colors", c.value === "AM" ? "bg-vdt-theme-500 text-white" : "text-vdt-content hover:bg-vdt-interactive-hover"])
               }, toDisplayString(x("AM")), 3),
               createBaseVNode("button", {
                 type: "button",
-                onClick: y[4] || (y[4] = ($) => g("PM")),
+                onClick: g[4] || (g[4] = ($) => y("PM")),
                 class: normalizeClass(["px-2 py-1 text-sm transition-colors", c.value === "PM" ? "bg-vdt-theme-500 text-white" : "text-vdt-content hover:bg-vdt-interactive-hover"])
               }, toDisplayString(x("PM")), 3)
             ])
@@ -5188,20 +5186,20 @@ var fa = defineComponent({
       const u = a.selectionMode === "range" ? a.rangeStart : a.value;
       return u ? { year: u.year, month: u.month } : { year: i.value, month: c.value };
     });
-    watch(b, ({ year: u, month: y }) => {
-      i.value = u, c.value = y;
+    watch(b, ({ year: u, month: g }) => {
+      i.value = u, c.value = g;
     }, { immediate: true }), watch(() => a.timeValue, (u) => {
       v.value = u;
     }, { immediate: true });
-    const g = (u) => {
+    const y = (u) => {
       if (a.selectionMode === "single") {
-        const y = me.convertFromCalendarDate(u, a.calendar);
-        y && (n("select", y, true), a.showTimeSelector && v.value && n("time-select", v.value));
+        const g = me.convertFromCalendarDate(u, a.calendar);
+        g && (n("select", g, true), a.showTimeSelector && v.value && n("time-select", v.value));
       }
-    }, x = (u, y) => {
+    }, x = (u, g) => {
       if (a.selectionMode === "range") {
-        const $ = me.convertFromCalendarDate(u, a.calendar), N = me.convertFromCalendarDate(y, a.calendar);
-        n("range-select", $, N);
+        const $ = me.convertFromCalendarDate(u, a.calendar), H = me.convertFromCalendarDate(g, a.calendar);
+        n("range-select", $, H);
       }
     }, S = (u) => {
       v.value = u, n("time-select", u);
@@ -5217,8 +5215,8 @@ var fa = defineComponent({
       // 獲取當前範圍（範圍模式）
       getSelectedRange: () => ({ start: a.rangeStart, end: a.rangeEnd }),
       // 設置顯示的月份
-      setDisplayMonth: (u, y) => {
-        i.value = u, c.value = y;
+      setDisplayMonth: (u, g) => {
+        i.value = u, c.value = g;
       },
       // 導航到上個月
       previousMonth: () => {
@@ -5228,21 +5226,21 @@ var fa = defineComponent({
       nextMonth: () => {
         c.value === 12 ? (c.value = 1, i.value += 1) : c.value += 1;
       }
-    }), (u, y) => (openBlock(), createElementBlock("div", ts, [
+    }), (u, g) => (openBlock(), createElementBlock("div", ts, [
       createVNode(El, {
         month: c.value,
-        "onUpdate:month": y[0] || (y[0] = ($) => c.value = $),
+        "onUpdate:month": g[0] || (g[0] = ($) => c.value = $),
         year: i.value,
-        "onUpdate:year": y[1] || (y[1] = ($) => i.value = $),
+        "onUpdate:year": g[1] || (g[1] = ($) => i.value = $),
         locale: u.locale,
         "min-year": f.value,
         "max-year": d.value,
         calendar: u.calendar
       }, createSlots({ _: 2 }, [
-        renderList(u.$slots, ($, N) => ({
-          name: N,
-          fn: withCtx((H) => [
-            renderSlot(u.$slots, N, normalizeProps(guardReactiveProps(H)))
+        renderList(u.$slots, ($, H) => ({
+          name: H,
+          fn: withCtx((L) => [
+            renderSlot(u.$slots, H, normalizeProps(guardReactiveProps(L)))
           ])
         }))
       ]), 1032, ["month", "year", "locale", "min-year", "max-year", "calendar"]),
@@ -5263,7 +5261,7 @@ var fa = defineComponent({
         locale: u.locale,
         "week-starts-on": u.weekStartsOn,
         calendar: u.calendar,
-        onSelect: g,
+        onSelect: y,
         onRangeSelect: x
       }, null, 8, ["year", "month", "selected-date", "range-start", "range-end", "selection-mode", "min-date", "max-date", "locale", "week-starts-on", "calendar"]),
       createVNode(es, {
@@ -5297,7 +5295,7 @@ function ns(r, e) {
     }, null, -1)
   ]));
 }
-var Hr = je(as, [["render", ns]]);
+var Hr = We(as, [["render", ns]]);
 function ma(r, e) {
   const { dateInputRef: t, timeInputRef: a } = r, { showTime: n, autoFocusTimeAfterDate: o = true } = e;
   return {
@@ -5336,23 +5334,23 @@ function ma(r, e) {
   };
 }
 function ha(r = {}) {
-  const { required: e = true, showTime: t = false, minDate: a, maxDate: n, dateFormat: o = "YYYY-MM-DD" } = r, l = ref({}), s = ref({}), i = ref({}), c = computed(() => ({ ...l.value, ...s.value })), v = computed(() => ({ ...i.value })), p = computed(() => Object.keys(c.value).length > 0), m = (S, T, u = "date", y = {}) => {
+  const { required: e = true, showTime: t = false, minDate: a, maxDate: n, dateFormat: o = "YYYY-MM-DD" } = r, l = ref({}), s = ref({}), i = ref({}), c = computed(() => ({ ...l.value, ...s.value })), v = computed(() => ({ ...i.value })), p = computed(() => Object.keys(c.value).length > 0), m = (S, T, u = "date", g = {}) => {
     ["date", "year", "month", "day"].forEach(($) => {
       h(`${u}.${$}`), f(`${u}.${$}`);
-    }), S || Object.entries(T).forEach(([$, N]) => {
-      const H = `${u}.${$}`;
-      l.value[H] = N, y[$] && (i.value[H] = y[$]);
+    }), S || Object.entries(T).forEach(([$, H]) => {
+      const L = `${u}.${$}`;
+      l.value[L] = H, g[$] && (i.value[L] = g[$]);
     });
-  }, w = (S, T, u = "time", y = {}) => (["time", "hour", "minute", "second"].forEach(($) => {
+  }, w = (S, T, u = "time", g = {}) => (["time", "hour", "minute", "second"].forEach(($) => {
     h(`${u}.${$}`), f(`${u}.${$}`);
-  }), S || Object.entries(T).forEach(([$, N]) => {
-    const H = `${u}.${$}`;
-    l.value[H] = N, y[$] && (i.value[H] = y[$]);
+  }), S || Object.entries(T).forEach(([$, H]) => {
+    const L = `${u}.${$}`;
+    l.value[L] = H, g[$] && (i.value[L] = g[$]);
   }), !p.value), M = (S) => {
     if (!S) return false;
     if (a) {
-      const T = ge(a);
-      if (T && jt(S, T) < 0)
+      const T = ye(a);
+      if (T && Wt(S, T) < 0)
         return m(false, {
           date: "date.beforeMin"
         }, "date", {
@@ -5360,8 +5358,8 @@ function ha(r = {}) {
         }), false;
     }
     if (n) {
-      const T = ge(n);
-      if (T && jt(S, T) > 0)
+      const T = ye(n);
+      if (T && Wt(S, T) > 0)
         return m(false, {
           date: "date.afterMax"
         }, "date", {
@@ -5421,22 +5419,22 @@ function va(r = {}) {
     enableSeconds: l = true
   } = r, s = ref(null), i = ref(null), c = ref(null), v = (u) => {
     if (!u || u.hour === void 0) return null;
-    const y = u.hour.toString().padStart(2, "0"), $ = (u.minute || 0).toString().padStart(2, "0");
+    const g = u.hour.toString().padStart(2, "0"), $ = (u.minute || 0).toString().padStart(2, "0");
     if (l) {
-      const N = (u.second || 0).toString().padStart(2, "0");
-      return `${y}:${$}:${N}`;
+      const H = (u.second || 0).toString().padStart(2, "0");
+      return `${g}:${$}:${H}`;
     } else
-      return `${y}:${$}`;
-  }, p = (u, y) => {
+      return `${g}:${$}`;
+  }, p = (u, g) => {
     if (!u) return null;
-    const $ = ge(u);
+    const $ = ye(u);
     if (!$) return null;
-    if (!y && !e)
-      return ze($.year, $.month, $.day);
-    if (!y)
+    if (!g && !e)
+      return He($.year, $.month, $.day);
+    if (!g)
       if (o) {
         const re = o.split(":").map(Number), X = re[0] || 0, I = re[1] || 0, R = re[2] || 0;
-        return ze(
+        return He(
           $.year,
           $.month,
           $.day,
@@ -5445,39 +5443,55 @@ function va(r = {}) {
           R
         );
       } else
-        return ze($.year, $.month, $.day);
-    const N = y.split(":").map(Number), H = N[0] || 0, _ = N[1] || 0, z = N[2] || 0;
-    return ze(
+        return He($.year, $.month, $.day);
+    const H = g.split(":").map(Number), L = H[0] || 0, _ = H[1] || 0, z = H[2] || 0;
+    return He(
       $.year,
       $.month,
       $.day,
-      H,
+      L,
       _,
       z
     );
   }, m = (u) => {
-    const y = ge(u);
-    s.value = y, y ? (i.value = Re(y, t), c.value = v(y)) : (i.value = null, c.value = null);
-  }, w = (u, y) => {
-    const $ = u !== void 0 ? u : i.value, N = y !== void 0 ? y : c.value, H = p($, N);
-    return s.value = H, H;
+    const g = ye(u);
+    s.value = g, g ? (i.value = Re(g, t), c.value = v(g)) : (i.value = null, c.value = null);
+  }, w = (u, g) => {
+    const $ = u !== void 0 ? u : i.value, H = g !== void 0 ? g : c.value, L = p($, H);
+    return s.value = L, L;
   }, M = (u) => {
-    s.value = u, u ? (i.value = Re(u, t), c.value = v(u)) : (i.value = null, c.value = null);
+    if (!u) {
+      s.value = null, i.value = null, c.value = null;
+      return;
+    }
+    if (e && o && (u.hour === void 0 || u.hour === null) && !c.value) {
+      const g = o.split(":").map(Number), $ = g[0] || 0, H = g[1] || 0, L = g[2] || 0, _ = He(
+        u.year,
+        u.month,
+        u.day,
+        $,
+        H,
+        L
+      );
+      s.value = _, c.value = o;
+    } else
+      s.value = u, c.value = v(u);
+    s.value && (i.value = Re(s.value));
   }, h = (u) => {
     if (!s.value) return null;
-    const y = u.split(":").map(Number), $ = {
+    const g = u.split(":").map(Number), $ = {
       ...s.value,
-      hour: y[0] || 0,
-      minute: y[1] || 0,
-      second: y[2] || 0
+      hour: g[0] || 0,
+      minute: g[1] || 0,
+      second: g[2] || 0
     };
     return s.value = $, c.value = u, $;
   }, f = (u) => {
-    const y = u !== void 0 ? u : s.value, $ = e ? `${t} ${a}` : t;
-    return zt(y, n, $);
+    const g = u !== void 0 ? u : s.value, $ = e ? `${t} ${a}` : t;
+    return zt(g, n, $);
   }, d = () => {
     s.value = null, i.value = null, c.value = null;
-  }, b = computed(() => !!(i.value || c.value || s.value)), g = () => e && !c.value && o ? (c.value = o, true) : false, x = computed(() => !!i.value), S = computed(() => !!c.value), T = computed(() => e ? x.value && S.value : x.value);
+  }, b = computed(() => !!(i.value || c.value || s.value)), y = () => e && !c.value && o ? (c.value = o, true) : false, x = computed(() => !!i.value), S = computed(() => !!c.value), T = computed(() => e ? x.value && S.value : x.value);
   return {
     // 響應式狀態
     internalDateTime: s,
@@ -5496,7 +5510,7 @@ function va(r = {}) {
     // updateDateTime,
     getFormattedOutput: f,
     clearValues: d,
-    applyDefaultTime: g,
+    applyDefaultTime: y,
     // 輔助方法
     getTimeFromDateTime: v,
     createDateTimeFromInputs: p
@@ -5519,9 +5533,9 @@ function qr(r, e, t = {}) {
       width: window.innerWidth,
       height: window.innerHeight
     };
-    let b = h.height + 5, g = 0;
+    let b = h.height + 5, y = 0;
     const x = f.getBoundingClientRect();
-    h.left + x.width > d.width && (g = d.width - h.left - x.width - 10), h.bottom + x.height > d.height && (b = -x.height - 5), f.style.position = "absolute", f.style.top = `${b}px`, f.style.left = `${g}px`, f.style.zIndex = "50";
+    h.left + x.width > d.width && (y = d.width - h.left - x.width - 10), h.bottom + x.height > d.height && (b = -x.height - 5), f.style.position = "absolute", f.style.top = `${b}px`, f.style.left = `${y}px`, f.style.zIndex = "50";
   }, v = (h) => {
     const f = e.value, d = r.value, b = h.target;
     o.value && f && !f.contains(b) && d && !d.contains(b) && (i(), n == null || n());
@@ -5617,7 +5631,7 @@ function ls(r = {}, e) {
   } = r, { containerRef: M, calendarRef: h, dateInputRef: f, timeInputRef: d } = e, b = computed(() => {
     var A;
     return ((A = r.calendar) == null ? void 0 : A.value) || "gregory";
-  }), g = computed(() => {
+  }), y = computed(() => {
     var A;
     return ((A = r.locale) == null ? void 0 : A.value) || "zh-TW";
   }), x = computed(() => {
@@ -5636,7 +5650,7 @@ function ls(r = {}, e) {
     outputType: x.value,
     defaultTime: c,
     enableSeconds: v
-  }), y = ma(
+  }), g = ma(
     { dateInputRef: f, timeInputRef: d },
     { showTime: a, autoFocusTimeAfterDate: p }
   ), $ = qr(
@@ -5647,14 +5661,14 @@ function ls(r = {}, e) {
       onOutsideClick: () => {
       }
     }
-  ), N = os({
+  ), H = os({
     customDefaultTime: c,
     enableSeconds: v
-  }), H = computed(() => {
-    const A = ge(m, g.value);
+  }), L = computed(() => {
+    const A = ye(m, y.value);
     return A || null;
   }), _ = computed(() => {
-    const A = ge(w, g.value);
+    const A = ye(w, y.value);
     return A || null;
   });
   let z = null, re = null, X = null;
@@ -5663,15 +5677,15 @@ function ls(r = {}, e) {
   }, R = async (A = u.internalDateTime.value) => {
     let K = null;
     if (A) {
-      const ye = a ? `${l} ${s}` : l;
-      K = zt(A, x.value, ye, a, b.value, g.value, i);
+      const ge = a ? `${l} ${s}` : l;
+      K = zt(A, x.value, ge, a, b.value, y.value, i);
     }
     z == null || z(K), re == null || re(K);
     const ne = !T.hasErrors.value;
     X == null || X(ne, T.mergedErrors.value);
   };
   watch(() => t, (A) => {
-    const K = ge(A, g.value, b.value);
+    const K = ye(A, y.value, b.value);
     A && !K ? (T.handleDateValidation(false, { date: "無效的日期格式" }), u.setExternalValue(null)) : K && !T.validateDateRange(K) ? u.setExternalValue(null) : (T.clearFieldErrors("date"), T.clearFieldErrors("invalidInput"), u.setExternalValue(K));
   }, { immediate: true });
   const D = (A, K, ne = {}) => {
@@ -5687,9 +5701,9 @@ function ls(r = {}, e) {
     }
     T.validateDateRange(K) && (await R(K), ["date", "year", "month", "day"].forEach((ne) => {
       T.clearFieldErrors(ne);
-    }), y.autoFocusTimeAfterDateComplete(
+    }), g.autoFocusTimeAfterDateComplete(
       u,
-      c ? N.getValidDefaultTime.value : void 0
+      c ? H.getValidDefaultTime.value : void 0
     ));
   }, te = async (A) => {
     u.inputTimeValue.value = A;
@@ -5701,7 +5715,7 @@ function ls(r = {}, e) {
     try {
       if (!T.validateDateRange(A))
         return;
-      u.setInternalDateTime(A), await R(A), ["date", "year", "month", "day"].forEach((ne) => {
+      u.setInternalDateTime(A), await R(u.internalDateTime.value), ["date", "year", "month", "day"].forEach((ne) => {
         T.clearFieldErrors(ne);
       }), K && $.hideCalendar();
     } catch (ne) {
@@ -5714,11 +5728,11 @@ function ls(r = {}, e) {
     });
   }, Y = (A) => {
     $.handleContainerClick(A, () => {
-      y.focusFirstInput();
+      g.focusFirstInput();
     }), $.toggleCalendar();
   }, k = () => {
     u.clearValues(), T.clearAllErrors(), R(null);
-  }, q = async () => {
+  }, N = async () => {
     var ae, $e;
     const A = await ((ae = f.value) == null ? void 0 : ae.validate()), K = a ? await (($e = d.value) == null ? void 0 : $e.validate()) : true;
     let ne = true;
@@ -5732,10 +5746,10 @@ function ls(r = {}, e) {
       date: "date.invalid"
       // 簡化錯誤信息
     }));
-    const ye = T.validateDateTime(
+    const ge = T.validateDateTime(
       u.inputDateValue.value,
       u.inputTimeValue.value
-    ), V = A && K && ne && ye;
+    ), V = A && K && ne && ge;
     return X == null || X(V, T.mergedErrors.value), V;
   }, ee = async () => {
     const A = /* @__PURE__ */ new Date(), K = {
@@ -5752,13 +5766,13 @@ function ls(r = {}, e) {
       });
     } catch (ne) {
       console.warn("設置當前時間失敗:", ne);
-      const ye = `${K.year}-${K.month.toString().padStart(2, "0")}-${K.day.toString().padStart(2, "0")}`, V = a ? `${(K.hour || 0).toString().padStart(2, "0")}:${(K.minute || 0).toString().padStart(2, "0")}:${(K.second || 0).toString().padStart(2, "0")}` : null;
-      u.inputDateValue.value = ye, a && V && (u.inputTimeValue.value = V);
+      const ge = `${K.year}-${K.month.toString().padStart(2, "0")}-${K.day.toString().padStart(2, "0")}`, V = a ? `${(K.hour || 0).toString().padStart(2, "0")}:${(K.minute || 0).toString().padStart(2, "0")}:${(K.second || 0).toString().padStart(2, "0")}` : null;
+      u.inputDateValue.value = ge, a && V && (u.inputTimeValue.value = V);
       const ae = u.updateFromInputs();
       await R(ae);
     }
   }, J = () => {
-    y.focusFirstInput();
+    g.focusFirstInput();
   };
   return {
     // 狀態
@@ -5770,10 +5784,10 @@ function ls(r = {}, e) {
     ...u,
     ...$,
     // 計算屬性
-    calendarMinDate: H,
+    calendarMinDate: L,
     calendarMaxDate: _,
     // 預設時間相關
-    getValidDefaultTime: N.getValidDefaultTime,
+    getValidDefaultTime: H.getValidDefaultTime,
     // 事件處理方法
     setEmitters: I,
     validateDateInput: D,
@@ -5785,16 +5799,16 @@ function ls(r = {}, e) {
     handleContainerClick: Y,
     handleContainerMouseDown: $.handleContainerMouseDown,
     // 導航方法
-    handleNavigateToDate: y.handleNavigateToDate,
-    handleNavigateToTime: y.handleNavigateToTime,
+    handleNavigateToDate: g.handleNavigateToDate,
+    handleNavigateToTime: g.handleNavigateToTime,
     // 主要操作方法
     reset: k,
-    validate: q,
+    validate: N,
     selectNow: ee,
     focus: J,
     // 直接暴露導航方法（用於 defineExpose）
-    focusFirstInput: y.focusFirstInput,
-    focusLastInput: y.focusLastInput
+    focusFirstInput: g.focusFirstInput,
+    focusLastInput: g.focusLastInput
   };
 }
 var Ta = {
@@ -6198,7 +6212,7 @@ function or(r) {
 function ps(r) {
   return Ta[r] || {};
 }
-var gs = class {
+var ys = class {
   constructor() {
     be(this, "instances", /* @__PURE__ */ new Map());
     be(this, "mediaQuery", null);
@@ -6414,7 +6428,7 @@ var gs = class {
     this.mediaQuery && this.mediaQuery.removeEventListener("change", this.handleSystemThemeChange.bind(this)), this.instances.clear(), this.listeners.clear();
   }
 };
-var Fe = new gs();
+var Fe = new ys();
 function zr(r = {}) {
   const e = ref(
     Fe.createInstance(r.instanceId, {
@@ -6503,7 +6517,7 @@ function zr(r = {}) {
     setEmeraldTheme: () => w("emerald")
   };
 }
-var ys = { key: 0 };
+var gs = { key: 0 };
 var $s = {
   key: 0,
   class: "text-vdt-content"
@@ -6535,7 +6549,7 @@ var lr = defineComponent({
     timeFormat: { default: "HH:mm:ss" },
     showTime: { type: Boolean, default: false },
     enableSeconds: { type: Boolean, default: true },
-    use24Hour: { type: Boolean, default: false },
+    use24Hour: { type: Boolean, default: true },
     useLocalizedPeriod: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
     inputEnabled: { type: Boolean, default: true },
@@ -6587,18 +6601,18 @@ var lr = defineComponent({
     const {
       themeClasses: d,
       containerAttributes: b,
-      setColor: g,
+      setColor: y,
       setMode: x,
       currentMode: S,
       isDark: T,
       isLight: u
-    } = zr(), y = computed(() => {
-      const E = ge(a.minDate, a.locale);
+    } = zr(), g = computed(() => {
+      const E = ye(a.minDate, a.locale);
       return Re(E);
     }), $ = computed(() => {
-      const E = ge(a.maxDate, a.locale);
+      const E = ye(a.maxDate, a.locale);
       return Re(E);
-    }), N = computed(() => w.value), H = computed(() => a.calendar === "gregory"), _ = computed(() => !!(R.value && R.value.trim())), z = computed(() => {
+    }), H = computed(() => w.value), L = computed(() => a.calendar === "gregory"), _ = computed(() => !!(R.value && R.value.trim())), z = computed(() => {
       var Z, ie, Q, pe, Ae, bt, Mt;
       a.locale;
       const E = {
@@ -6641,7 +6655,7 @@ var lr = defineComponent({
         h.value.timeFormat = "format.invalid", console.warn(`時間格式 "${E}" 不正確，已自動修復為 "${Z}"`), M.value = Z;
       }
     }), watch(() => a.theme, (E) => {
-      E && g(E);
+      E && y(E);
     }, { immediate: true }), watch(() => a.mode, (E) => {
       x(E);
     }, { immediate: true }), watch(() => a.locale, (E) => {
@@ -6660,7 +6674,7 @@ var lr = defineComponent({
         f.setExternalValue(E);
       },
       // 主題控制
-      setTheme: g,
+      setTheme: y,
       setDarkMode: () => x("dark"),
       setLightMode: () => x("light"),
       setAutoMode: () => x("auto"),
@@ -6683,13 +6697,13 @@ var lr = defineComponent({
       hasValue: Y,
       // 事件處理
       validateDateInput: k,
-      validateTimeInput: q,
+      validateTimeInput: N,
       handleDateComplete: ee,
       handleTimeComplete: J,
       handleCalendarSelect: A,
       handleTimeSelect: K,
       handleContainerClick: ne,
-      handleContainerMouseDown: ye,
+      handleContainerMouseDown: ge,
       handleNavigateToDate: V,
       // 日曆控制
       toggleCalendar: ae,
@@ -6706,7 +6720,7 @@ var lr = defineComponent({
         createBaseVNode("div", {
           class: normalizeClass(["date-picker-container flex w-full items-center px-2 py-1 bg-vdt-surface text-vdt-content rounded-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed", [{ "border-red-500 ring-2 ring-red-200": I.value }]])
         }, [
-          H.value && E.inputEnabled ? (openBlock(), createElementBlock("div", {
+          L.value && E.inputEnabled ? (openBlock(), createElementBlock("div", {
             key: 0,
             class: normalizeClass(["flex w-full items-center justify-start gap-2", [E.disabled ? "cursor-not-allowed cursor-event-none opacity-50" : ""]]),
             onClick: Z[2] || (Z[2] = withModifiers(
@@ -6715,7 +6729,7 @@ var lr = defineComponent({
               ["stop"]
             )),
             onMousedown: Z[3] || (Z[3] = //@ts-ignore
-            (...ie) => unref(ye) && unref(ye)(...ie))
+            (...ie) => unref(ge) && unref(ge)(...ie))
           }, [
             createBaseVNode("div", null, [
               createVNode(ca, {
@@ -6726,16 +6740,16 @@ var lr = defineComponent({
                 "year-placeholder": z.value.year,
                 "month-placeholder": z.value.month,
                 "day-placeholder": z.value.day,
-                "min-date": y.value,
+                "min-date": g.value,
                 "max-date": $.value,
                 required: E.required,
                 separator: E.dateSeparator,
-                "date-format": N.value,
+                "date-format": H.value,
                 onValidation: unref(k),
                 onComplete: unref(ee)
               }, null, 8, ["modelValue", "year-placeholder", "month-placeholder", "day-placeholder", "min-date", "max-date", "required", "separator", "date-format", "onValidation", "onComplete"])
             ]),
-            E.showTime ? (openBlock(), createElementBlock("div", ys, [
+            E.showTime ? (openBlock(), createElementBlock("div", gs, [
               createVNode(da, {
                 ref_key: "timeInputRef",
                 ref: m,
@@ -6749,7 +6763,7 @@ var lr = defineComponent({
                 required: E.required,
                 locale: E.locale,
                 useLocalizedPeriod: E.useLocalizedPeriod,
-                onValidation: unref(q),
+                onValidation: unref(N),
                 onComplete: unref(J),
                 onNavigateToDate: unref(V)
               }, null, 8, ["modelValue", "hour-placeholder", "minute-placeholder", "second-placeholder", "enable-seconds", "use24Hour", "required", "locale", "useLocalizedPeriod", "onValidation", "onComplete", "onNavigateToDate"])
@@ -6912,11 +6926,11 @@ var Ts = defineComponent({
       if (!m.value.isSelecting)
         m.value.isSelecting = true, m.value.tempStart = d, n("range-select", d, null);
       else {
-        const g = m.value.tempStart;
-        if (g && (d.year !== g.year || d.month !== g.month || d.day !== g.day)) {
+        const y = m.value.tempStart;
+        if (y && (d.year !== y.year || d.month !== y.month || d.day !== y.day)) {
           m.value.isSelecting = false, m.value.tempStart = null;
-          const x = g.year * 1e4 + g.month * 100 + g.day, S = d.year * 1e4 + d.month * 100 + d.day;
-          x <= S ? n("range-select", g, d) : n("range-select", d, g);
+          const x = y.year * 1e4 + y.month * 100 + y.day, S = d.year * 1e4 + d.month * 100 + d.day;
+          x <= S ? n("range-select", y, d) : n("range-select", d, y);
         } else
           m.value.tempStart = d, n("range-select", d, null);
       }
@@ -6968,7 +6982,7 @@ var Ts = defineComponent({
           "use24-hour": d.use24Hour,
           "default-time": d.defaultTime,
           onRangeSelect: w,
-          onTimeSelect: b[0] || (b[0] = (g) => M(g, "start"))
+          onTimeSelect: b[0] || (b[0] = (y) => M(y, "start"))
         }, null, 8, ["range-start", "range-end", "year", "month", "min-date", "max-date", "locale", "week-starts-on", "calendar", "showTimeSelector", "time-value", "enable-seconds", "use24-hour", "default-time"])
       ]),
       createBaseVNode("div", ks, [
@@ -6989,7 +7003,7 @@ var Ts = defineComponent({
           "use24-hour": d.use24Hour,
           "default-time": d.defaultTime,
           onRangeSelect: w,
-          onTimeSelect: b[1] || (b[1] = (g) => M(g, "end"))
+          onTimeSelect: b[1] || (b[1] = (y) => M(y, "end"))
         }, null, 8, ["range-start", "range-end", "year", "month", "min-date", "max-date", "locale", "week-starts-on", "calendar", "showTimeSelector", "time-value", "enable-seconds", "use24-hour", "default-time"])
       ])
     ]));
@@ -7017,20 +7031,20 @@ function xs(r = {}, e) {
     locale: d = "zh-TW"
   } = r, {
     containerRef: b,
-    calendarRef: g,
+    calendarRef: y,
     startDateInputRef: x,
     endDateInputRef: S,
     startTimeInputRef: T,
     endTimeInputRef: u
-  } = e, y = ref(l);
+  } = e, g = ref(l);
   let $ = {};
-  const N = ha({
+  const H = ha({
     required: o,
     showTime: n,
     minDate: w,
     maxDate: M,
     dateFormat: i
-  }), H = ha({
+  }), L = ha({
     required: o,
     showTime: n,
     minDate: w,
@@ -7052,8 +7066,8 @@ function xs(r = {}, e) {
     enableSeconds: m
   }), re = qr(
     b,
-    g,
-    { disabled: y }
+    y,
+    { disabled: g }
   ), X = ma(
     { dateInputRef: x, timeInputRef: T },
     { showTime: n, autoFocusTimeAfterDate: true }
@@ -7064,31 +7078,31 @@ function xs(r = {}, e) {
     () => _.hasValue.value || z.hasValue.value
   ), D = computed(() => {
     const O = {
-      ...N.mergedErrors.value,
-      ...H.mergedErrors.value
+      ...H.mergedErrors.value,
+      ...L.mergedErrors.value
     };
     return _.internalDateTime.value && !z.internalDateTime.value && s && (O["range.endRequired"] = "range.endRequired"), O;
   }), U = computed(() => ({
-    ...N.mergedErrorParams.value,
-    ...H.mergedErrorParams.value
+    ...H.mergedErrorParams.value,
+    ...L.mergedErrorParams.value
   })), P = computed(() => Object.keys(D.value).length > 0), te = computed(() => {
     const O = _.internalDateTime.value, G = z.internalDateTime.value;
-    if (!O || !G || jt(O, G) > 0) return false;
+    if (!O || !G || Wt(O, G) > 0) return false;
     if (h || f) {
       const oe = ar(O, G);
       if (h && oe > h)
-        return H.handleDateValidation(false, {
+        return L.handleDateValidation(false, {
           range: "range.exceedsMaxRange"
         }, "endDate", {
           range: { maxRange: h, actualDays: oe }
         }), false;
       if (f && oe < f)
-        return H.handleDateValidation(false, {
+        return L.handleDateValidation(false, {
           range: "range.belowMinRange"
         }, "endDate", {
           range: { minRange: f, actualDays: oe }
         }), false;
-      H.clearFieldErrors("range");
+      L.clearFieldErrors("range");
     }
     return !P.value;
   }), ce = computed(() => [
@@ -7097,8 +7111,8 @@ function xs(r = {}, e) {
       getValue: () => {
         const O = Ze();
         return {
-          start: ze(O.year, O.month, O.day, 0, 0, 0),
-          end: ze(O.year, O.month, O.day, 23, 59, 59)
+          start: He(O.year, O.month, O.day, 0, 0, 0),
+          end: He(O.year, O.month, O.day, 23, 59, 59)
         };
       }
     },
@@ -7121,15 +7135,15 @@ function xs(r = {}, e) {
       getValue: ko
     }
   ]), le = computed(() => ({
-    minDate: ge(w, d),
-    maxDate: z.internalDateTime.value || ge(M, d)
+    minDate: ye(w, d),
+    maxDate: z.internalDateTime.value || ye(M, d)
   })), Y = computed(() => ({
-    minDate: _.internalDateTime.value || ge(w, d),
-    maxDate: ge(M, d)
+    minDate: _.internalDateTime.value || ye(w, d),
+    maxDate: ye(M, d)
   })), k = computed(() => ({
     minDate: le.value.minDate ? Re(le.value.minDate, i) : null,
     maxDate: le.value.maxDate ? Re(le.value.maxDate, i) : null
-  })), q = computed(() => ({
+  })), N = computed(() => ({
     minDate: Y.value.minDate ? Re(Y.value.minDate, i) : null,
     maxDate: Y.value.maxDate ? Re(Y.value.maxDate, i) : null
   }));
@@ -7146,7 +7160,7 @@ function xs(r = {}, e) {
     } : { valid: true };
   }
   function J(O) {
-    !O.error || !O.params || H.handleDateValidation(
+    !O.error || !O.params || L.handleDateValidation(
       false,
       { range: O.error },
       "endDate",
@@ -7188,53 +7202,53 @@ function xs(r = {}, e) {
   }
   const ne = (O) => {
     $ = O;
-  }, ye = (O, G, oe, ke, St) => {
+  }, ge = (O, G, oe, ke, St) => {
     var st;
     oe.handleDateValidation(O, G, ke, St), (st = $.validation) == null || st.call($, !P.value, D.value);
   }, V = (O, G, oe) => {
-    ye(O, G, N, "startDate", oe);
+    ge(O, G, H, "startDate", oe);
   }, ae = (O, G, oe) => {
-    ye(O, G, H, "endDate", oe);
+    ge(O, G, L, "endDate", oe);
   }, $e = (O, G, oe = {}) => {
     var ke;
-    N.handleTimeValidation(O, G, "startTime", oe), (ke = $.validation) == null || ke.call($, !P.value, D.value);
+    H.handleTimeValidation(O, G, "startTime", oe), (ke = $.validation) == null || ke.call($, !P.value, D.value);
   }, E = (O, G, oe = {}) => {
     var ke;
-    H.handleTimeValidation(O, G, "endTime", oe), (ke = $.validation) == null || ke.call($, !P.value, D.value);
+    L.handleTimeValidation(O, G, "endTime", oe), (ke = $.validation) == null || ke.call($, !P.value, D.value);
   }, Z = (O) => {
     _.inputDateValue.value = O;
     const G = _.updateFromInputs();
     if (!G) {
-      N.handleDateValidation(false, { date: "date.invalid" });
+      H.handleDateValidation(false, { date: "date.invalid" });
       return;
     }
-    N.validateDateRange(G) && (X.autoFocusTimeAfterDateComplete(
+    H.validateDateRange(G) && (X.autoFocusTimeAfterDateComplete(
       _,
       xt
-    ), A(), K(N, ["startDate", "date.year", "date.month", "date.day"]), n || I.focusFirstInput());
+    ), A(), K(H, ["startDate", "date.year", "date.month", "date.day"]), n || I.focusFirstInput());
   }, ie = (O) => {
     z.inputDateValue.value = O;
     const G = z.updateFromInputs();
     if (!G) {
-      H.handleDateValidation(false, { date: "date.invalid" });
+      L.handleDateValidation(false, { date: "date.invalid" });
       return;
     }
-    H.validateDateRange(G) && (I.autoFocusTimeAfterDateComplete(
+    L.validateDateRange(G) && (I.autoFocusTimeAfterDateComplete(
       z,
       Yt
-    ), A(), K(H, ["endDate", "date.year", "date.month", "date.day"]));
+    ), A(), K(L, ["endDate", "date.year", "date.month", "date.day"]));
   }, Q = (O) => {
-    _.inputTimeValue.value = O, _.updateFromInputs() && A(), K(N, ["startTime", "time.hour", "time.minute", "time.second"]);
+    _.inputTimeValue.value = O, _.updateFromInputs() && A(), K(H, ["startTime", "time.hour", "time.minute", "time.second"]);
   }, pe = (O) => {
-    z.inputTimeValue.value = O, z.updateFromInputs() && A(), K(H, ["endTime", "time.hour", "time.minute", "time.second"]);
+    z.inputTimeValue.value = O, z.updateFromInputs() && A(), K(L, ["endTime", "time.hour", "time.minute", "time.second"]);
   }, Ae = (O, G) => {
     O && !G ? bt(O) : O && G ? Mt(O, G) : _t(), A();
   };
   function bt(O) {
-    N.validateDateRange(O) && (_.setInternalDateTime(O), K(N, ["startDate", "date.year", "date.month", "date.day"]), z.clearValues());
+    H.validateDateRange(O) && (_.setInternalDateTime(O), K(H, ["startDate", "date.year", "date.month", "date.day"]), z.clearValues());
   }
   function Mt(O, G) {
-    if (!(!N.validateDateRange(O) || !H.validateDateRange(G))) {
+    if (!(!H.validateDateRange(O) || !L.validateDateRange(G))) {
       if (h || f) {
         const oe = ee(O, G);
         if (!oe.valid) {
@@ -7242,16 +7256,16 @@ function xs(r = {}, e) {
           return;
         }
       }
-      _.setInternalDateTime(O), z.setInternalDateTime(G), n && (_.inputTimeValue.value || (_.inputTimeValue.value = xt, _.updateFromInputs()), z.inputTimeValue.value || (z.inputTimeValue.value = Yt, z.updateFromInputs())), K(N, ["startDate", "endDate", "range", "date.year", "date.month", "date.day"]), K(H, ["startDate", "endDate", "range", "date.year", "date.month", "date.day"]);
+      _.setInternalDateTime(O), z.setInternalDateTime(G), n && (_.inputTimeValue.value || (_.inputTimeValue.value = xt, _.updateFromInputs()), z.inputTimeValue.value || (z.inputTimeValue.value = Yt, z.updateFromInputs())), K(H, ["startDate", "endDate", "range", "date.year", "date.month", "date.day"]), K(L, ["startDate", "endDate", "range", "date.year", "date.month", "date.day"]);
     }
   }
-  const jr = (O, G) => {
+  const Wr = (O, G) => {
     G === "start" && _.internalDateTime.value && Q(O), G === "end" && z.internalDateTime.value && pe(O);
-  }, Wr = (O) => {
+  }, jr = (O) => {
     const G = O.getValue();
     _.setInternalDateTime(G.start), z.setInternalDateTime(G.end), n && (_.inputTimeValue.value || (_.inputTimeValue.value = xt, _.updateFromInputs()), z.inputTimeValue.value || (z.inputTimeValue.value = Yt, z.updateFromInputs())), A();
   }, _t = () => {
-    _.clearValues(), z.clearValues(), N.clearAllErrors(), H.clearAllErrors(), A();
+    _.clearValues(), z.clearValues(), H.clearAllErrors(), L.clearAllErrors(), A();
   }, Jr = (O) => {
     O ? (_.setExternalValue(O.start), z.setExternalValue(O.end)) : _t(), A();
   }, _r = () => {
@@ -7268,8 +7282,8 @@ function xs(r = {}, e) {
   };
   return watch(() => a, (O) => {
     if (O && (O.start || O.end)) {
-      const G = O.start ? ge(O.start, d, t) : null, oe = O.end ? ge(O.end, d, t) : null;
-      if (O.start && !G && (console.warn(`Invalid start date provided: ${O.start}`), N.handleDateValidation(false, { date: "date.invalid" }, "startDate")), O.end && !oe && (console.warn(`Invalid end date provided: ${O.end}`), H.handleDateValidation(false, { date: "date.invalid" }, "endDate")), G && oe && jt(G, oe) > 0) {
+      const G = O.start ? ye(O.start, d, t) : null, oe = O.end ? ye(O.end, d, t) : null;
+      if (O.start && !G && (console.warn(`Invalid start date provided: ${O.start}`), H.handleDateValidation(false, { date: "date.invalid" }, "startDate")), O.end && !oe && (console.warn(`Invalid end date provided: ${O.end}`), L.handleDateValidation(false, { date: "date.invalid" }, "endDate")), G && oe && Wt(G, oe) > 0) {
         console.warn("Initial date range has start > end, auto-swapping values"), _.setExternalValue(O.end), z.setExternalValue(O.start), setTimeout(() => {
           A();
         }, 0);
@@ -7280,11 +7294,11 @@ function xs(r = {}, e) {
       _.clearValues(), z.clearValues();
   }, { immediate: true }), {
     // 狀態
-    isDisabled: y,
+    isDisabled: g,
     startDateConstraints: le,
     endDateConstraints: Y,
     startDateConstraintsStr: k,
-    endDateConstraintsStr: q,
+    endDateConstraintsStr: N,
     // 驗證相關
     hasErrors: P,
     mergedErrors: D,
@@ -7313,12 +7327,12 @@ function xs(r = {}, e) {
     handleEndTimeComplete: pe,
     // 日曆事件處理
     handleCalendarRangeSelect: Ae,
-    handleTimeSelect: jr,
+    handleTimeSelect: Wr,
     // 導航事件處理
     handleStartNavigateToDate: X.handleNavigateToDate,
     handleEndNavigateToDate: I.handleNavigateToDate,
     // 主要操作
-    applyShortcut: Wr,
+    applyShortcut: jr,
     clearRange: _t,
     setRange: Jr,
     validate: _r,
@@ -7374,8 +7388,8 @@ var Ns = {
 };
 var Us = { class: "flex flex-wrap gap-2" };
 var zs = ["aria-label", "data-testid", "onClick"];
-var js = { key: 2 };
-var Ws = { class: "flex flex-wrap gap-2" };
+var Ws = { key: 2 };
+var js = { class: "flex flex-wrap gap-2" };
 var Js = { class: "calendar-container flex flex-col md:flex-row gap-1 overflow-auto" };
 var _s = { key: 0 };
 var Ks = defineComponent({
@@ -7451,7 +7465,7 @@ var Ks = defineComponent({
       containerAttributes: f,
       setColor: d,
       setMode: b
-    } = zr(), g = computed(() => {
+    } = zr(), y = computed(() => {
       var ae, $e, E, Z, ie, Q, pe, Ae;
       const V = {
         start: M("range.start"),
@@ -7509,10 +7523,10 @@ var Ks = defineComponent({
     const {
       // 狀態
       showCalendar: u,
-      startDateConstraintsStr: y,
+      startDateConstraintsStr: g,
       endDateConstraintsStr: $,
-      shortcuts: N,
-      startDateTime: H,
+      shortcuts: H,
+      startDateTime: L,
       endDateTime: _,
       hasRangeValue: z,
       mergedErrors: re,
@@ -7528,14 +7542,14 @@ var Ks = defineComponent({
       handleEndTimeComplete: le,
       handleCalendarRangeSelect: Y,
       handleStartNavigateToDate: k,
-      handleEndNavigateToDate: q,
+      handleEndNavigateToDate: N,
       handleTimeSelect: ee,
       // 操作方法
       toggleCalendar: J,
       applyShortcut: A,
       clearRange: K,
       focusStartDate: ne,
-      focusEndDate: ye
+      focusEndDate: ge
     } = m;
     return (V, ae) => {
       var $e, E, Z, ie;
@@ -7558,11 +7572,11 @@ var Ks = defineComponent({
               "aria-label": "選擇日期範圍"
             }, [
               createBaseVNode("div", Cs, [
-                ($e = V.modelValue) != null && $e.start ? (openBlock(), createElementBlock("span", Rs, toDisplayString((E = V.modelValue) == null ? void 0 : E.start), 1)) : (openBlock(), createElementBlock("span", Es, toDisplayString(g.value.start), 1))
+                ($e = V.modelValue) != null && $e.start ? (openBlock(), createElementBlock("span", Rs, toDisplayString((E = V.modelValue) == null ? void 0 : E.start), 1)) : (openBlock(), createElementBlock("span", Es, toDisplayString(y.value.start), 1))
               ]),
               createBaseVNode("div", Is, toDisplayString(V.separator), 1),
               createBaseVNode("div", Os, [
-                (Z = V.modelValue) != null && Z.end ? (openBlock(), createElementBlock("span", Vs, toDisplayString((ie = V.modelValue) == null ? void 0 : ie.end), 1)) : (openBlock(), createElementBlock("span", Fs, toDisplayString(g.value.end), 1))
+                (Z = V.modelValue) != null && Z.end ? (openBlock(), createElementBlock("span", Vs, toDisplayString((ie = V.modelValue) == null ? void 0 : ie.end), 1)) : (openBlock(), createElementBlock("span", Fs, toDisplayString(y.value.end), 1))
               ])
             ], 8, Ys),
             createBaseVNode("div", {
@@ -7622,13 +7636,13 @@ var Ks = defineComponent({
                   createVNode(ca, {
                     ref_key: "startDateInputRef",
                     ref: s,
-                    modelValue: unref(H).inputDateValue.value,
-                    "onUpdate:modelValue": ae[3] || (ae[3] = (Q) => unref(H).inputDateValue.value = Q),
-                    "year-placeholder": g.value.year,
-                    "month-placeholder": g.value.month,
-                    "day-placeholder": g.value.day,
-                    "max-date": unref(y).maxDate,
-                    "min-date": unref(y).minDate,
+                    modelValue: unref(L).inputDateValue.value,
+                    "onUpdate:modelValue": ae[3] || (ae[3] = (Q) => unref(L).inputDateValue.value = Q),
+                    "year-placeholder": y.value.year,
+                    "month-placeholder": y.value.month,
+                    "day-placeholder": y.value.day,
+                    "max-date": unref(g).maxDate,
+                    "min-date": unref(g).minDate,
                     "date-format": x.value,
                     onValidation: unref(I),
                     onComplete: unref(P)
@@ -7637,11 +7651,11 @@ var Ks = defineComponent({
                     createVNode(da, {
                       ref_key: "startTimeInputRef",
                       ref: c,
-                      modelValue: unref(H).inputTimeValue.value,
-                      "onUpdate:modelValue": ae[4] || (ae[4] = (Q) => unref(H).inputTimeValue.value = Q),
-                      "hour-placeholder": g.value.hour,
-                      "minute-placeholder": g.value.minute,
-                      "second-placeholder": g.value.second,
+                      modelValue: unref(L).inputTimeValue.value,
+                      "onUpdate:modelValue": ae[4] || (ae[4] = (Q) => unref(L).inputTimeValue.value = Q),
+                      "hour-placeholder": y.value.hour,
+                      "minute-placeholder": y.value.minute,
+                      "second-placeholder": y.value.second,
                       "enable-seconds": V.enableSeconds,
                       use24Hour: V.use24Hour,
                       locale: V.locale,
@@ -7656,7 +7670,7 @@ var Ks = defineComponent({
                   "aria-label": "結束日期輸入區域",
                   onClick: ae[8] || (ae[8] = withModifiers(
                     //@ts-ignore
-                    (...Q) => unref(ye) && unref(ye)(...Q),
+                    (...Q) => unref(ge) && unref(ge)(...Q),
                     ["stop"]
                   )),
                   class: "flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200"
@@ -7666,9 +7680,9 @@ var Ks = defineComponent({
                     ref: i,
                     modelValue: unref(_).inputDateValue.value,
                     "onUpdate:modelValue": ae[6] || (ae[6] = (Q) => unref(_).inputDateValue.value = Q),
-                    "year-placeholder": g.value.year,
-                    "month-placeholder": g.value.month,
-                    "day-placeholder": g.value.day,
+                    "year-placeholder": y.value.year,
+                    "month-placeholder": y.value.month,
+                    "day-placeholder": y.value.day,
                     "min-date": unref($).minDate,
                     "max-date": unref($).maxDate,
                     "date-format": x.value,
@@ -7681,22 +7695,22 @@ var Ks = defineComponent({
                       ref: v,
                       modelValue: unref(_).inputTimeValue.value,
                       "onUpdate:modelValue": ae[7] || (ae[7] = (Q) => unref(_).inputTimeValue.value = Q),
-                      "hour-placeholder": g.value.hour,
-                      "minute-placeholder": g.value.minute,
-                      "second-placeholder": g.value.second,
+                      "hour-placeholder": y.value.hour,
+                      "minute-placeholder": y.value.minute,
+                      "second-placeholder": y.value.second,
                       "enable-seconds": V.enableSeconds,
                       use24Hour: V.use24Hour,
                       locale: V.locale,
                       onValidation: unref(U),
                       onComplete: unref(le),
-                      onNavigateToDate: unref(q)
+                      onNavigateToDate: unref(N)
                     }, null, 8, ["modelValue", "hour-placeholder", "minute-placeholder", "second-placeholder", "enable-seconds", "use24Hour", "locale", "onValidation", "onComplete", "onNavigateToDate"])
                   ])) : createCommentVNode("", true)
                 ])
               ])) : createCommentVNode("", true),
-              unref(N).length > 0 && V.showShortcuts ? (openBlock(), createElementBlock("div", Ns, [
+              unref(H).length > 0 && V.showShortcuts ? (openBlock(), createElementBlock("div", Ns, [
                 createBaseVNode("div", Us, [
-                  (openBlock(true), createElementBlock(Fragment, null, renderList(unref(N), (Q) => (openBlock(), createElementBlock("button", {
+                  (openBlock(true), createElementBlock(Fragment, null, renderList(unref(H), (Q) => (openBlock(), createElementBlock("button", {
                     key: Q.label,
                     type: "button",
                     "aria-label": `選擇${Q.label}範圍`,
@@ -7706,15 +7720,15 @@ var Ks = defineComponent({
                   }, toDisplayString(Q.label), 9, zs))), 128)),
                   renderSlot(V.$slots, "shortcuts", {
                     applyShortcut: unref(A),
-                    shortcuts: unref(N),
+                    shortcuts: unref(H),
                     currentRange: V.modelValue
                   })
                 ])
-              ])) : V.$slots.shortcuts && V.showShortcuts ? (openBlock(), createElementBlock("div", js, [
-                createBaseVNode("div", Ws, [
+              ])) : V.$slots.shortcuts && V.showShortcuts ? (openBlock(), createElementBlock("div", Ws, [
+                createBaseVNode("div", js, [
                   renderSlot(V.$slots, "shortcuts", {
                     applyShortcut: unref(A),
-                    shortcuts: unref(N),
+                    shortcuts: unref(H),
                     currentRange: V.modelValue
                   })
                 ])
@@ -7723,16 +7737,16 @@ var Ks = defineComponent({
                 createVNode(Ts, {
                   showTimeSelector: V.showTime,
                   calendar: V.calendar,
-                  "range-start": unref(H).internalDateTime.value,
+                  "range-start": unref(L).internalDateTime.value,
                   "range-end": unref(_).internalDateTime.value,
                   enableSeconds: V.enableSeconds,
                   use24Hour: V.use24Hour,
                   locale: V.locale,
                   "week-starts-on": V.weekStartsOn,
-                  "start-time-value": unref(H).inputTimeValue.value,
+                  "start-time-value": unref(L).inputTimeValue.value,
                   "end-time-value": unref(_).inputTimeValue.value,
-                  "min-date": unref(ge)(V.minDate),
-                  "max-date": unref(ge)(V.maxDate),
+                  "min-date": unref(ye)(V.minDate),
+                  "max-date": unref(ye)(V.maxDate),
                   onRangeSelect: unref(Y),
                   onTimeSelect: unref(ee)
                 }, null, 8, ["showTimeSelector", "calendar", "range-start", "range-end", "enableSeconds", "use24Hour", "locale", "week-starts-on", "start-time-value", "end-time-value", "min-date", "max-date", "onRangeSelect", "onTimeSelect"])
@@ -7773,6 +7787,7 @@ var di = {
 export {
   lr as DatePicker,
   Ks as DateRange,
+  Vr as RocFormatPlugin,
   di as VueDatepicker,
   di as default
 };

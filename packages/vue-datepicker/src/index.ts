@@ -4,8 +4,11 @@ import type { App } from 'vue';
 import DatePicker from './DatePicker.vue';
 import DateRange from './DateRange.vue';
 
+// 格式化插件
+import { RocFormatPlugin } from './plugins/calendars/RocFormatPlugin';
+
 // 個別組件導出
-export { DatePicker, DateRange };
+export { DatePicker, DateRange, RocFormatPlugin };
 
 // 類型導出
 export type { DatePickerProps, DateRangeProps } from './types/datePickerProps';

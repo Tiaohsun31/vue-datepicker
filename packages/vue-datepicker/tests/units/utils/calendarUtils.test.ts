@@ -198,7 +198,6 @@ describe('CalendarUtils', () => {
 
         it('應該處理錯誤並返回空陣列', () => {
             const days = CalendarUtils.generateCalendarDays(0, 0, 'invalid', 'zh-TW')
-            console.log(days)
             expect(days).toEqual([])
         })
     })
@@ -479,8 +478,6 @@ describe('CalendarUtils', () => {
             it('應該處理日本曆的年號邊界情況', () => {
                 // 日本曆的 1-1-1 可能會被自動調整，這是預期行為
                 const result = CalendarUtils.isValidDate(1, 1, 1, 'japanese')
-                // 由於年號系統的複雜性，這個結果可能是 false（被調整了）
-                console.log('日本曆 1-1-1 驗證結果:', result)
 
                 // 測試更安全的日期
                 expect(CalendarUtils.isValidDate(2, 6, 15, 'japanese')).toBe(true)
@@ -530,7 +527,6 @@ describe('CalendarUtils', () => {
 
                     testCases.forEach(({ year, month, day, expected }) => {
                         const result = CalendarUtils.isValidDate(year, month, day, 'japanese')
-                        console.log(`日本曆 ${year}-${month}-${day} 驗證:`, result)
                         // 由於日本曆的複雜性，我們只記錄結果，不強制斷言
                     })
                 })

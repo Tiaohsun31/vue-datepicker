@@ -276,9 +276,8 @@ export function useDateTimePicker(
             if (!validation.validateDateRange(date)) {
                 return;
             }
-
             dateTimeValue.setInternalDateTime(date);
-            await emitEvents(date);
+            await emitEvents(dateTimeValue.internalDateTime.value);
 
             ['date', 'year', 'month', 'day'].forEach(field => {
                 validation.clearFieldErrors(field);

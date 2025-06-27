@@ -72,9 +72,9 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
 
 <div class="demo-container space-y-2">
   <DatePicker v-model="date" theme="blue" />
-  <DatePicker v-model="date" theme="#ff0000" />
+  <DatePicker v-model="date" theme="#ffff00" />
   <DatePicker v-model="date" theme="rgb(255, 0, 0)" />
-  <DatePicker v-model="date" theme="oklch(62.3% 0.214 259.815)" />
+  <DatePicker v-model="date" theme="oklch(69.6% 0.17 162.48)" />
 </div>
 :::
 
@@ -84,13 +84,13 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
   <DatePicker v-model="date" theme="blue" />
 
   <!-- 使用十六進制顏色 -->
-  <DatePicker v-model="date" theme="#ff0000" />
+  <DatePicker v-model="date" theme="#ffff00" />
 
   <!-- 使用 RGB 顏色 -->
   <DatePicker v-model="date" theme="rgb(255, 0, 0)" />
 
   <!-- 使用 OKLCH 顏色 -->
-  <DatePicker v-model="date" theme="oklch(62.3% 0.214 259.815)" />
+  <DatePicker v-model="date" theme="oklch(69.6% 0.17 162.48)" />
 </template>
 ```
 

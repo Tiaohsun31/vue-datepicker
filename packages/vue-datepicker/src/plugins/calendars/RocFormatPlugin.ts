@@ -220,6 +220,8 @@ class RocFormatPlugin implements CalendarPlugin {
         if (!this.supportsFormat(format)) {
             throw new Error(`RocFormatPlugin 不支援格式: ${format}`);
         }
+        // 檢查日期物件是否實際包含時間資訊
+        const hasTimeData = date.hour !== undefined && date.hour !== null;
         // 檢查是否為複合格式（包含時間部分）
         const parts = format.split(' ');
         const dateFormatPart = parts[0];
@@ -229,7 +231,7 @@ class RocFormatPlugin implements CalendarPlugin {
         const formattedDate = this.formatDatePart(date, dateFormatPart, locale);
 
         // 如果有時間部分，處理時間格式
-        if (timeFormatPart) {
+        if (timeFormatPart && hasTimeData) {
             // 透過 format 字串判斷是否使用 24 小時制
             const use24Hour = this.detectTimeFormat(timeFormatPart);
             const formattedTime = this.formatTimePart(date, timeFormatPart, use24Hour);
@@ -256,12 +258,10 @@ class RocFormatPlugin implements CalendarPlugin {
         // ROC 特定格式
         const rocFormats: Record<string, string> = {
             'ROC-YYYY': `民國${rocYear}年`,
-            'ROC-YY': `民國${rocYear.toString().slice(-2)}年`,
             'ROC-YYYY-MM-DD': `民國${rocYear}年${month.toString().padStart(2, '0')}月${day.toString().padStart(2, '0')}日`,
-            'ROC-YY-MM-DD': `民國${rocYear.toString().slice(-2)}年${month.toString().padStart(2, '0')}月${day.toString().padStart(2, '0')}日`,
-            'ROC-NUM-YYYY-MM-DD': `${rocYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
-            'ROC-NUM-YY-MM-DD': `${rocYear.toString().slice(-2)}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
             'ROC-YYYY/MM/DD': `民國${rocYear}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`,
+            'ROC-NUM-YYYY-MM-DD': `${rocYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+            'ROC-NUM-YYYY/MM/DD': `${rocYear}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`,
         };
 
         if (rocFormats[format]) {

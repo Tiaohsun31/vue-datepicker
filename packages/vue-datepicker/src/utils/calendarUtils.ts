@@ -471,6 +471,7 @@ export class CalendarUtils {
                     return dayjs(jsDate).format(gregorianFormat);
                 case 'roc':
                     const rocPlugin = new RocFormatPlugin();
+
                     if (rocPlugin.supportsFormat(format) && rocPlugin.canParseInput(format)) {
                         return rocPlugin.format(date, format, locale);
                     }

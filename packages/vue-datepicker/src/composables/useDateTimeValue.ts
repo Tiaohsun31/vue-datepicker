@@ -134,16 +134,56 @@ export function useDateTimeValue(
 
     // 直接設置內部值（適用於 Calendar/TimeSelector）
     const setInternalDateTime = (dateTime: SimpleDateValue | null) => {
-        internalDateTime.value = dateTime;
-
-        // 同步更新顯示值（西元格式）
-        if (dateTime) {
-            inputDateValue.value = formatSimpleDate(dateTime, dateFormat);
-            inputTimeValue.value = getTimeFromDateTime(dateTime);
-        } else {
+        if (!dateTime) {
+            internalDateTime.value = null;
             inputDateValue.value = null;
             inputTimeValue.value = null;
+            return;
         }
+        // 如果需要顯示時間且有預設時間，且傳入的日期沒有時間信息
+        if (showTime && defaultTime &&
+            (dateTime.hour === undefined || dateTime.hour === null) &&
+            !inputTimeValue.value) {
+
+            // 解析預設時間
+            const timeParts = defaultTime.split(':').map(Number);
+            const hour = timeParts[0] || 0;
+            const minute = timeParts[1] || 0;
+            const second = timeParts[2] || 0;
+
+            // 創建包含預設時間的新日期時間對象
+            const dateTimeWithDefaultTime = createSimpleDate(
+                dateTime.year,
+                dateTime.month,
+                dateTime.day,
+                hour,
+                minute,
+                second
+            );
+
+            internalDateTime.value = dateTimeWithDefaultTime;
+            inputTimeValue.value = defaultTime;
+        } else {
+            internalDateTime.value = dateTime;
+            inputTimeValue.value = getTimeFromDateTime(dateTime);
+        }
+
+        // 同步更新顯示值（西元格式）
+        if (internalDateTime.value) {
+            inputDateValue.value = formatSimpleDate(internalDateTime.value);
+        }
+        // internalDateTime.value = dateTime;
+
+        // console.log('setInternalDateTime', dateTime);
+
+        // // 同步更新顯示值（西元格式）
+        // if (dateTime) {
+        //     inputDateValue.value = formatSimpleDate(dateTime, dateFormat);
+        //     inputTimeValue.value = getTimeFromDateTime(dateTime);
+        // } else {
+        //     inputDateValue.value = null;
+        //     inputTimeValue.value = null;
+        // }
     };
 
     // 只更新時間部分（適用於 TimeSelector）

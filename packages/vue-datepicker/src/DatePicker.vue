@@ -143,7 +143,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     timeFormat: 'HH:mm:ss',
     showTime: false,
     enableSeconds: true,
-    use24Hour: false,
+    use24Hour: true,
     useLocalizedPeriod: false,
     autoFocusTimeAfterDate: true,
 

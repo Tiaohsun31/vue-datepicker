@@ -4,7 +4,8 @@
         <!-- 預設的錯誤顯示邏輯 -->
         <div v-if="Array.isArray(processedErrors)">
             <div v-for="(error, index) in processedErrors" :key="index">
-                <slot :name="`error-${error.field}`" :error="error" :message="error.message" :field="error.field">
+                <slot :name="`error-${error.field}`" :error="error" :message="error.message" :field="error.field"
+                    :errorParams="error.params">
                     <span>{{ error.message }}</span>
                 </slot>
             </div>
@@ -17,12 +18,23 @@
         </div>
 
         <div v-else-if="typeof processedErrors === 'object'">
-            <div v-for="(error, field) in processedErrors" :key="field">
+            <!-- <div v-for="(error, field) in processedErrors" :key="field">
                 <slot :name="getSlotName(field)" :field="field" :error="error" :message="error"
                     :originalKey="getOriginalKey(field)" :fieldType="getFieldType(field)">
                     <span>{{ error }}</span>
                 </slot>
-            </div>
+            </div> -->
+            <!-- 主要的 error slot，傳遞完整的 errors 和 errorParams -->
+            <slot name="error" :errors="processedErrors" :errorParams="props.errorParams">
+                <!-- 預設顯示：逐個顯示錯誤 -->
+                <div v-for="(error, field) in processedErrors" :key="field">
+                    <slot :name="getSlotName(field)" :field="field" :error="error" :message="error"
+                        :originalKey="getOriginalKey(field)" :fieldType="getFieldType(field)"
+                        :errorParams="props.errorParams[field] || {}">
+                        <span>{{ error }}</span>
+                    </slot>
+                </div>
+            </slot>
         </div>
     </div>
 </template>
@@ -101,7 +113,8 @@ const processedErrors = computed(() => {
         return props.errors.map((error, index) => ({
             field: `item-${index}`,
             message: translateMessage(error),
-            originalKey: error
+            originalKey: error,
+            params: {}
         }));
     }
 
@@ -130,6 +143,11 @@ const processedErrors = computed(() => {
     }
 
     return props.errors;
+});
+
+// 計算完整的錯誤參數資訊（用於 slot）
+const processedErrorParams = computed(() => {
+    return props.errorParams || {};
 });
 
 function getOriginalKey(field: string): string | undefined {
@@ -335,6 +353,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
 defineExpose({
     hasErrors,
     processedErrors,
+    processedErrorParams,
     translateMessage,
     getOriginalKey,
     getSlotName,

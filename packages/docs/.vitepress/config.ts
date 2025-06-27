@@ -15,7 +15,7 @@ export default defineConfig({
             }
         },
         optimizeDeps: {
-            force: true
+            force: true,
         },
         build: {
             rollupOptions: {
@@ -60,6 +60,7 @@ export default defineConfig({
             }, {
                 items: [
                     { text: 'Theme & Mode', link: '/pages/theming' },
+                    { text: 'Error Message', link: '/pages/error-message' }
                 ]
             }
         ],

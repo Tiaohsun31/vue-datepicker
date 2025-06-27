@@ -6,9 +6,10 @@ import { jaJPLocaleMessages as jaJP } from './ja-JP';
 import { koKRLocaleMessages as koKR } from './ko-KR';
 import type { ErrorMessages, LocaleMessages } from '@/types/locale';
 
-export type LocaleKey = 'zh-TW' | 'zh-CN' | 'en-US' | 'ja-JP' | 'ko-KR';
+export type SupportedLocale = 'zh-TW' | 'zh-CN' | 'en-US' | 'ja-JP' | 'ko-KR';
+export type LocaleKey = SupportedLocale | string;
 
-export const localeMessages: Record<LocaleKey, LocaleMessages> = {
+export const localeMessages: Record<string, LocaleMessages> = {
     'zh-TW': zhTW,
     'zh-CN': zhCN,
     'en-US': enUS,
@@ -27,8 +28,28 @@ export function interpolateMessage(template: string, variables: Record<string, a
 export class LocaleManager {
     private currentLocale: LocaleKey = 'zh-TW';
 
-    setLocale(locale: LocaleKey): void {
+    setLocale(locale: string): void {
+        if (!localeMessages[locale]) {
+            console.warn(`Locale '${locale}' not found, falling back to 'zh-TW'`);
+            this.currentLocale = 'zh-TW';
+            return;
+        }
         this.currentLocale = locale;
+    }
+
+    // 註冊自定義語言包
+    registerLocale(locale: string, messages: LocaleMessages): void {
+        localeMessages[locale] = messages;
+    }
+
+    // 檢查語言包是否存在
+    hasLocale(locale: string): boolean {
+        return !!localeMessages[locale];
+    }
+
+    // 獲取所有可用語言
+    getAvailableLocales(): string[] {
+        return Object.keys(localeMessages);
     }
 
     getCurrentLocale(): LocaleKey {
@@ -60,12 +81,24 @@ export class LocaleManager {
     }
 
     // 支援自定義語言包
-    addCustomMessages(locale: LocaleKey, messages: Partial<ErrorMessages>): void {
+    addCustomMessages(locale: string, messages: Partial<LocaleMessages>): void {
+        if (!localeMessages[locale]) {
+            console.warn(`Locale '${locale}' not found. Please register it first using registerLocale().`);
+            return;
+        }
+
         localeMessages[locale] = {
             ...localeMessages[locale],
             ...this.deepMerge(localeMessages[locale], messages)
         };
     }
+
+    // addCustomMessages(locale: LocaleKey, messages: Partial<ErrorMessages>): void {
+    //     localeMessages[locale] = {
+    //         ...localeMessages[locale],
+    //         ...this.deepMerge(localeMessages[locale], messages)
+    //     };
+    // }
 
     /**
      * 獲取參數化錯誤訊息

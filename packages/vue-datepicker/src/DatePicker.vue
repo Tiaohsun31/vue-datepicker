@@ -81,7 +81,7 @@
     <!-- 錯誤訊息顯示 - 可選且可自定義 -->
     <div v-if="showErrorMessage && hasErrors">
         <!-- 讓使用者完全控制錯誤顯示 -->
-        <slot name="error" :errors="mergedErrors" :hasErrors="hasErrors">
+        <slot name="error" :errors="mergedErrors" :errorParams="mergedErrorParams" :hasErrors="hasErrors">
             <!-- 預設使用 DateErrorMessage -->
             <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
                 :custom-messages="customErrorMessages" :errorParams="mergedErrorParams">
@@ -131,6 +131,7 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     // 日曆系統
     calendar: 'gregory',
     locale: 'zh-TW',
+    customLocaleMessages: undefined,
     outputType: 'iso',
     useStrictISO: false,
 
@@ -162,12 +163,15 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     customErrorMessages: () => ({})
 });
 
-const { setLocale, getPlaceholderMessage } = useLocale(props.locale);
+const { setLocale, getPlaceholderMessage } = useLocale(
+    props.locale,
+    props.customLocaleMessages
+);
 
 const emit = defineEmits<{
     'update:modelValue': [date: DateTimeInput];
     'change': [date: DateTimeInput];
-    'validation': [isValid: boolean, errors: Record<string, string>];
+    'validation': [isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>];
 }>();
 
 // Slot
@@ -229,7 +233,7 @@ const datePicker = useDateTimePicker(
 datePicker.setEmitters({
     update: (value) => emit('update:modelValue', value),
     change: (value) => emit('change', value),
-    validation: (isValid, errors) => emit('validation', isValid, errors)
+    validation: (isValid, errors, errorParams) => emit('validation', isValid, errors, errorParams)
 });
 
 // 使用主題 composable
@@ -299,10 +303,16 @@ const mergedErrors = computed(() => {
 
 // 合併所有錯誤參數
 const mergedErrorParams = computed(() => {
-    return {
-        ...datePicker.mergedErrorParams?.value || {},
-        // 格式錯誤通常不需要參數，但可以擴展
+    const datePickerParams = datePicker.mergedErrorParams?.value || {};
+    const formatParams = {}; // 格式錯誤通常不需要參數
+
+    const merged = {
+        ...datePickerParams,
+        ...formatParams
     };
+
+    // 如果沒有任何參數，返回空物件而不是 undefined
+    return Object.keys(merged).length > 0 ? merged : {};
 });
 
 // 是否有錯誤
@@ -350,9 +360,16 @@ watch(() => props.mode, (newMode) => {
 // 監聽語言變化
 watch(() => props.locale, (newLocale) => {
     if (newLocale) {
-        setLocale(newLocale);
+        setLocale(newLocale, props.customLocaleMessages);
     }
 }, { immediate: true });
+
+// 監聽自定義語言包變化
+watch(() => props.customLocaleMessages, (newMessages) => {
+    if (newMessages && props.locale) {
+        setLocale(props.locale, newMessages);
+    }
+});
 
 watch(() => props.calendar, (newCalendar) => {
     if (!CalendarUtils.isCalendarSupported(newCalendar)) {

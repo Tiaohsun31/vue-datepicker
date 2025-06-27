@@ -243,7 +243,7 @@ console.log(formatted);
 
 ```typescript
 // 檢查格式是否被插件支援
-const isSupported = rocPlugin.supportsFormat("ROC-YYYY年MM月DD日");
+const isSupported = rocPlugin.supportsFormat("ROC-YYYY-MM-DD");
 console.log(isSupported); // true
 
 const isNotSupported = rocPlugin.supportsFormat("YYYY-MM-DD");
@@ -276,10 +276,10 @@ console.log(invalidDate); // null
 2. **格式限制**：僅支援預定義的 ROC 格式代碼
 3. **語言支援**：主要針對中文環境優化
 4. **相容性**：需要現代瀏覽器支援
-5. **性能**：ROC 插件只在需要時才會被載入和執行
+5. **性能**：插件只在需要時才會被載入和執行
    :::
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 // 基本示例
 const rocDateTime = ref('')

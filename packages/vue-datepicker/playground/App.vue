@@ -95,6 +95,15 @@
             <DatePicker v-model="dateTime" :calendar="calendar" :locale="locale" :outputType="outputType" />
             {{ dateTime }}
         </div>
+        <div>
+            <DatePicker v-model="dateTime" locale="fr-FR" min-date="2025-06-01"
+                :customLocaleMessages="frFRLocaleMessages" required>
+            </DatePicker>
+        </div>
+        <div>
+            <DatePicker v-model="dateTime" locale="zh-TW" min-date="2025-06-01" required @validation="handleValidation">
+            </DatePicker>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -102,12 +111,12 @@ import { ref } from 'vue';
 import DatePicker from '@/DatePicker.vue';
 import DateRange from '@/DateRange.vue';
 import type { OutputType } from '@/types/main';
-import { RocFormatPlugin } from '@tiaohsun/vue-datepicker';
+import { RocFormatPlugin, type LocaleMessages } from '@tiaohsun/vue-datepicker';
 
 // 民國113年6月15日
 const rocDate = ref(null);
 const rocDate1 = ref(null);
-const dateTime = ref(''); // ISO 8601 格式
+const dateTime = ref('2025-05-22'); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
 
 // 新增 DateRange 測試變數
@@ -193,5 +202,110 @@ console.log(outOfRange); // null
 const invalidDate = rocPlugin.parseInput("民國113年02月30日", "zh-TW");
 console.log(invalidDate); // null
 
+// 法文語言包
+const frFRLocaleMessages = {
+    error: {
+        calendar: {
+            unsupported: 'Calendrier non supporté',
+        },
+        date: {
+            required: 'Veuillez sélectionner une date',
+            invalid: 'Date invalide',
+            outOfRange: 'Date hors de la plage autorisée',
+            beforeMin: 'La date ne peut pas être antérieure à {minDate}',
+            afterMax: 'La date ne peut pas être postérieure à {maxDate}',
+            unsupportedFormat: 'Format de date non supporté, formats supportés: {formats}',
+            parseError: 'Échec de l\'analyse de la date, veuillez vérifier le format',
+        },
+        time: {
+            required: 'Veuillez sélectionner une heure',
+            invalid: 'Heure invalide',
+            hourOutOfRange: 'L\'heure doit être entre {min}-{max}',
+            minuteOutOfRange: 'Les minutes doivent être entre 0-59',
+            secondOutOfRange: 'Les secondes doivent être entre 0-59',
+            hourRequired: 'Veuillez entrer l\'heure',
+            minuteRequired: 'Veuillez entrer les minutes',
+            secondRequired: 'Veuillez entrer les secondes',
+            minuteStepInvalid: 'Les minutes doivent être un multiple de {step}',
+        },
+        year: {
+            required: 'Veuillez entrer une année',
+            invalid: 'Format d\'année invalide',
+            outOfRange: 'L\'année doit être entre {min}-{max}',
+            notLeapYear: 'Le 29 février n\'existe pas en {year}, ce n\'est pas une année bissextile',
+        },
+        month: {
+            required: 'Veuillez entrer le mois',
+            invalid: 'Format de mois invalide',
+            outOfRange: 'Le mois doit être entre 1-12',
+        },
+        day: {
+            required: 'Veuillez entrer le jour',
+            invalid: 'Format de jour invalide',
+            outOfRange: 'Le jour doit être entre 1-31',
+            notExistInMonth: 'Le mois {month} a au maximum {maxDays} jours',
+        },
+        range: {
+            startRequired: 'Veuillez sélectionner la date de début',
+            endRequired: 'Veuillez sélectionner la date de fin',
+            startAfterEnd: 'La date de début ne peut pas être postérieure à la date de fin',
+            exceedsMaxRange: 'La plage de sélection ne peut pas dépasser {maxRange} jours',
+            belowMinRange: 'La plage de sélection ne peut pas être inférieure à {minRange} jours',
+        },
+        format: {
+            dateFormat: 'Format de date invalide: "{original}" automatiquement corrigé en "{fixed}"',
+            timeFormat: 'Format d\'heure invalide: "{original}" automatiquement corrigé en "{fixed}"',
+        },
+    },
+    placeholder: {
+        date: {
+            year: 'AAAA',
+            month: 'MM',
+            day: 'JJ'
+        },
+        time: {
+            hour: 'HH',
+            minute: 'mm',
+            second: 'ss'
+        },
+        general: {
+            selectDate: 'Sélectionnez une date',
+            selectTime: 'Sélectionnez une heure',
+            clear: 'Effacer',
+            time: 'Heure',
+        },
+        range: {
+            start: 'Date de début',
+            end: 'Date de fin',
+        }
+    },
+    yearSelector: {
+        jumpToYear: 'Aller à l\'année',
+        inputYearPlaceholder: 'Entrez l\'année grégorienne...',
+        yearRangeInfo: 'Plage d\'années {calendar}: {min} - {max}',
+        noYearsToDisplay: 'Aucune année à afficher',
+        returnToValidRange: 'Retour à la plage valide',
+    }
+};
 
+function handleValidation(
+    isValid: boolean,
+    errors: Record<string, string>,
+    errorParams?: Record<string, Record<string, any>>
+) {
+    console.log('驗證結果:', { isValid, errors, errorParams });
+
+    // 安全檢查 errorParams
+    if (errorParams) {
+        console.log('錯誤參數:', errorParams);
+
+        // 安全使用參數
+        Object.entries(errors).forEach(([field, message]) => {
+            const params = errorParams[field];
+            if (params) {
+                console.log(`欄位 ${field} 的參數:`, params);
+            }
+        });
+    }
+}
 </script>

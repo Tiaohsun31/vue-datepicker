@@ -143,7 +143,7 @@ export function useDateTimePicker(
     // 事件發射器
     let emitUpdate: ((value: DateTimeInput) => void) | null = null;
     let emitChange: ((value: DateTimeInput) => void) | null = null;
-    let emitValidation: ((isValid: boolean, errors: Record<string, string>) => void) | null = null;
+    let emitValidation: ((isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => void) | null = null;
 
     /**
      * 設置事件發射器
@@ -151,7 +151,7 @@ export function useDateTimePicker(
     const setEmitters = (emitters: {
         update?: (value: DateTimeInput) => void;
         change?: (value: DateTimeInput) => void;
-        validation?: (isValid: boolean, errors: Record<string, string>) => void;
+        validation?: (isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => void;
     }) => {
         emitUpdate = emitters.update || null;
         emitChange = emitters.change || null;
@@ -173,7 +173,7 @@ export function useDateTimePicker(
 
         // 發送驗證狀態
         const isValid = !validation.hasErrors.value;
-        emitValidation?.(isValid, validation.mergedErrors.value);
+        emitValidation?.(isValid, validation.mergedErrors.value, validation.errorParams.value);
     };
 
     /**
@@ -206,7 +206,7 @@ export function useDateTimePicker(
         errorParams: Record<string, Record<string, any>> = {}
     ) => {
         validation.handleDateValidation(isValid, validationErrors, 'date', errorParams);
-        emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+        emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value, validation.errorParams.value);
     };
 
     /**
@@ -218,7 +218,7 @@ export function useDateTimePicker(
         errorParams: Record<string, Record<string, any>> = {}
     ) => {
         validation.handleTimeValidation(isValid, validationErrors, 'time', errorParams);
-        emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value);
+        emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value, validation.errorParams.value);
     };
 
     /**
@@ -360,7 +360,7 @@ export function useDateTimePicker(
         const allValid = dateValid && timeValid && calendarValid && overallValid;
 
         // 4. 發送驗證結果
-        emitValidation?.(allValid, validation.mergedErrors.value);
+        emitValidation?.(allValid, validation.mergedErrors.value, validation.errorParams.value);
 
         return allValid;
     };

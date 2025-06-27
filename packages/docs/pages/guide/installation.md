@@ -7,25 +7,23 @@
 - Tailwind CSS 4.0 或更高版本
 - TypeScript 4.5+ (可選)
 
-## 安裝方式
+## 安裝
 
-### NPM
+::: code-group
 
-```bash
+```bash [NPM]
 npm install @tiaohsun/vue-datepicker
 ```
 
-### Yarn
-
-```bash
+```bash [Yarn]
 yarn add @tiaohsun/vue-datepicker
 ```
 
-### PNPM
-
-```bash
+```bash [PNPM]
 pnpm add @tiaohsun/vue-datepicker
 ```
+
+:::
 
 ## 使用方式
 
@@ -195,7 +193,6 @@ import { DatePicker, DateRange } from "@tiaohsun/vue-datepicker";
 import type {
   DatePickerProps,
   DateRangeProps,
-  DatePickerInstance,
   TailwindColor,
   OutputType,
 } from "@tiaohsun/vue-datepicker";

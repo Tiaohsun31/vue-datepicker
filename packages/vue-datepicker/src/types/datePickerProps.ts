@@ -1,6 +1,6 @@
 import { type TailwindColor, type OutputType } from './main';
 import type { DateTimeInput } from '@/utils/dateUtils';
-import type { CalendarIdentifier } from '@internationalized/date';
+import type { LocaleMessages } from '@/types/locale';
 
 interface BaseDatePickerProps {
     // 主題
@@ -10,6 +10,7 @@ interface BaseDatePickerProps {
     // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
     calendar?: string; // 日曆系統 預設為 'gregory'
     locale?: string; // 語言環境 預設為 'zh-TW'
+    customLocaleMessages?: LocaleMessages; // 完整的自定義語言包
     outputType?: OutputType;  // 輸出格式 預設為 'iso'，如果設置了 outputFormat，則會忽略 dateFormat 和 timeFormat 的設置
     useStrictISO?: boolean; // 是否使用嚴格的 ISO 8601 格式輸出 預設為 false
 
@@ -36,7 +37,7 @@ interface BaseDatePickerProps {
     // 錯誤處理選項
     showErrorMessage?: boolean;  // 是否顯示錯誤訊息 預設為 true
     useI18n?: boolean;  // 是否使用內建i18n 預設為 true
-    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息 TODO: 確認使用方式
+    customErrorMessages?: Record<string, string>; // 自定義錯誤訊息
 }
 
 export interface DatePickerProps extends BaseDatePickerProps {

@@ -10,14 +10,12 @@
 
 <div class="demo-container space-y-2">
   <DatePicker v-model="basicDate" />
-  <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800">
+  <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ basicDate }}
   </div>
 </div>
 
 :::
-
-<code> v-model: {{ basicDate }} </code>
 
 ```vue
 <template>
@@ -39,7 +37,7 @@ const date = ref("");
 
 <div class="demo-container space-y-2">
   <DateRange v-model="dateRange" />
-  <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800">
+  <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ dateRange }}
   </div>
 </div>
@@ -68,13 +66,13 @@ const dateRange = ref({
 
 <div class="demo-container space-y-2">
   <DatePicker v-model="formattedDate" date-format="DD/MM/YYYY" locale="en-US" output-type="custom" dateSeparator="/" />
-  <div v-if="formattedDate" class="py-1 px-2 bg-gray-100 rounded">
+  <div v-if="formattedDate" class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ formattedDate }}
   </div>
 </div>
 :::
 
-::: details
+::: details Code Example
 
 ```vue
 <template>
@@ -98,19 +96,54 @@ const date = ref(null);
 
 :::
 
+## 啟用時間
+
+::: raw
+
+<div class="demo-container space-y-2">
+  <DatePicker v-model="timeDate" locale="zh-TW" output-type="custom" :show-time="true" />
+  <div v-if="timeDate" class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
+      v-model: {{ timeDate }}
+  </div>
+</div>
+:::
+
+::: details Code Example
+
+```vue
+<template>
+  <DatePicker
+    v-model="date"
+    locale="zh-TW"
+    output-type="custom"
+    :show-time="true"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import { DatePicker } from "@tiaohsun/vue-datepicker";
+import "@tiaohsun/vue-datepicker/style";
+
+const date = ref(null);
+</script>
+```
+
+:::
+
 ## 使用不同日曆
 
 ::: raw
 
 <div class="demo-container space-y-2">
   <DatePicker v-model="rocDate"  locale="zh-TW" calendar="roc" output-type="custom" />
-  <div v-if="rocDate" class="py-1 px-2 bg-gray-100 rounded">
+  <div v-if="rocDate" class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ rocDate }}
   </div>
 </div>
 :::
 
-::: details
+::: details Code Example
 
 ```vue
 <template>
@@ -139,7 +172,7 @@ const date = ref(null);
 
 ::: raw
 
-<div class="demo-container space-y-2">
+<div class="demo-container">
   <DatePicker v-model="themeDate" theme="blue"  />
 </div>
 
@@ -149,13 +182,13 @@ const date = ref(null);
 
 ::: raw
 
-<div class="demo-container space-y-2">
+<div class="demo-container">
   <DatePicker v-model="themeDate" mode="dark"  />
 </div>
 
 :::
 
-::: details
+::: details Code Example
 
 ```vue
 <template>
@@ -182,6 +215,8 @@ const dateRange = ref({
   start: '',
   end: '',
 })
+
+const timeDate = ref('')
 
 const rocDate = ref('');
 const themeDate = ref('');

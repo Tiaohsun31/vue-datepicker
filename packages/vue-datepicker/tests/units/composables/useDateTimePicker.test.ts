@@ -260,7 +260,7 @@ describe('useDateTimePicker Integration Tests', () => {
             expect(datePicker.hasErrors.value).toBe(true)
 
             // 驗證事件發送
-            expect(mockEmitters.validation).toHaveBeenCalledWith(false, expect.any(Object))
+            expect(mockEmitters.validation).toHaveBeenCalledWith(false, expect.any(Object), expect.any(Object))
         })
 
         it('當錯誤被修正時，應該清除相關錯誤', async () => {
@@ -281,7 +281,7 @@ describe('useDateTimePicker Integration Tests', () => {
             expect(datePicker.hasErrors.value).toBe(false)
 
             // 驗證事件發送
-            expect(mockEmitters.validation).toHaveBeenLastCalledWith(true, {})
+            expect(mockEmitters.validation).toHaveBeenLastCalledWith(true, {}, {})
         })
     })
 

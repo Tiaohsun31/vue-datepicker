@@ -298,11 +298,20 @@ function handleValidation(
 
 :::
 
+```typescript
+@validation="(isValid, errors, errorParams?) => {
+  // isValid: boolean - 是否通過所有驗證
+  // errors: Record<string, string> - 錯誤訊息，鍵為欄位名，值為錯誤訊息
+  // errorParams?: Record<string, Record<string, any>> - 錯誤參數（可選），提供動態數值如日期範圍等
+}"
+```
+
 ## 錯誤訊息的國際化
 
 ### 完整語言包結構
 
 以下是完整的語言包結構，您可以參考這個結構來建立自定義語言包：
+::: details Code Example
 
 ```typescript
 interface LocaleMessages {
@@ -391,33 +400,137 @@ interface LocaleMessages {
 }
 ```
 
+:::
+
 ### 新增自定義語言包
 
-如果您需要支援其他語言，可以擴展語言包：
+如果您需要支援其他語言，可以透過 `customLocaleMessages` 屬性傳入完整的語言包：
+
+::: raw
+
+<div class="space-y-4">
+  <DatePicker
+    v-model="customLocale1"
+    locale="fr-FR"
+    :customLocaleMessages="frFRLocaleMessages"
+    required
+  />
+</div>
+:::
+
+::: details Code Example
 
 ```vue
 <template>
   <DatePicker
-    v-model="frFR1"
-    :locale="locale"
-    :customErrorMessages="frFRLocaleMessages"
+    v-model="customLocale1"
+    locale="fr-FR"
+    :customLocaleMessages="frFRLocaleMessages"
     required
   />
-  <script setup lang="ts">
-    import type LocaleMessages from "@tiaohsun/vue-datepicker";
-    const frFRLocaleMessages: LocaleMessages = {
-      error: {
-        date: {
-          required: "Veuillez sélectionner une date",
-          invalid: "Date invalide",
-          // ...更多翻譯
-        },
-        // ...更多分類
-      },
-    };
-  </script>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import type { LocaleMessages } from "@tiaohsun/vue-datepicker";
+
+const customLocale1 = ref(null);
+
+const frFRLocaleMessages: LocaleMessages = {
+  error: {
+    calendar: {
+      unsupported: "Calendrier non supporté",
+    },
+    date: {
+      required: "Veuillez sélectionner une date",
+      invalid: "Date invalide",
+      outOfRange: "Date hors de la plage autorisée",
+      beforeMin: "La date ne peut pas être antérieure à {minDate}",
+      afterMax: "La date ne peut pas être postérieure à {maxDate}",
+      unsupportedFormat:
+        "Format de date non supporté, formats supportés: {formats}",
+      parseError: "Échec de l'analyse de la date, veuillez vérifier le format",
+    },
+    time: {
+      required: "Veuillez sélectionner une heure",
+      invalid: "Heure invalide",
+      hourOutOfRange: "L'heure doit être entre {min}-{max}",
+      minuteOutOfRange: "Les minutes doivent être entre 0-59",
+      secondOutOfRange: "Les secondes doivent être entre 0-59",
+      hourRequired: "Veuillez entrer l'heure",
+      minuteRequired: "Veuillez entrer les minutes",
+      secondRequired: "Veuillez entrer les secondes",
+      minuteStepInvalid: "Les minutes doivent être un multiple de {step}",
+    },
+    year: {
+      required: "Veuillez entrer une année",
+      invalid: "Format d'année invalide",
+      outOfRange: "L'année doit être entre {min}-{max}",
+      notLeapYear:
+        "Le 29 février n'existe pas en {year}, ce n'est pas une année bissextile",
+    },
+    month: {
+      required: "Veuillez entrer le mois",
+      invalid: "Format de mois invalide",
+      outOfRange: "Le mois doit être entre 1-12",
+    },
+    day: {
+      required: "Veuillez entrer le jour",
+      invalid: "Format de jour invalide",
+      outOfRange: "Le jour doit être entre 1-31",
+      notExistInMonth: "Le mois {month} a au maximum {maxDays} jours",
+    },
+    range: {
+      startRequired: "Veuillez sélectionner la date de début",
+      endRequired: "Veuillez sélectionner la date de fin",
+      startAfterEnd:
+        "La date de début ne peut pas être postérieure à la date de fin",
+      exceedsMaxRange:
+        "La plage de sélection ne peut pas dépasser {maxRange} jours",
+      belowMinRange:
+        "La plage de sélection ne peut pas être inférieure à {minRange} jours",
+    },
+    format: {
+      dateFormat:
+        'Format de date invalide: "{original}" automatiquement corrigé en "{fixed}"',
+      timeFormat:
+        'Format d\'heure invalide: "{original}" automatiquement corrigé en "{fixed}"',
+    },
+  },
+  placeholder: {
+    date: {
+      year: "AAAA",
+      month: "MM",
+      day: "JJ",
+    },
+    time: {
+      hour: "HH",
+      minute: "mm",
+      second: "ss",
+    },
+    general: {
+      selectDate: "Sélectionnez une date",
+      selectTime: "Sélectionnez une heure",
+      clear: "Effacer",
+      time: "Heure",
+    },
+    range: {
+      start: "Date de début",
+      end: "Date de fin",
+    },
+  },
+  yearSelector: {
+    jumpToYear: "Aller à l'année",
+    inputYearPlaceholder: "Entrez l'année grégorienne...",
+    yearRangeInfo: "Plage d'années {calendar}: {min} - {max}",
+    noYearsToDisplay: "Aucune année à afficher",
+    returnToValidRange: "Retour à la plage valide",
+  },
+};
+</script>
 ```
+
+:::
 
 ### 停用國際化
 
@@ -464,34 +577,68 @@ interface LocaleMessages {
 "年份必須是 {min}-{max} 之間的數字"; // 會自動替換 {min} 和 {max}
 ```
 
-### 錯誤訊息的優先順序
+## Props 說明
 
-系統會按照以下優先順序來決定顯示的錯誤訊息：
+### 錯誤訊息相關 Props
 
-1. **customErrorMessages** - 透過 props 傳入的自定義訊息
-2. **內建語言包** - 根據 locale 自動選擇的語言包
-3. **智能匹配** - 系統嘗試智能匹配相似的錯誤類型
-4. **原始錯誤** - 最後回退到原始錯誤訊息
+| Prop 名稱              | 類型                     | 預設值      | 說明               |
+| ---------------------- | ------------------------ | ----------- | ------------------ |
+| `showErrorMessage`     | `boolean`                | `true`      | 是否顯示錯誤訊息   |
+| `useI18n`              | `boolean`                | `true`      | 是否使用內建國際化 |
+| `customErrorMessages`  | `Record<string, string>` | `{}`        | 自定義錯誤訊息映射 |
+| `customLocaleMessages` | `LocaleMessages`         | `undefined` | 完整的自定義語言包 |
+| `locale`               | `string`                 | `'zh-TW'`   | 語言環境           |
 
-### 除錯模式
-
-您可以開啟除錯模式來查看錯誤訊息的處理過程：
+### 使用範例
 
 ```vue
-<DateErrorMessage :errors="errors" :debug="true" :locale="locale" />
+<template>
+  <!-- 基本用法：顯示預設錯誤訊息 -->
+  <DatePicker v-model="date1" required />
+
+  <!-- 自定義部分錯誤訊息 -->
+  <DatePicker
+    v-model="date2"
+    :customErrorMessages="{ 'year.required': '請輸入年份！' }"
+    required
+  />
+
+  <!-- 使用完整自定義語言包 -->
+  <DatePicker
+    v-model="date3"
+    locale="fr-FR"
+    :customLocaleMessages="frenchMessages"
+    required
+  />
+
+  <!-- 關閉錯誤訊息顯示，使用程式化處理 -->
+  <DatePicker
+    v-model="date4"
+    :showErrorMessage="false"
+    @validation="handleValidation"
+    required
+  />
+</template>
 ```
 
-這會在控制台輸出詳細的翻譯過程，幫助您理解錯誤訊息的處理邏輯。
+## Slot 說明
 
-## 最佳實踐
+### 錯誤顯示 Slot
 
-1. **一致性**：在同一個應用中保持錯誤訊息風格的一致性
-2. **清晰性**：錯誤訊息應該清楚說明問題和解決方法
-3. **本地化**：為不同地區的用戶提供適當的語言支援
-4. **可訪問性**：確保錯誤訊息對輔助技術友好
-5. **用戶體驗**：避免技術性的錯誤訊息，使用用戶容易理解的語言
+| Slot 名稱       | 參數                                                       | 說明                 |
+| --------------- | ---------------------------------------------------------- | -------------------- |
+| `error`         | `{ errors, errorParams?, hasErrors }`                      | 完整的錯誤物件和參數 |
+| `error-{field}` | `{ message, field, errorParams?, originalKey, fieldType }` | 特定欄位的錯誤資訊   |
 
-透過這些豐富的客製化選項，您可以為任何語言和使用場景提供最適合的錯誤訊息體驗。
+**參數詳細說明：**
+
+- `errors`: `Record<string, string>` - 所有錯誤訊息
+- `errorParams?`: `Record<string, Record<string, any>>` - 錯誤參數（可選）
+- `hasErrors`: `boolean` - 是否有錯誤
+- `message`: `string` - 錯誤訊息文字
+- `field`: `string` - 欄位名稱
+- `originalKey`: `string` - 原始錯誤鍵值
+- `fieldType`: `string` - 欄位類型（date/time/range）
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick,watch } from "vue";
@@ -506,7 +653,7 @@ const slotCustom1 = ref(null);
 const fieldCustom1 = ref(null);
 const programmaticError1 = ref(null);
 const noI18n1 = ref(null);
-
+const customLocale1 = ref(null);
 // 驗證錯誤狀態
 const validationErrors = ref<string[]>([]);
 
@@ -566,4 +713,96 @@ onMounted(async () => {
         });
     }, 200);
 });
+
+const frFRLocaleMessages: LocaleMessages = {
+  error: {
+    calendar: {
+      unsupported: "Calendrier non supporté",
+    },
+    date: {
+      required: "Veuillez sélectionner une date",
+      invalid: "Date invalide",
+      outOfRange: "Date hors de la plage autorisée",
+      beforeMin: "La date ne peut pas être antérieure à {minDate}",
+      afterMax: "La date ne peut pas être postérieure à {maxDate}",
+      unsupportedFormat:
+        "Format de date non supporté, formats supportés: {formats}",
+      parseError: "Échec de l'analyse de la date, veuillez vérifier le format",
+    },
+    time: {
+      required: "Veuillez sélectionner une heure",
+      invalid: "Heure invalide",
+      hourOutOfRange: "L'heure doit être entre {min}-{max}",
+      minuteOutOfRange: "Les minutes doivent être entre 0-59",
+      secondOutOfRange: "Les secondes doivent être entre 0-59",
+      hourRequired: "Veuillez entrer l'heure",
+      minuteRequired: "Veuillez entrer les minutes",
+      secondRequired: "Veuillez entrer les secondes",
+      minuteStepInvalid: "Les minutes doivent être un multiple de {step}",
+    },
+    year: {
+      required: "Veuillez entrer une année",
+      invalid: "Format d'année invalide",
+      outOfRange: "L'année doit être entre {min}-{max}",
+      notLeapYear:
+        "Le 29 février n'existe pas en {year}, ce n'est pas une année bissextile",
+    },
+    month: {
+      required: "Veuillez entrer le mois",
+      invalid: "Format de mois invalide",
+      outOfRange: "Le mois doit être entre 1-12",
+    },
+    day: {
+      required: "Veuillez entrer le jour",
+      invalid: "Format de jour invalide",
+      outOfRange: "Le jour doit être entre 1-31",
+      notExistInMonth: "Le mois {month} a au maximum {maxDays} jours",
+    },
+    range: {
+      startRequired: "Veuillez sélectionner la date de début",
+      endRequired: "Veuillez sélectionner la date de fin",
+      startAfterEnd:
+        "La date de début ne peut pas être postérieure à la date de fin",
+      exceedsMaxRange:
+        "La plage de sélection ne peut pas dépasser {maxRange} jours",
+      belowMinRange:
+        "La plage de sélection ne peut pas être inférieure à {minRange} jours",
+    },
+    format: {
+      dateFormat:
+        'Format de date invalide: "{original}" automatiquement corrigé en "{fixed}"',
+      timeFormat:
+        'Format d\'heure invalide: "{original}" automatiquement corrigé en "{fixed}"',
+    },
+  },
+  placeholder: {
+    date: {
+      year: "AAAA",
+      month: "MM",
+      day: "JJ",
+    },
+    time: {
+      hour: "HH",
+      minute: "mm",
+      second: "ss",
+    },
+    general: {
+      selectDate: "Sélectionnez une date",
+      selectTime: "Sélectionnez une heure",
+      clear: "Effacer",
+      time: "Heure",
+    },
+    range: {
+      start: "Date de début",
+      end: "Date de fin",
+    },
+  },
+  yearSelector: {
+    jumpToYear: "Aller à l'année",
+    inputYearPlaceholder: "Entrez l'année grégorienne...",
+    yearRangeInfo: "Plage d'années {calendar}: {min} - {max}",
+    noYearsToDisplay: "Aucune année à afficher",
+    returnToValidRange: "Retour à la plage valide",
+  },
+};
 </script>

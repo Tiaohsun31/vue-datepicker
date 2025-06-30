@@ -241,7 +241,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 const emit = defineEmits<{
     'update:modelValue': [range: { start: DateTimeInput; end: DateTimeInput } | null];
     'change': [range: { start: DateTimeInput; end: DateTimeInput } | null];
-    'validation': [isValid: boolean, errors: Record<string, string>];
+    'validation': [isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>];
 }>();
 
 // DOM 引用
@@ -289,7 +289,7 @@ const { setLocale, getPlaceholderMessage } = useLocale(props.locale);
 dateRange.setEmitters({
     update: (range) => emit('update:modelValue', range),
     change: (range) => emit('change', range),
-    validation: (isValid, errors) => emit('validation', isValid, errors)
+    validation: (isValid, errors, errorParams) => emit('validation', isValid, errors, errorParams)
 });
 
 // 使用主題 composable

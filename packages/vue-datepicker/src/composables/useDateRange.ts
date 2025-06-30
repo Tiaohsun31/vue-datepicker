@@ -55,7 +55,7 @@ interface DateRangeRefs {
 interface DateRangeEmitters {
     update?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
     change?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
-    validation?: (isValid: boolean, errors: Record<string, string>) => void;
+    validation?: (isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => void;
 }
 
 interface RangeValidationResult {
@@ -349,7 +349,7 @@ export function useDateRange(
 
         // 發送驗證狀態
         const isValid = isValidRange.value && !hasErrors.value;
-        emitters.validation?.(isValid, mergedErrors.value);
+        emitters.validation?.(isValid, mergedErrors.value, mergedErrorParams.value);
     }
 
     function clearFieldErrors(validation: any, fields: string[]) {
@@ -369,7 +369,7 @@ export function useDateRange(
         errorParams?: Record<string, Record<string, any>>
     ) => {
         validation.handleDateValidation(isValid, validationErrors, fieldPrefix, errorParams);
-        emitters.validation?.(!hasErrors.value, mergedErrors.value);
+        emitters.validation?.(!hasErrors.value, mergedErrors.value, mergedErrorParams.value);
     };
 
     const handleStartDateValidation = (isValid: boolean, validationErrors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => {
@@ -396,7 +396,7 @@ export function useDateRange(
         errorParams: Record<string, Record<string, any>> = {}
     ) => {
         endValidation.handleTimeValidation(isValid, validationErrors, 'endTime', errorParams);
-        emitters.validation?.(!hasErrors.value, mergedErrors.value);
+        emitters.validation?.(!hasErrors.value, mergedErrors.value, mergedErrorParams.value);
     };
 
     const handleStartDateComplete = (dateStr: string) => {

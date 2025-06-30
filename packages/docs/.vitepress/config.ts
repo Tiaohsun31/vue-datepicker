@@ -44,25 +44,35 @@ export default defineConfig({
                 ]
             },
             {
-                text: 'Calendar Systems',
+                text: 'Components',
                 items: [
-                    { text: '日曆系統', link: '/pages/calendars/basic' },
-                    { text: 'Roc Plugin', link: '/pages/calendars/roc-plugin' },
+                    { text: 'DatePicker', link: '/pages/components/datepicker' },
+                    { text: 'DateRange', link: '/pages/components/daterange' },
+                    // { text: 'Time Picker', link: '/pages/components/time-picker' }
                 ]
             },
             {
-                text: 'API Reference',
+                text: 'Calendar',
                 items: [
-                    { text: 'Props', link: '/api/props' },
-                    { text: 'Events', link: '/api/events' },
-                    { text: 'Slots', link: '/api/slots' }
+                    { text: '日曆系統', link: '/pages/calendars/basic' },
+                    { text: 'ROC Plugin', link: '/pages/calendars/roc-plugin' },
                 ]
-            }, {
+            },
+            {
+                text: 'Customization',
                 items: [
-                    { text: 'Theme & Mode', link: '/pages/theming' },
-                    { text: 'Error Message', link: '/pages/error-message' }
+                    { text: 'Theme & Mode', link: '/pages/customization/theming' },
+                    { text: 'Error Message', link: '/pages/customization/error-message' }
                 ]
-            }
+            },
+            // {
+            //     text: 'API Reference',
+            //     items: [
+            //         { text: 'Props', link: '/api/props' },
+            //         { text: 'Events', link: '/api/events' },
+            //         { text: 'Slots', link: '/api/slots' }
+            //     ]
+            // },
         ],
 
         socialLinks: [

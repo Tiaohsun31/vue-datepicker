@@ -11,7 +11,7 @@
         <div class="grow grid grid-cols-2 gap-2">
             <!-- 月份選擇器 -->
             <slot name="month-selector" :month-names="monthNames" :selected-month="selectedMonthLocal"
-                :on-month-change="onMonthChange">
+                :on-month-change="onMonthChangeWithValue">
                 <select v-model="selectedMonthLocal" @change="onMonthChange"
                     class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500"
                     aria-label="選擇月份" role="combobox">
@@ -202,6 +202,13 @@ const nextMonth = () => {
 
 // 處理月份變更
 const onMonthChange = () => {
+    updateDate(selectedMonthLocal.value, selectedYearLocal.value);
+};
+
+const onMonthChangeWithValue = (monthValue?: number) => {
+    if (monthValue !== undefined) {
+        selectedMonthLocal.value = monthValue;
+    }
     updateDate(selectedMonthLocal.value, selectedYearLocal.value);
 };
 

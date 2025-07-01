@@ -164,8 +164,8 @@ export function useDateTimePicker(
     const emitEvents = async (dateTime = dateTimeValue.internalDateTime.value) => {
         let formattedOutput: DateTimeInput = null;
         if (dateTime) {
-            const customFormat = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
-            formattedOutput = formatOutput(dateTime, outputType.value, customFormat, showTime, calendar.value, locale.value, useStrictISO);
+            const finalTimeFormat = showTime ? timeFormat : undefined;
+            formattedOutput = formatOutput(dateTime, outputType.value, dateFormat, finalTimeFormat, showTime, calendar.value, locale.value, useStrictISO, enableSeconds);
         }
 
         emitUpdate?.(formattedOutput);

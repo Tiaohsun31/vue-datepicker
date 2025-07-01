@@ -17,6 +17,9 @@
             <DatePicker v-model="rocDate1" calendar="roc" locale="zh-TW" :showTime="true" output-type="custom"
                 customDefaultTime="00:00:00" />
 
+            {{ dateTime }}
+            <DatePicker v-model="dateTime" :showTime="true" :use24Hour="false" output-type="custom" />
+
             <!-- 自定義格式 -->
             {{ dateTime }}
             <DatePicker v-model="dateTime" date-format="DD/MM/YYYY" output-type="custom"></DatePicker>
@@ -103,6 +106,15 @@
         <div>
             <DatePicker v-model="dateTime" locale="zh-TW" min-date="2025-06-01" required @validation="handleValidation">
             </DatePicker>
+        </div>
+
+        <div class="space-y-2">
+            <h4 class="font-semibold">24小時制時間範圍</h4>
+            <DateRange v-model="time24Range" :showTime="true" :use24Hour="true" />
+        </div>
+        <div class="space-y-2">
+            <h4 class="font-semibold">12小時制時間範圍</h4>
+            <DateRange v-model="time12Range" :showTime="true" :use24Hour="false" :enableSeconds="false" />
         </div>
     </div>
 </template>
@@ -308,4 +320,13 @@ function handleValidation(
         });
     }
 }
+
+const time24Range = ref({
+    start: '2025-06-01 08:00',
+    end: '2025-06-01 18:00',
+});
+const time12Range = ref({
+    start: '',
+    end: '',
+});
 </script>

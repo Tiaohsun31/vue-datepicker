@@ -139,13 +139,13 @@ DatePicker 是一個功能豐富的日期時間選擇器組件，支援多種日
 
 ### 時間選項
 
-| 屬性                | 類型      | 預設值       | 說明               |
-| ------------------- | --------- | ------------ | ------------------ |
-| `showTime`          | `boolean` | `false`      | 是否顯示時間選擇   |
-| `timeFormat`        | `string`  | `'HH:mm:ss'` | 時間格式           |
-| `enableSeconds`     | `boolean` | `true`       | 是否啟用秒         |
-| `use24Hour`         | `boolean` | `true`       | 是否使用 24 小時制 |
-| `customDefaultTime` | `string`  | `undefined`  | 自定義預設時間     |
+| 屬性                | 類型      | 預設值      | 說明                                           |
+| ------------------- | --------- | ----------- | ---------------------------------------------- |
+| `showTime`          | `boolean` | `false`     | 是否顯示時間選擇                               |
+| `timeFormat`        | `string`  | `undefined` | 時間格式(依照 enableSeconds 及 use24Hour 預設) |
+| `enableSeconds`     | `boolean` | `true`      | 是否啟用秒                                     |
+| `use24Hour`         | `boolean` | `true`      | 是否使用 24 小時制                             |
+| `customDefaultTime` | `string`  | `undefined` | 自定義預設時間                                 |
 
 ### 主題外觀
 
@@ -206,7 +206,7 @@ interface PlaceholderOverrides {
   </div>
   <div class="space-y-2">
   <h4 class="font-semibold">民國曆 (ROC)</h4>
-  <DatePicker v-model="rocDate" calendar="roc" />
+  <DatePicker v-model="rocDate" calendar="roc" outputType="custom" />
   </div>
 </div>
 :::
@@ -217,7 +217,7 @@ interface PlaceholderOverrides {
   <DatePicker v-model="gregorianDate" calendar="gregory" />
 
   <!-- 民國曆 -->
-  <DatePicker v-model="rocDate" calendar="roc" />
+  <DatePicker v-model="rocDate" calendar="roc" outputType="custom" />
 </template>
 ```
 
@@ -261,10 +261,18 @@ interface PlaceholderOverrides {
     <div class="space-y-2">
         <h4 class="font-semibold">24小時制</h4>
         <DatePicker v-model="time24" :showTime="true" :use24Hour="true" />
+        <p class="text-sm">輸出: {{ time24 }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">12小時制</h4>
         <DatePicker v-model="time12" :showTime="true" :use24Hour="false" />
+        <p class="text-sm">輸出: {{ time12 }}</p>
+    </div>
+        <div class="space-y-2">
+        <h4 class="font-semibold">12小時制自定義輸出</h4>
+        <DatePicker v-model="time12Custom" :showTime="true" :use24Hour="false" 
+                   outputType="custom" timeFormat="hh:mm:ss A" />
+        <p class="text-sm">輸出: {{ time12Custom }} </p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">無秒數</h4>
@@ -285,6 +293,15 @@ interface PlaceholderOverrides {
   <!-- 12小時制 -->
   <DatePicker v-model="time12" :showTime="true" :use24Hour="false" />
 
+  <!-- 12小時制自定義輸出 -->
+  <DatePicker
+    v-model="time12Custom"
+    :showTime="true"
+    :use24Hour="false"
+    outputType="custom"
+    timeFormat="hh:mm:ss A"
+  />
+
   <!-- 不顯示秒數 -->
   <DatePicker v-model="timeNoSeconds" :showTime="true" :enableSeconds="false" />
 
@@ -296,6 +313,28 @@ interface PlaceholderOverrides {
   />
 </template>
 ```
+
+::: tip 輸出格式說明
+
+**ISO 模式（預設）**
+
+- `outputType="iso"`：輸出符合 ISO 8601 標準的格式
+- 時間部分固定使用 24 小時制（如：`2025-06-30 14:30:00`）
+- `use24Hour` 參數僅影響**輸入界面的顯示**，不會改變輸出格式
+
+**自定義模式**
+
+- `outputType="custom"`：完全自定義輸出格式
+- 可通過 `timeFormat` 控制輸出的時間格式
+- 範例：`use24Hour={false}` + `timeFormat="hh:mm:ss A"` → 輸出 `2025-06-30 02:30:00 PM`
+
+**`use24Hour` 參數的作用**
+
+- ✅ 控制時間輸入界面是否顯示 AM/PM 選擇器
+- ✅ 在 `outputType="custom"` 時配合 `timeFormat` 影響輸出
+- ❌ 不會改變 ISO 格式的輸出（ISO 標準本身就是 24 小時制）
+
+:::
 
 ### 輸出格式
 
@@ -376,7 +415,6 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
                 </div>
             </template>
         </DatePicker>
-        <p class="text-sm text-gray-600">適用於民國曆等需要顯示對照年份的情況</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">月份選擇器自定義</h4>
@@ -398,7 +436,6 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
             </div>
             </template>
         </DatePicker>
-        <p class="text-sm text-gray-600">自定義月份選擇介面</p>
     </div>
 </div>
 :::
@@ -520,6 +557,7 @@ const darkDate = ref('');
 // 時間配置
 const time24 = ref('');
 const time12 = ref('');
+const time12Custom = ref('');
 const timeNoSeconds = ref('');
 const customTime = ref('');
 

@@ -450,25 +450,38 @@ export class CalendarUtils {
      * 格式化輸出 - 統一執行順序：插件 → @internationalized/date → dayjs → 基本回退
      * 格式化含日曆系統的格式，如民國XX年XX月XX日 XX時XX分XX秒
      */
-    static formatOutput(date: SimpleDateValue, format: string, calendar: string = 'gregory', locale: string = 'zh-TW'): string {
+    static formatOutput(date: SimpleDateValue,
+        // format: string,
+        dateFormat: string = 'YYYY-MM-DD',
+        timeFormat?: string,
+        includeTime: boolean = false,
+        calendar: string = 'gregory',
+        locale: string = 'zh-TW'): string {
         if (!date) return '';
-
+        // let format = includeTime ? `${dateFormat} ${timeFormat}` : dateFormat || 'YYYY-MM-DD HH:mm:ss';
+        let format: string;
+        if (includeTime && timeFormat) {
+            format = `${dateFormat} ${timeFormat}`;
+        } else if (includeTime) {
+            // 如果需要時間但沒有提供時間格式，使用默認
+            const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
+            const defaultTimeFormat = hasTime ? 'HH:mm:ss' : 'HH:mm:ss';
+            format = `${dateFormat} ${defaultTimeFormat}`;
+        } else {
+            format = dateFormat;
+        }
         try {
             // 1. 優先嘗試專用插件解析
             switch (calendar) {
                 case 'gregory':
-                    // 西元曆直接使用 dayjs
-                    let gregorianFormat = format || 'YYYY-MM-DD HH:mm:ss';
-
                     // 使用 dateUtils 的格式驗證
-                    if (!isValidFormatForDayjs(gregorianFormat)) {
+                    if (!isValidFormatForDayjs(dateFormat, timeFormat)) {
                         const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
-                        gregorianFormat = hasTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
+                        format = hasTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
                     }
-
                     const jsDate = new Date(date.year, date.month - 1, date.day,
                         date.hour || 0, date.minute || 0, date.second || 0);
-                    return dayjs(jsDate).format(gregorianFormat);
+                    return dayjs(jsDate).format(format);
                 case 'roc':
                     const rocPlugin = new RocFormatPlugin();
 

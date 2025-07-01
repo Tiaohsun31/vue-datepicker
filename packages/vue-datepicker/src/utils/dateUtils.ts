@@ -177,19 +177,27 @@ export function formatSimpleDate(
 export function formatOutput(
     date: SimpleDateValue | null,
     outputType: OutputType = 'iso',
-    customFormat?: string,
+    // customFormat?: string,
+    dateFormat: string = 'YYYY-MM-DD',
+    timeFormat?: string,
     includeTime: boolean = false,
     calendar: string = 'gregory',
     locale: string = 'zh-TW',
-    useStrictISO: boolean = false
+    useStrictISO: boolean = false,
+    enableSeconds: boolean = true
 ): DateTimeInput {
     if (!date) return null;
     try {
         switch (outputType) {
             case 'iso':
                 if (includeTime) {
-                    const isoFormat = useStrictISO ? 'YYYY-MM-DDTHH:mm:ss' : 'YYYY-MM-DD HH:mm:ss';
-                    return formatSimpleDate(date, isoFormat);
+                    let isoTimeFormat: string;
+                    if (enableSeconds) {
+                        isoTimeFormat = useStrictISO ? 'YYYY-MM-DDTHH:mm:ss' : 'YYYY-MM-DD HH:mm:ss';
+                    } else {
+                        isoTimeFormat = useStrictISO ? 'YYYY-MM-DDTHH:mm' : 'YYYY-MM-DD HH:mm';
+                    }
+                    return formatSimpleDate(date, isoTimeFormat);
                 } else {
                     return formatSimpleDate(date, 'YYYY-MM-DD');
                 }
@@ -208,8 +216,8 @@ export function formatOutput(
                 return date;
 
             case 'custom':
-                const format = customFormat || (includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
-                return CalendarUtils.formatOutput(date, format, calendar, locale);
+                // const format = customFormat || (includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
+                return CalendarUtils.formatOutput(date, dateFormat, timeFormat, includeTime, calendar, locale);
 
             default:
                 console.warn(`不支援的輸出類型: ${outputType}，回退到 ISO 格式`);
@@ -302,30 +310,74 @@ export function getCurrentMonthRange(): { start: SimpleDateValue; end: SimpleDat
     return { start, end };
 }
 
-export function isValidFormatForDayjs(format: string): boolean {
-    if (!format || typeof format !== 'string') {
+export function isValidFormatForDayjs(dateFormat: string, timeFormat?: string): boolean {
+    if (!dateFormat || typeof dateFormat !== 'string') {
         return false;
     }
 
-    // 1. 首先檢查是否包含基本的日期組件（使用 dateUtils 的邏輯）
-    const hasBasicDateStructure = isValidDateFormat(format);
-
-    // 2. 檢查是否包含時間組件
-    const hasTimeComponents = isValidTimeFormatPattern(format);
-
-    // 3. 至少要有日期結構
-    if (!hasBasicDateStructure && !hasTimeComponents) {
-        return false;
-    }
-
-    // 4. 最後用實際格式化測試
     try {
-        const testDate = dayjs('2000-12-31 23:59:59');
-        const formatted = testDate.format(format);
+        // 1. 先進行語義驗證（使用您現有的函數）
+        const isDateFormatMeaningful = isValidDateFormat(dateFormat);
 
-        // 檢查格式化是否成功且有意義
-        return formatted !== format && formatted.length > 0;
+        let isTimeFormatMeaningful = true;
+        if (timeFormat) {
+            isTimeFormatMeaningful = isValidTimeFormatPattern(timeFormat);
+        }
+
+        // 如果語義驗證失敗，直接返回 false
+        if (!isDateFormatMeaningful) {
+            console.warn(`日期格式語義驗證失敗: "${dateFormat}"`);
+            return false;
+        }
+
+        if (timeFormat && !isTimeFormatMeaningful) {
+            console.warn(`時間格式語義驗證失敗: "${timeFormat}"`);
+            return false;
+        }
+
+        // 2. 再進行技術驗證（dayjs 能否正確格式化）
+        const testDate = dayjs('2000-12-31 23:59:59');
+
+        // 驗證日期格式
+        let isDateFormatValid = false;
+        try {
+            const formattedDate = testDate.format(dateFormat);
+            isDateFormatValid = formattedDate !== dateFormat && formattedDate.length > 0;
+        } catch (error) {
+            console.warn(`日期格式 dayjs 驗證失敗: "${dateFormat}"`, error);
+            isDateFormatValid = false;
+        }
+
+        // 驗證時間格式（如果提供）
+        let isTimeFormatValid = true;
+        if (timeFormat) {
+            try {
+                const formattedTime = testDate.format(timeFormat);
+                isTimeFormatValid = formattedTime !== timeFormat && formattedTime.length > 0;
+            } catch (error) {
+                console.warn(`時間格式 dayjs 驗證失敗: "${timeFormat}"`, error);
+                isTimeFormatValid = false;
+            }
+        }
+
+        // 驗證組合格式（如果兩個格式都提供）
+        let isCombinedFormatValid = true;
+        if (timeFormat) {
+            try {
+                const combinedFormat = `${dateFormat} ${timeFormat}`;
+                const formattedCombined = testDate.format(combinedFormat);
+                isCombinedFormatValid = formattedCombined !== combinedFormat && formattedCombined.length > 0;
+            } catch (error) {
+                console.warn(`組合格式 dayjs 驗證失敗: "${dateFormat} ${timeFormat}"`, error);
+                isCombinedFormatValid = false;
+            }
+        }
+
+        const finalResult = isDateFormatValid && isTimeFormatValid && isCombinedFormatValid;
+        return finalResult;
+
     } catch (error) {
+        console.error('格式驗證時發生錯誤:', error);
         return false;
     }
 }
@@ -365,24 +417,61 @@ export function isValidDateFormat(format: string): boolean {
 }
 
 /**
- * 驗證時間格式
+ * 驗證時間格式 - 支援 12/24 小時制
  */
 export function isValidTimeFormatPattern(format: string): boolean {
-    const validTokens = ['HH', 'H', 'mm', 'm', 'ss', 's', 'a', 'A'];
-    const formatClean = format.replace(/[^\w]/g, ' ');
-
-    const hasHour = formatClean.includes('HH') || formatClean.includes('H');
-    const hasMinute = formatClean.includes('mm') || formatClean.includes('m');
-
-    const tokens = formatClean.split(/\s+/).filter(Boolean);
-    const hasInvalidToken = tokens.some(token => {
-        if (/^[hH]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
-        if (/^[mM]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
-        if (/^[sS]{1,2}$/.test(token) && !validTokens.includes(token)) return true;
+    if (!format || typeof format !== 'string') {
         return false;
-    });
+    }
 
-    return hasHour && hasMinute && !hasInvalidToken;
+    // 支援的時間格式 tokens
+    const validTokens = [
+        'HH', 'H',     // 24 小時制
+        'hh', 'h',     // 12 小時制
+        'mm', 'm',     // 分鐘
+        'ss', 's',     // 秒
+        'A', 'a'       // AM/PM
+    ];
+
+    // 清理格式字符串
+    const cleanFormat = format.replace(/[^\w]/g, ' ');
+    const tokens = cleanFormat.split(/\s+/).filter(Boolean);
+
+    // 檢查是否所有 token 都有效
+    const allTokensValid = tokens.every(token => validTokens.includes(token));
+    if (!allTokensValid) {
+        return false;
+    }
+
+    // 檢查必要組件
+    const hasHour24 = tokens.some(token => ['HH', 'H'].includes(token));
+    const hasHour12 = tokens.some(token => ['hh', 'h'].includes(token));
+    const hasMinute = tokens.some(token => ['mm', 'm'].includes(token));
+    const hasPeriod = tokens.some(token => ['A', 'a'].includes(token));
+
+    // 必須有小時和分鐘
+    const hasHour = hasHour24 || hasHour12;
+    if (!hasHour || !hasMinute) {
+        return false;
+    }
+
+    // 不能同時有 12 小時制和 24 小時制
+    if (hasHour12 && hasHour24) {
+        return false;
+    }
+
+    // 檢查重複組件
+    const componentCounts = validTokens.reduce((acc, token) => {
+        acc[token] = tokens.filter(t => t === token).length;
+        return acc;
+    }, {} as Record<string, number>);
+
+    // 任何組件都不能出現超過一次
+    if (Object.values(componentCounts).some(count => count > 1)) {
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -397,7 +486,18 @@ export function fixDateFormat(format: string): string {
  * 修正時間格式
  */
 export function fixTimeFormat(format: string): string {
-    return format.replace(/hh/g, 'HH');
+    let fixed = format;
+
+    // 常見的錯誤修正
+    fixed = fixed
+        .replace(/HH/g, 'HH')  // 保持 24 小時制
+        .replace(/hh/g, 'hh')  // 保持 12 小時制
+        .replace(/MM/g, 'mm')  // MM 通常是月份，時間中應該是 mm
+        .replace(/SS/g, 'ss')  // SS 改為 ss
+        .replace(/aa/g, 'a')   // aa 改為 a
+        .replace(/AA/g, 'A');  // 保持 A
+
+    return fixed;
 }
 
 /**

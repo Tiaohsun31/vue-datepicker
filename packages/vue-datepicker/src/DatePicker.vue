@@ -141,7 +141,6 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     dateFormat: 'YYYY-MM-DD',
 
     // 時間相關屬性
-    timeFormat: 'HH:mm:ss',
     showTime: false,
     enableSeconds: true,
     use24Hour: true,
@@ -198,8 +197,22 @@ const dateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
 const timeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 
 // 內部格式狀態
+const computedTimeFormat = computed(() => {
+    // 如果使用者明確提供了 timeFormat，就使用使用者的設定
+    if (props.timeFormat) {
+        return props.timeFormat;
+    }
+
+    // 否則根據 enableSeconds 和 use24Hour 自動決定
+    if (props.enableSeconds) {
+        return props.use24Hour ? 'HH:mm:ss' : 'hh:mm:ss A';
+    } else {
+        return props.use24Hour ? 'HH:mm' : 'hh:mm A';
+    }
+});
+
 const internalDateFormat = ref(props.dateFormat);
-const internalTimeFormat = ref(props.timeFormat);
+const internalTimeFormat = ref(computedTimeFormat.value);
 const formatErrors = ref<Record<string, string>>({});
 
 // 使用主要的 DateTimePicker composable
@@ -334,14 +347,21 @@ onBeforeMount(() => {
     }
 
     // 驗證時間格式
-    if (props.showTime && !isValidTimeFormatPattern(props.timeFormat)) {
-        const originalFormat = props.timeFormat;
-        const fixedFormat = fixTimeFormat(props.timeFormat);
+    if (props.showTime && !isValidTimeFormatPattern(internalTimeFormat.value)) {
+        const originalFormat = internalTimeFormat.value;
+        const fixedFormat = fixTimeFormat(internalTimeFormat.value);
 
-        formatErrors.value.timeFormat = 'format.invalid';
-        console.warn(`時間格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
-
-        internalTimeFormat.value = fixedFormat;
+        // 如果修復後仍然無效，使用預設格式
+        if (!isValidTimeFormatPattern(fixedFormat)) {
+            const defaultFormat = computedTimeFormat.value; // 使用新的計算邏輯
+            formatErrors.value.timeFormat = 'format.invalid';
+            console.warn(`時間格式 "${originalFormat}" 不正確，已使用預設格式 "${defaultFormat}"`);
+            internalTimeFormat.value = defaultFormat;
+        } else {
+            formatErrors.value.timeFormat = 'format.invalid';
+            console.warn(`時間格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
+            internalTimeFormat.value = fixedFormat;
+        }
     }
 
 });
@@ -370,6 +390,13 @@ watch(() => props.customLocaleMessages, (newMessages) => {
         setLocale(props.locale, newMessages);
     }
 });
+
+watch([() => props.enableSeconds, () => props.use24Hour, () => props.timeFormat], () => {
+    // 只有在使用者沒有明確設定 timeFormat 時才自動更新
+    if (!props.timeFormat) {
+        internalTimeFormat.value = computedTimeFormat.value;
+    }
+}, { immediate: true });
 
 watch(() => props.calendar, (newCalendar) => {
     if (!CalendarUtils.isCalendarSupported(newCalendar)) {

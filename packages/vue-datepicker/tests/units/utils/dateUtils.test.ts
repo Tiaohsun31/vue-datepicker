@@ -114,7 +114,7 @@ describe('dateUtils', () => {
         })
 
         it('應該正確格式化為 ISO 格式包含時間', () => {
-            const result = formatOutput(testDate, 'iso', undefined, true)
+            const result = formatOutput(testDate, 'iso', undefined, undefined, true)
             expect(result).toBe('2024-06-15 14:30:45')
         })
 
@@ -405,9 +405,8 @@ describe('dateUtils', () => {
     })
 
     describe('fixTimeFormat', () => {
-        it('應該修正小寫的時間格式', () => {
-            expect(fixTimeFormat('hh:mm:ss')).toBe('HH:mm:ss')
-            expect(fixTimeFormat('hh:mm')).toBe('HH:mm')
+        it('應該支援小寫的時間格式', () => {
+            expect(fixTimeFormat('hh:mm:ss A')).toBe('hh:mm:ss A')
         })
 
         it('應該保持正確的格式不變', () => {

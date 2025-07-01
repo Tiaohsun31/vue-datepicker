@@ -787,7 +787,8 @@ describe('useDateRange Integration Tests', () => {
             const [dateRange, testWrapper] = withSetup(() =>
                 useDateRange({
                     outputType: 'iso',
-                    showTime: true
+                    showTime: true,
+                    enableSeconds: true
                 }, refs)
             )
             wrapper = testWrapper

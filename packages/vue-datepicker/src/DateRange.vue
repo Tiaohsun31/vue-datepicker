@@ -185,7 +185,7 @@ import { useDateRange } from './composables/useDateRange';
 import { useTheme } from './composables/useTheme';
 
 // Utils
-import { parseInputToSimpleDate, type DateTimeInput } from './utils/dateUtils';
+import { parseInputToSimpleDate, formatSimpleDate, type DateTimeInput } from './utils/dateUtils';
 import type { DateRangeProps } from '@/types/datePickerProps';
 import { useLocale } from '@/composables/useLocale';
 
@@ -208,7 +208,6 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
     maxDate: undefined,
 
     // 時間相關屬性
-    timeFormat: 'HH:mm:ss',
     showTime: false,
     enableSeconds: true,
     use24Hour: true,
@@ -217,7 +216,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 
     // 一般選項
     disabled: false,
-    inputEnabled: true,
+    inputEnabled: false,
     required: false,
     showClearButton: true,
 
@@ -254,6 +253,20 @@ const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 
 const formatErrors = ref<Record<string, string>>({});
 
+const computedTimeFormat = computed(() => {
+    // 如果使用者明確提供了 timeFormat，就使用使用者的設定
+    if (props.timeFormat) {
+        return props.timeFormat;
+    }
+
+    // 否則根據 enableSeconds 和 use24Hour 自動決定
+    if (props.enableSeconds) {
+        return props.use24Hour ? 'HH:mm:ss' : 'hh:mm:ss A';
+    } else {
+        return props.use24Hour ? 'HH:mm' : 'hh:mm A';
+    }
+});
+
 // 使用日期範圍 composable
 const dateRange = useDateRange(
     {
@@ -263,7 +276,7 @@ const dateRange = useDateRange(
         required: props.required,
         disabled: props.disabled,
         dateFormat: props.dateFormat,
-        timeFormat: props.timeFormat,
+        timeFormat: computedTimeFormat.value,
         outputType: props.outputType,
         useStrictISO: props.useStrictISO,
         enableSeconds: props.enableSeconds,
@@ -272,6 +285,7 @@ const dateRange = useDateRange(
         maxRange: props.maxRange,
         minRange: props.minRange,
         incomplete: props.incomplete,
+        locale: props.locale,
     },
     {
         containerRef,

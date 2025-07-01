@@ -322,25 +322,29 @@ export function useDateRange(
             return;
         }
 
-        const customFormat = showTime ? `${dateFormat} ${timeFormat}` : dateFormat;
+        const finalTimeFormat = showTime ? timeFormat : undefined;
         const range = {
             start: formatOutput(
                 startDateTime.internalDateTime.value,
                 outputType,
-                customFormat,
+                dateFormat,
+                finalTimeFormat,
                 showTime,
                 calendar,
                 locale,
-                useStrictISO
+                useStrictISO,
+                enableSeconds
             ),
             end: formatOutput(
                 endDateTime.internalDateTime.value,
                 outputType,
-                customFormat,
+                dateFormat,
+                finalTimeFormat,
                 showTime,
                 calendar,
                 locale,
-                useStrictISO
+                useStrictISO,
+                enableSeconds
             )
         };
 

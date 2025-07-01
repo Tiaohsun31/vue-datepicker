@@ -22,7 +22,7 @@ interface BaseDatePickerProps {
     dateFormat?: string; // 日期格式 預設為 'YYYY-MM-DD' 會依照日期格式輸出
 
     // 時間選項
-    timeFormat?: string; // 時間格式 預設為 'HH:mm:ss'
+    timeFormat?: string; // 時間格式，如果不提供會根據 enableSeconds 和 use24Hour 自動決定
     showTime?: boolean; // 是否顯示時間輸入選項 預設為 false
     enableSeconds?: boolean; // 是否啟用秒 選項 預設為 true
     use24Hour?: boolean; // 是否使用24小時制 預設為 true
@@ -30,7 +30,7 @@ interface BaseDatePickerProps {
 
     // 一般選項
     disabled?: boolean; // 是否禁用選擇器 預設為 false
-    inputEnabled?: boolean;  // 是否允許使用輸入框 預測為 true 目前僅在 gregory 中使用
+    inputEnabled?: boolean;  // 是否允許使用輸入框 預設為 true(dateRange為false) 目前僅在 gregory 中使用
     required?: boolean; // 是否為必填 預設為 false
     showClearButton?: boolean; // 是否顯示清除按鈕 預設為 true
 

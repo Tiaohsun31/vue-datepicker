@@ -11,18 +11,18 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">基本日期範圍選擇</h4>
-        <DateRange v-model="basicRange" />
-        <p class="text-sm text-gray-600">點擊選擇開始和結束日期，支援雙日曆顯示</p>
+        <DateRange v-model="basicRange" :locale="locale" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">點擊選擇開始和結束日期，支援雙日曆顯示</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">包含時間範圍</h4>
-        <DateRange v-model="timeRange" :showTime="true" />
-        <p class="text-sm text-gray-600">選擇日期後可設定開始和結束時間</p>
+        <DateRange v-model="timeRange" :locale="locale" :showTime="true" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">選擇日期後可設定開始和結束時間</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">必填驗證</h4>
-        <DateRange v-model="requiredRange" required />
-        <p class="text-sm text-gray-600">即時驗證並顯示錯誤訊息</p>
+        <DateRange v-model="requiredRange" :locale="locale" required />
+        <p class="text-sm text-gray-600 dark:text-gray-400">即時驗證並顯示錯誤訊息</p>
     </div>
 </div>
 :::
@@ -51,13 +51,13 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">輸入框輸入</h4>
-        <DateRange v-model="inputRange" :inputEnabled="true" />
-        <p class="text-sm text-gray-600">可在日曆中直接使用輸入框輸入日期範圍</p>
+        <DateRange v-model="inputRange" :locale="locale" :inputEnabled="true" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">可在日曆中直接使用輸入框輸入日期範圍</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">僅日曆選擇</h4>
-        <DateRange v-model="calendarOnlyRange" :inputEnabled="false" />
-        <p class="text-sm text-gray-600">隱藏輸入框，僅使用日曆進行選擇</p>
+        <DateRange v-model="calendarOnlyRange" :locale="locale" :inputEnabled="false" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">隱藏輸入框，僅使用日曆進行選擇</p>
     </div>
 </div>
 :::
@@ -79,8 +79,8 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">內建快捷選項</h4>
-        <DateRange v-model="shortcutRange" :showShortcuts="true" />
-        <p class="text-sm text-gray-600">提供今天、最近7天、最近30天、本月等快捷選項</p>
+        <DateRange v-model="shortcutRange" :locale="locale" :showShortcuts="true" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">提供今天、最近7天、最近30天、本月等快捷選項</p>
     </div>
 </div>
 :::
@@ -99,18 +99,18 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">最大範圍限制</h4>
-        <DateRange v-model="maxRangeLimit" :maxRange="7" />
-        <p class="text-sm text-gray-600">最多只能選擇 7 天的範圍</p>
+        <DateRange v-model="maxRangeLimit" :locale="locale" :maxRange="7" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">最多只能選擇 7 天的範圍</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">最小範圍限制</h4>
-        <DateRange v-model="minRangeLimit" :minRange="3" />
-        <p class="text-sm text-gray-600">至少要選擇 3 天的範圍</p>
+        <DateRange v-model="minRangeLimit" :locale="locale" :minRange="3" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">至少要選擇 3 天的範圍</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">日期範圍限制</h4>
-        <DateRange v-model="dateConstrainedRange" :minDate="minDate" :maxDate="maxDate" />
-        <p class="text-sm text-gray-600">限制可選日期範圍: {{ minDate }} ~ {{ maxDate }}</p>
+        <DateRange v-model="dateConstrainedRange" :locale="locale" :minDate="minDate" :maxDate="maxDate" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">限制可選日期範圍: {{ minDate }} ~ {{ maxDate }}</p>
     </div>
 </div>
 :::
@@ -237,11 +237,11 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">西元曆 (Gregorian)</h4>
-        <DateRange v-model="gregorianRange" calendar="gregory" />
+        <DateRange v-model="gregorianRange" :locale="locale" calendar="gregory" />
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">民國曆 (ROC)</h4>
-        <DateRange v-model="rocRange" calendar="roc" locale="zh-TW" outputType="custom"  />
+        <DateRange v-model="rocRange"  calendar="roc" :locale="locale" outputType="custom"  />
     </div>
 </div>
 :::
@@ -252,12 +252,7 @@ interface PlaceholderOverrides {
   <DateRange v-model="gregorianRange" calendar="gregory" />
 
   <!-- 民國曆 -->
-  <DateRange
-    v-model="rocRange"
-    calendar="roc"
-    locale="zh-TW"
-    outputType="custom"
-  />
+  <DateRange v-model="rocRange" calendar="roc" outputType="custom" />
 </template>
 ```
 
@@ -272,11 +267,11 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">淺色模式</h4>
-        <DateRange v-model="lightRange" mode="light" theme="blue" />
+        <DateRange v-model="lightRange" :locale="locale" mode="light" theme="blue" />
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">深色模式</h4>
-        <DateRange v-model="darkRange" mode="dark" theme="emerald" />
+        <DateRange v-model="darkRange" :locale="locale" mode="dark" theme="emerald" />
     </div>
 </div>
 :::
@@ -300,15 +295,15 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">24小時制時間範圍</h4>
-        <DateRange v-model="time24Range" :showTime="true" :use24Hour="true" />
+        <DateRange v-model="time24Range" :locale="locale" :showTime="true" :use24Hour="true" />
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">12小時制時間範圍</h4>
-        <DateRange v-model="time12Range" :showTime="true" :use24Hour="false" />
+        <DateRange v-model="time12Range" :locale="locale" :showTime="true" :use24Hour="false" />
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">無秒數時間範圍</h4>
-        <DateRange v-model="timeNoSecondsRange" :showTime="true" :enableSeconds="false" />
+        <DateRange v-model="timeNoSecondsRange" :locale="locale" :showTime="true" :enableSeconds="false" />
     </div>
 </div>
 :::
@@ -337,27 +332,27 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">ISO 格式輸出</h4>
-        <DateRange v-model="isoRange" outputType="iso" />
+        <DateRange v-model="isoRange" :locale="locale" outputType="iso" />
         <p class="text-sm">輸出: {{ isoRange }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">ISO 格式輸出(嚴格模式)</h4>
-        <DateRange v-model="isoStrictRange" outputType="iso" :useStrictISO="true" :showTime="true" />
+        <DateRange v-model="isoStrictRange" :locale="locale" outputType="iso" :useStrictISO="true" :showTime="true" />
         <p class="text-sm">輸出: {{ isoStrictRange }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">Javascript Date物件格式</h4>
-        <DateRange v-model="jsDateRange" outputType="date" />
+        <DateRange v-model="jsDateRange" :locale="locale" outputType="date" />
         <p class="text-sm">輸出: {{ jsDateRange }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">物件格式</h4>
-        <DateRange v-model="objectRange" outputType="object" />
+        <DateRange v-model="objectRange" :locale="locale" outputType="object" />
         <p class="text-sm">輸出: {{ objectRange }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">自定義格式輸出</h4>
-        <DateRange v-model="customFormatRange" outputType="custom" dateFormat="YY/MM/DD" />
+        <DateRange v-model="customFormatRange" :locale="locale" outputType="custom" dateFormat="YY/MM/DD" />
         <p class="text-sm">輸出: {{ customFormatRange }}</p>
     </div>
 </div>
@@ -402,7 +397,7 @@ DateRange 提供多個插槽來自定義快捷選項和錯誤訊息處理。
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">自定義快捷選項</h4>
-        <DateRange v-model="customShortcutRange" :showShortcuts="true">
+        <DateRange v-model="customShortcutRange" :locale="locale" :showShortcuts="true">
             <template #shortcuts="{ applyShortcut }">
                 <button 
                     @click="applyShortcut({ 
@@ -424,7 +419,7 @@ DateRange 提供多個插槽來自定義快捷選項和錯誤訊息處理。
                 </button>
             </template>
         </DateRange>
-        <p class="text-sm text-gray-600">添加自定義的快捷選項按鈕</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">添加自定義的快捷選項按鈕</p>
     </div>
 </div>
 :::
@@ -530,8 +525,8 @@ DateRange 提供完整的鍵盤導航功能：
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">智能輸入與導航</h4>
-        <DateRange v-model="keyboardNavRange" :inputEnabled="true" :showTime="true" />
-        <div class="text-sm text-gray-600 space-y-1">
+        <DateRange v-model="keyboardNavRange" :locale="locale" :inputEnabled="true" :showTime="true" />
+        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>• <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> 在開始和結束日期間切換</p>
             <p>• <kbd>→</kbd> / <kbd>←</kbd> 在日期欄位間切換</p>
             <p>• <kbd>Backspace</kbd> 在空欄位時回到上一個欄位</p>
@@ -552,13 +547,13 @@ DateRange 提供多種範圍驗證功能：
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">無效範圍處理</h4>
-        <DateRange v-model="invalidRange" :maxRange="5" required />
-        <p class="text-sm text-gray-600">嘗試選擇超過5天的範圍或空範圍查看錯誤提示</p>
+        <DateRange v-model="invalidRange" :locale="locale" :maxRange="5" required />
+        <p class="text-sm text-gray-600 dark:text-gray-400">嘗試選擇超過5天的範圍或空範圍查看錯誤提示</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">自動修正範圍順序</h4>
-        <DateRange v-model="autoCorrectRange" />
-        <p class="text-sm text-gray-600">如果結束日期早於開始日期，系統會自動交換</p>
+        <DateRange v-model="autoCorrectRange" :locale="locale" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">如果結束日期早於開始日期，系統會自動交換</p>
     </div>
 </div>
 :::
@@ -568,10 +563,14 @@ DateRange 提供多種範圍驗證功能：
 - 結束日期必須晚於或等於開始日期
 - 範圍天數必須符合 `minRange` 和 `maxRange` 限制
 - 日期必須在 `minDate` 和 `maxDate` 範圍內
-- 必填時兩個日期都不能為空
+- 兩個日期都不能為空
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref,computed } from "vue";
+import { useData } from 'vitepress'
+
+const { lang } = useData()
+const locale = computed(() => lang.value);
 
 // 基本範例
 const basicRange = ref({ start: '', end: '' });

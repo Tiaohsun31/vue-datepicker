@@ -72,8 +72,8 @@ export const koKRLocaleMessages: LocaleMessages = {
             time: '시간',
         },
         range: {
-            start: '시작 날짜를 선택해주세요',
-            end: '종료 날짜를 선택해주세요',
+            start: '시작 날짜',
+            end: '종료 날짜',
         }
     },
     yearSelector: {

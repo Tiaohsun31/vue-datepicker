@@ -72,8 +72,8 @@ export const zhCNLocaleMessages: LocaleMessages = {
             time: '时间',
         },
         range: {
-            start: '请选择开始日期',
-            end: '请选择结束日期',
+            start: '开始日期',
+            end: '结束日期',
         }
     },
     yearSelector: {

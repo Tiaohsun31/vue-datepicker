@@ -72,8 +72,8 @@ export const enUSLocaleMessages: LocaleMessages = {
             time: 'Time',
         },
         range: {
-            start: 'Please select start date',
-            end: 'Please select end date',
+            start: 'Start date',
+            end: 'End date',
         }
     },
     yearSelector: {

@@ -72,8 +72,8 @@ export const jaJPLocaleMessages: LocaleMessages = {
             time: '時刻',
         },
         range: {
-            start: '開始日を選択してください',
-            end: '終了日を選択してください',
+            start: '開始日を',
+            end: '終了日を',
         },
     },
     yearSelector: {

@@ -1,13 +1,13 @@
-# 安裝指南
+# Installation Guide
 
-## 系統需求
+## System Requirements
 
-- Node.js 16.0 或更高版本
-- Vue.js 3.0 或更高版本
-- Tailwind CSS 4.0 或更高版本
-- TypeScript 4.5+ (可選)
+- Node.js 16.0 or higher
+- Vue.js 3.0 or higher
+- Tailwind CSS 4.0 or higher
+- TypeScript 4.5+ (optional)
 
-## 安裝
+## Installation
 
 ::: code-group
 
@@ -25,23 +25,23 @@ pnpm add @tiaohsun/vue-datepicker
 
 :::
 
-## 使用方式
+## Usage
 
-### Tailwind CSS 整合
+### Tailwind CSS Integration
 
-Tailwind CSS，需要配置以載入組件樣式：
+For Tailwind CSS, you need to configure it to load component styles:
 
 ```css
-/* 在您的主要 CSS 檔案中 */
+/* In your main CSS file */
 @import "tailwindcss";
 
-/* 掃描 vue-datepicker 組件以產生必要的樣式 */
+/* Scan vue-datepicker components to generate necessary styles */
 @source "../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,vue}";
 ```
 
-### 方法一：全域註冊
+### Method 1: Global Registration
 
-在您的 `main.js` 或 `main.ts` 中：
+In your `main.js` or `main.ts`:
 
 ```javascript
 import { createApp } from "vue";
@@ -53,15 +53,15 @@ app.use(VueDatepicker);
 app.mount("#app");
 ```
 
-全域註冊後，您可以在任何組件中直接使用：
+After global registration, you can use it directly in any component:
 
 ```vue
 <template>
   <div>
-    <!-- 單一日期選擇器 -->
+    <!-- Single date picker -->
     <DatePicker v-model="date" />
 
-    <!-- 日期範圍選擇器 -->
+    <!-- Date range picker -->
     <DateRange v-model="dateRange" />
   </div>
 </template>
@@ -72,14 +72,14 @@ import { ref } from "vue";
 const date = ref(new Date());
 const dateRange = ref({
   start: "2025-06-24",
-  end: "2025-07-01", // 7天後
+  end: "2025-07-01", // 7 days later
 });
 </script>
 ```
 
-### 方法二：區域導入
+### Method 2: Local Import
 
-#### 單一日期選擇器
+#### Single Date Picker
 
 ```vue
 <template>
@@ -97,7 +97,7 @@ const date = ref(new Date());
 </script>
 ```
 
-#### 日期範圍選擇器
+#### Date Range Picker
 
 ```vue
 <template>
@@ -113,12 +113,12 @@ import "@tiaohsun/vue-datepicker/style";
 
 const dateRange = ref({
   start: "2025-06-24",
-  end: "2025-07-01", // 7天後
+  end: "2025-07-01", // 7 days later
 });
 </script>
 ```
 
-#### 同時使用多個組件
+#### Using Multiple Components
 
 ```vue
 <template>
@@ -136,14 +136,14 @@ import "@tiaohsun/vue-datepicker/style";
 const singleDate = ref(new Date());
 const dateRange = ref({
   start: "2025-06-24",
-  end: "2025-07-01", // 7天後
+  end: "2025-07-01", // 7 days later
 });
 </script>
 ```
 
-## CDN 使用
+## CDN Usage
 
-如果您不使用構建工具，可以直接通過 CDN 引入：
+If you're not using a build tool, you can include it directly via CDN:
 
 ```html
 <!DOCTYPE html>
@@ -184,9 +184,9 @@ const dateRange = ref({
 </html>
 ```
 
-## TypeScript 支援
+## TypeScript Support
 
-本套件完全支援 TypeScript，包含完整的型別定義：
+This package fully supports TypeScript with complete type definitions:
 
 ```typescript
 import { DatePicker, DateRange } from "@tiaohsun/vue-datepicker";
@@ -195,9 +195,11 @@ import type {
   DateRangeProps,
   TailwindColor,
   OutputType,
+  LocaleMessages,
+  RocFormatPlugin,
 } from "@tiaohsun/vue-datepicker";
 
-// 使用型別
+// Using types
 const datePickerProps: DatePickerProps = {
   modelValue: new Date(),
   theme: "blue",
@@ -205,87 +207,47 @@ const datePickerProps: DatePickerProps = {
 };
 ```
 
-## 自訂主題
+## Troubleshooting
 
-您可以選擇不同的內建主題：
+### Component Not Displaying Correctly
 
-```vue
-<template>
-  <DatePicker v-model="date" theme="violet" />
-</template>
-```
+**Issue**: Component appears blank or shows "Component is missing template" error
 
-可用主題：`violet`, `blue`, `green`, `red`, `yellow`, `indigo`, `purple`, `pink`
-更進一步說明請參考 [主題客製化](./theming.md)
+**Solution**:
 
-## 下一步
-
-- [基本配置](./configuration.md) - 了解所有可用的配置選項
-- [API 參考](./api.md) - 完整的 API 文件
-- [主題客製化](./theming.md) - 自訂樣式和主題
-- [範例展示](./examples.md) - 更多使用範例
-
-## 疑難排解
-
-### 組件未正確顯示
-
-**問題**：組件顯示為空白或出現 "Component is missing template" 錯誤
-
-**解決方案**：
-
-1. 確保正確導入組件：
+1. Ensure you're importing the component correctly:
 
    ```javascript
    import { DatePicker } from "@tiaohsun/vue-datepicker";
    ```
 
-2. 檢查是否正確導入樣式：
+2. Check if you're importing styles correctly:
    ```javascript
    import "@tiaohsun/vue-datepicker/style";
    ```
 
-### 樣式未正確載入
+### Styles Not Loading Correctly
 
-**問題**：組件功能正常但樣式缺失
+**Issue**: Component functions properly but styles are missing
 
-**解決方案**：
+**Solution**:
 
-1. 確保導入了 CSS 檔案：
+1. Make sure you've imported the CSS file:
 
    ```javascript
    import "@tiaohsun/vue-datepicker/style";
    ```
 
-2. 如果使用 Tailwind CSS，確保配置正確：
+2. For Tailwind CSS, ensure configuration is correct:
    ```css
    @import "tailwindcss";
    @source "../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,vue}";
    ```
 
-### 與其他 UI 框架衝突
-
-**問題**：與 Bootstrap、Element UI 等框架樣式衝突
-
-**解決方案**：
-
-1. 使用 CSS 作用域或模組化
-2. 調整 CSS 載入順序
-3. 參考 [主題客製化](./theming.md) 進行樣式覆蓋
-
-### TypeScript 類型錯誤
-
-**問題**：TypeScript 無法識別組件類型
-
-**解決方案**：
-
-1. 確保安裝了最新版本
-2. 重新啟動 TypeScript 服務
-3. 檢查 `tsconfig.json` 配置是否正確
-
-## 版本相容性
+## Version Compatibility
 
 | Vue.js | Node.js | TypeScript | Tailwind |
 | ------ | ------- | ---------- | -------- |
 | 3.0+   | 16.0+   | 4.5+       | 4.0+     |
 
-如果遇到其他問題，請到 [GitHub Issues](https://github.com/tiaohsun/vue-datepicker/issues) 回報。
+If you encounter other issues, please report them at [GitHub Issues](https://github.com/Tiaohsun31/vue-datepicker/issues).

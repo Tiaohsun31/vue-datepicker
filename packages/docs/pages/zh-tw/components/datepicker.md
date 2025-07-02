@@ -11,18 +11,18 @@ DatePicker 是一個功能豐富的日期時間選擇器組件，支援多種日
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">基本日期輸入</h4>
-        <DatePicker v-model="dateOnly" placeholder="請輸入日期" />
-        <p class="text-sm text-gray-600">格式: YYYY-MM-DD，支援鍵盤導航和自動完成</p>
+        <DatePicker v-model="dateOnly" :locale="locale" placeholder="請輸入日期" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">格式: YYYY-MM-DD，支援鍵盤導航和自動完成</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">包含時間輸入</h4>
-        <DatePicker v-model="dateTime" :showTime="true" />
-        <p class="text-sm text-gray-600">日期輸入完成後自動聚焦到時間欄位</p>
+        <DatePicker v-model="dateTime" :locale="locale" :showTime="true" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">日期輸入完成後自動聚焦到時間欄位</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">必填驗證</h4>
-        <DatePicker v-model="requiredDate" required />
-        <p class="text-sm text-gray-600">即時驗證並顯示錯誤訊息</p>
+        <DatePicker v-model="requiredDate" :locale="locale" required />
+        <p class="text-sm text-gray-600 dark:text-gray-400">即時驗證並顯示錯誤訊息</p>
     </div>
 </div>
 :::
@@ -54,18 +54,18 @@ DatePicker 是一個功能豐富的日期時間選擇器組件，支援多種日
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">年-月-日 (YYYY-MM-DD)</h4>
-        <DatePicker v-model="formatYMD" dateFormat="YYYY-MM-DD" />
-        <p class="text-sm text-gray-600">輸入順序: 年份 → 月份 → 日期</p>
+        <DatePicker v-model="formatYMD" :locale="locale" dateFormat="YYYY-MM-DD" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">輸入順序: 年份 → 月份 → 日期</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">日/月/年 (DD/MM/YYYY)</h4>
-        <DatePicker v-model="formatDMY" dateFormat="DD/MM/YYYY" date-separator="/" />
-        <p class="text-sm text-gray-600">輸入順序: 日期 → 月份 → 年份</p>
+        <DatePicker v-model="formatDMY" :locale="locale" dateFormat="DD/MM/YYYY" date-separator="/" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">輸入順序: 日期 → 月份 → 年份</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">月/日/年 (MM/DD/YYYY)</h4>
-        <DatePicker v-model="formatMDY" dateFormat="MM/DD/YYYY"  date-separator="/" />
-        <p class="text-sm text-gray-600">輸入順序: 月份 → 日期 → 年份</p>
+        <DatePicker v-model="formatMDY" :locale="locale" dateFormat="MM/DD/YYYY"  date-separator="/" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">輸入順序: 月份 → 日期 → 年份</p>
     </div>
 </div>
 :::
@@ -91,11 +91,12 @@ DatePicker 是一個功能豐富的日期時間選擇器組件，支援多種日
   <h4 class="font-semibold">日期範圍限制</h4>
   <DatePicker 
     v-model="constrainedDate" 
+    :locale="locale"
     :minDate="minDate" 
     :maxDate="maxDate"
     required
   />
-<p class="text-sm text-gray-600">限制範圍: {{ minDate }} ~ {{ maxDate }}</p>
+<p class="text-sm text-gray-600 dark:text-gray-400">限制範圍: {{ minDate }} ~ {{ maxDate }}</p>
   </div>
 :::
 
@@ -202,11 +203,11 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
 <div class="space-y-2">
   <h4 class="font-semibold">西元曆 (Gregorian)</h4>
-  <DatePicker v-model="gregorianDate" calendar="gregory" />
+  <DatePicker v-model="gregorianDate" :locale="locale" calendar="gregory" />
   </div>
   <div class="space-y-2">
   <h4 class="font-semibold">民國曆 (ROC)</h4>
-  <DatePicker v-model="rocDate" calendar="roc" outputType="custom" />
+  <DatePicker v-model="rocDate" calendar="roc" :locale="locale" outputType="custom" />
   </div>
 </div>
 :::
@@ -232,11 +233,11 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
  <div class="space-y-2">
   <h4 class="font-semibold">淺色模式</h4>
-  <DatePicker v-model="lightDate" mode="light" theme="blue" />
+  <DatePicker v-model="lightDate" :locale="locale" mode="light" theme="blue" />
   </div>
    <div class="space-y-2">
   <h4 class="font-semibold">深色模式</h4>
-  <DatePicker v-model="darkDate" mode="dark" theme="emerald" />
+  <DatePicker v-model="darkDate" :locale="locale" mode="dark" theme="emerald" />
     </div>
 </div>
 :::
@@ -260,27 +261,27 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">24小時制</h4>
-        <DatePicker v-model="time24" :showTime="true" :use24Hour="true" />
+        <DatePicker v-model="time24" :locale="locale" :showTime="true" :use24Hour="true" />
         <p class="text-sm">輸出: {{ time24 }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">12小時制</h4>
-        <DatePicker v-model="time12" :showTime="true" :use24Hour="false" />
+        <DatePicker v-model="time12" :locale="locale" :showTime="true" :use24Hour="false" />
         <p class="text-sm">輸出: {{ time12 }}</p>
     </div>
         <div class="space-y-2">
         <h4 class="font-semibold">12小時制自定義輸出</h4>
-        <DatePicker v-model="time12Custom" :showTime="true" :use24Hour="false" 
+        <DatePicker v-model="time12Custom" :locale="locale" :showTime="true" :use24Hour="false" 
                    outputType="custom" timeFormat="hh:mm:ss A" />
         <p class="text-sm">輸出: {{ time12Custom }} </p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">無秒數</h4>
-        <DatePicker v-model="timeNoSeconds" :showTime="true" :enableSeconds="false" />
+        <DatePicker v-model="timeNoSeconds" :locale="locale" :showTime="true" :enableSeconds="false" />
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">自定義預設時間</h4>
-        <DatePicker v-model="customTime" :showTime="true" customDefaultTime="15:30:00" />
+        <DatePicker v-model="customTime" :locale="locale" :showTime="true" customDefaultTime="15:30:00" />
     </div>
 </div>
 :::
@@ -343,27 +344,27 @@ interface PlaceholderOverrides {
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">ISO 格式輸出</h4>
-        <DatePicker v-model="isoDate" outputType="iso" />
+        <DatePicker v-model="isoDate" :locale="locale" outputType="iso" />
         <p class="text-sm">輸出: {{ isoDate }}</p>
     </div>
         <div class="space-y-2">
         <h4 class="font-semibold">ISO 格式輸出(嚴格模式)</h4>
-        <DatePicker v-model="isoStrictDate" outputType="iso" :useStrictISO="true" :showTime="true" />
+        <DatePicker v-model="isoStrictDate" :locale="locale" outputType="iso" :useStrictISO="true" :showTime="true" />
         <p class="text-sm">輸出: {{ isoStrictDate }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">Javascript Date物件格式</h4>
-        <DatePicker v-model="jsDate" outputType="date" />
+        <DatePicker v-model="jsDate" :locale="locale" outputType="date" />
         <p class="text-sm">輸出: {{ jsDate }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">物件格式</h4>
-        <DatePicker v-model="objectDate" outputType="object" />
+        <DatePicker v-model="objectDate" :locale="locale" outputType="object" />
         <p class="text-sm">輸出: {{ objectDate }}</p>
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">自定義格式輸出</h4>
-        <DatePicker v-model="customDate" outputType="custom" dateFormat="YY/MM/DD" />
+        <DatePicker v-model="customDate" :locale="locale" outputType="custom" dateFormat="YY/MM/DD" />
         <p class="text-sm">輸出: {{ customDate }}</p>
   </div>
 </div>
@@ -403,7 +404,7 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">年份顯示自定義</h4>
-        <DatePicker v-model="slotDate" calendar="roc" locale="zh-TW">
+        <DatePicker v-model="slotDate" calendar="roc" :locale="locale">
             <template #year-display="{ yearData, isSelected }">
                 <div class="custom-year-display">
                     <div :class="['font-bold', isSelected ? 'text-white' : 'text-blue-600']">
@@ -418,7 +419,7 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">月份選擇器自定義</h4>
-        <DatePicker v-model="monthSelectorDate">
+        <DatePicker v-model="monthSelectorDate" :locale="locale">
             <template #month-selector="{ monthNames, selectedMonth, onMonthChange }">
             <div class="grid grid-cols-3 gap-1 p-2 bg-gray-50 rounded-lg">
                 <button
@@ -428,7 +429,7 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
                 class="px-2 py-1 text-xs rounded transition-all duration-200 transform hover:scale-105"
                 :class="{
                     'bg-blue-500 text-white shadow-lg': selectedMonth === index + 1,
-                    'bg-white text-gray-600 hover:bg-blue-100': selectedMonth !== index + 1
+                    'bg-white text-gray-600 dark:text-gray-400 hover:bg-blue-100': selectedMonth !== index + 1
                 }"
                 >
                 {{ month.slice(0, 3) }}
@@ -439,6 +440,8 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
     </div>
 </div>
 :::
+
+::: details Code Example
 
 ```vue
 <template>
@@ -469,7 +472,7 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
           class="px-2 py-1 text-xs rounded transition-all duration-200 transform hover:scale-105"
           :class="{
             'bg-blue-500 text-white shadow-lg': selectedMonth === index + 1,
-            'bg-white text-gray-600 hover:bg-blue-100':
+            'bg-white text-gray-600 dark:text-gray-400 hover:bg-blue-100':
               selectedMonth !== index + 1,
           }"
         >
@@ -480,6 +483,8 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
   </DatePicker>
 </template>
 ```
+
+:::
 
 ### 錯誤訊息插槽
 
@@ -507,8 +512,8 @@ DatePicker 提供多種智能輸入功能，提升使用者體驗：
 <div class="space-y-4">
     <div class="space-y-2">
         <h4 class="font-semibold">自動補零與跳轉</h4>
-        <DatePicker v-model="autoCompleteDate" />
-        <div class="text-sm text-gray-600 space-y-1">
+        <DatePicker v-model="autoCompleteDate" :locale="locale" />
+        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>• 月份輸入 "2" 自動補零為 "02" 並跳到日期</p>
             <p>• 日期輸入 "5" 自動補零為 "05" 並完成輸入</p>
             <p>• 年份輸入完整4位數後自動跳到月份</p>
@@ -516,8 +521,8 @@ DatePicker 提供多種智能輸入功能，提升使用者體驗：
     </div>
     <div class="space-y-2">
         <h4 class="font-semibold">鍵盤導航</h4>
-        <DatePicker v-model="keyboardNavDate" :showTime="true" />
-        <div class="text-sm text-gray-600 space-y-1">
+        <DatePicker v-model="keyboardNavDate" :locale="locale" :showTime="true" />
+        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>• <kbd>→</kbd> / <kbd>←</kbd> 左右箭頭切換欄位</p>
             <p>• <kbd>Backspace</kbd> 在空欄位時回到上一個欄位</p>
             <p>• <kbd>Enter</kbd> 完成輸入並驗證</p>
@@ -529,6 +534,10 @@ DatePicker 提供多種智能輸入功能，提升使用者體驗：
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useData } from 'vitepress'
+
+const { lang } = useData()
+const locale = computed(() => lang.value);
 
 // 基本範例
 const basicDate = ref('');

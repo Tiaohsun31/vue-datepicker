@@ -32,10 +32,10 @@
             }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
                 @keydown.space.prevent="!disabled && toggleCalendar?.()">
                 <!-- 顯示值或 placeholder -->
-                <span v-if="hasDisplayValue" class="text-vdt-content">
+                <span v-if="hasDisplayValue" class="date-placeholder text-vdt-content truncate">
                     {{ modelValue }}
                 </span>
-                <span v-else class="text-vdt-content-muted">
+                <span v-else class="date-placeholder text-vdt-content-muted truncate">
                     {{ computedPlaceholders.selectDate }}
                 </span>
             </button>

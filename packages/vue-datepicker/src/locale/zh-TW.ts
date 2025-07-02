@@ -72,8 +72,8 @@ export const zhTWLocaleMessages: LocaleMessages = {
             time: '時間',
         },
         range: {
-            start: '請選擇開始日期',
-            end: '請選擇結束日期',
+            start: '開始日期',
+            end: '結束日期',
         }
     },
     yearSelector: {

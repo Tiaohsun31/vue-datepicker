@@ -1,15 +1,15 @@
-# 基礎使用
+# Basic Usage
 
 ::: warning
-由於 VitePress 的樣式限制，文件中的組件展示效果可能與實際使用時有所差異，請以實際安裝後的效果為準。
+Due to VitePress style limitations, the component display effects in the documentation may differ from actual usage. Please refer to the actual effects after installation.
 :::
 
-## DatePicker 組件
+## DatePicker Component
 
 ::: raw
 
 <div class="demo-container space-y-2">
-  <DatePicker v-model="basicDate" />
+  <DatePicker v-model="basicDate" :locale="locale" />
   <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ basicDate }}
   </div>
@@ -31,12 +31,12 @@ const date = ref("");
 </script>
 ```
 
-## DateRange 組件
+## DateRange Component
 
 ::: raw
 
 <div class="demo-container space-y-2">
-  <DateRange v-model="dateRange" />
+  <DateRange v-model="dateRange" :locale="locale" />
   <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ dateRange }}
   </div>
@@ -60,12 +60,12 @@ const dateRange = ref({
 </script>
 ```
 
-## 自定義格式
+## Custom Format
 
 ::: raw
 
 <div class="demo-container space-y-2">
-  <DatePicker v-model="formattedDate" date-format="DD/MM/YYYY" locale="en-US" output-type="custom" dateSeparator="/" />
+  <DatePicker v-model="formattedDate" date-format="DD/MM/YYYY" :locale="locale" output-type="custom" dateSeparator="/" />
   <div v-if="formattedDate" class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ formattedDate }}
   </div>
@@ -79,7 +79,6 @@ const dateRange = ref({
   <DatePicker
     v-model="date"
     date-format="DD/MM/YYYY"
-    locale="en-US"
     output-type="custom"
     dateSeparator="/"
   />
@@ -96,12 +95,12 @@ const date = ref(null);
 
 :::
 
-## 啟用時間
+## Enable Time
 
 ::: raw
 
 <div class="demo-container space-y-2">
-  <DatePicker v-model="timeDate" locale="zh-TW" output-type="custom" :show-time="true" />
+  <DatePicker v-model="timeDate" :locale="locale" output-type="custom" :show-time="true" />
   <div v-if="timeDate" class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ timeDate }}
   </div>
@@ -112,12 +111,7 @@ const date = ref(null);
 
 ```vue
 <template>
-  <DatePicker
-    v-model="date"
-    locale="zh-TW"
-    output-type="custom"
-    :show-time="true"
-  />
+  <DatePicker v-model="date" output-type="custom" :show-time="true" />
 </template>
 
 <script setup lang="ts">
@@ -131,12 +125,12 @@ const date = ref(null);
 
 :::
 
-## 使用不同日曆
+## Using Different Calendars
 
 ::: raw
 
 <div class="demo-container space-y-2">
-  <DatePicker v-model="rocDate"  locale="zh-TW" calendar="roc" output-type="custom" />
+  <DatePicker v-model="rocDate"  :locale="locale" calendar="roc" output-type="custom" />
   <div v-if="rocDate" class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
       v-model: {{ rocDate }}
   </div>
@@ -147,12 +141,7 @@ const date = ref(null);
 
 ```vue
 <template>
-  <DatePicker
-    v-model="date"
-    locale="zh-TW"
-    calendar="roc"
-    output-type="custom"
-  />
+  <DatePicker v-model="date" calendar="roc" output-type="custom" />
 </template>
 
 <script setup lang="ts">
@@ -166,14 +155,14 @@ const date = ref(null);
 
 :::
 
-## 自定義樣式
+## Custom Styling
 
 ### Theme
 
 ::: raw
 
 <div class="demo-container">
-  <DatePicker v-model="themeDate" theme="blue"  />
+  <DatePicker v-model="themeDate" :locale="locale" theme="blue"  />
 </div>
 
 :::
@@ -183,7 +172,7 @@ const date = ref(null);
 ::: raw
 
 <div class="demo-container">
-  <DatePicker v-model="themeDate" mode="dark"  />
+  <DatePicker v-model="themeDate" :locale="locale" mode="dark"  />
 </div>
 
 :::
@@ -207,7 +196,11 @@ const date2 = ref(null);
 ```
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useData } from 'vitepress'
+
+const { lang } = useData()
+const locale = computed(() => lang.value);
 
 const basicDate = ref('')
 const formattedDate = ref(null)

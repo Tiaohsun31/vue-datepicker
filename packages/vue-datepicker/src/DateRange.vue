@@ -1,21 +1,21 @@
 <!-- DateRange.vue -->
 <template>
-    <div class="date-range-wrapper md:min-w-auto relative w-full"
+    <div class="date-range-wrapper relative w-full"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[200px]']" v-bind="containerAttributes"
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 rounded-sm transition-all duration-200 bg-vdt-surface text-vdt-content disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 rounded-sm transition-all duration-200 bg-vdt-surface text-vdt-content overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <button type="button"
-                class="flex items-center gap-1 flex-1 cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="grid grid-cols-[1fr_auto_1fr] gap-1 w-full cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="disabled" @click="toggleCalendar" aria-label="選擇日期範圍">
                 <!-- 開始日期 -->
-                <div class="flex-1 text-center whitespace-nowrap">
-                    <span v-if="modelValue?.start" class="text-vdt-content text-sm">
+                <div class="text-center min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.start">
+                    <span v-if="modelValue?.start" class="date-placeholder text-vdt-content truncate block">
                         {{ modelValue?.start }}
                     </span>
-                    <span v-else class="text-vdt-content-muted text-sm">
+                    <span v-else class="date-placeholder text-vdt-content-muted truncate block">
                         {{ computedPlaceholders.start }}
                     </span>
                 </div>
@@ -26,11 +26,11 @@
                 </div>
 
                 <!-- 結束日期 -->
-                <div class="flex-1 text-center whitespace-nowrap">
-                    <span v-if="modelValue?.end" class="text-vdt-content text-sm">
+                <div class="text-center  min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.end">
+                    <span v-if="modelValue?.end" class="date-placeholder text-vdt-content truncate block">
                         {{ modelValue?.end }}
                     </span>
-                    <span v-else class="text-vdt-content-muted text-sm">
+                    <span v-else class="date-placeholder text-vdt-content-muted truncate block">
                         {{ computedPlaceholders.end }}
                     </span>
                 </div>
@@ -38,7 +38,7 @@
 
             <!-- 日曆圖標和清除按鈕 -->
 
-            <div class="date-picker-icon-container relative group cursor-pointer"
+            <div class="date-picker-icon-container relative group cursor-pointer flex justify-center items-center flex-shrink-0"
                 :class="{ 'cursor-not-allowed': disabled }">
                 <!-- 日曆圖標 (預設顯示) -->
                 <button type="button" aria-label="開啟日曆"

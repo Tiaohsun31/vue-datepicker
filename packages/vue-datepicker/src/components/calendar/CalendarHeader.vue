@@ -27,7 +27,7 @@
                 <slot name="year-selector" :display-year="displayYear" :toggle-year-selector="toggleYearSelector"
                     :show-year-selector="showYearSelector">
                     <button type="button" @click="toggleYearSelector" data-year-selector-button
-                        class="inline-flex text-nowrap items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200"
+                        class="inline-flex truncate items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200"
                         aria-label="選擇年份">
                         {{ displayYear }}
                     </button>

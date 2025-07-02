@@ -1,21 +1,21 @@
 # Theme & Mode
 
-Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿足不同的設計需求。您可以透過多種方式來自訂顏色主題和明暗模式。
+Vue DatePicker provides a flexible theming system that supports multiple customization methods to meet different design requirements. You can customize color themes and light/dark modes in various ways.
 
-::: warning Tailwind CSS 4 配置
-如果您使用 Tailwind CSS 4，需要在您的 CSS 文件中添加以下配置以支援 `mode` 功能：
+::: warning Tailwind CSS 4 Configuration
+If you are using Tailwind CSS 4, you need to add the following configuration to your CSS file to support the `mode` functionality:
 
 ```css
 @import "tailwindcss";
-/* 支援 Vue DatePicker 的 dark mode */
+/* Support Vue DatePicker's dark mode */
 @custom-variant dark (&:where([data-vdt-mode="dark"], [data-vdt-mode="dark"] *, .dark, .dark *));
 ```
 
 :::
 
-## Default 跟隨系統偏好
+## Default - Follow System Preference
 
-預設情況下，DatePicker 會自動跟隨使用者的系統偏好設定（`prefers-color-scheme`），在淺色和深色主題之間自動切換。
+By default, DatePicker automatically follows the user's system preference (`prefers-color-scheme`), switching automatically between light and dark themes.
 
 ::: raw
 
@@ -30,9 +30,9 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
 </template>
 ```
 
-## Dark Mode 強制深色
+## Dark Mode - Force Dark
 
-您可以強制使用深色模式，無論使用者的系統設定為何。
+You can force dark mode regardless of the user's system settings.
 
 ::: raw
 
@@ -47,9 +47,9 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
 </template>
 ```
 
-## Light Mode 強制淺色
+## Light Mode - Force Light
 
-同樣地，您也可以強制使用淺色模式。
+Similarly, you can also force light mode.
 
 ::: raw
 
@@ -64,51 +64,51 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
 </template>
 ```
 
-## 主題顏色
+## Theme Colors
 
-支援 Tailwind 顏色名稱、十六進制、RGB 或 OKLCH 格式：
+Supports Tailwind color names, hexadecimal, RGB, or OKLCH formats:
 
 ::: raw
 
 <div class="demo-container space-y-2">
-  <DatePicker v-model="date"  :locale="locale" theme="blue" />
-  <DatePicker v-model="date"  :locale="locale" theme="#ffff00" />
-  <DatePicker v-model="date"  :locale="locale" theme="rgb(255, 0, 0)" />
-  <DatePicker v-model="date"  :locale="locale" theme="oklch(69.6% 0.17 162.48)" />
+  <DatePicker v-model="date" :locale="locale" theme="blue" />
+  <DatePicker v-model="date" :locale="locale" theme="#ffff00" />
+  <DatePicker v-model="date" :locale="locale" theme="rgb(255, 0, 0)" />
+  <DatePicker v-model="date" :locale="locale" theme="oklch(69.6% 0.17 162.48)" />
 </div>
 :::
 
 ```vue
 <template>
-  <!-- 使用 Tailwind 顏色名稱 -->
+  <!-- Using Tailwind color names -->
   <DatePicker v-model="date" theme="blue" />
 
-  <!-- 使用十六進制顏色 -->
+  <!-- Using hexadecimal colors -->
   <DatePicker v-model="date" theme="#ffff00" />
 
-  <!-- 使用 RGB 顏色 -->
+  <!-- Using RGB colors -->
   <DatePicker v-model="date" theme="rgb(255, 0, 0)" />
 
-  <!-- 使用 OKLCH 顏色 -->
+  <!-- Using OKLCH colors -->
   <DatePicker v-model="date" theme="oklch(69.6% 0.17 162.48)" />
 </template>
 ```
 
-::: warning 顏色轉換說明
-傳入的顏色值會自動尋找最相近的 Tailwind 顏色名稱，所以顏色會有些微差異。如果要完全相同的顏色，請使用 `:root` 變數取代。
+::: warning Color Conversion Note
+The input color values will automatically find the closest Tailwind color name, so there may be slight color differences. For exact colors, use `:root` variables instead.
 :::
 
-### 支援的 Tailwind 顏色
+### Supported Tailwind Colors
 
 `slate`, `gray`, `zinc`, `neutral`, `stone`, `red`, `orange`, `amber`, `yellow`, `lime`, `green`, `emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo`, `violet`, `purple`, `fuchsia`, `pink`, `rose`
 
-請參考 [Tailwind CSS](https://tailwindcss.com/docs/customizing-colors#default-color-palette)。
+Refer to [Tailwind CSS](https://tailwindcss.com/docs/customizing-colors#default-color-palette).
 
-## CSS 自訂
+## CSS Customization
 
-### 使用 CSS 變數
+### Using CSS Variables
 
-您可以透過 CSS 屬性（CSS Variables）來全域設置主題色彩。從 50 到 950 共 11 個色階(其中 500 為主要變數)：
+You can globally set theme colors through CSS Variables. From 50 to 950, there are 11 color scales (with 500 being the primary variable):
 
 ```css
 :root {
@@ -117,7 +117,7 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
   --color-vdt-theme-200: #bae6fd;
   --color-vdt-theme-300: #7dd3fc;
   --color-vdt-theme-400: #38bdf8;
-  --color-vdt-theme-500: #0ea5e9; /* 主要變數 */
+  --color-vdt-theme-500: #0ea5e9; /* Primary variable */
   --color-vdt-theme-600: #0284c7;
   --color-vdt-theme-700: #0369a1;
   --color-vdt-theme-800: #075985;
@@ -126,13 +126,13 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
 }
 ```
 
-### 自訂語義化顏色
+### Custom Semantic Colors
 
-您也可以自訂語義化的顏色變數：
+You can also customize semantic color variables:
 
 ```css
 :root {
-  /* 淺色模式 */
+  /* Light mode */
   --color-vdt-light-surface: white;
   --color-vdt-light-surface-secondary: oklch(98.5% 0.002 247.839);
   --color-vdt-light-surface-elevated: white;
@@ -145,7 +145,7 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
   --color-vdt-light-interactive-hover: oklch(92.8% 0.006 264.531);
   --color-vdt-light-interactive-active: oklch(87.2% 0.01 258.338);
 
-  /* 深色模式 */
+  /* Dark mode */
   --color-vdt-dark-surface: oklch(20% 0.034 264.665);
   --color-vdt-dark-surface-secondary: oklch(25% 0.033 256.848);
   --color-vdt-dark-surface-elevated: oklch(32% 0.033 256.848);
@@ -158,7 +158,7 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
   --color-vdt-dark-interactive-hover: oklch(39.3% 0.034 259.733);
   --color-vdt-dark-interactive-active: oklch(44.6% 0.03 256.802);
 
-  /* 當前使用的顏色（會根據模式自動切換） */
+  /* Currently used colors (automatically switch based on mode) */
   --color-vdt-surface: var(--color-vdt-light-surface);
   --color-vdt-surface-secondary: var(--color-vdt-light-surface-secondary);
   --color-vdt-surface-elevated: var(--color-vdt-light-surface-elevated);
@@ -171,67 +171,67 @@ Vue DatePicker 提供了靈活的主題系統，支援多種自訂方式來滿�
   --color-vdt-interactive-hover: var(--color-vdt-light-interactive-hover);
   --color-vdt-interactive-active: var(--color-vdt-light-interactive-active);
 
-  /* 狀態顏色 */
+  /* Status colors */
   --color-vdt-error: oklch(63.7% 0.237 25.331);
 }
 ```
 
-### 複合選擇器 精確控制
+### Compound Selectors - Precise Control
 
-使用 CSS 選擇器組合可以針對特定的模式和主題進行精確控制：
+Using CSS selector combinations allows for precise control over specific modes and themes:
 
 ```css
-/* 深色模式 + violet 主題 */
+/* Dark mode + violet theme */
 [data-vdt-mode="dark"][data-vdt-theme="violet"] {
   --color-vdt-theme-500: oklch(60.6% 0.25 292.717);
   --color-vdt-theme-600: oklch(54.1% 0.281 293.009);
 }
 
-/* 淺色模式 + blue 主題 */
+/* Light mode + blue theme */
 [data-vdt-mode="light"][data-vdt-theme="blue"] {
   --color-vdt-theme-500: oklch(62.3% 0.214 259.815);
   --color-vdt-theme-600: oklch(54.6% 0.245 262.881);
 }
 ```
 
-### 使用 Class 選擇器
+### Using Class Selectors
 
-Vue Datepicker 也支援使用 Class 選擇器來進行更精確的樣式控制。
+Vue Datepicker also supports using class selectors for more precise style control.
 
 ```css
-/* 主要元素 */
+/* Main elements */
 .date-picker-wrapper {
-  /* 主容器 */
+  /* Main container */
 }
 .date-picker-container {
-  /* 輸入框容器 */
+  /* Input container */
 }
 .calendar-container {
-  /* 日曆彈窗 */
+  /* Calendar popup */
 }
 
-/* 日曆元素 */
+/* Calendar elements */
 .calendar-cell {
-  /* 日期單元格 */
+  /* Date cell */
 }
 .calendar-cell-button {
-  /* 日期按鈕 */
+  /* Date button */
 }
 .calendar-cell-button[aria-selected="true"] {
-  /* 選中日期 */
+  /* Selected date */
 }
 .calendar-cell-button[aria-current="date"] {
-  /* 今天日期 */
+  /* Today's date */
 }
 
-/* 實用範例 */
+/* Practical example */
 .my-custom-picker .calendar-cell-button:hover {
   background: var(--color-vdt-theme-100);
   transform: scale(1.05);
 }
 ```
 
-### 使用組件來自定義主題
+### Using Components to Customize Themes
 
 ```vue
 <template>
@@ -250,11 +250,11 @@ Vue Datepicker 也支援使用 Class 選擇器來進行更精確的樣式控制�
 
 ::: tip
 
-- 建議優先使用 `theme` prop 進行快速設定
-- 所有的 class 都使用 kebab-case 命名，以 `date-picker-` 或 `calendar-` 為前綴，避免與其他 CSS 框架衝突。
-- 部分樣式可能需要使用 `!important` 來強制覆蓋原有樣式，以確保網頁的美觀性。
-- 如需查看所有可用的 class 名稱，請參考組件的 HTML 結構或 [開發者工具](https://developer.chrome.com/docs/devtools/) 檢視元素。
-- 每個 DatePicker 組件都有獨立的主題設置，不會互相影響
+- It's recommended to use the `theme` prop for quick setup
+- All classes use kebab-case naming with `date-picker-` or `calendar-` prefixes to avoid conflicts with other CSS frameworks
+- Some styles may need `!important` to forcefully override existing styles for visual consistency
+- To view all available class names, refer to the component's HTML structure or use [Developer Tools](https://developer.chrome.com/docs/devtools/) to inspect elements
+- Each DatePicker component has independent theme settings and won't affect each other
   :::
 
 <script setup lang="ts">

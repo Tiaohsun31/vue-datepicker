@@ -1,24 +1,24 @@
-# ROC 格式化插件
+# ROC Formatting Plugin
 
-雖然 [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) 提供了強大的日曆系統支援，但在某些特殊格式化需求上仍有限制。ROC 格式化插件專門用來處理中華民國曆的自訂格式，特別是在時間處理和中文格式化方面。
+While [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) provides powerful calendar system support, it still has limitations for certain special formatting requirements. The ROC formatting plugin is specifically designed to handle custom formats for the Republic of China (Taiwan) calendar, particularly in time handling and Chinese formatting.
 
-## 插件功能
+## Plugin Features
 
-ROC 格式化插件主要提供以下功能：
+The ROC formatting plugin mainly provides the following features:
 
-- 🎯 **自訂民國年格式** - 支援多種民國年顯示格式
-- ⏰ **進階時間處理** - 支援中文時間格式（時/分/秒）
-- 📝 **智能輸入解析** - 自動識別並解析民國格式輸入
-- 🔄 **雙向轉換** - 西元年與民國年的自動轉換
+- 🎯 **Custom ROC Year Formats** - Support for multiple ROC year display formats
+- ⏰ **Advanced Time Handling** - Support for Chinese time formats (hour/minute/second)
+- 📝 **Smart Input Parsing** - Automatically recognize and parse ROC format inputs
+- 🔄 **Bidirectional Conversion** - Automatic conversion between Gregorian and ROC years
 
-## 差異比較
+## Comparison
 
 ::: raw
 
 <div class="demo-container space-y-4">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="space-y-2">
-      <h4 class="font-medium">一般使用</h4>
+      <h4 class="font-medium">Standard Usage</h4>
       <DatePicker 
         v-model="rocDate1" 
         calendar="roc" 
@@ -32,7 +32,7 @@ ROC 格式化插件主要提供以下功能：
       </div>
     </div>
     <div class="space-y-2">
-      <h4 class="font-medium">使用插件</h4>
+      <h4 class="font-medium">With Plugin</h4>
       <DatePicker 
         v-model="rocDate2" 
         calendar="roc" 
@@ -50,13 +50,13 @@ ROC 格式化插件主要提供以下功能：
 </div>
 :::
 
-::: details
+::: details Code Example
 
 ```vue
 <template>
   <div class="demo-container space-y-4">
     <div class="space-y-2">
-      <h4 class="font-medium">一般使用</h4>
+      <h4 class="font-medium">Standard Usage</h4>
       <DatePicker
         v-model="formatDate1"
         calendar="roc"
@@ -66,7 +66,7 @@ ROC 格式化插件主要提供以下功能：
       />
     </div>
     <div class="space-y-2">
-      <h4 class="font-medium">使用插件</h4>
+      <h4 class="font-medium">With Plugin</h4>
       <DatePicker
         v-model="formatDate2"
         calendar="roc"
@@ -82,32 +82,33 @@ ROC 格式化插件主要提供以下功能：
 ```
 
 :::
-::: tip 如何使用?
 
-- `date-format` 設定`ROC`開頭的日期格式化選項，將自動套用到日期輸出上
-- 完整支援，請參考下列自訂格式化選項
+::: tip How to Use
+
+- Set `date-format` with `ROC` prefix formatting options, which will be automatically applied to date output
+- For complete support, refer to the custom formatting options below
   :::
 
-## 格式支援
+## Format Support
 
-ROC 插件支援多種民國曆格式**輸入解析**和**輸出格式化**：
+The ROC plugin supports multiple ROC calendar formats for **input parsing** and **output formatting**:
 
-### 日期格式對照表
+### Date Format Reference Table
 
-| 格式代碼             | 輸出示例                | 說明           |
-| -------------------- | ----------------------- | -------------- |
-| `ROC-YYYY`           | 民國 113 年             | 完整民國年     |
-| `ROC-YYYY-MM-DD`     | 民國 113 年 12 月 25 日 | 完整中文日期   |
-| `ROC-YYYY/MM/DD`     | 民國 113/12/25          | 民國年數字格式 |
-| `ROC-NUM-YYYY-MM-DD` | 113-12-25               | 純數字民國格式 |
-| `ROC-NUM-YYYY/MM/DD` | 113/12/25               | 純數字民國格式 |
+| Format Code          | Output Example          | Description             |
+| -------------------- | ----------------------- | ----------------------- |
+| `ROC-YYYY`           | 民國 113 年             | Full ROC year           |
+| `ROC-YYYY-MM-DD`     | 民國 113 年 12 月 25 日 | Full Chinese date       |
+| `ROC-YYYY/MM/DD`     | 民國 113/12/25          | ROC year numeric format |
+| `ROC-NUM-YYYY-MM-DD` | 113-12-25               | Pure numeric ROC format |
+| `ROC-NUM-YYYY/MM/DD` | 113/12/25               | Pure numeric ROC format |
 
 ::: raw
 
 <div class="demo-container space-y-4">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">完整中文格式</h4>
+      <h4 class="text-sm font-medium">Full Chinese Format</h4>
       <DatePicker 
         v-model="formatDate1" 
         calendar="roc" 
@@ -115,10 +116,10 @@ ROC 插件支援多種民國曆格式**輸入解析**和**輸出格式化**：
         output-type="custom"
         date-format="ROC-YYYY-MM-DD"
       />
-      <div class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate1 || '請選擇日期' }}</div>
+      <div class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate1 || 'Please select a date' }}</div>
     </div>
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">數字格式</h4>
+      <h4 class="text-sm font-medium">Numeric Format</h4>
       <DatePicker 
         v-model="formatDate2" 
         calendar="roc" 
@@ -126,7 +127,7 @@ ROC 插件支援多種民國曆格式**輸入解析**和**輸出格式化**：
         output-type="custom"
         date-format="ROC-NUM-YYYY-MM-DD"
       />
-      <div class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate2 || '請選擇日期' }}</div>
+      <div class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate2 || 'Please select a date' }}</div>
     </div>
   </div>
 </div>
@@ -138,7 +139,7 @@ ROC 插件支援多種民國曆格式**輸入解析**和**輸出格式化**：
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">完整中文格式</h4>
+      <h4 class="text-sm font-medium">Full Chinese Format</h4>
       <DatePicker
         v-model="formatDate1"
         calendar="roc"
@@ -146,11 +147,11 @@ ROC 插件支援多種民國曆格式**輸入解析**和**輸出格式化**：
         date-format="ROC-YYYY-MM-DD"
       />
       <div class="text-xs text-gray-600 dark:text-gray-400">
-        {{ formatDate1 || "請選擇日期" }}
+        {{ formatDate1 || "Please select a date" }}
       </div>
     </div>
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">數字格式</h4>
+      <h4 class="text-sm font-medium">Numeric Format</h4>
       <DatePicker
         v-model="formatDate2"
         calendar="roc"
@@ -158,7 +159,7 @@ ROC 插件支援多種民國曆格式**輸入解析**和**輸出格式化**：
         date-format="ROC-NUM-YYYY-MM-DD"
       />
       <div class="text-xs text-gray-600 dark:text-gray-400">
-        {{ formatDate2 || "請選擇日期" }}
+        {{ formatDate2 || "Please select a date" }}
       </div>
     </div>
   </div>
@@ -176,28 +177,28 @@ const formatDate2 = ref(null);
 
 :::
 
-### 時間格式對照表
+### Time Format Reference Table
 
-| 格式代碼         | 輸出示例               | 說明           |
-| ---------------- | ---------------------- | -------------- |
-| `HH:mm:ss`       | 14:30:00               | 24 小時制      |
-| `HH:mm`          | 12:30                  | 24 小時制      |
-| `HH時mm分ss秒`   | 14 時 30 分 00 秒      | 中文 24 小時制 |
-| `HH時mm分`       | 下午 02:30             | 中文 24 小時制 |
-| `A HH時mm分ss秒` | 下午 02 時 30 分 00 秒 | 中文 12 小時制 |
-| `A HH時mm分`     | 下午 02 時 30 分       | 中文 12 小時制 |
-| `hh:mm:ss A`     | 02:30:00 下午          | 英文 12 小時制 |
-| `hh:mm A`        | 02:30 下午             | 英文 12 小時制 |
-| `h:mm A`         | 2:30 下午              | 英文 12 小時制 |
-| `A hh:mm:ss`     | 下午 02:30:00          | 英文 12 小時制 |
-| `A hh:mm`        | 下午 02:30             | 英文 12 小時制 |
+| Format Code      | Output Example         | Description            |
+| ---------------- | ---------------------- | ---------------------- |
+| `HH:mm:ss`       | 14:30:00               | 24-hour format         |
+| `HH:mm`          | 12:30                  | 24-hour format         |
+| `HH時mm分ss秒`   | 14 時 30 分 00 秒      | Chinese 24-hour format |
+| `HH時mm分`       | 下午 02:30             | Chinese 24-hour format |
+| `A HH時mm分ss秒` | 下午 02 時 30 分 00 秒 | Chinese 12-hour format |
+| `A HH時mm分`     | 下午 02 時 30 分       | Chinese 12-hour format |
+| `hh:mm:ss A`     | 02:30:00 下午          | English 12-hour format |
+| `hh:mm A`        | 02:30 下午             | English 12-hour format |
+| `h:mm A`         | 2:30 下午              | English 12-hour format |
+| `A hh:mm:ss`     | 下午 02:30:00          | English 12-hour format |
+| `A hh:mm`        | 下午 02:30             | English 12-hour format |
 
 ::: raw
 
 <div class="demo-container space-y-4">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">中文12小時制</h4>
+      <h4 class="text-sm font-medium">Chinese 12-hour Format</h4>
       <DatePicker 
         v-model="timeFormat1" 
         calendar="roc" 
@@ -209,10 +210,10 @@ const formatDate2 = ref(null);
         time-format="A HH時mm分ss秒"
         customDefaultTime="00:00:00"
       />
-      <div class="text-xs text-gray-600 dark:text-gray-400 break-all">{{ timeFormat1 || '請選擇日期時間' }}</div>
+      <div class="text-xs text-gray-600 dark:text-gray-400 break-all">{{ timeFormat1 || 'Please select date and time' }}</div>
     </div>
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">中文24小時制</h4>
+      <h4 class="text-sm font-medium">Chinese 24-hour Format</h4>
       <DatePicker 
         v-model="timeFormat2" 
         calendar="roc" 
@@ -223,7 +224,7 @@ const formatDate2 = ref(null);
         time-format="HH時mm分ss秒"
         customDefaultTime="00:00:00"
       />
-      <div class="text-xs text-gray-600 dark:text-gray-400 break-all">{{ timeFormat2 || '請選擇日期時間' }}</div>
+      <div class="text-xs text-gray-600 dark:text-gray-400 break-all">{{ timeFormat2 || 'Please select date and time' }}</div>
     </div>
   </div>
 </div>
@@ -235,7 +236,7 @@ const formatDate2 = ref(null);
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">中文12小時制</h4>
+      <h4 class="text-sm font-medium">Chinese 12-hour Format</h4>
       <DatePicker
         v-model="timeFormat1"
         calendar="roc"
@@ -247,11 +248,11 @@ const formatDate2 = ref(null);
         customDefaultTime="00:00:00"
       />
       <div class="text-xs text-gray-600 dark:text-gray-400 break-all">
-        {{ timeFormat1 || "請選擇日期時間" }}
+        {{ timeFormat1 || "Please select date and time" }}
       </div>
     </div>
     <div class="space-y-2">
-      <h4 class="text-sm font-medium">中文24小時制</h4>
+      <h4 class="text-sm font-medium">Chinese 24-hour Format</h4>
       <DatePicker
         v-model="timeFormat2"
         calendar="roc"
@@ -262,7 +263,7 @@ const formatDate2 = ref(null);
         customDefaultTime="00:00:00"
       />
       <div class="text-xs text-gray-600 dark:text-gray-400 break-all">
-        {{ timeFormat2 || "請選擇日期時間" }}
+        {{ timeFormat2 || "Please select date and time" }}
       </div>
     </div>
   </div>
@@ -279,41 +280,41 @@ const timeFormat2 = ref("");
 
 :::
 
-### 輸入解析
+### Input Parsing
 
-插件能自動識別以下民國日期格式:
+The plugin can automatically recognize the following ROC date formats:
 
 ```typescript
-// 這些輸入都會被正確解析
+// All these inputs will be correctly parsed
 const inputs = [
-  "民國113年12月25日", // 完整中文格式
-  "民国113年12月25日", // 簡體中文
-  "ROC 113年12月25日", // 英文前綴
-  "民國113年12月25日 上午 09時30分", // 含時間
+  "民國113年12月25日", // Full Chinese format
+  "民国113年12月25日", // Simplified Chinese
+  "ROC 113年12月25日", // English prefix
+  "民國113年12月25日 上午 09時30分", // With time
 ];
 ```
 
-## 進階用法
+## Advanced Usage
 
-### 程式化使用插件
+### Programmatic Plugin Usage
 
-您也可以直接在程式中使用 ROC 插件：
+You can also use the ROC plugin directly in your code:
 
 ```typescript
 import { RocFormatPlugin } from "@tiaohsun/vue-datepicker";
 
 const rocPlugin = new RocFormatPlugin();
 
-// 檢查是否可以解析輸入
+// Check if input can be parsed
 const canParse = rocPlugin.canParseInput("民國113年12月25日");
 console.log(canParse); // true
 
-// 解析輸入
+// Parse input
 const parsed = rocPlugin.parseInput("民國113年12月25日", "zh-TW");
 console.log(parsed);
 // { year: 2024, month: 12, day: 25 }
 
-// 格式化輸出
+// Format output
 const date = {
   year: 2024,
   month: 12,
@@ -331,10 +332,10 @@ console.log(formatted);
 // 民國113年12月25日 14時30分00秒
 ```
 
-### 自訂格式驗證
+### Custom Format Validation
 
 ```typescript
-// 檢查格式是否被插件支援
+// Check if format is supported by the plugin
 const isSupported = rocPlugin.supportsFormat("ROC-YYYY-MM-DD");
 console.log(isSupported); // true
 
@@ -342,33 +343,33 @@ const isNotSupported = rocPlugin.supportsFormat("YYYY-MM-DD");
 console.log(isNotSupported); // false
 ```
 
-### 錯誤處理
+### Error Handling
 
-插件提供完善的錯誤處理機制：
+The plugin provides comprehensive error handling mechanisms:
 
 ```typescript
-// 無效輸入處理
-const invalidInput = rocPlugin.parseInput("無效日期", "zh-TW");
+// Invalid input handling
+const invalidInput = rocPlugin.parseInput("Invalid date", "zh-TW");
 console.log(invalidInput); // null
 
-// 超出範圍的年份
+// Out of range year
 const outOfRange = rocPlugin.parseInput("民國300年01月01日", "zh-TW");
 console.log(outOfRange); // null
 
-// 無效日期（如2月30日）
+// Invalid date (e.g., February 30th)
 const invalidDate = rocPlugin.parseInput("民國113年02月30日", "zh-TW");
 console.log(invalidDate); // null
 ```
 
-## 限制與注意事項
+## Limitations and Notes
 
-::: warning 使用限制
+::: warning Usage Limitations
 
-1. **年份範圍**：支援民國 1 年至 200 年（西元 1912-2111）
-2. **格式限制**：僅支援預定義的 ROC 格式代碼
-3. **語言支援**：主要針對中文環境優化
-4. **相容性**：需要現代瀏覽器支援
-5. **性能**：插件只在需要時才會被載入和執行
+1. **Year Range**: Supports ROC years 1 to 200 (1912-2111 CE)
+2. **Format Limitations**: Only supports predefined ROC format codes
+3. **Language Support**: Primarily optimized for Chinese environments
+4. **Compatibility**: Requires modern browser support
+5. **Performance**: Plugin is only loaded and executed when needed
    :::
 
 <script setup lang="ts">
@@ -378,18 +379,18 @@ import { useData } from 'vitepress'
 
 const { lang } = useData()
 const locale = computed(() => lang.value);
-// 基本示例
+// Basic examples
 const rocDateTime = ref('')
 
-// 差異示例
+// Comparison examples
 const rocDate1 = ref(null)
 const rocDate2 = ref(null)
 
-// 格式化示例
+// Format examples
 const formatDate1 = ref(null)
 const formatDate2 = ref(null)
 
-// 時間格式示例
+// Time format examples
 const timeFormat1 = ref('')
 const timeFormat2 = ref('')
 </script>

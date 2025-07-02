@@ -4855,7 +4855,7 @@ var El = defineComponent({
               type: "button",
               onClick: k,
               "data-year-selector-button": "",
-              class: "inline-flex text-nowrap items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200",
+              class: "inline-flex truncate items-center px-2 py-1 bg-vdt-surface text-vdt-content w-full border border-vdt-outline rounded-sm text-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200",
               "aria-label": "選擇年份"
             }, toDisplayString(i.value), 1)
           ]),
@@ -7003,7 +7003,7 @@ var ir = defineComponent({
 });
 var Ss = {
   key: 0,
-  class: "calendar-container flex-1 md:min-w-[275px] min-w-auto"
+  class: "calendar-container flex-1 md:min-w-[280px] min-w-auto"
 };
 var ws = defineComponent({
   __name: "RangeCalendar",
@@ -7101,7 +7101,7 @@ var ws = defineComponent({
     }, [
       createBaseVNode("div", {
         class: normalizeClass(["calendar-container flex-1", [
-          g.monthDisplayMode === "dual" ? "min-w-auto md:min-w-[275px]" : "min-w-auto"
+          g.monthDisplayMode === "dual" ? "min-w-auto md:min-w-[280px]" : "min-w-auto"
         ]])
       }, [
         createVNode(pa, {
@@ -7550,7 +7550,7 @@ var _s = defineComponent({
     monthDisplayMode: {},
     placeholderOverrides: { default: () => ({}) },
     separator: { default: " ~ " },
-    showShortcuts: { type: Boolean, default: false },
+    showShortcuts: { type: Boolean, default: true },
     incomplete: { type: Boolean, default: true },
     maxRange: { default: void 0 },
     minRange: { default: void 0 },
@@ -7781,7 +7781,6 @@ var _s = defineComponent({
               "max-h-[80vh] overflow-auto",
               // 小螢幕時確保足夠的邊距
               "sm:max-h-[70vh]",
-              // 確保在小螢幕上有足夠的觸控空間
               w.value === "single" ? "min-w-[275px]" : "min-w-[275px] md:min-w-[570px]"
             ]]),
             onClick: Y[9] || (Y[9] = withModifiers(() => {

@@ -1,4 +1,4 @@
-# 日曆系統 (Calendar Systems)
+# 日曆系統
 
 Vue DatePicker 支援多種日曆系統，基於強大的 [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) 套件實現國際化日期處理。
 
@@ -62,30 +62,12 @@ Vue DatePicker 支援多種日曆系統，基於強大的 [@internationalized/da
     </div>
     <div class="space-y-2">
         <DatePicker v-model="date" :calendar="selectedCalendar" :locale="selectedLocale" :output-type="selectedOutputType"  />
-        <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800">
+        <div class="py-1 px-2 bg-gray-100 rounded dark:bg-gray-800 text-sm">
             v-model: {{ date }}
         </div>
     </div>
 </div>
 :::
-
-```vue
-<template>
-  <DatePicker
-    v-model="date"
-    calendar="roc"
-    locale="zh-TW"
-    output-type="custom"
-  />
-</template>
-
-<script setup>
-import { ref } from "vue";
-import { DatePicker } from "@tiaohsun/vue-datepicker";
-
-const date = ref("");
-</script>
-```
 
 使用上方的互動式範例可以直接體驗不同日曆系統和語言的顯示效果。
 
@@ -100,16 +82,16 @@ const date = ref("");
 
 不同日曆系統有各自的有效年份範圍：
 
-| 日曆系統 | 最小年份   | 最大年份    | 說明                              |
-| -------- | ---------- | ----------- | --------------------------------- |
-| Gregory  | 1          | 當前年+100  | 西元紀年                          |
-| ROC      | 1912       | 當前年+100  | 民國元年對應西元 1912 年          |
-| Buddhist | 544        | 當前年+643  | 佛曆紀年比西元早 543 年           |
-| Japanese | 1868       | 當前年+100  | 明治維新開始                      |
-| Islamic  | 622        | 當前年+100  | 伊斯蘭紀年                        |
-| Persian  | 622        | 當前年+100  | 波斯紀年                          |
-| Hebrew   | 1          | 當前年+3860 | 希伯來紀年                        |
-| 其他系統 | 依系統而定 |             | 詳見 @internationalized/date 文件 |
+| 日曆系統 | 最小年份   | 最大年份    | 說明                                                                                                       |
+| -------- | ---------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
+| Gregory  | 1          | 當前年+100  | 西元紀年                                                                                                   |
+| ROC      | 1912       | 當前年+100  | 民國元年對應西元 1912 年                                                                                   |
+| Buddhist | 544        | 當前年+643  | 佛曆紀年比西元早 543 年                                                                                    |
+| Japanese | 1868       | 當前年+100  | 明治維新開始                                                                                               |
+| Islamic  | 622        | 當前年+100  | 伊斯蘭紀年                                                                                                 |
+| Persian  | 622        | 當前年+100  | 波斯紀年                                                                                                   |
+| Hebrew   | 1          | 當前年+3860 | 希伯來紀年                                                                                                 |
+| 其他系統 | 依系統而定 |             | 詳見 [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) 文件 |
 
 ::: warning 注意
 
@@ -130,12 +112,15 @@ const date = ref("");
 | `output-type` | `'iso' \| 'date' \| 'object' \| 'custom'` | `'iso'`     | 輸出格式類型   |
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { DatePicker, type OutputType } from '@tiaohsun/vue-datepicker';
-import '@tiaohsun/vue-datepicker/style';
+import { ref, computed } from 'vue';
+import type OutputType  from '@tiaohsun/vue-datepicker';
+import { useData } from 'vitepress'
+
+const { lang } = useData()
+const locale = computed(() => lang.value === 'en-US' ? 'en-US' : 'zh-TW');
 
 const date = ref('')
 const selectedCalendar = ref('gregory')
-const selectedLocale = ref('zh-TW')
+const selectedLocale = ref(locale.value)
 const selectedOutputType = ref<OutputType>('custom')
 </script>

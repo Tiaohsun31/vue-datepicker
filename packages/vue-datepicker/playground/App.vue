@@ -26,9 +26,8 @@
 
             <!-- 基本日期範圍選擇器 -->
             <div class="p-4 max-w-3xl">
-                <DateRange v-model="selectedDate" locale="en-US" output-type="date" />
+                <DateRange v-model="selectedDate" />
             </div>
-
 
             <!-- 帶快捷選項的日期範圍選擇器 -->
             <DateRange data-testid="date-range-with-shortcuts" v-model="selectedDateWithShortcuts" :showShortcuts="true"

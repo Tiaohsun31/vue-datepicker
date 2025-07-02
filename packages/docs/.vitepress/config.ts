@@ -1,6 +1,7 @@
 // .vitepress/config.ts
 import { defineConfig } from 'vitepress'
 import tailwindcss from '@tailwindcss/vite'
+import { defineAdditionalConfig, type DefaultTheme } from 'vitepress'
 
 export default defineConfig({
     srcDir: './pages',
@@ -72,6 +73,22 @@ export default defineConfig({
                         ]
                     },
                 ],
+                search: {
+                    provider: 'local',
+                    options: {
+                        miniSearch: {
+                            options: {
+                                tokenize: (string) => string.split(/[\s\-]+/),
+                                processTerm: (term) => term.toLowerCase()
+                            },
+                            searchOptions: {
+                                fuzzy: 0.2,
+                                prefix: true,
+                                boost: { title: 4, text: 2, titles: 1 }
+                            }
+                        }
+                    }
+                },
                 socialLinks: [
                     { icon: 'github', link: 'https://github.com/Tiaohsun31/vue-datepicker' }
                 ]
@@ -119,6 +136,32 @@ export default defineConfig({
                         ]
                     },
                 ],
+                search: {
+                    provider: 'local',
+                    options: {
+                        locales: {
+                            'zh-tw': {
+                                translations: {
+                                    button: {
+                                        buttonText: '搜尋文檔',
+                                        buttonAriaLabel: '搜尋文檔'
+                                    }
+                                }
+                            }
+                        },
+                        miniSearch: {
+                            options: {
+                                tokenize: (string) => string.split(/[\s\-\u4e00-\u9fff]+/),
+                                processTerm: (term) => term.toLowerCase()
+                            },
+                            searchOptions: {
+                                fuzzy: 0.1, // 中文搜尋建議降低模糊匹配
+                                prefix: true,
+                                boost: { title: 4, text: 2, titles: 1 }
+                            }
+                        }
+                    }
+                },
                 socialLinks: [
                     { icon: 'github', link: 'https://github.com/Tiaohsun31/vue-datepicker' }
                 ]

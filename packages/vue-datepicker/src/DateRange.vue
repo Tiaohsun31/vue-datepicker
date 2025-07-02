@@ -59,13 +59,22 @@
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto md:min-w-[570px]"
-            @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
+            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto"
+            :class="[
+                // 基本尺寸控制
+                'max-w-[95vw]',
+                // 響應式最大高度和滾動
+                'max-h-[80vh] overflow-auto',
+                // 小螢幕時確保足夠的邊距
+                'sm:max-h-[70vh]',
+                displayMode === 'single' ? 'min-w-[275px]' : 'min-w-[275px] md:min-w-[570px]'
+            ]" @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
 
             <!-- 範圍選擇器內容 -->
             <div class="p-2 space-y-2">
                 <!-- 輸入區域 -->
-                <div v-if="inputEnabled" class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
+                <div v-if="inputEnabled && displayMode === 'dual'"
+                    class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
                     <!-- 開始日期輸入 -->
                     <div data-testid="start-date-inputs" aria-label="開始日期輸入區域" @click.stop="focusStartDate"
                         class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
@@ -138,14 +147,15 @@
                 </div>
 
                 <!-- 雙月日曆 -->
-                <div class="calendar-container flex flex-col md:flex-row gap-1 overflow-auto">
-                    <DualMonthCalendar :showTimeSelector="showTime" :calendar="calendar"
+                <div class="calendar-container overflow-auto">
+                    <RangeCalendar :month-display-mode="displayMode" :showTimeSelector="showTime" :calendar="calendar"
                         :range-start="startDateTime.internalDateTime.value"
-                        :range-end="endDateTime.internalDateTime.value" :enableSeconds="enableSeconds"
-                        :use24Hour="use24Hour" :locale="locale" :week-starts-on="weekStartsOn"
+                        :range-end="endDateTime.internalDateTime.value"
                         :start-time-value="startDateTime.inputTimeValue.value"
-                        :end-time-value="endDateTime.inputTimeValue.value" :min-date="parseInputToSimpleDate(minDate)"
-                        :max-date="parseInputToSimpleDate(maxDate)" @range-select="handleCalendarRangeSelect"
+                        :end-time-value="endDateTime.inputTimeValue.value" :locale="locale"
+                        :week-starts-on="weekStartsOn" :min-date="parseInputToSimpleDate(minDate)"
+                        :max-date="parseInputToSimpleDate(maxDate)" :enable-seconds="enableSeconds"
+                        :use24-hour="use24Hour" @range-select="handleCalendarRangeSelect"
                         @time-select="handleTimeSelect" />
                 </div>
             </div>
@@ -178,16 +188,17 @@ import TimeInput from './components/inputs/TimeInput.vue';
 import DateErrorMessage from './components/calendar/DateErrorMessage.vue';
 import CalendarIcon from './components/icons/CalendarIcon.vue';
 import ClearIcon from './components/icons/ClearIcon.vue';
-import DualMonthCalendar from './components/calendar/DualMonthCalendar.vue';
+import RangeCalendar from './components/calendar/RangeCalendar.vue';
 
 // Composables
 import { useDateRange } from './composables/useDateRange';
 import { useTheme } from './composables/useTheme';
 
 // Utils
-import { parseInputToSimpleDate, formatSimpleDate, type DateTimeInput } from './utils/dateUtils';
+import { parseInputToSimpleDate, type DateTimeInput } from './utils/dateUtils';
 import type { DateRangeProps } from '@/types/datePickerProps';
 import { useLocale } from '@/composables/useLocale';
+import { useWindowSize } from './composables/useWindowSize';
 
 const props = withDefaults(defineProps<DateRangeProps>(), {
     modelValue: null,
@@ -225,7 +236,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 
     // 範圍特定
     separator: ' ~ ',
-    showShortcuts: false,
+    showShortcuts: true,
     incomplete: true,
 
     maxRange: undefined,
@@ -252,6 +263,15 @@ const startTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
 
 const formatErrors = ref<Record<string, string>>({});
+
+const { width: windowWidth } = useWindowSize();
+const displayMode = computed(() => {
+    if (props.monthDisplayMode) {
+        return props.monthDisplayMode;
+    }
+    // 根據響應式的窗口寬度自動切換顯示模式
+    return windowWidth.value < 768 ? 'single' : 'dual';
+});
 
 const computedTimeFormat = computed(() => {
     // 如果使用者明確提供了 timeFormat，就使用使用者的設定

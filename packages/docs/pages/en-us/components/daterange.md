@@ -27,10 +27,6 @@ DateRange is a feature-rich date range picker component that supports dual calen
 </div>
 :::
 
-::: warning
-Input functionality is only available when calendar is set to 'gregory'
-:::
-
 ```vue
 <template>
   <!-- Basic range selection -->
@@ -69,6 +65,46 @@ Input functionality is only available when calendar is set to 'gregory'
 
   <!-- Calendar only selection -->
   <DateRange v-model="calendarOnlyRange" :inputEnabled="false" />
+</template>
+```
+
+::: warning
+Input functionality is only available when displayMode is set to 'dual'
+:::
+
+### Calendar Display Mode
+
+::: raw
+
+<div class="space-y-4">
+    <div class="space-y-2">
+        <h4 class="font-semibold">Dual Month Display Mode</h4>
+        <DateRange v-model="dualModeRange" :locale="locale" monthDisplayMode="dual" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">Display two consecutive month calendars simultaneously for easy cross-month range selection</p>
+    </div>
+    <div class="space-y-2">
+        <h4 class="font-semibold">Single Month Display Mode</h4>
+        <DateRange v-model="singleModeRange" :locale="locale" monthDisplayMode="single" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">Display only a single month calendar to save display space</p>
+    </div>
+    <div class="space-y-2">
+        <h4 class="font-semibold">Auto Mode (Default)</h4>
+        <DateRange v-model="autoModeRange" :locale="locale" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">Automatically switch based on screen width: dual month on desktop, single month on mobile</p>
+    </div>
+</div>
+:::
+
+```vue
+<template>
+  <!-- Force dual month display -->
+  <DateRange v-model="dualModeRange" monthDisplayMode="dual" />
+
+  <!-- Force single month display -->
+  <DateRange v-model="singleModeRange" monthDisplayMode="single" />
+
+  <!-- Auto adaptive (default behavior) -->
+  <DateRange v-model="autoModeRange" />
 </template>
 ```
 
@@ -172,14 +208,15 @@ Input functionality is only available when calendar is set to 'gregory'
 
 ### Range-Specific Options
 
-| Property        | Type      | Default     | Description                     |
-| --------------- | --------- | ----------- | ------------------------------- |
-| `showShortcuts` | `boolean` | `false`     | Show shortcuts                  |
-| `incomplete`    | `boolean` | `true`      | Show incomplete range selection |
-| `maxRange`      | `number`  | `undefined` | Maximum selectable days         |
-| `minRange`      | `number`  | `undefined` | Minimum selectable days         |
-| `minDate`       | `string`  | `undefined` | Minimum selectable date         |
-| `maxDate`       | `string`  | `undefined` | Maximum selectable date         |
+| Property           | Type                 | Default     | Description                                                    |
+| ------------------ | -------------------- | ----------- | -------------------------------------------------------------- |
+| `monthDisplayMode` | `'single' \| 'dual'` | `undefined` | Calendar display mode, auto-switches by window size when unset |
+| `showShortcuts`    | `boolean`            | `false`     | Show shortcuts                                                 |
+| `incomplete`       | `boolean`            | `true`      | Show incomplete range selection                                |
+| `maxRange`         | `number`             | `undefined` | Maximum selectable days                                        |
+| `minRange`         | `number`             | `undefined` | Minimum selectable days                                        |
+| `minDate`          | `string`             | `undefined` | Minimum selectable date                                        |
+| `maxDate`          | `string`             | `undefined` | Maximum selectable date                                        |
 
 ### Theme Appearance
 
@@ -580,6 +617,11 @@ const requiredRange = ref({ start: '', end: '' });
 // Input modes
 const inputRange = ref({ start: '', end: '' });
 const calendarOnlyRange = ref({ start: '', end: '' });
+
+// Calendar display modes
+const dualModeRange = ref({ start: '', end: '' });
+const singleModeRange = ref({ start: '', end: '' });
+const autoModeRange = ref({ start: '', end: '' });
 
 // Shortcuts
 const shortcutRange = ref({ start: '', end: '' });

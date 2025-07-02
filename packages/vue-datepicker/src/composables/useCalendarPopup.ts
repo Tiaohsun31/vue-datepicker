@@ -66,28 +66,46 @@ export function useCalendarPopup(
             height: window.innerHeight
         };
 
+        // 重置樣式以獲取真實尺寸
+        calendar.style.position = 'absolute';
+        calendar.style.visibility = 'hidden';
+        calendar.style.display = 'block';
+
+        const calendarRect = calendar.getBoundingClientRect();
+
         // 計算基本位置（輸入框下方）
         let top = containerRect.height + 5;
         let left = 0;
 
-        // 檢查是否需要調整位置以防止超出視窗
-        const calendarRect = calendar.getBoundingClientRect();
+        // 檢查垂直空間
+        const spaceBelow = viewport.height - containerRect.bottom;
+        const spaceAbove = containerRect.top;
+        const calendarHeight = calendarRect.height;
 
-        // 水平位置調整
-        if (containerRect.left + calendarRect.width > viewport.width) {
-            left = viewport.width - containerRect.left - calendarRect.width - 10;
+        // 如果下方空間不足且上方空間更大，則顯示在上方
+        if (spaceBelow < calendarHeight && spaceAbove > spaceBelow) {
+            top = -calendarHeight - 5;
         }
 
-        // 垂直位置調整（如果下方空間不足，顯示在上方）
-        if (containerRect.bottom + calendarRect.height > viewport.height) {
-            top = -calendarRect.height - 5;
+        // 水平位置調整
+        const spaceRight = viewport.width - containerRect.left;
+        const calendarWidth = calendarRect.width;
+
+        if (spaceRight < calendarWidth) {
+            // 如果右側空間不足，向左調整
+            left = Math.max(-(calendarWidth - spaceRight + 10), -containerRect.left + 10);
+        }
+
+        // 確保不會超出左邊界
+        if (containerRect.left + left < 0) {
+            left = -containerRect.left + 10;
         }
 
         // 應用位置
-        calendar.style.position = 'absolute';
         calendar.style.top = `${top}px`;
         calendar.style.left = `${left}px`;
         calendar.style.zIndex = '50';
+        calendar.style.visibility = 'visible';
     };
 
     /**

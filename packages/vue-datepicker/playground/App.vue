@@ -26,7 +26,7 @@
 
             <!-- 基本日期範圍選擇器 -->
             <div class="p-4 max-w-3xl">
-                <DateRange v-model="selectedDate" locale="en-US" output-type="date" :showTime="true" />
+                <DateRange v-model="selectedDate" locale="en-US" output-type="date" />
             </div>
 
 

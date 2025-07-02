@@ -27,10 +27,6 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 </div>
 :::
 
-::: warning
-輸入功能僅限於 calendar 為 gregory 的情況下
-:::
-
 ```vue
 <template>
   <!-- 基本範圍選擇 -->
@@ -69,6 +65,46 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 
   <!-- 僅日曆選擇 -->
   <DateRange v-model="calendarOnlyRange" :inputEnabled="false" />
+</template>
+```
+
+::: warning
+輸入功能僅限於 monthDisplayMode 為 dual 的情況下
+:::
+
+### 日曆顯示模式
+
+::: raw
+
+<div class="space-y-4">
+    <div class="space-y-2">
+        <h4 class="font-semibold">雙月顯示模式</h4>
+        <DateRange v-model="dualModeRange" :locale="locale" monthDisplayMode="dual" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">同時顯示兩個連續月份的日曆，方便選擇跨月範圍</p>
+    </div>
+    <div class="space-y-2">
+        <h4 class="font-semibold">單月顯示模式</h4>
+        <DateRange v-model="singleModeRange" :locale="locale" monthDisplayMode="single" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">僅顯示單個月份日曆，節省顯示空間</p>
+    </div>
+    <div class="space-y-2">
+        <h4 class="font-semibold">自動模式（預設）</h4>
+        <DateRange v-model="autoModeRange" :locale="locale" />
+        <p class="text-sm text-gray-600 dark:text-gray-400">根據螢幕寬度自動切換：桌面版顯示雙月，行動版顯示單月</p>
+    </div>
+</div>
+:::
+
+```vue
+<template>
+  <!-- 強制雙月顯示 -->
+  <DateRange v-model="dualModeRange" monthDisplayMode="dual" />
+
+  <!-- 強制單月顯示 -->
+  <DateRange v-model="singleModeRange" monthDisplayMode="single" />
+
+  <!-- 自動適應（預設行為） -->
+  <DateRange v-model="autoModeRange" />
 </template>
 ```
 
@@ -172,14 +208,15 @@ DateRange 是一個功能豐富的日期範圍選擇器組件，支援雙日曆�
 
 ### 範圍特定選項
 
-| 屬性            | 類型      | 預設值      | 說明                     |
-| --------------- | --------- | ----------- | ------------------------ |
-| `showShortcuts` | `boolean` | `false`     | 是否顯示快捷選項         |
-| `incomplete`    | `boolean` | `true`      | 是否提示不完整的範圍選擇 |
-| `maxRange`      | `number`  | `undefined` | 允許選擇的最大天數       |
-| `minRange`      | `number`  | `undefined` | 允許選擇的最小天數       |
-| `minDate`       | `string`  | `undefined` | 最小可選日期             |
-| `maxDate`       | `string`  | `undefined` | 最大可選日期             |
+| 屬性               | 類型                 | 預設值      | 說明                                       |
+| ------------------ | -------------------- | ----------- | ------------------------------------------ |
+| `monthDisplayMode` | `'single' \| 'dual'` | `undefined` | 日曆顯示模式，未設定時依照視窗大小自動切換 |
+| `showShortcuts`    | `boolean`            | `false`     | 是否顯示快捷選項                           |
+| `incomplete`       | `boolean`            | `true`      | 是否提示不完整的範圍選擇                   |
+| `maxRange`         | `number`             | `undefined` | 允許選擇的最大天數                         |
+| `minRange`         | `number`             | `undefined` | 允許選擇的最小天數                         |
+| `minDate`          | `string`             | `undefined` | 最小可選日期                               |
+| `maxDate`          | `string`             | `undefined` | 最大可選日期                               |
 
 ### 主題外觀
 
@@ -580,6 +617,11 @@ const requiredRange = ref({ start: '', end: '' });
 // 輸入模式
 const inputRange = ref({ start: '', end: '' });
 const calendarOnlyRange = ref({ start: '', end: '' });
+
+// 日曆顯示模式
+const dualModeRange = ref({ start: '', end: '' });
+const singleModeRange = ref({ start: '', end: '' });
+const autoModeRange = ref({ start: '', end: '' });
 
 // 快捷選項
 const shortcutRange = ref({ start: '', end: '' });

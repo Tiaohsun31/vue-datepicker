@@ -60,6 +60,7 @@ export interface DatePickerProps extends BaseDatePickerProps {
 
 export interface DateRangeProps extends BaseDatePickerProps {
     modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
+    monthDisplayMode?: 'single' | 'dual'; // 單月或雙月顯示模式，依照視窗大小自動切換，預設為 'dual'
 
     // 輸入框佔位符 預設取locale中的Placeholder
     placeholderOverrides?: {

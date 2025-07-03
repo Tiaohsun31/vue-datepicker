@@ -123,7 +123,7 @@ import { ref } from 'vue';
 import DatePicker from '@/DatePicker.vue';
 import DateRange from '@/DateRange.vue';
 import type { OutputType } from '@/types/main';
-import { RocFormatPlugin, type LocaleMessages } from '@tiaohsun/vue-datepicker';
+import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 
 // 民國113年6月15日
 const rocDate = ref(null);

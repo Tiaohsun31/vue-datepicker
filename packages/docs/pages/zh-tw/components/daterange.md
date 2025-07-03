@@ -540,11 +540,11 @@ DateRange 提供多個插槽來自定義快捷選項和錯誤訊息處理。
 
 ### 日曆相關插槽
 
-DateRange 也支援客製化日曆，詳見 [DatePicker Slots](/pages/components/datepicker.html#slots-插槽)。
+DateRange 也支援客製化日曆，詳見 [DatePicker Slots](../components/datepicker.md#slots-插槽)。
 
 ### 錯誤訊息插槽
 
-DateRange 也支援客製化錯誤訊息，詳見 [錯誤訊息處理文檔](/pages/customization/error-message)。
+DateRange 也支援客製化錯誤訊息，詳見 [錯誤訊息處理文檔](../customization/error-message)。
 
 ### 可用插槽列表
 

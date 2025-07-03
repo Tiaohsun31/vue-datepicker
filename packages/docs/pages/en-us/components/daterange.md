@@ -540,11 +540,11 @@ DateRange provides multiple slots to customize shortcuts and error message handl
 
 ### Calendar Related Slots
 
-DateRange also supports calendar customization, see [DatePicker Slots](/pages/components/datepicker.html#slots).
+DateRange also supports calendar customization, see [DatePicker Slots](../components/datepicker.md#slots).
 
 ### Error Message Slot
 
-DateRange also supports custom error messages, see [Error Message Handling Documentation](/pages/customization/error-message).
+DateRange also supports custom error messages, see [Error Message Handling Documentation](../customization/error-message).
 
 ### Available Slots List
 

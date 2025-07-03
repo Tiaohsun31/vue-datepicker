@@ -487,7 +487,7 @@ DatePicker provides multiple slots to customize calendar display and error messa
 
 ### Error Message Slot
 
-DatePicker also supports custom error messages, see [Error Message Handling Documentation](/pages/customization/error-message).
+DatePicker also supports custom error messages, see [Error Message Handling Documentation](../customization/error-message.md).
 
 ### Available Slots List
 

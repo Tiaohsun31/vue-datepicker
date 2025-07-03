@@ -488,7 +488,7 @@ DatePicker 提供多個插槽來自定義日曆顯示和錯誤訊息處理。
 
 ### 錯誤訊息插槽
 
-DatePicker 也支援客製化錯誤訊息，詳見 [錯誤訊息處理文檔](/pages/customization/error-message)。
+DatePicker 也支援客製化錯誤訊息，詳見 [錯誤訊息處理文檔](../customization/error-message.md)。
 
 ### 可用插槽列表
 

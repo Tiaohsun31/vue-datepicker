@@ -56,12 +56,11 @@ const selectedDate = ref<string>('')
 
 For detailed API documentation, examples, and configuration options, please visit:
 
-**[📖 View Full Documentation](https://vue-datepicker.tiaohsun.dev)**
+**[📖 View Full Documentation](https://vue-datepicker.pages.dev)**
 
-- [Getting Started](https://vue-datepicker.tiaohsun.dev/guide/installation)
-- [API Reference](https://vue-datepicker.tiaohsun.dev/api/datepicker)
-- [Examples](https://vue-datepicker.tiaohsun.dev/examples)
-- [Theme Customization](https://vue-datepicker.tiaohsun.dev/guide/theming)
+- [Getting Started](https://vue-datepicker.pages.dev/en-us/guide/installation)
+- [Examples](https://vue-datepicker.pages.dev/en-us/guide/basic-usage)
+- [Theme Customization](https://vue-datepicker.pages.dev/en-us/customization/theming)
 
 ## 🌍 Supported Languages
 
@@ -84,8 +83,8 @@ This project is licensed under the [MIT](./LICENSE) License.
 
 ## 📊 Links
 
-- [📚 Documentation](https://vue-datepicker.tiaohsun.dev)
-- [🎮 Online Demo](https://vue-datepicker.tiaohsun.dev/demo)
+- [📚 Documentation](https://vue-datepicker.pages.dev)
+- [🎮 Online Demo](https://vue-datepicker.pages.dev/en-us/guide/basic-usage)
 - [🐛 Report Issues](https://github.com/Tiaohsun31/vue-datepicker/issues)
 - [💬 Discussions](https://github.com/Tiaohsun31/vue-datepicker/discussions)
 

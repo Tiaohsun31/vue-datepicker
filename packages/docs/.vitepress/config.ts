@@ -29,7 +29,9 @@ export default defineConfig({
     // 添加站點級別的配置
     title: "Vue-Datepicker",
     description: "A Vue 3 datepicker component with multi-calendar support",
-
+    sitemap: {
+        hostname: 'https://vue-datepicker.pages.dev',
+    },
     locales: {
         'en-us': {
             label: 'English',

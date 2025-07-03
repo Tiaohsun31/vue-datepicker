@@ -41,7 +41,7 @@ jobs:
           fail_ci_if_error: false # 不因覆蓋率失敗而中斷 CI
 
       - name: Check coverage threshold
-        run: node scripts/check-coverage.js
+        run: node packages/vue-datepicker/scripts/check-coverage.js
         continue-on-error: true # 生成覆蓋率報告但不強制門檻
 
       # 可選：如果需要在 CI 中檢查覆蓋率門檻，可以取消註釋以下步驟

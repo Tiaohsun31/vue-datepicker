@@ -25,6 +25,7 @@ export default mergeConfig(
                     'src/components/icons/',
                     'src/index.ts',
                     'src/composables/useTestId.ts',
+                    'dist/',
                     // 設定檔案
                     '**/eslint.config.ts',
                     '**/playwright.config.ts',

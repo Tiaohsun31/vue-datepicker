@@ -25,6 +25,22 @@ export default defineConfig({
             }
         }
     },
+    head: [
+        // Google Search Console 驗證
+        ['meta', {
+            name: 'google-site-verification',
+            content: 'jknyn5AQRCyHKjLqSGjLwz8y0Ff1tTXuR4b9nCVbCqA'
+        }],
+        ['meta', { name: 'author', content: 'tiaohsun' }],
+        // Open Graph
+        ['meta', { property: 'og:title', content: 'Vue-Datepicker' }],
+        ['meta', { property: 'og:description', content: 'A Vue 3 datepicker component with multi-calendar support' }],
+        ['meta', { property: 'og:type', content: 'website' }],
+        ['meta', { property: 'og:url', content: 'https://vue-datepicker.pages.dev/' }],
+        // alternate language links
+        ['link', { rel: 'alternate', hreflang: 'en-us', href: 'https://vue-datepicker.pages.dev/en-us/' }],
+        ['link', { rel: 'alternate', hreflang: 'zh-tw', href: 'https://vue-datepicker.pages.dev/zh-tw/' }],
+    ],
 
     // 添加站點級別的配置
     title: "Vue-Datepicker",

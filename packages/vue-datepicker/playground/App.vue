@@ -3,7 +3,7 @@
         <h3>E2E Test區域</h3>
         <div class="space-y-4">
             <!-- 基本日期選擇器 -->
-            <DatePicker v-model="dateTime" mode="dark" :required="true" :showTime="true"></DatePicker>
+            <DatePicker v-model="dateTime" :required="true"></DatePicker>
 
             <!-- 使用 disabled 來禁用日期選擇器 -->
             <DatePicker data-testid="disabled-date-picker" v-model="dateTime2" calendar="japanese" mode="dark"
@@ -25,9 +25,7 @@
             <DatePicker v-model="dateTime" date-format="DD/MM/YYYY" output-type="custom"></DatePicker>
 
             <!-- 基本日期範圍選擇器 -->
-            <div class="p-4 max-w-3xl">
-                <DateRange v-model="selectedDate" />
-            </div>
+            <DateRange v-model="selectedDate" :showTime="true" input-enabled />
 
             <!-- 帶快捷選項的日期範圍選擇器 -->
             <DateRange data-testid="date-range-with-shortcuts" v-model="selectedDateWithShortcuts" :showShortcuts="true"
@@ -130,7 +128,7 @@ import { RocFormatPlugin, type LocaleMessages } from '@tiaohsun/vue-datepicker';
 // 民國113年6月15日
 const rocDate = ref(null);
 const rocDate1 = ref(null);
-const dateTime = ref('2025-05-22'); // ISO 8601 格式
+const dateTime = ref(''); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
 
 // 新增 DateRange 測試變數
@@ -167,8 +165,6 @@ const darkSelectedDate = ref({
 const locale = ref('zh-TW');
 const calendar = ref('gregory');
 const outputType = ref<OutputType>('iso');
-
-
 
 const rocPlugin = new RocFormatPlugin();
 

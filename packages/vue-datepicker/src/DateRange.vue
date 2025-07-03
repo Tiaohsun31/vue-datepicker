@@ -11,7 +11,8 @@
                 class="grid grid-cols-[1fr_auto_1fr] gap-1 w-full cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="disabled" @click="toggleCalendar" aria-label="選擇日期範圍">
                 <!-- 開始日期 -->
-                <div class="text-center min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.start">
+                <div class="text-center min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.start"
+                    aria-label="開始日期">
                     <span v-if="modelValue?.start" class="date-placeholder text-vdt-content truncate block">
                         {{ modelValue?.start }}
                     </span>
@@ -26,7 +27,8 @@
                 </div>
 
                 <!-- 結束日期 -->
-                <div class="text-center  min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.end">
+                <div class="text-center  min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.end"
+                    aria-label="結束日期">
                     <span v-if="modelValue?.end" class="date-placeholder text-vdt-content truncate block">
                         {{ modelValue?.end }}
                     </span>

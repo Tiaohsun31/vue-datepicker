@@ -46,7 +46,7 @@ features:
     details: 支援自訂錯誤訊息，提供多種錯誤提示方式
 
   - icon: 📝
-    title: 靈活格式化
+    title: 進階格式化
     details: 支援自訂輸入輸出格式、驗證規則，提供多種資料輸出方式
 ---
 

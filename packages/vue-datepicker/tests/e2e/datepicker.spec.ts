@@ -7,8 +7,7 @@ test.describe('DatePicker E2E Tests', () => {
     })
 
     test('應該能完整的日期選擇流程', async ({ page }) => {
-        // 使用你現有的 aria-label 來點擊日曆按鈕
-        await page.click('button[aria-label="開啟日曆"]')
+        await page.click('.date-picker-container')
 
         // 等待日曆出現 (使用你現有的 role="dialog")
         await expect(page.locator('[role="dialog"]')).toBeVisible()
@@ -21,8 +20,12 @@ test.describe('DatePicker E2E Tests', () => {
         const monthInput = page.locator('input[placeholder*="月"]').first()
         const dayInput = page.locator('input[placeholder*="日"]').first()
 
-        await expect(yearInput).toHaveValue('2025')
-        await expect(monthInput).toHaveValue('06')
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+
+        await expect(yearInput).toHaveValue(year.toString())
+        await expect(monthInput).toHaveValue(month)
         await expect(dayInput).toHaveValue('15')
 
         // 日曆應該關閉

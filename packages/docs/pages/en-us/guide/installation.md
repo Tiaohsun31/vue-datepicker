@@ -248,6 +248,6 @@ const datePickerProps: DatePickerProps = {
 
 | Vue.js | Node.js | TypeScript | Tailwind |
 | ------ | ------- | ---------- | -------- |
-| 3.0+   | 16.0+   | 4.5+       | 4.0+     |
+| 3.4+   | 18.0+   | 5.0+       | 4.1+     |
 
 If you encounter other issues, please report them at [GitHub Issues](https://github.com/Tiaohsun31/vue-datepicker/issues).

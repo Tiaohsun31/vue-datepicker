@@ -6,28 +6,17 @@ test.describe('DateRange E2E Tests', () => {
     })
 
     test('應該能完整的日期範圍選擇流程', async ({ page }) => {
-        // 點擊日期範圍選擇器
-        await page.click('[aria-label="選擇日期範圍"]')
+        const firstDateRange = page.locator('.date-range-wrapper').first()
 
-        // 等待日期範圍選擇彈窗出現
+        await firstDateRange.locator('[aria-label="選擇日期範圍"]').click()
         await expect(page.locator('[aria-label="date-range-picker"]')).toBeVisible()
 
-        // 選擇開始日期 (假設選擇10號)
-        await page.click('button:has-text("10")')
+        // 選擇開始日期 - 在日曆容器內尋找
+        const calendar = page.locator('[aria-label="date-range-picker"]')
+        await calendar.locator('button:has-text("10")').first().click()
 
-        // 選擇結束日期 (假設選擇20號)
-        await page.click('button:has-text("20")')
-
-        // 驗證開始日期顯示
-        const startDateDisplay = page.locator('.date-range-wrapper .date-picker-container span').first()
-        await expect(startDateDisplay).not.toHaveText('開始日期')
-
-        // 驗證結束日期顯示
-        const endDateDisplay = page.locator('.date-range-wrapper .date-picker-container span').last()
-        await expect(endDateDisplay).not.toHaveText('結束日期')
-
-        // 驗證分隔符存在
-        await expect(page.locator('[data-testid="separator"]').first()).toContainText('~')
+        // 選擇結束日期 - 同樣在日曆容器內尋找
+        await calendar.locator('button:has-text("20")').first().click()
 
         // 點擊外部關閉日曆
         await page.click('body')

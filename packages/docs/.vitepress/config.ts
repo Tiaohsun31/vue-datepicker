@@ -1,7 +1,6 @@
 // .vitepress/config.ts
 import { defineConfig } from 'vitepress'
 import tailwindcss from '@tailwindcss/vite'
-import { defineAdditionalConfig, type DefaultTheme } from 'vitepress'
 
 export default defineConfig({
     srcDir: './pages',
@@ -41,7 +40,7 @@ export default defineConfig({
                 nav: [
                     { text: 'Home', link: '/en-us/' },
                     { text: 'Guide', link: '/en-us/guide/installation' },
-                    { text: 'Components', link: '/en-us/components/datepicker' }
+                    { text: 'v1.0.X', link: 'https://github.com/Tiaohsun31/vue-datatable/releases' }
                 ],
                 sidebar: [
                     {
@@ -104,7 +103,7 @@ export default defineConfig({
                 nav: [
                     { text: '首頁', link: '/zh-tw/' },
                     { text: '指南', link: '/zh-tw/guide/installation' },
-                    { text: '組件', link: '/zh-tw/components/datepicker' }
+                    { text: 'v1.0.X', link: 'https://github.com/Tiaohsun31/vue-datatable/releases' }
                 ],
                 sidebar: [
                     {

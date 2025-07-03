@@ -46,7 +46,7 @@ features:
     details: Support for custom error messages with multiple error notification methods
 
   - icon: 📝
-    title: Flexible Formatting
+    title: Advanced Formatting
     details: Support for custom input/output formats and validation rules with multiple data output methods
 ---
 

@@ -5,7 +5,7 @@ A powerful and flexible Vue 3 DatePicker component with TypeScript and Tailwind 
 ## 📦 Packages
 
 - **[@tiaohsun/vue-datepicker](./packages/vue-datepicker/README.md)** - The main component package
-- **[docs](https://vue-datepicker.pages.dev)** - Documentation website (VitePress)
+- **[docs](https://vue-datepicker.tiaohsun.dev)** - Documentation website (VitePress)
 
 ## 🚀 Quick Start
 
@@ -23,7 +23,7 @@ yarn add @tiaohsun/vue-datepicker
 
 ## 📚 Documentation
 
-**[📖 View Full Documentation](https://vue-datepicker.pages.dev)**
+**[📖 View Full Documentation](https://vue-datepicker.tiaohsun.dev)**
 
 ## 📝 License
 

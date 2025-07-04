@@ -36,17 +36,17 @@ export default defineConfig({
         ['meta', { property: 'og:title', content: 'Vue-Datepicker' }],
         ['meta', { property: 'og:description', content: 'A Vue 3 datepicker component with multi-calendar support' }],
         ['meta', { property: 'og:type', content: 'website' }],
-        ['meta', { property: 'og:url', content: 'https://vue-datepicker.pages.dev/' }],
+        ['meta', { property: 'og:url', content: 'https://vue-datepicker.tiaohsun.dev/' }],
         // alternate language links
-        ['link', { rel: 'alternate', hreflang: 'en-us', href: 'https://vue-datepicker.pages.dev/en-us/' }],
-        ['link', { rel: 'alternate', hreflang: 'zh-tw', href: 'https://vue-datepicker.pages.dev/zh-tw/' }],
+        ['link', { rel: 'alternate', hreflang: 'en-us', href: 'https://vue-datepicker.tiaohsun.dev/en-us/' }],
+        ['link', { rel: 'alternate', hreflang: 'zh-tw', href: 'https://vue-datepicker.tiaohsun.dev/zh-tw/' }],
     ],
 
     // 添加站點級別的配置
     title: "Vue-Datepicker",
     description: "A Vue 3 datepicker component with multi-calendar support",
     sitemap: {
-        hostname: 'https://vue-datepicker.pages.dev',
+        hostname: 'https://vue-datepicker.tiaohsun.dev',
     },
     locales: {
         'en-us': {

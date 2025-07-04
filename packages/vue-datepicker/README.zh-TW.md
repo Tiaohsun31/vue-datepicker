@@ -56,11 +56,11 @@ const selectedDate = ref('')
 
 詳細的 API 文檔、使用範例和配置選項請參考：
 
-**[📖 查看完整文檔](https://vue-datepicker.pages.dev)**
+**[📖 查看完整文檔](https://vue-datepicker.tiaohsun.dev)**
 
-- [快速開始](https://vue-datepicker.pages.dev/zh-tw/guide/installation)
-- [使用範例](https://vue-datepicker.pages.dev/zh-tw/guide/basic-usage)
-- [主題自訂](https://vue-datepicker.pages.dev/zh-tw/customization/theming)
+- [快速開始](https://vue-datepicker.tiaohsun.dev/zh-tw/guide/installation)
+- [使用範例](https://vue-datepicker.tiaohsun.dev/zh-tw/guide/basic-usage)
+- [主題自訂](https://vue-datepicker.tiaohsun.dev/zh-tw/customization/theming)
 
 ## 🌍 支援的語言
 
@@ -83,8 +83,8 @@ const selectedDate = ref('')
 
 ## 📊 相關連結
 
-- [📚 完整文檔](https://vue-datepicker.pages.dev)
-- [🎮 在線演示](https://vue-datepicker.pages.dev/zh-tw/guide/basic-usage)
+- [📚 完整文檔](https://vue-datepicker.tiaohsun.dev)
+- [🎮 在線演示](https://vue-datepicker.tiaohsun.dev/zh-tw/guide/basic-usage)
 - [🐛 問題回報](https://github.com/Tiaohsun31/vue-datepicker/issues)
 - [💬 討論區](https://github.com/Tiaohsun31/vue-datepicker/discussions)
 

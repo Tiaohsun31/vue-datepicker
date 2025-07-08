@@ -2,10 +2,10 @@
 
 ## 系統需求
 
-- Node.js 16.0 或更高版本
-- Vue.js 3.0 或更高版本
-- Tailwind CSS 4.0 或更高版本
-- TypeScript 4.5+ (可選)
+- Node.js 18.0 或更高版本
+- Vue.js 3.4 或更高版本
+- Tailwind CSS 4.1 或更高版本
+- TypeScript 5.0+ (可選)
 
 ## 安裝
 

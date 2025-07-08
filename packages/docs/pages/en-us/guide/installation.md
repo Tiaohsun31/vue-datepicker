@@ -2,10 +2,10 @@
 
 ## System Requirements
 
-- Node.js 16.0 or higher
-- Vue.js 3.0 or higher
-- Tailwind CSS 4.0 or higher
-- TypeScript 4.5+ (optional)
+- Node.js 18.0 or higher
+- Vue.js 3.4 or higher
+- Tailwind CSS 4.1 or higher
+- TypeScript 5.0+ (optional)
 
 ## Installation
 

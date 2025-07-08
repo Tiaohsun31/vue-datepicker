@@ -27,25 +27,19 @@ export default defineConfig({
         }
     },
     head: [
-        // Favicon
         ['link', { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
         ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
         ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
         ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' }],
-        // Google Search Console 驗證
         ['meta', {
             name: 'google-site-verification',
             content: 'jknyn5AQRCyHKjLqSGjLwz8y0Ff1tTXuR4b9nCVbCqA'
         }],
-        ['meta', { name: 'author', content: 'tiaohsun' }],
-        // Open Graph
-        ['meta', { property: 'og:title', content: 'Vue-Datepicker' }],
-        ['meta', { property: 'og:description', content: 'A Vue 3 datepicker component with multi-calendar support' }],
-        ['meta', { property: 'og:type', content: 'website' }],
-        ['meta', { property: 'og:url', content: 'https://vue-datepicker.tiaohsun.dev/' }],
-        // alternate language links
+        // 全局 alternate links
         ['link', { rel: 'alternate', hreflang: 'en-us', href: 'https://vue-datepicker.tiaohsun.dev/en-us/' }],
         ['link', { rel: 'alternate', hreflang: 'zh-tw', href: 'https://vue-datepicker.tiaohsun.dev/zh-tw/' }],
+        ['link', { rel: 'alternate', hreflang: 'x-default', href: 'https://vue-datepicker.tiaohsun.dev/en-us/' }],
+        ['link', { rel: 'canonical', href: 'https://vue-datepicker.tiaohsun.dev/' }],
     ],
 
     // 添加站點級別的配置
@@ -60,6 +54,15 @@ export default defineConfig({
             lang: 'en-US',
             title: "Vue-Datepicker",
             description: "A Vue 3 datepicker component with multi-calendar support",
+            head: [
+                ['meta', { name: 'author', content: 'tiaohsun' }],
+                ['meta', { property: 'og:title', content: 'Vue-Datepicker' }],
+                ['meta', { property: 'og:description', content: 'A Vue 3 datepicker component with multi-calendar support' }],
+                ['meta', { property: 'og:type', content: 'website' }],
+                ['meta', { property: 'og:url', content: 'https://vue-datepicker.tiaohsun.dev/en-us/' }],
+                ['meta', { property: 'og:locale', content: 'en_US' }],
+                ['link', { rel: 'canonical', href: 'https://vue-datepicker.tiaohsun.dev/en-us/' }],
+            ],
             themeConfig: {
                 nav: [
                     { text: 'Home', link: '/en-us/' },
@@ -123,6 +126,15 @@ export default defineConfig({
             lang: 'zh-TW',
             title: "Vue-Datepicker",
             description: '一個基於 Vue 3 的日期選擇器組件，支援多種日曆系統和自定義主題',
+            head: [
+                ['meta', { name: 'author', content: 'tiaohsun' }],
+                ['meta', { property: 'og:title', content: 'Vue-Datepicker' }],
+                ['meta', { property: 'og:description', content: '一個基於 Vue 3 的日期選擇器組件，支援多種日曆系統和自定義主題' }],
+                ['meta', { property: 'og:type', content: 'website' }],
+                ['meta', { property: 'og:url', content: 'https://vue-datepicker.tiaohsun.dev/zh-tw/' }],
+                ['meta', { property: 'og:locale', content: 'zh_TW' }],
+                ['link', { rel: 'canonical', href: 'https://vue-datepicker.tiaohsun.dev/zh-tw/' }],
+            ],
             themeConfig: {
                 nav: [
                     { text: '首頁', link: '/zh-tw/' },

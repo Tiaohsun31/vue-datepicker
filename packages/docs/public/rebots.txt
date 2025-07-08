@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://vue-datepicker.tiaohsun.dev/sitemap.xml
+
+# 禁止訪問開發和測試文件
+Disallow: /assets/
+Disallow: /.vitepress/
+Disallow: /node_modules/
+
+# 允許所有語言版本
+Allow: /en-us/
+Allow: /zh-tw/

@@ -1,6 +1,6 @@
 {
   "name": "@tiaohsun/vue-datepicker",
-  "version": "1.0.1",
+  "version": "0.2.1",
   "description": "A Vue 3 datepicker with multi-calendar support, styled with Tailwind CSS",
   "license": "MIT",
   "author": {
@@ -63,7 +63,6 @@
     "test:coverage": "vitest --coverage"
   },
   "peerDependencies": {
-    "tailwindcss": "^4.1.0",
     "vue": "^3.4.0"
   },
   "peerDependenciesMeta": {
@@ -81,7 +80,6 @@
   "devDependencies": {
     "@playwright/test": "^1.53.2",
     "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/vite": "^4.1.11",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/vue": "^8.1.0",
@@ -95,6 +93,7 @@
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.30.1",
     "eslint-plugin-oxlint": "^1.5.0",
     "eslint-plugin-vue": "~10.3.0",
@@ -102,8 +101,9 @@
     "jsdom": "^26.1.0",
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.5.0",
+    "postcss": "^8.5.6",
     "prettier": "3.6.2",
-    "tailwindcss": "^4.1.11",
+    "tailwindcss": "^3.4.17",
     "typescript": "~5.8.3",
     "vite": "^7.0.0",
     "vite-plugin-dts": "^4.5.4",

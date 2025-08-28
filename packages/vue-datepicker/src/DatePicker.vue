@@ -1,5 +1,5 @@
 <template>
-    <div class="date-picker-wrapper relative w-full"
+    <div class="date-picker-wrapper relative w-full min-w-0 justify-self-start"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
         ref="containerRef">
         <!-- 日期時間輸入容器 -->
@@ -41,7 +41,7 @@
             </button>
 
             <!-- 日曆圖標和清除按鈕 -->
-            <div class="date-picker-icon-container relative group cursor-pointer"
+            <div class="date-picker-icon-container relative group cursor-pointer items-center ml-auto flex h-6 w-6 flex-shrink-0 justify-center rounded-full hover:bg-vdt-surface-hover transition-colors"
                 :class="{ 'cursor-not-allowed': disabled }">
                 <button type="button"
                     class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"

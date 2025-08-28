@@ -3,7 +3,13 @@
         <h3>E2E Test區域</h3>
         <div class="space-y-4">
             <!-- 基本日期選擇器 -->
-            <DatePicker v-model="dateTime" :required="true"></DatePicker>
+            <div class="grid grid-cols-4">
+                <div>
+                    <DatePicker v-model="dateTime" :required="true"></DatePicker>
+                </div>
+
+            </div>
+
 
             <!-- 使用 disabled 來禁用日期選擇器 -->
             <DatePicker data-testid="disabled-date-picker" v-model="dateTime2" calendar="japanese" mode="dark"

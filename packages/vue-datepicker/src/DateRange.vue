@@ -181,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeMount } from 'vue';
+import { ref, computed, watch, onBeforeMount, toRef } from 'vue';
 import { CalendarUtils } from './utils/calendarUtils';
 
 // 組件導入
@@ -296,7 +296,7 @@ const dateRange = useDateRange(
         modelValue: props.modelValue,
         showTime: props.showTime,
         required: props.required,
-        disabled: props.disabled,
+        disabled: toRef(props, 'disabled'),
         dateFormat: props.dateFormat,
         timeFormat: computedTimeFormat.value,
         outputType: props.outputType,

@@ -139,7 +139,7 @@ const period = ref<'AM' | 'PM'>('AM');
 watch(() => props.value, (newValue) => {
     if (newValue) {
         const [hoursStr, minutes, seconds] = newValue.split(':');
-        let hours = parseInt(hoursStr);
+        let hours = parseInt(hoursStr || '0');
 
         if (!props.use24Hour) {
             if (hours >= 12) {
@@ -152,8 +152,8 @@ watch(() => props.value, (newValue) => {
         }
 
         selectedHour.value = hours;
-        selectedMinute.value = parseInt(minutes) || 0;
-        selectedSecond.value = parseInt(seconds) || 0;
+        selectedMinute.value = parseInt(minutes || '0') || 0;
+        selectedSecond.value = parseInt(seconds || '0') || 0;
     }
 }, { immediate: true });
 

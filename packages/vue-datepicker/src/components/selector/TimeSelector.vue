@@ -159,7 +159,7 @@ const parseAndSetTime = (timeStr: string) => {
     if (!timeStr) return;
 
     const [hoursStr, minutes, seconds] = timeStr.split(':');
-    let hours = parseInt(hoursStr) || 0;
+    let hours = parseInt(hoursStr || '0') || 0;
 
     if (!props.use24Hour) {
         if (hours >= 12) {
@@ -172,7 +172,7 @@ const parseAndSetTime = (timeStr: string) => {
     }
 
     selectedHour.value = hours;
-    selectedMinute.value = parseInt(minutes) || 0;
+    selectedMinute.value = parseInt(minutes || '0') || 0;
 
     if (props.enableSeconds && seconds) {
         selectedSecond.value = parseInt(seconds) || 0;

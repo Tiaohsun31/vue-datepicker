@@ -195,6 +195,8 @@ const handleNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
     const firstCell = cellStates[0];
     const lastCell = cellStates[cellStates.length - 1];
 
+    if (!firstCell || !lastCell) return;
+
     switch (direction) {
         case 'left':
             if (firstCell.date.day < 15 && firstCell.date.month !== currentDisplayMonth.value) {

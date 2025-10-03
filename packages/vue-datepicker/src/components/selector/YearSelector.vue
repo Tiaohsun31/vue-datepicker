@@ -245,6 +245,8 @@ const displayRangeText = computed(() => {
     const firstYear = years[0];
     const lastYear = years[years.length - 1];
 
+    if (!firstYear || !lastYear) return '';
+
     // 西元曆直接顯示數字區間
     if (isGregorianCalendar.value) {
         return `${firstYear.displayYear} - ${lastYear.displayYear}`;

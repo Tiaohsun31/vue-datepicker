@@ -30,9 +30,9 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
         }
 
         const parts = timeStr.split(':');
-        const hours = parseInt(parts[0]);
-        const minutes = parseInt(parts[1]);
-        const seconds = parts[2] ? parseInt(parts[2]) : 0;
+        const hours = parseInt(parts[0] || '0');
+        const minutes = parseInt(parts[1] || '0');
+        const seconds = parts[2] ? parseInt(parts[2] || '0') : 0;
 
         // 驗證範圍
         if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
@@ -48,8 +48,8 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
      */
     const formatTimeString = (timeStr: string, needSeconds: boolean = enableSeconds): string => {
         const parts = timeStr.split(':');
-        const hours = parts[0].padStart(2, '0');
-        const minutes = parts[1].padStart(2, '0');
+        const hours = (parts[0] || '0').padStart(2, '0');
+        const minutes = (parts[1] || '0').padStart(2, '0');
         const seconds = parts[2] ? parts[2].padStart(2, '0') : '00';
 
         if (needSeconds) {
@@ -94,9 +94,9 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
     const parseTimeString = (timeStr: string) => {
         const parts = timeStr.split(':');
         return {
-            hours: parseInt(parts[0]) || 0,
-            minutes: parseInt(parts[1]) || 0,
-            seconds: parseInt(parts[2]) || 0,
+            hours: parseInt(parts[0] || '0') || 0,
+            minutes: parseInt(parts[1] || '0') || 0,
+            seconds: parseInt(parts[2] || '0') || 0,
         };
     };
 

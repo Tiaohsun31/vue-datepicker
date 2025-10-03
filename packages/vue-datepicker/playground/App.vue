@@ -1,11 +1,17 @@
 <template>
     <div>
+        <button class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-150"
+            @click="disabledStatus = !disabledStatus">
+            Toggle Disabled
+        </button>
         <h3>E2E Test區域</h3>
         <div class="space-y-4">
             <!-- 基本日期選擇器 -->
             <div class="grid grid-cols-2">
                 <div>
-                    <DatePicker v-model="dateTime" :required="true"></DatePicker>
+                    <label for="disabled-date-picker"> Disabled Date Picker </label>
+                    <DatePicker id="disabled-date-picker" name="disabled-date-picker" v-model="dateTime"
+                        :required="true" :disabled="disabledStatus"></DatePicker>
                 </div>
             </div>
             <!-- 使用 disabled 來禁用日期選擇器 -->
@@ -21,7 +27,8 @@
                 customDefaultTime="00:00:00" />
 
             {{ dateTime }}
-            <DatePicker v-model="dateTime" :showTime="true" :use24Hour="false" output-type="custom" />
+            <DatePicker v-model="dateTime" :showTime="true" :customDefaultTime="'00:00:00'" :use24Hour="false"
+                output-type="custom" />
 
             <!-- 自定義格式 -->
             {{ dateTime }}
@@ -133,6 +140,8 @@ const rocDate = ref(null);
 const rocDate1 = ref(null);
 const dateTime = ref(''); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
+
+const disabledStatus = ref(true);
 
 // 新增 DateRange 測試變數
 const selectedDate = ref({

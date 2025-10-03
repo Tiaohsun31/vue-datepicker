@@ -71,10 +71,12 @@ class RocFormatPlugin implements CalendarPlugin {
         const [, datePart, timePart] = dateTimeMatch;
 
         // 解析日期部分
+        if (!datePart) return null;
         const dateResult = this.parseDatePart(datePart);
         if (!dateResult) return null;
 
         // 解析時間部分
+        if (!timePart) return dateResult;
         const timeResult = this.parseTimePart(timePart);
         if (!timeResult) return dateResult; // 如果時間解析失敗，至少返回日期
 
@@ -94,9 +96,9 @@ class RocFormatPlugin implements CalendarPlugin {
         if (!dateMatch) return null;
 
         const [, yearStr, monthStr, dayStr] = dateMatch;
-        const year = parseInt(yearStr);
-        const month = parseInt(monthStr);
-        const day = parseInt(dayStr);
+        const year = parseInt(yearStr || '0');
+        const month = parseInt(monthStr || '0');
+        const day = parseInt(dayStr || '0');
 
         return this.validateAndConvertRocDate(year, month, day);
     }
@@ -113,8 +115,8 @@ class RocFormatPlugin implements CalendarPlugin {
         const chineseTimeMatch = trimmedTime.match(/(上午|下午)\s*(\d{1,2})時(\d{2})分(?:(\d{2})秒)?/);
         if (chineseTimeMatch) {
             const [, period, hourStr, minuteStr, secondStr] = chineseTimeMatch;
-            let hour = parseInt(hourStr);
-            const minute = parseInt(minuteStr);
+            let hour = parseInt(hourStr || '0');
+            const minute = parseInt(minuteStr || '0');
             const second = secondStr ? parseInt(secondStr) : 0;
 
             // 轉換 12 小時制到 24 小時制
@@ -135,8 +137,8 @@ class RocFormatPlugin implements CalendarPlugin {
         const standardTimeMatch = trimmedTime.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
         if (standardTimeMatch) {
             const [, hourStr, minuteStr, secondStr] = standardTimeMatch;
-            const hour = parseInt(hourStr);
-            const minute = parseInt(minuteStr);
+            const hour = parseInt(hourStr || '0');
+            const minute = parseInt(minuteStr || '0');
             const second = secondStr ? parseInt(secondStr) : 0;
 
             // 驗證時間範圍
@@ -163,9 +165,9 @@ class RocFormatPlugin implements CalendarPlugin {
 
         if (parts.length < 3) return null;
 
-        const year = parseInt(parts[0]);
-        const month = parseInt(parts[1]);
-        const day = parseInt(parts[2]);
+        const year = parseInt(parts[0] || '0');
+        const month = parseInt(parts[1] || '0');
+        const day = parseInt(parts[2] || '0');
 
         return this.validateAndConvertRocDate(year, month, day);
     }
@@ -224,7 +226,7 @@ class RocFormatPlugin implements CalendarPlugin {
         const hasTimeData = date.hour !== undefined && date.hour !== null;
         // 檢查是否為複合格式（包含時間部分）
         const parts = format.split(' ');
-        const dateFormatPart = parts[0];
+        const dateFormatPart = parts[0] || format;
         const timeFormatPart = parts.slice(1).join(' ');
 
         // 處理日期部分的 ROC 格式

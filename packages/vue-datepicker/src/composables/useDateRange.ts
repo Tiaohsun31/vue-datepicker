@@ -29,7 +29,7 @@ interface DateRangeOptions {
     modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
     showTime?: boolean;
     required?: boolean;
-    disabled?: boolean;
+    disabled?: Ref<boolean>;
     incomplete?: boolean;
     dateFormat?: string;
     timeFormat?: string;
@@ -78,7 +78,6 @@ export function useDateRange(
         modelValue = null,
         showTime = false,
         required = false,
-        disabled = false,
         incomplete = false,
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
@@ -102,7 +101,7 @@ export function useDateRange(
     } = refs;
 
     // 狀態管理
-    const isDisabled = ref(disabled);
+    const isDisabled = computed(() => options.disabled?.value ?? false);
     let emitters: DateRangeEmitters = {};
 
     // 初始化子 composables

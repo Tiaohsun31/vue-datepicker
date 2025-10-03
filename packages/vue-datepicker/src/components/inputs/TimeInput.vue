@@ -503,7 +503,7 @@ defineExpose({
     setTime: (timeStr: string) => {
         if (timeStr) {
             const [hoursStr, minutes, seconds] = timeStr.split(':');
-            let hours = parseInt(hoursStr);
+            let hours = parseInt(hoursStr || '0');
 
             if (!props.use24Hour) {
                 if (hours >= 12) {
@@ -516,9 +516,9 @@ defineExpose({
             }
 
             hourValue.value = hours.toString().padStart(2, '0');
-            minuteValue.value = minutes;
+            minuteValue.value = minutes || '';
             if (props.enableSeconds && seconds) {
-                secondValue.value = seconds;
+                secondValue.value = seconds || '';
             }
 
             validateAndEmit();

@@ -34,6 +34,10 @@ interface BaseDatePickerProps {
     required?: boolean; // 是否為必填 預設為 false
     showClearButton?: boolean; // 是否顯示清除按鈕 預設為 true
 
+    // HTML Attributes
+    id?: string; // 元素的 ID
+    name?: string; // 表單元素的 name 屬性
+
     // 錯誤處理選項
     showErrorMessage?: boolean;  // 是否顯示錯誤訊息 預設為 true
     useI18n?: boolean;  // 是否使用內建i18n 預設為 true

@@ -2,7 +2,7 @@
  * useDateTimePicker.ts
  */
 
-import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
+import { ref, computed, watch, toRef, type Ref, type ComputedRef } from 'vue';
 import { useInputNavigation } from './useInputNavigation';
 import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
@@ -22,7 +22,7 @@ interface DateTimePickerOptions {
     modelValue?: DateTimeInput;
     showTime?: boolean;
     required?: boolean;
-    disabled?: boolean;
+    disabled?: Ref<boolean>;
 
     // 日曆系統支援
     calendar?: Ref<string>;              // 日曆系統 ID
@@ -62,7 +62,7 @@ export function useDateTimePicker(
         modelValue = null,
         showTime = false,
         required = true,
-        disabled = false,
+        // disabled = false,
         // calendar = 'gregory',          // 日曆系統
         dateFormat = 'YYYY-MM-DD',
         timeFormat = 'HH:mm:ss',
@@ -82,8 +82,7 @@ export function useDateTimePicker(
     const locale = computed(() => options.locale?.value || 'zh-TW'); // 默認語言為中文（台灣）
     const outputType = computed(() => options.outputType?.value || 'iso'); // 默認輸出類型為 ISO
 
-    // 創建禁用狀態的響應式引用
-    const isDisabled = ref(disabled);
+    const isDisabled = computed(() => options.disabled?.value ?? false);
 
     // 初始化各個 composables
     const validation = useDateTimeValidation({

@@ -54,8 +54,8 @@ describe('RangeCalendar.vue', () => {
             const containers = wrapper.findAll('.calendar-container')
 
             expect(containers).toHaveLength(2)
-            expect(containers[0].classes()).toContain('flex-1')
-            expect(containers[1].classes()).toContain('flex-1')
+            expect(containers[0]?.classes()).toContain('flex-1')
+            expect(containers[1]?.classes()).toContain('flex-1')
         })
     })
 

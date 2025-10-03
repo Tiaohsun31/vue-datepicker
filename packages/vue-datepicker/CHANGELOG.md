@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-10-03
+
+### Fixed
+
+- 🐛 Fixed Disabled only working after initialization / 修復 Disabled 只有在初始化才有作用
+
+### Added
+
+- 🆔 Added support for id and name for label matching / 新增支援id與name，以與label進行搭配
+- 🔧 Fixed many type defaults issues / 處理大量型別預設問題
+
 ## [1.0.2] - 2025-08-28
 
 ### Fixed

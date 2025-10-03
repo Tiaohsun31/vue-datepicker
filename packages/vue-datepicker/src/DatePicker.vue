@@ -2,6 +2,9 @@
     <div class="date-picker-wrapper relative w-full min-w-0 justify-self-start"
         :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[150px]']" v-bind="containerAttributes"
         ref="containerRef">
+        <!-- Hidden input for form integration (name attribute only) -->
+        <input v-if="name" type="hidden" :name="name" :value="modelValue || ''" />
+
         <!-- 日期時間輸入容器 -->
         <div class="date-picker-container flex w-full items-center px-2 py-1 bg-vdt-surface text-vdt-content rounded-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
@@ -13,7 +16,8 @@
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="computedPlaceholders.year"
                         :month-placeholder="computedPlaceholders.month" :day-placeholder="computedPlaceholders.day"
                         :min-date="minDateStr" :max-date="maxDateStr" :required="required" :separator="dateSeparator"
-                        :date-format="dateInputFormat" @validation="validateDateInput" @complete="handleDateComplete" />
+                        :date-format="dateInputFormat" :input-id="id" @validation="validateDateInput"
+                        @complete="handleDateComplete" />
                 </div>
 
                 <!-- 時間輸入部分 -->
@@ -153,6 +157,10 @@ const props = withDefaults(defineProps<DatePickerProps>(), {
     required: false,
     showClearButton: true,
 
+    // HTML Attributes
+    id: undefined,
+    name: undefined,
+
     // 輸入框佔位符
     placeholderOverrides: () => ({}),
 
@@ -221,7 +229,7 @@ const datePicker = useDateTimePicker(
         modelValue: props.modelValue,
         showTime: props.showTime,
         required: props.required,
-        disabled: props.disabled,
+        disabled: toRef(props, 'disabled'),
         calendar: toRef(props, 'calendar'),
         dateFormat: internalDateFormat.value,
         timeFormat: internalTimeFormat.value,

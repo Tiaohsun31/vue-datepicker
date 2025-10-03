@@ -232,7 +232,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                const [isValid, errors] = validationEvents![validationEvents!.length - 1] as [boolean, any];
                 expect(isValid).toBe(false);
                 expect(errors).toHaveProperty('hour');
             });
@@ -248,7 +248,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                const [isValid, errors] = validationEvents![validationEvents!.length - 1] as [boolean, any];
                 expect(isValid).toBe(false);
                 expect(errors).toHaveProperty('hour');
             });
@@ -264,7 +264,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                const [isValid, errors] = validationEvents![validationEvents!.length - 1] as [boolean, any];
                 expect(isValid).toBe(false);
                 expect(errors).toHaveProperty('hour');
             });
@@ -364,7 +364,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(true);
             });
         });
@@ -379,7 +379,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(true);
             });
         });
@@ -394,7 +394,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(true);
             });
         });
@@ -411,7 +411,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(true);
             });
         });
@@ -485,7 +485,7 @@ describe('TimeInput', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, any];
+                const [isValid, errors] = validationEvents![validationEvents!.length - 1] as [boolean, any];
                 expect(isValid).toBe(false);
                 expect(errors).toHaveProperty('hour');
             });

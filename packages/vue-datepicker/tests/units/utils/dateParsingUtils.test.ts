@@ -594,12 +594,12 @@ describe('parseUserDateInput 便利函數', () => {
             parseUserDateInput('2023-01-02', 'zh-TW'), // 中文：1月2日
         ];
 
-        expect(results[0].date?.month).toBe(1);
-        expect(results[0].date?.day).toBe(2);
-        expect(results[1].date?.month).toBe(2);
-        expect(results[1].date?.day).toBe(1);
-        expect(results[2].date?.month).toBe(1);
-        expect(results[2].date?.day).toBe(2);
+        expect(results[0]!.date?.month).toBe(1);
+        expect(results[0]!.date?.day).toBe(2);
+        expect(results[1]!.date?.month).toBe(2);
+        expect(results[1]!.date?.day).toBe(1);
+        expect(results[2]!.date?.month).toBe(1);
+        expect(results[2]!.date?.day).toBe(2);
     });
 
     it('應該保持日曆系統設定的一致性', () => {

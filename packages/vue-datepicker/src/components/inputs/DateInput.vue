@@ -10,21 +10,24 @@
                 :maxlength="4" class="date-input text-sm text-center active:bg-vdt-theme-100" @input="handleYearInput"
                 @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')" @blur="handleBlur('year')"
                 aria-label="year" :aria-invalid="!!localizedErrors.year"
-                :aria-errormessage="localizedErrors.year ? 'year-error' : undefined" />
+                :aria-errormessage="localizedErrors.year ? 'year-error' : undefined"
+                :id="index === 0 && inputId ? inputId : undefined" />
 
             <input v-else-if="segment === 'month'" :ref="(el) => setInputRef(el as HTMLInputElement, 'month')"
                 v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="monthPlaceholder"
                 :maxlength="2" class="date-input text-sm text-center" @input="handleMonthInput"
                 @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')" @blur="handleBlur('month')"
                 aria-label="month" :aria-invalid="!!localizedErrors.month"
-                :aria-errormessage="localizedErrors.month ? 'month-error' : undefined" />
+                :aria-errormessage="localizedErrors.month ? 'month-error' : undefined"
+                :id="index === 0 && inputId ? inputId : undefined" />
 
             <input v-else-if="segment === 'day'" :ref="(el) => setInputRef(el as HTMLInputElement, 'day')"
                 v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric" :placeholder="dayPlaceholder"
                 :maxlength="2" class="date-input text-sm text-center" @input="handleDayInput"
                 @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
                 aria-label="day" :aria-invalid="!!localizedErrors.day"
-                :aria-errormessage="localizedErrors.day ? 'day-error' : undefined" />
+                :aria-errormessage="localizedErrors.day ? 'day-error' : undefined"
+                :id="index === 0 && inputId ? inputId : undefined" />
 
             <!-- 分隔符，除非是最後一個段 -->
             <span v-if="index < dateSegments.length - 1" class="text-gray-400">{{ separator }}</span>
@@ -59,6 +62,7 @@ export interface DateInputProps {
     required?: boolean;
     separator?: string;
     dateFormat?: string;
+    inputId?: string;
 }
 
 const props = withDefaults(defineProps<DateInputProps>(), {
@@ -70,7 +74,8 @@ const props = withDefaults(defineProps<DateInputProps>(), {
     maxDate: null,
     required: true,
     separator: '-',
-    dateFormat: 'YYYY-MM-DD'
+    dateFormat: 'YYYY-MM-DD',
+    inputId: undefined
 });
 
 const emit = defineEmits<{
@@ -266,7 +271,7 @@ const getDaysInMonth = (year: number, month: number): number => {
         return isLeapYear(year) ? 29 : 28;
     }
 
-    return daysInMonth[month];
+    return daysInMonth[month] ?? 31;
 };
 
 // 驗證單個字段

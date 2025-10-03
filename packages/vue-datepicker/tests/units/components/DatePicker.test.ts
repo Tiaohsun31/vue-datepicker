@@ -243,7 +243,8 @@ describe('DatePicker', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('update:modelValue');
                 const events = emitted()['update:modelValue'];
-                expect((events as unknown[][])[events.length - 1][0]).toBeNull();
+                expect(events).toBeDefined();
+                expect((events as unknown[][])[events!.length - 1]![0]).toBeNull();
             });
         });
     });
@@ -402,7 +403,7 @@ describe('DatePicker', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(true);
             });
         });
@@ -421,7 +422,7 @@ describe('DatePicker', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(false);
             });
         });
@@ -437,7 +438,7 @@ describe('DatePicker', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid] = validationEvents[validationEvents.length - 1] as [boolean];
+                const [isValid] = validationEvents![validationEvents!.length - 1] as [boolean];
                 expect(isValid).toBe(false);
             });
         });
@@ -493,7 +494,7 @@ describe('DatePicker', () => {
             await waitFor(() => {
                 expect(emitted()).toHaveProperty('validation');
                 const validationEvents = emitted().validation;
-                const [isValid, errors] = validationEvents[validationEvents.length - 1] as [boolean, string[]];
+                const [isValid, errors] = validationEvents![validationEvents!.length - 1] as [boolean, string[]];
                 expect(isValid).toBe(false);
                 expect(errors).toBeDefined();
             });

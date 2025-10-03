@@ -181,7 +181,7 @@ describe('CalendarGrid.vue', () => {
             expect(wrapper.emitted('select')).toBeTruthy()
             expect(wrapper.emitted('select')).toHaveLength(1)
 
-            const selectEvent = wrapper.emitted('select')![0]
+            const selectEvent = wrapper.emitted('select')![0]!;
             expect(selectEvent[0]).toMatchObject({
                 year: 2024,
                 month: 6,
@@ -201,7 +201,7 @@ describe('CalendarGrid.vue', () => {
             expect(wrapper.emitted('range-select')).toBeTruthy()
             expect(wrapper.emitted('range-select')).toHaveLength(1)
 
-            const rangeEvent = wrapper.emitted('range-select')![0]
+            const rangeEvent = wrapper.emitted('range-select')![0]!;
             expect(rangeEvent[0]).toMatchObject({
                 year: 2024,
                 month: 6,
@@ -224,7 +224,7 @@ describe('CalendarGrid.vue', () => {
             await vm.emitTimeSelect('14:30:00')
 
             expect(wrapper.emitted('time-select')).toBeTruthy()
-            expect(wrapper.emitted('time-select')![0][0]).toBe('14:30:00')
+            expect(wrapper.emitted('time-select')![0]![0]).toBe('14:30:00')
         })
 
         it('單一選擇模式下，日期選擇時應該同時發送時間事件', async () => {
@@ -241,7 +241,7 @@ describe('CalendarGrid.vue', () => {
             // 檢查兩個事件都被觸發
             expect(wrapper.emitted('select')).toHaveLength(1)
             expect(wrapper.emitted('time-select')).toHaveLength(1)
-            expect(wrapper.emitted('time-select')![0][0]).toBe('15:45:30')
+            expect(wrapper.emitted('time-select')![0]![0]).toBe('15:45:30')
         })
     })
 
@@ -279,7 +279,7 @@ describe('CalendarGrid.vue', () => {
             await vm.setTodaysDate()
 
             expect(wrapper.emitted('select')).toBeTruthy()
-            const selectEvent = wrapper.emitted('select')![0]
+            const selectEvent = wrapper.emitted('select')![0]!;
             expect(selectEvent[0]).toMatchObject({
                 year: 2024,
                 month: 6,

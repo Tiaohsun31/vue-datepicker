@@ -3,10 +3,10 @@
  * 管理日曆彈窗的顯示、隱藏和定位
  */
 
-import { ref, nextTick, onMounted, onBeforeUnmount, type Ref } from 'vue';
+import { ref, nextTick, onMounted, onBeforeUnmount, type Ref, type ComputedRef } from 'vue';
 
 interface CalendarPopupOptions {
-    disabled?: Ref<boolean>;
+    disabled?: ComputedRef<boolean>;
     onOutsideClick?: () => void;
 }
 

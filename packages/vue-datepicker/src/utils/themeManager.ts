@@ -246,7 +246,7 @@ class ThemeManager {
 
         // 使用數值比較
         const isDefaultColor = this.isOklchEqual(theme500FromCSS, defaultViolet500);
-        const isExpectedColor = this.isOklchEqual(theme500FromCSS, expectedValue);
+        const isExpectedColor = expectedValue ? this.isOklchEqual(theme500FromCSS, expectedValue) : false;
 
         // 如果既不是預設值也不是期待值，才認為是用戶覆蓋
         const hasOverride = !isDefaultColor && !isExpectedColor;
@@ -259,7 +259,7 @@ class ThemeManager {
      */
     private parseOklchForComparison(color: string): { l: number, c: number, h: number } | null {
         const match = color.match(/oklch\(\s*([0-9.]+)%?\s+([0-9.]+)\s+([0-9.]+)\s*\)/);
-        if (!match) return null;
+        if (!match || !match[1] || !match[2] || !match[3]) return null;
 
         return {
             l: parseFloat(match[1]),

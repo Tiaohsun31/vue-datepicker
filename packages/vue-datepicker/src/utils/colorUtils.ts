@@ -37,7 +37,12 @@ export function parseOklch(color: string): OklchColor | null {
     const match = color.match(/oklch\(\s*([0-9.]+)%?\s+([0-9.]+)\s+([0-9.]+)(?:\s*\/\s*([0-9.]+))?\s*\)/);
     if (!match) return null;
 
-    const [_, lightness, chroma, hue] = match.map(Number);
+    const lightness = Number(match[1]);
+    const chroma = Number(match[2]);
+    const hue = Number(match[3]);
+
+    if (isNaN(lightness) || isNaN(chroma) || isNaN(hue)) return null;
+
     return { lightness, chroma, hue };
 }
 
@@ -69,7 +74,9 @@ export function parseRgb(color: string): RgbColor | null {
     // 處理 rgb(255, 0, 0) 格式
     const rgbMatch = color.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
     if (rgbMatch) {
-        const [_, rVal, gVal, bVal] = rgbMatch.map(Number);
+        const rVal = Number(rgbMatch[1]);
+        const gVal = Number(rgbMatch[2]);
+        const bVal = Number(rgbMatch[3]);
         return {
             r: Math.max(0, Math.min(255, rVal)) / 255,
             g: Math.max(0, Math.min(255, gVal)) / 255,
@@ -80,7 +87,9 @@ export function parseRgb(color: string): RgbColor | null {
     // 處理 rgba(255, 0, 0, 0.5) 格式
     const rgbaMatch = color.match(/^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*([0-9]*\.?[0-9]+)\s*\)$/);
     if (rgbaMatch) {
-        const [_, rVal, gVal, bVal] = rgbaMatch.map(Number);
+        const rVal = Number(rgbaMatch[1]);
+        const gVal = Number(rgbaMatch[2]);
+        const bVal = Number(rgbaMatch[3]);
         return {
             r: Math.max(0, Math.min(255, rVal)) / 255,
             g: Math.max(0, Math.min(255, gVal)) / 255,

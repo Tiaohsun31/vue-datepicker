@@ -11,7 +11,7 @@
                 @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')" @blur="handleBlur('year')"
                 aria-label="year" :aria-invalid="!!localizedErrors.year"
                 :aria-errormessage="localizedErrors.year ? 'year-error' : undefined"
-                :id="index === 0 && inputId ? inputId : undefined" />
+                :id="index === 0 && inputId ? inputId : undefined" :disabled="disabled" />
 
             <input v-else-if="segment === 'month'" :ref="(el) => setInputRef(el as HTMLInputElement, 'month')"
                 v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="monthPlaceholder"
@@ -19,7 +19,7 @@
                 @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')" @blur="handleBlur('month')"
                 aria-label="month" :aria-invalid="!!localizedErrors.month"
                 :aria-errormessage="localizedErrors.month ? 'month-error' : undefined"
-                :id="index === 0 && inputId ? inputId : undefined" />
+                :id="index === 0 && inputId ? inputId : undefined" :disabled="disabled" />
 
             <input v-else-if="segment === 'day'" :ref="(el) => setInputRef(el as HTMLInputElement, 'day')"
                 v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric" :placeholder="dayPlaceholder"
@@ -27,7 +27,7 @@
                 @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
                 aria-label="day" :aria-invalid="!!localizedErrors.day"
                 :aria-errormessage="localizedErrors.day ? 'day-error' : undefined"
-                :id="index === 0 && inputId ? inputId : undefined" />
+                :id="index === 0 && inputId ? inputId : undefined" :disabled="disabled" />
 
             <!-- 分隔符，除非是最後一個段 -->
             <span v-if="index < dateSegments.length - 1" class="text-gray-400">{{ separator }}</span>
@@ -63,6 +63,7 @@ export interface DateInputProps {
     separator?: string;
     dateFormat?: string;
     inputId?: string;
+    disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<DateInputProps>(), {
@@ -75,7 +76,8 @@ const props = withDefaults(defineProps<DateInputProps>(), {
     required: true,
     separator: '-',
     dateFormat: 'YYYY-MM-DD',
-    inputId: undefined
+    inputId: undefined,
+    disabled: false
 });
 
 const emit = defineEmits<{

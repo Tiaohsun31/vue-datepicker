@@ -5,8 +5,14 @@
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 rounded-sm transition-all duration-200 bg-vdt-surface text-vdt-content overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 rounded-sm transition-all duration-200 bg-vdt-surface text-vdt-content overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
+            <!-- 日曆圖標 (預設顯示) -->
+            <button v-if="showCalendarIcon" type="button" aria-label="開啟日曆"
+                class="date-picker-icon text-gray-400 hover:text-gray-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50 flex-shrink-0"
+                :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
+                <CalendarIcon class="size-5" />
+            </button>
             <button type="button"
                 class="grid grid-cols-[1fr_auto_1fr] gap-1 w-full cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="disabled" @click="toggleCalendar" aria-label="選擇日期範圍">
@@ -37,26 +43,12 @@
                     </span>
                 </div>
             </button>
-
-            <!-- 日曆圖標和清除按鈕 -->
-
-            <div class="date-picker-icon-container relative group cursor-pointer flex justify-center items-center flex-shrink-0"
-                :class="{ 'cursor-not-allowed': disabled }">
-                <!-- 日曆圖標 (預設顯示) -->
-                <button type="button" aria-label="開啟日曆"
-                    class="date-picker-icon text-gray-400 hover:text-gray-600 transition-colors disabled:cursor-not-allowed"
-                    :class="{ 'group-hover:opacity-0': hasRangeValue && !disabled && showClearButton }"
-                    :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
-                    <CalendarIcon class="h-5 w-5" />
-                </button>
-
-                <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
-                <button v-if="hasRangeValue && !disabled && showClearButton" type="button" aria-label="清除日期"
-                    class="date-picker-icon absolute inset-0 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
-                    @click.stop="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
-                    <ClearIcon class="h-4 w-4" />
-                </button>
-            </div>
+            <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
+            <button v-if="hasRangeValue && !disabled && showClearButton" type="button" aria-label="清除日期"
+                class="date-picker-icon text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                @click.stop="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
+                <ClearIcon class="size-5" />
+            </button>
         </div>
 
         <!-- 日期範圍選擇彈窗 -->
@@ -232,6 +224,7 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
     inputEnabled: false,
     required: false,
     showClearButton: true,
+    showCalendarIcon: true,
 
     // 輸入框佔位符
     placeholderOverrides: () => ({}),

@@ -33,6 +33,7 @@ interface BaseDatePickerProps {
     inputEnabled?: boolean;  // 是否允許使用輸入框 預設為 true(dateRange為false) 目前僅在 gregory 中使用
     required?: boolean; // 是否為必填 預設為 false
     showClearButton?: boolean; // 是否顯示清除按鈕 預設為 true
+    showCalendarIcon?: boolean; // 是否顯示日曆圖標 預設為 true
 
     // HTML Attributes
     id?: string; // 元素的 ID

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-10-30
+
+### Fixed
+
+- 🐛 In the Disabled state, DateInput and TimeInput were not passed correctly. / Disabled狀態下，未正確傳入 DateInput 及 TimeInput
+
+### Added
+
+- 🔧 The default date icon position has been changed to the front, and a new `showCalendarIcon` attribute has been added, allowing users to choose whether to display it. / 預設日期圖標位置改為前面，並新增`showCalendarIcon`屬性，可自行選擇是否顯示。
+
 ## [1.0.3] - 2025-10-03
 
 ### Fixed

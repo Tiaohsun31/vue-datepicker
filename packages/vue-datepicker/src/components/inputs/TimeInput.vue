@@ -7,7 +7,7 @@
             :placeholder="hourPlaceholder" :maxlength="2" class="time-input text-sm text-center"
             @input="handleHourInput" @keydown="handleKeydown($event, 'hour')" @focus="handleFocus('hour')"
             @blur="handleBlur('hour')" aria-label="hour" :aria-invalid="!!errors.hour"
-            :aria-errormessage="errors.hour ? 'hour-error' : undefined" />
+            :aria-errormessage="errors.hour ? 'hour-error' : undefined" :disabled="disabled" />
         <span class="text-gray-400 mx-1">:</span>
 
         <!-- 分鐘輸入 -->
@@ -15,7 +15,7 @@
             :placeholder="minutePlaceholder" :maxlength="2" class="time-input text-sm text-center"
             @input="handleMinuteInput" @keydown="handleKeydown($event, 'minute')" @focus="handleFocus('minute')"
             @blur="handleBlur('minute')" aria-label="minute" :aria-invalid="!!errors.minute"
-            :aria-errormessage="errors.minute ? 'minute-error' : undefined" />
+            :aria-errormessage="errors.minute ? 'minute-error' : undefined" :disabled="disabled" />
 
         <!-- 秒鐘輸入（如果啟用） -->
         <template v-if="enableSeconds">
@@ -24,7 +24,7 @@
                 :placeholder="secondPlaceholder" :maxlength="2" class="time-input text-sm text-center"
                 @input="handleSecondInput" @keydown="handleKeydown($event, 'second')" @focus="handleFocus('second')"
                 @blur="handleBlur('second')" aria-label="second" :aria-invalid="!!errors.second"
-                :aria-errormessage="errors.second ? 'second-error' : undefined" />
+                :aria-errormessage="errors.second ? 'second-error' : undefined" :disabled="disabled" />
         </template>
 
         <!-- AM/PM 選擇器 (12小時制) -->
@@ -64,6 +64,7 @@ export interface TimeInputProps {
     locale?: string;
     useLocalizedPeriod?: boolean;
     minuteStep?: number;
+    disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<TimeInputProps>(), {
@@ -76,7 +77,8 @@ const props = withDefaults(defineProps<TimeInputProps>(), {
     required: false,
     locale: 'zh-TW',
     useLocalizedPeriod: false,
-    minuteStep: 1
+    minuteStep: 1,
+    disabled: false
 });
 
 const emit = defineEmits<{

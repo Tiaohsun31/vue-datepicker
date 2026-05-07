@@ -1,17 +1,17 @@
 <template>
     <div v-if="show">
-        <hr class="my-2 border-vdt-outline" />
+        <hr class="my-2 border-[var(--color-vdt-outline)]" />
         <div class="flex flex-row items-center justify-between">
-            <label class="text-sm font-medium text-vdt-content uppercase">
+            <label class="text-sm font-medium text-[var(--color-vdt-content)] uppercase">
                 {{ getPlaceholderMessage('general.time') }}:
             </label>
             <div class="flex flex-row items-center gap-1">
                 <button type="button" @click="setNowTime"
-                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-active cursor-pointer">
+                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-[var(--color-vdt-outline)] text-[var(--color-vdt-content)] hover:bg-[var(--color-vdt-interactive-active)] cursor-pointer">
                     Now
                 </button>
                 <button v-if="selectionMode === 'single'" type="button" @click="emitTodayEvent"
-                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-active cursor-pointer">
+                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-[var(--color-vdt-outline)] text-[var(--color-vdt-content)] hover:bg-[var(--color-vdt-interactive-active)] cursor-pointer">
                     Today
                 </button>
             </div>
@@ -22,7 +22,7 @@
                 <!-- 小時選擇器 -->
                 <div class="flex-1">
                     <select v-model="selectedHour"
-                        class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
+                        class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdt-theme-200)] focus:border-[var(--color-vdt-theme-500)]">
                         <option v-for="hour in hourOptions" :key="hour" :value="hour">
                             {{ formatHour(hour) }}
                         </option>
@@ -32,7 +32,7 @@
                 <!-- 分鐘選擇器 -->
                 <div class="flex-1">
                     <select v-model="selectedMinute"
-                        class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
+                        class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdt-theme-200)] focus:border-[var(--color-vdt-theme-500)]">
                         <option v-for="minute in minuteOptions" :key="minute" :value="minute">
                             {{ formatNumber(minute) }}
                         </option>
@@ -42,7 +42,7 @@
                 <!-- 秒鐘選擇器 -->
                 <div class="flex-1" v-if="enableSeconds">
                     <select v-model="selectedSecond"
-                        class="appearance-none bg-none w-full py-1 px-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm text-sm focus:ring-2 focus:ring-vdt-theme-200 focus:border-vdt-theme-500">
+                        class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdt-theme-200)] focus:border-[var(--color-vdt-theme-500)]">
                         <option v-for="second in secondOptions" :key="second" :value="second">
                             {{ formatNumber(second) }}
                         </option>
@@ -51,13 +51,13 @@
 
                 <div v-if="!use24Hour" class="flex-shrink-0">
                     <div
-                        class="isolate inline-flex rounded-md border border-vdt-outline bg-vdt-surface overflow-hidden">
+                        class="isolate inline-flex rounded-md border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] overflow-hidden">
                         <button type="button" @click="setPeriod('AM')" class="px-2 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'AM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
+                            :class="selectedPeriod === 'AM' ? 'bg-[var(--color-vdt-theme-500)] text-white' : 'text-[var(--color-vdt-content)] hover:bg-[var(--color-vdt-interactive-hover)]'">
                             {{ getLocalizedPeriod('AM') }}
                         </button>
                         <button type="button" @click="setPeriod('PM')" class="px-2 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'PM' ? 'bg-vdt-theme-500 text-white' : 'text-vdt-content hover:bg-vdt-interactive-hover'">
+                            :class="selectedPeriod === 'PM' ? 'bg-[var(--color-vdt-theme-500)] text-white' : 'text-[var(--color-vdt-content)] hover:bg-[var(--color-vdt-interactive-hover)]'">
                             {{ getLocalizedPeriod('PM') }}
                         </button>
                     </div>

@@ -6,7 +6,7 @@
         <input v-if="name" type="hidden" :name="name" :value="modelValue || ''" />
 
         <!-- 日期時間輸入容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-vdt-surface text-vdt-content rounded-sm transition-all duration-200"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm transition-all duration-200"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <!-- 日曆圖標 (預設顯示) -->
             <button v-if="showCalendarIcon" type="button"
@@ -41,10 +41,10 @@
             }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
                 @keydown.space.prevent="!disabled && toggleCalendar?.()">
                 <!-- 顯示值或 placeholder -->
-                <span v-if="hasDisplayValue" class="date-placeholder text-vdt-content truncate">
+                <span v-if="hasDisplayValue" class="date-placeholder text-[var(--color-vdt-content)] truncate">
                     {{ modelValue }}
                 </span>
-                <span v-else class="date-placeholder text-vdt-content-muted truncate">
+                <span v-else class="date-placeholder text-[var(--color-vdt-content-muted)] truncate">
                     {{ computedPlaceholders.selectDate }}
                 </span>
             </button>
@@ -57,7 +57,7 @@
 
         <!-- 日曆彈出層 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="calendar-container absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10"
+            class="calendar-container absolute mt-1 bg-[var(--color-vdt-surface-elevated)] border border-[var(--color-vdt-outline)] rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
                 :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"

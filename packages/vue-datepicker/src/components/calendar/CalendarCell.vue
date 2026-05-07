@@ -64,7 +64,7 @@ const cellClasses = computed(() => {
     // 禁用狀態
     if (props.disabled) {
         classes['opacity-40 cursor-not-allowed'] = true;
-        classes['bg-vdt-surface text-vdt-content'] = true;
+        classes['bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)]'] = true;
         return classes;
     }
 
@@ -72,16 +72,16 @@ const cellClasses = computed(() => {
     if (props.selectionMode === 'range') {
         // 範圍起始點和結束點
         if (props.isRangeStart || props.isRangeEnd) {
-            classes['bg-vdt-theme-500 text-white'] = true;
+            classes['bg-[var(--color-vdt-theme-500)] text-white'] = true;
         }
         // 範圍內的日期
         else if (props.isInRange) {
-            classes['bg-vdt-outline text-vdt-content'] = true;
+            classes['bg-[var(--color-vdt-outline)] text-[var(--color-vdt-content)]'] = true;
         }
         // 預設狀態
         else {
-            classes['bg-vdt-surface text-vdt-content'] = true;
-            classes['hover:bg-vdt-interactive-hover cursor-pointer'] = true;
+            classes['bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)]'] = true;
+            classes['hover:bg-[var(--color-vdt-interactive-hover)] cursor-pointer'] = true;
         }
 
         // 今天的標記（範圍選擇模式）
@@ -92,10 +92,10 @@ const cellClasses = computed(() => {
     // 單一日期選擇模式
     else {
         if (props.selected) {
-            classes['bg-vdt-theme-500 text-white'] = true;
+            classes['bg-[var(--color-vdt-theme-500)] text-white'] = true;
         } else {
-            classes['bg-vdt-surface text-vdt-content'] = true;
-            classes['hover:bg-vdt-interactive-hover cursor-pointer'] = true;
+            classes['bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)]'] = true;
+            classes['hover:bg-[var(--color-vdt-interactive-hover)] cursor-pointer'] = true;
         }
 
         // 今天的標記（單一選擇模式）
@@ -106,9 +106,9 @@ const cellClasses = computed(() => {
 
     // 月外日期的文字顏色
     if (isOutsideMonth.value && !props.selected && !props.isRangeStart && !props.isRangeEnd) {
-        classes['text-vdt-content-muted'] = true;
+        classes['text-[var(--color-vdt-content-muted)]'] = true;
         // 移除預設文字顏色
-        classes['text-vdt-content'] = false;
+        classes['text-[var(--color-vdt-content)]'] = false;
     }
 
     return classes;
@@ -130,11 +130,11 @@ const handleSelect = () => {
 }
 
 /* 今天的日期特殊標記 */
-.calendar-cell-button[aria-current="date"]:not(.bg-vdt-theme-500) {
+.calendar-cell-button[aria-current="date"]:not([aria-selected="true"]) {
     position: relative;
 }
 
-.calendar-cell-button[aria-current="date"]:not(.bg-vdt-theme-500)::after {
+.calendar-cell-button[aria-current="date"]:not([aria-selected="true"])::after {
     content: '';
     position: absolute;
     bottom: 3px;

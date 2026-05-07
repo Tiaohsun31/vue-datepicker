@@ -30,7 +30,7 @@
         <!-- AM/PM 選擇器 (12小時制) -->
         <template v-if="!use24Hour">
             <button type="button" class="time-period pl-2 text-sm cursor-pointer"
-                :class="hourValue ? 'text-vdt-content' : 'text-gray-400'" @click.stop="togglePeriod">
+                :class="hourValue ? 'text-[var(--color-vdt-content)]' : 'text-gray-400'" @click.stop="togglePeriod">
                 {{ displayPeriod }}
             </button>
         </template>

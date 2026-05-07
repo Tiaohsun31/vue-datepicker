@@ -5,7 +5,7 @@
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 rounded-sm transition-all duration-200 bg-vdt-surface text-vdt-content overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 rounded-sm transition-all duration-200 bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <!-- 日曆圖標 (預設顯示) -->
             <button v-if="showCalendarIcon" type="button" aria-label="開啟日曆"
@@ -19,26 +19,29 @@
                 <!-- 開始日期 -->
                 <div class="text-center min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.start"
                     aria-label="開始日期">
-                    <span v-if="modelValue?.start" class="date-placeholder text-vdt-content truncate block">
+                    <span v-if="modelValue?.start"
+                        class="date-placeholder text-[var(--color-vdt-content)] truncate block">
                         {{ modelValue?.start }}
                     </span>
-                    <span v-else class="date-placeholder text-vdt-content-muted truncate block">
+                    <span v-else class="date-placeholder text-[var(--color-vdt-content-muted)] truncate block">
                         {{ computedPlaceholders.start }}
                     </span>
                 </div>
 
                 <!-- 分隔符 -->
-                <div class="text-vdt-content-muted text-sm px-1" aria-label="日期範圍分隔符" data-testid="separator">
+                <div class="text-[var(--color-vdt-content-muted)] text-sm px-1" aria-label="日期範圍分隔符"
+                    data-testid="separator">
                     {{ separator }}
                 </div>
 
                 <!-- 結束日期 -->
                 <div class="text-center  min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.end"
                     aria-label="結束日期">
-                    <span v-if="modelValue?.end" class="date-placeholder text-vdt-content truncate block">
+                    <span v-if="modelValue?.end"
+                        class="date-placeholder text-[var(--color-vdt-content)] truncate block">
                         {{ modelValue?.end }}
                     </span>
-                    <span v-else class="date-placeholder text-vdt-content-muted truncate block">
+                    <span v-else class="date-placeholder text-[var(--color-vdt-content-muted)] truncate block">
                         {{ computedPlaceholders.end }}
                     </span>
                 </div>
@@ -53,7 +56,7 @@
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-vdt-surface-elevated border border-vdt-outline rounded-lg shadow-lg z-10 overflow-auto"
+            class="absolute mt-1 bg-[var(--color-vdt-surface-elevated)] border border-[var(--color-vdt-outline)] rounded-lg shadow-lg z-10 overflow-auto"
             :class="[
                 // 基本尺寸控制
                 'max-w-[95vw]',
@@ -71,7 +74,7 @@
                     class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
                     <!-- 開始日期輸入 -->
                     <div data-testid="start-date-inputs" aria-label="開始日期輸入區域" @click.stop="focusStartDate"
-                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdt-theme-500)] focus-within:ring-[var(--color-vdt-theme-200)] transition-all duration-200">
 
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -92,7 +95,7 @@
 
                     <!-- 結束日期輸入 -->
                     <div data-testid="end-date-inputs" aria-label="結束日期輸入區域" @click.stop="focusEndDate"
-                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-vdt-outline bg-vdt-surface text-vdt-content rounded-sm focus-within:ring-2 focus-within:border-vdt-theme-500 focus-within:ring-vdt-theme-200 transition-all duration-200">
+                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdt-theme-500)] focus-within:ring-[var(--color-vdt-theme-200)] transition-all duration-200">
 
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -119,7 +122,7 @@
                         <button v-for="shortcut in shortcuts" :key="shortcut.label" type="button"
                             :aria-label="`選擇${shortcut.label}範圍`"
                             :data-testid="`shortcut-${shortcut.label.toLowerCase().replace(/\s+/g, '-')}`"
-                            class="px-3 py-1 text-xs bg-vdt-outline text-vdt-content hover:bg-vdt-interactive-hover rounded-sm transition-colors"
+                            class="px-3 py-1 text-xs bg-[var(--color-vdt-outline)] text-[var(--color-vdt-content)] hover:bg-[var(--color-vdt-interactive-hover)] rounded-sm transition-colors"
                             @click="applyShortcut(shortcut)">
                             {{ shortcut.label }}
                         </button>

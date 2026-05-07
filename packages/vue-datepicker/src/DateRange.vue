@@ -161,7 +161,7 @@
         <!-- 讓使用者完全控制錯誤顯示 -->
         <slot name="error" :errors="errors" :hasErrors="hasErrors">
             <!-- 預設使用 DateErrorMessage -->
-            <DateErrorMessage :errors="mergedErrors" :locale="locale" :use-i18n="useI18n"
+            <DateErrorMessage :errors="errors" :locale="locale" :use-i18n="useI18n"
                 :custom-messages="customErrorMessages" :errorParams="mergedErrorParams">
                 <!-- 將內部的 slot 轉發給使用者 -->
                 <template v-for="(_, slotName) in $slots" :key="slotName" #[slotName]="slotProps">
@@ -327,7 +327,10 @@ const {
     containerAttributes,
     setColor,
     setMode
-} = useTheme();
+} = useTheme({
+    defaultColor: props.theme,
+    defaultMode: props.mode
+});
 
 const computedPlaceholders = computed(() => {
     // 從語言包獲取預設值
@@ -369,7 +372,7 @@ const errors = computed(() => {
 
 // 是否有錯誤
 const hasErrors = computed(() => {
-    return Object.keys(mergedErrors.value).length > 0;
+    return Object.keys(errors.value).length > 0;
 });
 
 

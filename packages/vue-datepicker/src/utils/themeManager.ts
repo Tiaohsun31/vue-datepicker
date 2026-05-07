@@ -162,14 +162,9 @@ class ThemeManager {
             return;
         }
 
-        // 設置局部的 data-vdt-mode 屬性
-        if (state.userPreference === 'auto') {
-            // auto 模式時移除屬性，讓它跟隨系統偏好
-            container.removeAttribute('data-vdt-mode');
-        } else {
-            // 明確設定模式時設置屬性
-            container.setAttribute('data-vdt-mode', state.currentMode);
-        }
+        // 永遠依照 currentMode 設置 data-vdt-mode，確保 CSS 正確套用
+        // auto 模式時 currentMode 已由 JS 根據系統偏好決定
+        container.setAttribute('data-vdt-mode', state.currentMode);
     }
 
     /**

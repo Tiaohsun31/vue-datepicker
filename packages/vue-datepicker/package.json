@@ -40,7 +40,10 @@
       "import": "./dist/vue-datepicker.es.js",
       "require": "./dist/vue-datepicker.umd.js"
     },
-    "./style": "./dist/vue-datepicker.css"
+    "./style": {
+      "types": "./dist/vue-datepicker.css.d.ts",
+      "default": "./dist/vue-datepicker.css"
+    }
   },
   "files": [
     "dist",

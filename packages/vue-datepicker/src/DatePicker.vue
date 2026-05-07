@@ -6,7 +6,7 @@
         <input v-if="name" type="hidden" :name="name" :value="modelValue || ''" />
 
         <!-- 日期時間輸入容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-vdt-surface text-vdt-content rounded-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-vdt-surface text-vdt-content rounded-sm transition-all duration-200"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <!-- 日曆圖標 (預設顯示) -->
             <button v-if="showCalendarIcon" type="button"
@@ -259,7 +259,10 @@ const {
     currentMode,
     isDark,
     isLight
-} = useTheme();
+} = useTheme({
+    defaultColor: props.theme,
+    defaultMode: props.mode
+});
 
 // 計算屬性
 const minDateStr = computed(() => {

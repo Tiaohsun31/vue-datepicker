@@ -1,6 +1,6 @@
 <!-- components/calendar/CalendarCell.vue -->
 <template>
-    <div class="calendar-cell text-center relative">
+    <div class="calendar-cell text-center grid grid-cols-1 place-items-center">
         <!-- 日期按鈕 -->
         <button type="button" class="calendar-cell-button" :class="cellClasses" :disabled="disabled"
             :tabindex="focusable ? 0 : -1" :aria-selected="selected || isRangeStart || isRangeEnd"
@@ -59,7 +59,7 @@ const cellClasses = computed(() => {
     const classes: Record<string, boolean> = {};
 
     // 基礎樣式
-    classes['flex justify-center items-center w-8 h-8 rounded-md mx-auto relative z-10'] = true;
+    classes['flex justify-center items-center w-8 h-8 rounded-md col-start-1 row-start-1'] = true;
 
     // 禁用狀態
     if (props.disabled) {
@@ -86,7 +86,7 @@ const cellClasses = computed(() => {
 
         // 今天的標記（範圍選擇模式）
         if (props.isToday && !props.isRangeStart && !props.isRangeEnd && !props.isInRange) {
-            classes['ring-2 ring-vdt-theme-500'] = true;
+            classes['inset-ring-2 inset-ring-[var(--color-vdt-theme-500)]'] = true;
         }
     }
     // 單一日期選擇模式
@@ -100,7 +100,7 @@ const cellClasses = computed(() => {
 
         // 今天的標記（單一選擇模式）
         if (props.isToday && !props.selected) {
-            classes['ring-2 ring-vdt-theme-500'] = true;
+            classes['inset-ring-2 inset-ring-[var(--color-vdt-theme-500)]'] = true;
         }
     }
 
@@ -137,7 +137,7 @@ const handleSelect = () => {
 .calendar-cell-button[aria-current="date"]:not(.bg-vdt-theme-500)::after {
     content: '';
     position: absolute;
-    bottom: 2px;
+    bottom: 3px;
     left: 50%;
     transform: translateX(-50%);
     width: 4px;

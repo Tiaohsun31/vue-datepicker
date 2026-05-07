@@ -13,7 +13,7 @@
     --color-vdt-theme-950: oklch(28.3% 0.141 291.089);
 
     /* 語義化顏色 - 淺色模式 */
-    --color-vdt-light-surface: white;
+    /* --color-vdt-light-surface: white;
     --color-vdt-light-surface-secondary: oklch(98.5% 0.002 247.839);
     --color-vdt-light-surface-elevated: white;
     --color-vdt-light-content: oklch(21% 0.034 264.665);
@@ -23,6 +23,17 @@
     --color-vdt-light-outline-strong: oklch(75.2% 0.01 258.338);
     --color-vdt-light-outline-stronger: oklch(65.7% 0.022 261.325);
     --color-vdt-light-interactive-hover: oklch(92.8% 0.006 264.531);
+    --color-vdt-light-interactive-active: oklch(87.2% 0.01 258.338); */
+    --color-vdt-light-surface: white;
+    --color-vdt-light-surface-secondary: var(--color-gray-50);
+    --color-vdt-light-surface-elevated: white;
+    --color-vdt-light-content: var(--color-gray-900);
+    --color-vdt-light-content-secondary: var(--color-slate-700);
+    --color-vdt-light-content-muted: var(--color-slate-500);
+    --color-vdt-light-outline: var(--color-gray-200);
+    --color-vdt-light-outline-strong: oklch(75.2% 0.01 258.338);
+    --color-vdt-light-outline-stronger: oklch(65.7% 0.022 261.325);
+    --color-vdt-light-interactive-hover: var(--color-gray-100);
     --color-vdt-light-interactive-active: oklch(87.2% 0.01 258.338);
 
     /* 語義化顏色 - 深色模式 */
@@ -510,6 +521,7 @@
         --tw-ring-offset-width: 2px;
     }
 
+    /* V1 */
     .date-picker-container {
         border: 1px solid var(--color-vdt-outline);
         transition: all 0.2s ease;
@@ -518,7 +530,8 @@
     .date-picker-container:focus-within {
         border-color: var(--color-vdt-theme-500);
         box-shadow: 0 0 0 2px var(--color-vdt-theme-200);
-        outline: none;
+        outline: 4px solid color-mix(in srgb, var(--color-vdt-primary-400) 25%, transparent);
+        outline-offset: -1px;
     }
 
     .date-picker-container.error {

@@ -1,13 +1,14 @@
 <!-- src/components/selector/YearSelector.vue -->
 <template>
     <div v-if="showSelector" ref="yearSelectorRef"
-        class="absolute top-full mt-1 right-0 min-w-56 max-h-72 overflow-auto bg-vdt-surface-elevated text-vdt-content border border-vdt-outline rounded-md shadow-lg z-20">
+        class="absolute top-full mt-1 right-0 min-w-56 max-h-72 overflow-auto bg-[var(--color-vdt-surface-elevated)] text-[var(--color-vdt-content)] border border-[var(--color-vdt-outline)] rounded-md shadow-lg z-20">
 
         <!-- 年份選擇器頂部導航 -->
-        <div class="p-2 flex items-center justify-between border-b border-vdt-outline">
+        <div class="p-2 flex items-center justify-between border-b border-[var(--color-vdt-outline)]">
             <button type="button" @click="previousYearRange"
-                class="p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none" :disabled="!canGoPrevious"
-                :class="{ 'opacity-50 cursor-not-allowed': !canGoPrevious }" aria-label="previous year">
+                class="p-1 hover:bg-[var(--color-vdt-interactive-hover)] rounded focus:outline-none"
+                :disabled="!canGoPrevious" :class="{ 'opacity-50 cursor-not-allowed': !canGoPrevious }"
+                aria-label="previous year">
                 <DatePickerPrev class="h-4 w-4" />
             </button>
             <span class="text-sm font-medium">
@@ -17,8 +18,8 @@
                 </slot>
             </span>
             <button type="button" @click="nextYearRange"
-                class="p-1 hover:bg-vdt-interactive-hover rounded focus:outline-none" :disabled="!canGoNext"
-                :class="{ 'opacity-50 cursor-not-allowed': !canGoNext }" aria-label="next year">
+                class="p-1 hover:bg-[var(--color-vdt-interactive-hover)] rounded focus:outline-none"
+                :disabled="!canGoNext" :class="{ 'opacity-50 cursor-not-allowed': !canGoNext }" aria-label="next year">
                 <DatePickerNext class="h-4 w-4" />
             </button>
         </div>
@@ -27,8 +28,8 @@
         <div class="grid grid-cols-4 gap-1 p-2" v-if="visibleYears.length > 0">
             <button type="button" v-for="yearData in visibleYears" :key="yearData.gregorianYear"
                 @click="selectYear(yearData.gregorianYear)" :class="[
-                    'p-1 text-xs rounded focus:outline-none focus:ring-1 focus:ring-vdt-theme-500 leading-tight min-h-[2.5rem] flex flex-col justify-center items-center transition duration-200',
-                    selectedYear === yearData.gregorianYear ? 'bg-vdt-theme-500 text-white' : 'hover:bg-vdt-interactive-hover text-vdt-content',
+                    'p-1 text-xs rounded focus:outline-none focus:ring-1 focus:ring-[var(--color-vdt-theme-500)] leading-tight min-h-[2.5rem] flex flex-col justify-center items-center transition duration-200',
+                    selectedYear === yearData.gregorianYear ? 'bg-[var(--color-vdt-theme-500)] text-white' : 'hover:bg-[var(--color-vdt-interactive-hover)] text-[var(--color-vdt-content)]',
                     yearData.displayWarning ? 'ring-1 ring-amber-400' : ''
                 ]" :title="yearData.warningMessage">
 
@@ -48,18 +49,18 @@
         </div>
 
         <!-- 超出範圍提示 -->
-        <div v-else class="p-4 text-center text-sm text-vdt-content-muted">
+        <div v-else class="p-4 text-center text-sm text-[var(--color-vdt-content-muted)]">
             <slot name="no-years-display" :calendar-range="calendarRange" :go-to-valid-range="goToValidRange">
                 <div class="mb-2">{{ getLocalizedText('noYearsToDisplay') }}</div>
                 <button type="button" @click="goToValidRange"
-                    class="text-xs bg-vdt-theme-100 hover:bg-vdt-theme-200 px-3 py-1 rounded text-vdt-theme-700">
+                    class="text-xs bg-[var(--color-vdt-theme-100)] hover:bg-[var(--color-vdt-theme-200)] px-3 py-1 rounded text-[var(--color-vdt-theme-700)]">
                     {{ getLocalizedText('returnToValidRange') }}
                 </button>
             </slot>
         </div>
 
         <!-- 年份跳轉輸入 -->
-        <div class="p-2 border-t border-vdt-outline">
+        <div class="p-2 border-t border-[var(--color-vdt-outline)]">
             <slot name="year-input" :year-input="yearInput" :calendar-range="calendarRange"
                 :calendar-display-name="calendarDisplayName" :go-to-specific-year="goToSpecificYear"
                 :get-localized-text="getLocalizedText" :format-text="formatText">
@@ -70,8 +71,8 @@
                 <input type="number" v-model="yearInput" @keydown.enter="goToSpecificYear"
                     :placeholder="getLocalizedText('inputYearPlaceholder')" :min="calendarRange.min"
                     :max="calendarRange.max"
-                    class="w-full p-1 text-sm border border-vdt-outline bg-vdt-surface text-vdt-content rounded focus:outline-none focus:ring-2 focus:ring-vdt-theme-200 focus-within:ring-vdt-theme-500" />
-                <div class="text-xs text-vdt-content-muted mt-1">
+                    class="w-full p-1 text-sm border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-vdt-theme-200)] focus-within:ring-[var(--color-vdt-theme-500)]" />
+                <div class="text-xs text-[var(--color-vdt-content-muted)] mt-1">
                     {{ formatText(getLocalizedText('yearRangeInfo'), {
                         calendar: calendarDisplayName,
                         min: calendarRange.min,

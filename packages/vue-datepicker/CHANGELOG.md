@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-05-07
+
+### Changed
+
+- ♻️ Replaced all internal `@layer components` custom utility classes with Tailwind CSS arbitrary value syntax (`bg-[var(--color-vdt-*)]`) across all components / 將所有元件內部的 `@layer components` 自訂工具類別替換為 Tailwind CSS 任意值語法
+- ♻️ Removed the entire `@layer components` block (~400 lines) from `theme.css`, reducing bundle size / 移除 `theme.css` 中整個 `@layer components` 區塊（約 400 行），縮減打包體積
+- ♻️ Replaced Tailwind-dependent `var(--color-gray-*)` / `var(--color-slate-*)` references in `theme.css` with standalone oklch values to ensure compatibility without Tailwind / 將 `theme.css` 中依賴 Tailwind 的 `var(--color-gray-*)` 參照替換為獨立的 oklch 色值，確保不使用 Tailwind 的消費者也能正常顯示
+- ♻️ Removed unused CSS custom properties `--color-vdt-outline-strong` and `--color-vdt-outline-stronger` / 移除未使用的 CSS 自訂屬性
+
+### Fixed
+
+- 🐛 Fixed broken CSS selector in `CalendarCell` scoped styles: changed class-based selector to semantic `[aria-selected="true"]` attribute selector / 修復 `CalendarCell` scoped 樣式中失效的 CSS 選擇器，改為語意化的 `[aria-selected]` 屬性選擇器
+- 🐛 Fixed invalid `var(--color-vdt-primary-400)` reference in `.date-picker-container:focus-within` (variable did not exist) / 修復 `.date-picker-container:focus-within` 中使用不存在變數的問題
+
 ## [1.0.4] - 2025-10-30
 
 ### Fixed

@@ -1,6 +1,6 @@
 <template>
     <div class="grid grid-cols-7 mb-2">
-        <div v-for="(day, i) in weekdayNames" :key="i" class="text-center text-vdt-content text-sm py-2">
+        <div v-for="(day, i) in weekdayNames" :key="i" class="text-center text-[var(--color-vdt-content)] text-sm py-2">
             {{ day }}
         </div>
     </div>

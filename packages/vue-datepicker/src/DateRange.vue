@@ -285,11 +285,13 @@ const computedTimeFormat = computed(() => {
     }
 });
 
+const { setLocale, getMessage, getPlaceholderMessage, currentLocale } = useLocale(props.locale);
+
 // 使用日期範圍 composable
 const dateRange = useDateRange(
     {
         calendar: props.calendar,
-        modelValue: props.modelValue,
+        modelValue: () => props.modelValue,
         showTime: props.showTime,
         required: props.required,
         disabled: toRef(props, 'disabled'),
@@ -304,6 +306,9 @@ const dateRange = useDateRange(
         minRange: props.minRange,
         incomplete: props.incomplete,
         locale: props.locale,
+        // i18n：預設快捷選項標籤跟隨語系
+        getMessage,
+        localeRef: currentLocale,
     },
     {
         containerRef,
@@ -314,8 +319,6 @@ const dateRange = useDateRange(
         endTimeInputRef
     }
 );
-
-const { setLocale, getPlaceholderMessage } = useLocale(props.locale);
 
 // 設置事件發射器
 dateRange.setEmitters({

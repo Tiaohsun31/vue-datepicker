@@ -82,5 +82,11 @@ export const enUSLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar} Year Range: {min} - {max}',
         noYearsToDisplay: 'No years to display',
         returnToValidRange: 'Return to valid range',
+    },
+    shortcuts: {
+        today: 'Today',
+        last7Days: 'Last 7 days',
+        last30Days: 'Last 30 days',
+        thisMonth: 'This month',
     }
 };

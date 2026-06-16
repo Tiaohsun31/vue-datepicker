@@ -6,7 +6,6 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
-import dts from 'vite-plugin-dts';
 import type { Plugin } from 'vite';
 
 /** 在 build 結束後產出 CSS 的型別宣告 stub，讓 TS 能解析 `import '…/style'` */
@@ -31,13 +30,8 @@ export default defineConfig({
         vueDevTools(),
         tailwindcss(),
         cssDtsPlugin(),
-        dts({
-            // 使用組件庫專用的 tsconfig
-            tsconfigPath: './tsconfig.lib.json',
-            exclude: ['**/*.test.*', '**/*.spec.*'],
-            rollupTypes: true,
-            outDir: 'dist',
-        }),
+        // .d.ts 改由 plugin-less 的 `vue-tsc -p tsconfig.build.json` 產生（見 package.json build:types），
+        // 移除 vite-plugin-dts（v5 需 api-extractor 才能 bundle，且與新版工具鏈不相容）。
     ],
     build: {
         cssCodeSplit: false,

@@ -1,14 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SmartDateParser, parseUserDateInput, type DateParseResult } from '@/utils/dateParsingUtils';
-import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 
-// 模擬 RocFormatPlugin
-vi.mock('@/plugins/calendars/RocFormatPlugin', () => ({
-    RocFormatPlugin: vi.fn().mockImplementation(() => ({
-        canParseInput: vi.fn(),
-        parseInput: vi.fn()
-    }))
-}));
+// 註：不再 mock RocFormatPlugin。原本以 module mock 攔截被寫死的 `new RocFormatPlugin()`
+// 在 vitest 4 下接線失效，且測「mock 是否被呼叫」價值低。改為直接驗證真實 ROC 解析行為。
 
 describe('SmartDateParser', () => {
     let parser: SmartDateParser;
@@ -16,10 +10,6 @@ describe('SmartDateParser', () => {
     beforeEach(() => {
         parser = new SmartDateParser();
         vi.clearAllMocks();
-
-        // 重置 RocFormatPlugin Mock
-        const MockRocFormatPlugin = vi.mocked(RocFormatPlugin);
-        MockRocFormatPlugin.mockClear();
     });
 
     describe('建構函數', () => {
@@ -305,53 +295,32 @@ describe('SmartDateParser', () => {
     });
 
     describe('民國曆日曆插件', () => {
-        it('當日曆設為民國曆時應該使用 ROC 插件', () => {
-            const MockRocFormatPlugin = vi.mocked(RocFormatPlugin);
-
-            // 每次 new RocFormatPlugin() 都會返回這個 mock 實例
-            const mockInstance = {
-                canParseInput: vi.fn().mockReturnValue(true),
-                parseInput: vi.fn().mockReturnValue({
-                    year: 2023, month: 12, day: 25,
-                    hour: 0, minute: 0, second: 0
-                })
-            };
-
-            MockRocFormatPlugin.mockImplementation(() => mockInstance as any);
-
+        it('當日曆設為民國曆時應該以 ROC 插件解析民國日期（轉為西元）', () => {
             const rocParser = new SmartDateParser('zh-TW', 'roc');
             const result = rocParser.parse('民國112年12月25日');
 
-            expect(mockInstance.canParseInput).toHaveBeenCalledWith('民國112年12月25日');
+            expect(result.success).toBe(true);
+            expect(result.calendarSystem).toBe('roc');
+            expect(result.date).toMatchObject({ year: 2023, month: 12, day: 25 });
         });
 
-        it('當 ROC 插件失敗時應該回退至一般解析', () => {
+        it('當輸入非民國格式時應該回退至一般（西元）解析', () => {
             const rocParser = new SmartDateParser('zh-TW', 'roc');
-            const mockPlugin = new RocFormatPlugin() as any;
-            mockPlugin.canParseInput.mockReturnValue(false);
-
             const result = rocParser.parse('2023-12-25');
+
             expect(result.success).toBe(true);
             expect(result.calendarSystem).toBe('gregory');
+            expect(result.date).toMatchObject({ year: 2023, month: 12, day: 25 });
         });
 
         it('ROC 插件成功時應該回傳正確的信心度和日曆系統', () => {
             const rocParser = new SmartDateParser('zh-TW', 'roc');
-            const mockPlugin = new RocFormatPlugin() as any;
-            mockPlugin.canParseInput.mockReturnValue(true);
-            mockPlugin.parseInput.mockReturnValue({
-                year: 2023,
-                month: 12,
-                day: 25,
-                hour: 0,
-                minute: 0,
-                second: 0
-            });
+            const result = rocParser.parse('ROC 112/12/25');
 
-            const result = rocParser.parse('112/12/25');
             expect(result.confidence).toBe(0.95);
             expect(result.calendarSystem).toBe('roc');
             expect(result.format).toBe('roc-plugin');
+            expect(result.date).toMatchObject({ year: 2023, month: 12, day: 25 });
         });
     });
 
@@ -544,21 +513,11 @@ describe('parseUserDateInput 便利函數', () => {
     });
 
     it('應該處理民國曆', () => {
-        const MockRocFormatPlugin = vi.mocked(RocFormatPlugin);
-
-        // 每次 new RocFormatPlugin() 都會返回這個 mock 實例
-        const mockInstance = {
-            canParseInput: vi.fn().mockReturnValue(true),
-            parseInput: vi.fn().mockReturnValue({
-                year: 2023, month: 12, day: 25,
-                hour: 0, minute: 0, second: 0
-            })
-        };
-
-        MockRocFormatPlugin.mockImplementation(() => mockInstance as any);
         const result = parseUserDateInput('民國112年12月25日', 'zh-TW', 'roc');
 
-        expect(mockInstance.canParseInput).toHaveBeenCalledWith('民國112年12月25日');
+        expect(result.success).toBe(true);
+        expect(result.calendarSystem).toBe('roc');
+        expect(result.date).toMatchObject({ year: 2023, month: 12, day: 25 });
     });
 
     it('應該有效率地重複使用全域解析器實例', () => {

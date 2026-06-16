@@ -94,8 +94,18 @@ export interface YearSelectorMessages {
     returnToValidRange: string;
 }
 
+// DateRange 預設快捷選項標籤
+export interface ShortcutMessages {
+    today: string;
+    last7Days: string;
+    last30Days: string;
+    thisMonth: string;
+}
+
 export interface LocaleMessages {
     error: ErrorMessages;
     placeholder: PlaceholderMessages;
     yearSelector: YearSelectorMessages;
+    // 選填：消費者自訂語言包可不提供（內建語系皆有；缺漏時 DateRange 會回退預設標籤）。
+    shortcuts?: ShortcutMessages;
 }

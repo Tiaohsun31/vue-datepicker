@@ -10,7 +10,8 @@
     "playground/**/*"
   ],
   "compilerOptions": {
-    "baseUrl": ".",
+    // 不再使用 baseUrl（TS 6 已棄用）。moduleResolution: bundler 下
+    // paths 直接相對於本 tsconfig 解析，毋需 baseUrl。
     "paths": {
       "@/*": ["./src/*"]
     },

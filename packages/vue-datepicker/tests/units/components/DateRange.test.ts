@@ -247,6 +247,28 @@ describe('DateRange', () => {
                 expect(calendar.querySelector('.flex.flex-wrap.gap-2')).toBeInTheDocument();
             });
         });
+
+        it('預設快捷選項標籤應依 locale 本地化（zh-TW）', async () => {
+            renderDateRange({ showShortcuts: true });
+            await user.click(screen.getByLabelText('選擇日期範圍'));
+
+            await waitFor(() => {
+                expect(screen.getByText('今天')).toBeInTheDocument();
+                expect(screen.getByText('最近7天')).toBeInTheDocument();
+                expect(screen.getByText('本月')).toBeInTheDocument();
+            });
+        });
+
+        it('預設快捷選項標籤應依 locale 本地化（en-US）', async () => {
+            renderDateRange({ showShortcuts: true, locale: 'en-US' });
+            await user.click(screen.getByLabelText('選擇日期範圍'));
+
+            await waitFor(() => {
+                expect(screen.getByText('Today')).toBeInTheDocument();
+                expect(screen.getByText('Last 7 days')).toBeInTheDocument();
+                expect(screen.getByText('This month')).toBeInTheDocument();
+            });
+        });
     });
 
     describe('輸入模式', () => {

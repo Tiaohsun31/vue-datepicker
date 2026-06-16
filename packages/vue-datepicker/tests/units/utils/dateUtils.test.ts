@@ -134,6 +134,28 @@ describe('dateUtils', () => {
             expect(typeof result).toBe('string')
         })
 
+        // 活路徑整合測試：outputType='custom' 會分派到 CalendarUtils.formatOutput 做曆法輸出。
+        // 參數順序：(date, outputType, dateFormat, timeFormat, includeTime, calendar, locale)
+        describe('custom 輸出 → 曆法分派', () => {
+            const d = createSimpleDate(2023, 12, 25)
+
+            it('roc 應輸出民國年格式', () => {
+                const result = formatOutput(d, 'custom', 'ROC-YYYY-MM-DD', undefined, false, 'roc', 'zh-TW')
+                expect(result).toBe('民國112年12月25日')
+            })
+
+            it('buddhist 應輸出佛曆年（2566）', () => {
+                const result = formatOutput(d, 'custom', 'YYYY/MM/DD', undefined, false, 'buddhist', 'en-US')
+                expect(typeof result).toBe('string')
+                expect(result as string).toContain('2566')
+            })
+
+            it('gregory custom 應尊重 dateFormat', () => {
+                const result = formatOutput(d, 'custom', 'YYYY/MM/DD', undefined, false, 'gregory', 'zh-TW')
+                expect(result).toBe('2023/12/25')
+            })
+        })
+
         it('應該處理 null 輸入', () => {
             const result = formatOutput(null)
             expect(result).toBeNull()

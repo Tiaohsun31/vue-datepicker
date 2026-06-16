@@ -219,7 +219,7 @@ const formatErrors = ref<Record<string, string>>({});
 // 使用主要的 DateTimePicker composable
 const datePicker = useDateTimePicker(
     {
-        modelValue: props.modelValue,
+        modelValue: () => props.modelValue,
         showTime: props.showTime,
         required: props.required,
         disabled: toRef(props, 'disabled'),

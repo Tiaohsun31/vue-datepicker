@@ -3,7 +3,7 @@
  * 專門處理日期範圍選擇的 Composable
  */
 
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, watch, toValue, type Ref, type MaybeRefOrGetter } from 'vue';
 import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
@@ -26,7 +26,8 @@ import type { OutputType, DateRangeShortcut } from '../types/main';
 // 類型定義
 interface DateRangeOptions {
     calendar?: string;
-    modelValue?: { start: DateTimeInput; end: DateTimeInput } | null;
+    // 接受響應式來源（ref / getter / 純值），讓掛載後的外部 v-model 更新能傳播。
+    modelValue?: MaybeRefOrGetter<{ start: DateTimeInput; end: DateTimeInput } | null>;
     showTime?: boolean;
     required?: boolean;
     disabled?: Ref<boolean>;
@@ -41,6 +42,9 @@ interface DateRangeOptions {
     maxRange?: number;
     minRange?: number;
     locale?: string;
+    // i18n：由元件傳入（取自 useLocale），讓預設快捷選項標籤跟隨語系。
+    getMessage?: (path: string, variables?: Record<string, any>) => string;
+    localeRef?: Readonly<Ref<string>>;
 }
 
 interface DateRangeRefs {
@@ -75,7 +79,6 @@ export function useDateRange(
     // 解構配置選項並設置默認值
     const {
         calendar = 'gregory',
-        modelValue = null,
         showTime = false,
         required = false,
         incomplete = false,
@@ -182,6 +185,7 @@ export function useDateRange(
 
     const hasErrors = computed(() => Object.keys(mergedErrors.value).length > 0);
 
+    // 純函數：只回傳布林，不產生副作用（範圍錯誤的設定/清除改由 applyRangeConstraintValidation 處理）。
     const isValidRange = computed(() => {
         const start = startDateTime.internalDateTime.value;
         const end = endDateTime.internalDateTime.value;
@@ -194,62 +198,55 @@ export function useDateRange(
         // 檢查範圍限制
         if (maxRange || minRange) {
             const diffDays = calculateDaysDifference(start, end);
-
-            if (maxRange && diffDays > maxRange) {
-                endValidation.handleDateValidation(false, {
-                    range: 'range.exceedsMaxRange'
-                }, 'endDate', {
-                    range: { maxRange, actualDays: diffDays }
-                });
-                return false;
-            }
-
-            if (minRange && diffDays < minRange) {
-                endValidation.handleDateValidation(false, {
-                    range: 'range.belowMinRange'
-                }, 'endDate', {
-                    range: { minRange, actualDays: diffDays }
-                });
-                return false;
-            }
-
-            // 清除範圍錯誤如果都通過
-            endValidation.clearFieldErrors('range');
+            if (maxRange && diffDays > maxRange) return false;
+            if (minRange && diffDays < minRange) return false;
         }
 
         return !hasErrors.value;
     });
 
-    const shortcuts = computed<DateRangeShortcut[]>(() => [
-        {
-            label: '今天',
-            getValue: () => {
-                const today = getNow();
-                return {
-                    start: createSimpleDate(today.year, today.month, today.day, 0, 0, 0),
-                    end: createSimpleDate(today.year, today.month, today.day, 23, 59, 59)
-                };
+    // 標籤走 i18n（getMessage）；未提供 getMessage 或該語系缺 shortcuts 時，回退繁中字面值（向後相容）。
+    const shortcutLabel = (key: string, fallback: string) => {
+        if (!options.getMessage) return fallback;
+        const path = `shortcuts.${key}`;
+        const msg = options.getMessage(path);
+        return msg === path ? fallback : msg; // getMessage 找不到時回傳原 path
+    };
+
+    const shortcuts = computed<DateRangeShortcut[]>(() => {
+        // 反應式依賴：語系變更時重新計算標籤。
+        void options.localeRef?.value;
+        return [
+            {
+                label: shortcutLabel('today', '今天'),
+                getValue: () => {
+                    const today = getNow();
+                    return {
+                        start: createSimpleDate(today.year, today.month, today.day, 0, 0, 0),
+                        end: createSimpleDate(today.year, today.month, today.day, 23, 59, 59)
+                    };
+                }
+            },
+            {
+                label: shortcutLabel('last7Days', '最近7天'),
+                getValue: () => ({
+                    start: addDays(getNow(), -6),
+                    end: getNow()
+                })
+            },
+            {
+                label: shortcutLabel('last30Days', '最近30天'),
+                getValue: () => ({
+                    start: addDays(getNow(), -29),
+                    end: getNow()
+                })
+            },
+            {
+                label: shortcutLabel('thisMonth', '本月'),
+                getValue: getCurrentMonthRange
             }
-        },
-        {
-            label: '最近7天',
-            getValue: () => ({
-                start: addDays(getNow(), -6),
-                end: getNow()
-            })
-        },
-        {
-            label: '最近30天',
-            getValue: () => ({
-                start: addDays(getNow(), -29),
-                end: getNow()
-            })
-        },
-        {
-            label: '本月',
-            getValue: getCurrentMonthRange
-        }
-    ]);
+        ];
+    });
 
     // 計算動態的最大/最小日期約束
     const startDateConstraints = computed(() => {
@@ -314,6 +311,18 @@ export function useDateRange(
         );
     }
 
+    // 範圍限制驗證的副作用（原本誤置於 isValidRange computed 內）。
+    // 由 emitRangeEvents 在每次完整範圍變更時呼叫，集中設定/清除範圍錯誤。
+    function applyRangeConstraintValidation(start: SimpleDateValue, end: SimpleDateValue) {
+        if (!(maxRange || minRange)) return;
+        const result = validateRangeConstraints(start, end);
+        if (!result.valid) {
+            handleRangeValidationError(result);
+        } else {
+            endValidation.clearFieldErrors('range');
+        }
+    }
+
     function emitRangeEvents() {
         if (!startDateTime.internalDateTime.value || !endDateTime.internalDateTime.value) {
             emitters.update?.(null);
@@ -349,6 +358,12 @@ export function useDateRange(
 
         emitters.update?.(range);
         emitters.change?.(range);
+
+        // 在發送驗證狀態前，套用範圍限制驗證（設定/清除範圍錯誤）
+        applyRangeConstraintValidation(
+            startDateTime.internalDateTime.value,
+            endDateTime.internalDateTime.value
+        );
 
         // 發送驗證狀態
         const isValid = isValidRange.value && !hasErrors.value;
@@ -414,7 +429,6 @@ export function useDateRange(
         if (!startValidation.validateDateRange(updatedDateTime)) {
             return;
         }
-        // applyDefaultTimeIfNeeded(startDateTime, DEFAULT_START_TIME);
         startNavigation.autoFocusTimeAfterDateComplete(
             startDateTime,
             DEFAULT_START_TIME
@@ -427,14 +441,6 @@ export function useDateRange(
         if (!showTime) {
             endNavigation.focusFirstInput();
         }
-        // if (showTime) {
-        //     startNavigation.autoFocusTimeAfterDateComplete(
-        //         !!startDateTime.inputTimeValue.value,
-        //         DEFAULT_START_TIME
-        //     );
-        // } else {
-        //     endNavigation.focusFirstInput();
-        // }
     };
 
     const handleEndDateComplete = (dateStr: string) => {
@@ -449,7 +455,6 @@ export function useDateRange(
         if (!endValidation.validateDateRange(updatedDateTime)) {
             return;
         }
-        // applyDefaultTimeIfNeeded(endDateTime, DEFAULT_END_TIME);
         endNavigation.autoFocusTimeAfterDateComplete(
             endDateTime,
             DEFAULT_END_TIME
@@ -457,13 +462,6 @@ export function useDateRange(
         emitRangeEvents();
 
         clearFieldErrors(endValidation, ['endDate', 'date.year', 'date.month', 'date.day']);
-
-        // if (showTime) {
-        //     endNavigation.autoFocusTimeAfterDateComplete(
-        //         !!endDateTime.inputTimeValue.value,
-        //         DEFAULT_END_TIME
-        //     );
-        // }
     };
 
     const handleStartTimeComplete = (timeStr: string) => {
@@ -537,8 +535,6 @@ export function useDateRange(
                 endDateTime.inputTimeValue.value = DEFAULT_END_TIME;
                 endDateTime.updateFromInputs();
             }
-            // applyDefaultTimeIfNeeded(startDateTime, DEFAULT_START_TIME);
-            // applyDefaultTimeIfNeeded(endDateTime, DEFAULT_END_TIME);
         }
 
         clearFieldErrors(startValidation, ['startDate', 'endDate', 'range', 'date.year', 'date.month', 'date.day']);
@@ -569,8 +565,6 @@ export function useDateRange(
                 endDateTime.inputTimeValue.value = DEFAULT_END_TIME;
                 endDateTime.updateFromInputs();
             }
-            // applyDefaultTimeIfNeeded(startDateTime, DEFAULT_START_TIME);
-            // applyDefaultTimeIfNeeded(endDateTime, DEFAULT_END_TIME);
         }
 
         emitRangeEvents();
@@ -618,8 +612,8 @@ export function useDateRange(
         });
     };
 
-    // 監聽外部值變化並驗證日期順序
-    watch(() => modelValue, (newValue) => {
+    // 監聽外部值變化並驗證日期順序（toValue 解析響應式來源，支援受控更新）
+    watch(() => toValue(options.modelValue) ?? null, (newValue) => {
         if (newValue && (newValue.start || newValue.end)) {
             const startDate = newValue.start ? parseInputToSimpleDate(newValue.start, locale, calendar) : null;
             const endDate = newValue.end ? parseInputToSimpleDate(newValue.end, locale, calendar) : null;

@@ -2,7 +2,7 @@
  * useDateTimePicker.ts
  */
 
-import { ref, computed, watch, toRef, type Ref, type ComputedRef } from 'vue';
+import { ref, computed, watch, toRef, toValue, type Ref, type ComputedRef, type MaybeRefOrGetter } from 'vue';
 import { useInputNavigation } from './useInputNavigation';
 import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
@@ -19,7 +19,8 @@ import {
 
 interface DateTimePickerOptions {
     // 基本配置
-    modelValue?: DateTimeInput;
+    // 接受響應式來源（ref / getter / 純值），讓掛載後的外部 v-model 更新能傳播（受控用法）。
+    modelValue?: MaybeRefOrGetter<DateTimeInput>;
     showTime?: boolean;
     required?: boolean;
     disabled?: Ref<boolean>;
@@ -59,9 +60,8 @@ export function useDateTimePicker(
     refs: DateTimePickerRefs,
 ) {
     const {
-        modelValue = null,
         showTime = false,
-        required = true,
+        required = false,
         // disabled = false,
         // calendar = 'gregory',          // 日曆系統
         dateFormat = 'YYYY-MM-DD',
@@ -177,13 +177,14 @@ export function useDateTimePicker(
 
     /**
      * 監聽外部值變化 一律嘗試轉換成 SimpleDateValue
+     * 用 toValue 解析響應式來源，掛載後的外部 v-model 更新才會傳播。
      */
-    watch(() => modelValue, (newValue) => {
+    watch(() => toValue(options.modelValue) ?? null, (newValue) => {
         const parsedDate = parseInputToSimpleDate(newValue, locale.value, calendar.value);
 
         if (newValue && !parsedDate) {
             // 有輸入但解析失敗
-            validation.handleDateValidation(false, { date: '無效的日期格式' });
+            validation.handleDateValidation(false, { date: 'date.invalid' });
             dateTimeValue.setExternalValue(null);
         } else if (parsedDate && !validation.validateDateRange(parsedDate)) {
             // 解析成功但超出範圍

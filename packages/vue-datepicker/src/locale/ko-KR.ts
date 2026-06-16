@@ -82,5 +82,11 @@ export const koKRLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar}년 범위: {min} - {max}',
         noYearsToDisplay: '표시한 연도는 없습니다',
         returnToValidRange: '유효한 범위로 이동',
+    },
+    shortcuts: {
+        today: '오늘',
+        last7Days: '최근 7일',
+        last30Days: '최근 30일',
+        thisMonth: '이번 달',
     }
 };

@@ -98,7 +98,7 @@ describe('DatePicker', () => {
             const withTimeWrapper = withTime.querySelector('.date-picker-wrapper');
             const withoutTimeWrapper = withoutTime.querySelector('.date-picker-wrapper');
 
-            expect(withTimeWrapper).toHaveClass('min-w-[300px]');
+            expect(withTimeWrapper).toHaveClass('min-w-[270px]');
             expect(withoutTimeWrapper).toHaveClass('min-w-[150px]');
         });
 

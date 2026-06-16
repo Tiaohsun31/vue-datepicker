@@ -82,5 +82,11 @@ export const jaJPLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar}年の範囲: {min} - {max}',
         noYearsToDisplay: '表示する年はありません',
         returnToValidRange: '有効な範囲に戻る',
+    },
+    shortcuts: {
+        today: '今日',
+        last7Days: '過去7日間',
+        last30Days: '過去30日間',
+        thisMonth: '今月',
     }
 };

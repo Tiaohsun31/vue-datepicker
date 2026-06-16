@@ -228,6 +228,73 @@ describe('CalendarUtils', () => {
             expect(result).toContain('15')
         })
     })
+
+    // 核心賣點：多曆法「輸出格式化」。原本僅覆蓋西元曆，這裡補非西元曆路徑。
+    // 參數順序：formatOutput(date, dateFormat, timeFormat?, includeTime, calendar, locale)
+    describe('formatOutput - 多曆法輸出', () => {
+        const d = { year: 2023, month: 12, day: 25 } // 民國112 / 佛曆2566 / 令和5 / 波斯1402 / 希伯來5784
+
+        describe('ROC 民國曆（走 RocFormatPlugin）', () => {
+            it('ROC-YYYY-MM-DD → 民國年中文格式', () => {
+                expect(CalendarUtils.formatOutput(d, 'ROC-YYYY-MM-DD', undefined, false, 'roc', 'zh-TW'))
+                    .toBe('民國112年12月25日')
+            })
+
+            it('ROC-YYYY/MM/DD → 民國年斜線格式', () => {
+                expect(CalendarUtils.formatOutput(d, 'ROC-YYYY/MM/DD', undefined, false, 'roc', 'zh-TW'))
+                    .toBe('民國112/12/25')
+            })
+
+            it('ROC-YYYY → 僅民國年', () => {
+                expect(CalendarUtils.formatOutput(d, 'ROC-YYYY', undefined, false, 'roc', 'zh-TW'))
+                    .toBe('民國112年')
+            })
+
+            it('帶時間時應一併格式化（24 小時中文）', () => {
+                const dt = { year: 2023, month: 12, day: 25, hour: 14, minute: 30, second: 0 }
+                const result = CalendarUtils.formatOutput(dt, 'ROC-YYYY-MM-DD', 'HH時mm分', true, 'roc', 'zh-TW')
+                expect(result).toContain('民國112年12月25日')
+                expect(result).toContain('14時30分')
+            })
+        })
+
+        describe('其他曆法（走 @internationalized/date DateFormatter）', () => {
+            it('佛曆：年份 +543（2023 → 2566）', () => {
+                const result = CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'buddhist', 'en-US')
+                expect(result).toContain('2566')
+            })
+
+            it('日本曆：含令和年號（Reiwa）', () => {
+                const result = CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'japanese', 'en-US')
+                expect(result).toContain('Reiwa')
+            })
+
+            it('波斯曆：年份轉為 1402', () => {
+                const result = CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'persian', 'en-US')
+                expect(result).toContain('1402')
+            })
+
+            it('希伯來曆：年份轉為 5784', () => {
+                const result = CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'hebrew', 'en-US')
+                expect(result).toContain('5784')
+            })
+
+            // 行為記錄（非理想）：非西元/非 ROC 曆法目前「忽略」使用者的 dateFormat pattern，
+            // 一律輸出 Intl 長格式。對應 RefactorPlan §5.5#4 / Phase 6.5；改善後此測試需更新。
+            it('[現狀記錄] 非西元曆忽略 dateFormat pattern，輸出 Intl 長格式而非 2023/12/25', () => {
+                const result = CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'buddhist', 'en-US')
+                expect(result).not.toBe('2023/12/25')
+                expect(result).not.toMatch(/^\d{4}\/\d{2}\/\d{2}$/)
+            })
+        })
+
+        describe('西元曆尊重 dateFormat pattern（對照組）', () => {
+            it('YYYY/MM/DD', () => {
+                expect(CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'gregory', 'zh-TW'))
+                    .toBe('2023/12/25')
+            })
+        })
+    })
     describe('convertToCalendarDate - Additional Tests', () => {
         it('應該正確轉換佛曆日期', () => {
             const simpleDate = { year: 2024, month: 6, day: 15 }

@@ -1,0 +1,25 @@
+{
+  // 僅供 build:types 使用：以 vue-tsc emit 逐檔 .d.ts 到 dist（plugin-less）。
+  // 與 tsconfig.lib.json（type-check 用、composite）分離，避免互相干擾。
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "tsBuildInfoFile": null
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue"],
+  "exclude": [
+    "src/**/__tests__/*",
+    "src/**/*.test.*",
+    "src/**/*.spec.*",
+    "tests/**/*",
+    "playground/**/*",
+    "**/*.md"
+  ]
+}

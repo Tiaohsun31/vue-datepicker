@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "datepicker",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@tiaohsun/vue-datepicker", "dev"],
+      "port": 3000
+    }
+  ]
+}

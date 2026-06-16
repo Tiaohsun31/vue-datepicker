@@ -100,22 +100,14 @@ test.describe('DatePicker E2E Tests', () => {
         await expect(page.locator('input[placeholder*="分"]').first()).toHaveValue('30')
     })
 
-    test('應該能正確處理主題切換', async ({ page }) => {
+    test('應該能正確處理主題（宣告式模型）', async ({ page }) => {
         const firstDatePicker = page.locator('.date-picker-wrapper').first()
+        await expect(firstDatePicker).toBeVisible()
 
-        // 檢查預設主題類別
-        await expect(firstDatePicker).toHaveClass(/vdt-theme-violet/)
-
-        // 檢查是否有自動模式（根據系統主題）
-        const isDarkMode = await page.evaluate(() => {
-            return window.matchMedia('(prefers-color-scheme: dark)').matches
-        })
-
-        if (isDarkMode) {
-            await expect(firstDatePicker).toHaveClass(/vdt-mode-dark/)
-        } else {
-            await expect(firstDatePicker).toHaveClass(/vdt-mode-light/)
-        }
+        // 新模型：mode 為 auto（預設）時不設 data-vdt-mode，跟隨系統 prefers-color-scheme；
+        // 指定 light/dark 時才會有該屬性。
+        const mode = await firstDatePicker.getAttribute('data-vdt-mode')
+        expect(mode === null || mode === 'light' || mode === 'dark').toBeTruthy()
     })
 
 

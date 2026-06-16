@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center mb-4 gap-2">
         <!-- 上個月按鈕 -->
         <button type="button" @click="previousMonth"
-            class="p-2 text-[var(--color-vdt-content-secondary)] hover:bg-[var(--color-vdt-interactive-hover)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-vdt-theme-500)] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-2 text-[var(--color-vdp-content-secondary)] hover:bg-[var(--color-vdp-interactive-hover)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-vdp-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="上個月" :disabled="!canNavigatePrevious">
             <DatePickerPrev class="h-5 w-5" />
         </button>
@@ -13,7 +13,7 @@
             <slot name="month-selector" :month-names="monthNames" :selected-month="selectedMonthLocal"
                 :on-month-change="onMonthChangeWithValue">
                 <select v-model="selectedMonthLocal" @change="onMonthChange"
-                    class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdt-theme-200)] focus:border-[var(--color-vdt-theme-500)]"
+                    class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdp-primary-subtle)] focus:border-[var(--color-vdp-primary)]"
                     aria-label="選擇月份" role="combobox">
                     <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
                         {{ month }}
@@ -27,7 +27,7 @@
                 <slot name="year-selector" :display-year="displayYear" :toggle-year-selector="toggleYearSelector"
                     :show-year-selector="showYearSelector">
                     <button type="button" @click="toggleYearSelector" data-year-selector-button
-                        class="inline-flex truncate items-center px-2 py-1 bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] w-full border border-[var(--color-vdt-outline)] rounded-sm text-sm focus-within:ring-2 focus-within:border-[var(--color-vdt-theme-500)] focus-within:ring-[var(--color-vdt-theme-200)]"
+                        class="inline-flex truncate items-center px-2 py-1 bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] w-full border border-[var(--color-vdp-outline)] rounded-sm text-sm focus-within:ring-2 focus-within:border-[var(--color-vdp-primary)] focus-within:ring-[var(--color-vdp-primary-subtle)]"
                         aria-label="選擇年份">
                         {{ displayYear }}
                     </button>
@@ -48,7 +48,7 @@
 
         <!-- 下個月按鈕 -->
         <button type="button" @click="nextMonth"
-            class="p-2 text-[var(--color-vdt-content-secondary)] hover:bg-[var(--color-vdt-interactive-hover)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-vdt-theme-500)] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-2 text-[var(--color-vdp-content-secondary)] hover:bg-[var(--color-vdp-interactive-hover)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-vdp-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="下個月" :disabled="!canNavigateNext">
             <DatePickerNext class="h-5 w-5" />
         </button>

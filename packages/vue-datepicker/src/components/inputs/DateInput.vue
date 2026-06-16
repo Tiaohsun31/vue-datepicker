@@ -7,7 +7,7 @@
             <!-- 渲染對應的輸入框 -->
             <input v-if="segment === 'year'" :ref="(el) => setInputRef(el as HTMLInputElement, 'year')"
                 v-model="yearValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="yearPlaceholder"
-                :maxlength="4" class="date-input text-sm text-center active:bg-[var(--color-vdt-theme-100)]"
+                :maxlength="4" class="date-input text-sm text-center active:bg-[var(--color-vdp-primary-subtle)]"
                 @input="handleYearInput" @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')"
                 @blur="handleBlur('year')" aria-label="year" :aria-invalid="!!localizedErrors.year"
                 :aria-errormessage="localizedErrors.year ? 'year-error' : undefined"

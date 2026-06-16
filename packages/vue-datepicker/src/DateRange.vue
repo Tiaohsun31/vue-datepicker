@@ -1,11 +1,11 @@
 <!-- DateRange.vue -->
 <template>
     <div class="date-range-wrapper relative w-full"
-        :class="[themeClasses, showTime ? 'min-w-[300px]' : 'min-w-[200px]']" v-bind="containerAttributes"
+        :class="[showTime ? 'min-w-[300px]' : 'min-w-[200px]']" :style="themeStyle" v-bind="themeAttrs"
         ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 rounded-sm transition-all duration-200 bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 rounded-sm transition-all duration-200 bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <!-- 日曆圖標 (預設顯示) -->
             <button v-if="showCalendarIcon" type="button" aria-label="開啟日曆"
@@ -20,16 +20,16 @@
                 <div class="text-center min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.start"
                     aria-label="開始日期">
                     <span v-if="modelValue?.start"
-                        class="date-placeholder text-[var(--color-vdt-content)] truncate block">
+                        class="date-placeholder text-[var(--color-vdp-content)] truncate block">
                         {{ modelValue?.start }}
                     </span>
-                    <span v-else class="date-placeholder text-[var(--color-vdt-content-muted)] truncate block">
+                    <span v-else class="date-placeholder text-[var(--color-vdp-content-muted)] truncate block">
                         {{ computedPlaceholders.start }}
                     </span>
                 </div>
 
                 <!-- 分隔符 -->
-                <div class="text-[var(--color-vdt-content-muted)] text-sm px-1" aria-label="日期範圍分隔符"
+                <div class="text-[var(--color-vdp-content-muted)] text-sm px-1" aria-label="日期範圍分隔符"
                     data-testid="separator">
                     {{ separator }}
                 </div>
@@ -38,10 +38,10 @@
                 <div class="text-center  min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.end"
                     aria-label="結束日期">
                     <span v-if="modelValue?.end"
-                        class="date-placeholder text-[var(--color-vdt-content)] truncate block">
+                        class="date-placeholder text-[var(--color-vdp-content)] truncate block">
                         {{ modelValue?.end }}
                     </span>
-                    <span v-else class="date-placeholder text-[var(--color-vdt-content-muted)] truncate block">
+                    <span v-else class="date-placeholder text-[var(--color-vdp-content-muted)] truncate block">
                         {{ computedPlaceholders.end }}
                     </span>
                 </div>
@@ -56,7 +56,7 @@
 
         <!-- 日期範圍選擇彈窗 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-[var(--color-vdt-surface-elevated)] border border-[var(--color-vdt-outline)] rounded-lg shadow-lg z-10 overflow-auto"
+            class="absolute mt-1 bg-[var(--color-vdp-surface-elevated)] border border-[var(--color-vdp-outline)] rounded-lg shadow-lg z-10 overflow-auto"
             :class="[
                 // 基本尺寸控制
                 'max-w-[95vw]',
@@ -74,7 +74,7 @@
                     class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
                     <!-- 開始日期輸入 -->
                     <div data-testid="start-date-inputs" aria-label="開始日期輸入區域" @click.stop="focusStartDate"
-                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdt-theme-500)] focus-within:ring-[var(--color-vdt-theme-200)] transition-all duration-200">
+                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdp-primary)] focus-within:ring-[var(--color-vdp-primary-subtle)] transition-all duration-200">
 
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -95,7 +95,7 @@
 
                     <!-- 結束日期輸入 -->
                     <div data-testid="end-date-inputs" aria-label="結束日期輸入區域" @click.stop="focusEndDate"
-                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-[var(--color-vdt-outline)] bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdt-theme-500)] focus-within:ring-[var(--color-vdt-theme-200)] transition-all duration-200">
+                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdp-primary)] focus-within:ring-[var(--color-vdp-primary-subtle)] transition-all duration-200">
 
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -122,7 +122,7 @@
                         <button v-for="shortcut in shortcuts" :key="shortcut.label" type="button"
                             :aria-label="`選擇${shortcut.label}範圍`"
                             :data-testid="`shortcut-${shortcut.label.toLowerCase().replace(/\s+/g, '-')}`"
-                            class="px-3 py-1 text-xs bg-[var(--color-vdt-outline)] text-[var(--color-vdt-content)] hover:bg-[var(--color-vdt-interactive-hover)] rounded-sm transition-colors"
+                            class="px-3 py-1 text-xs bg-[var(--color-vdp-outline)] text-[var(--color-vdp-content)] hover:bg-[var(--color-vdp-interactive-hover)] rounded-sm transition-colors"
                             @click="applyShortcut(shortcut)">
                             {{ shortcut.label }}
                         </button>
@@ -200,7 +200,8 @@ import { useWindowSize } from './composables/useWindowSize';
 const props = withDefaults(defineProps<DateRangeProps>(), {
     modelValue: null,
     mode: 'auto',
-    theme: () => 'violet',
+    // theme 未指定時不 inline 覆蓋，交由 :root 的 --color-vdp-primary（家族 --tia-theme-primary）決定。
+    theme: undefined,
 
     // 日曆系統
     calendar: 'gregory',
@@ -327,16 +328,11 @@ dateRange.setEmitters({
     validation: (isValid, errors, errorParams) => emit('validation', isValid, errors, errorParams)
 });
 
-// 使用主題 composable
-const {
-    themeClasses,
-    containerAttributes,
-    setColor,
-    setMode
-} = useTheme({
-    defaultColor: props.theme,
-    defaultMode: props.mode
-});
+// 使用主題 composable（宣告式：只輸出 inline style 與 data-vdt-mode 屬性）
+const { themeStyle, themeAttrs } = useTheme(
+    toRef(props, 'theme'),
+    toRef(props, 'mode')
+);
 
 const computedPlaceholders = computed(() => {
     // 從語言包獲取預設值
@@ -382,16 +378,7 @@ const hasErrors = computed(() => {
 });
 
 
-// 監聽主題變化
-watch(() => props.theme, (newTheme) => {
-    if (newTheme) {
-        setColor(newTheme);
-    }
-}, { immediate: true });
-
-watch(() => props.mode, (newMode) => {
-    setMode(newMode);
-}, { immediate: true });
+// 主題改為宣告式綁定（:style="themeStyle" / v-bind="themeAttrs"），不再需要命令式 watch。
 
 watch(() => props.locale, (newLocale) => {
     if (newLocale) {
@@ -423,11 +410,7 @@ defineExpose({
     focusStartDate: dateRange.focusStartDate,
     focusEndDate: dateRange.focusEndDate,
 
-    // 主題控制
-    setTheme: setColor,
-    setDarkMode: () => setMode('dark'),
-    setLightMode: () => setMode('light'),
-    setAutoMode: () => setMode('auto'),
+    // 主題改為宣告式：請改用 `theme` / `mode` props 控制（移除命令式 setTheme/setMode）。
 
     // 錯誤相關
     getErrors: () => mergedErrors.value,

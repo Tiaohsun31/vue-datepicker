@@ -1,12 +1,12 @@
 <template>
     <div class="date-picker-wrapper relative w-full min-w-0 justify-self-start"
-        :class="[themeClasses, showTime ? 'min-w-[270px]' : 'min-w-[150px]']" v-bind="containerAttributes"
+        :class="[showTime ? 'min-w-[270px]' : 'min-w-[150px]']" :style="themeStyle" v-bind="themeAttrs"
         ref="containerRef">
         <!-- Hidden input for form integration (name attribute only) -->
         <input v-if="name" type="hidden" :name="name" :value="modelValue || ''" />
 
         <!-- 日期時間輸入容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)] rounded-sm transition-all duration-200"
+        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm transition-all duration-200"
             :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
             <!-- 日曆圖標 (預設顯示) -->
             <button v-if="showCalendarIcon" type="button"
@@ -41,10 +41,10 @@
             }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
                 @keydown.space.prevent="!disabled && toggleCalendar?.()">
                 <!-- 顯示值或 placeholder -->
-                <span v-if="hasDisplayValue" class="date-placeholder text-[var(--color-vdt-content)] truncate">
+                <span v-if="hasDisplayValue" class="date-placeholder text-[var(--color-vdp-content)] truncate">
                     {{ modelValue }}
                 </span>
-                <span v-else class="date-placeholder text-[var(--color-vdt-content-muted)] truncate">
+                <span v-else class="date-placeholder text-[var(--color-vdp-content-muted)] truncate">
                     {{ computedPlaceholders.selectDate }}
                 </span>
             </button>
@@ -57,7 +57,7 @@
 
         <!-- 日曆彈出層 -->
         <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="calendar-container absolute mt-1 bg-[var(--color-vdt-surface-elevated)] border border-[var(--color-vdt-outline)] rounded-lg shadow-lg z-10"
+            class="calendar-container absolute mt-1 bg-[var(--color-vdp-surface-elevated)] border border-[var(--color-vdp-outline)] rounded-lg shadow-lg z-10"
             @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
                 :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"
@@ -122,7 +122,8 @@ import { useLocale } from '@/composables/useLocale';
 const props = withDefaults(defineProps<DatePickerProps>(), {
     modelValue: null,
     mode: 'auto',
-    theme: () => 'violet',
+    // theme 未指定時不 inline 覆蓋，交由 :root 的 --color-vdp-primary（家族 --tia-theme-primary）決定。
+    theme: undefined,
 
     // 日曆系統
     calendar: 'gregory',
@@ -250,19 +251,11 @@ datePicker.setEmitters({
     validation: (isValid, errors, errorParams) => emit('validation', isValid, errors, errorParams)
 });
 
-// 使用主題 composable
-const {
-    themeClasses,
-    containerAttributes,
-    setColor,
-    setMode,
-    currentMode,
-    isDark,
-    isLight
-} = useTheme({
-    defaultColor: props.theme,
-    defaultMode: props.mode
-});
+// 使用主題 composable（宣告式：只輸出 inline style 與 data-vdt-mode 屬性）
+const { themeStyle, themeAttrs } = useTheme(
+    toRef(props, 'theme'),
+    toRef(props, 'mode')
+);
 
 // 計算屬性
 const minDateStr = computed(() => {
@@ -370,16 +363,7 @@ onBeforeMount(() => {
 
 });
 
-// 監聽主題變化
-watch(() => props.theme, (newTheme) => {
-    if (newTheme) {
-        setColor(newTheme);
-    }
-}, { immediate: true });
-
-watch(() => props.mode, (newMode) => {
-    setMode(newMode);
-}, { immediate: true });
+// 主題改為宣告式綁定（:style="themeStyle" / v-bind="themeAttrs"），不再需要命令式 watch。
 
 // 監聽語言變化
 watch(() => props.locale, (newLocale) => {
@@ -424,14 +408,7 @@ defineExpose({
         datePicker.setExternalValue(dateTime);
     },
 
-    // 主題控制
-    setTheme: setColor,
-    setDarkMode: () => setMode('dark'),
-    setLightMode: () => setMode('light'),
-    setAutoMode: () => setMode('auto'),
-    getCurrentMode: () => currentMode.value,
-    isDarkMode: () => isDark.value,
-    isLightMode: () => isLight.value,
+    // 主題改為宣告式：請改用 `theme` / `mode` props 控制（移除命令式 setTheme/setMode）。
 
     // 錯誤相關
     getErrors: () => mergedErrors.value,

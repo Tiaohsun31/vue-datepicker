@@ -204,13 +204,33 @@
 - [ ] `package.json`：`files` 移除 `"types"`；加 `"sideEffects": ["**/*.css"]`。
 - [ ] 盤點所有 `--color-vdt-*` 使用點（已知 11 檔，見 §3 清單），確認替換對照表。
 
-### Phase 1 — 主題引擎重寫（核心，先做引擎再做 CSS class）
-- [ ] `theme.css` 改寫為 §1 三層 token 模型（`--tia-*` + `--color-vdp-*` + `--vdp-*` + color-mix 衍生 + 深淺模式 + media query auto）。
-- [ ] `tailwind4-color.ts` 縮為「色名 → 單一 base oklch」（約 22–26 筆，`satisfies Record<string,string>`，`TailwindColor = keyof typeof`）。
-- [ ] 重寫 `useTheme.ts`（§2）：`resolvePrimaryColor` + `themeStyle` + `themeAttrs` + dev warn；移除單例/setTimeout/querySelector/監聽器。
-- [ ] 刪 `themeManager.ts`；刪 `colorUtils.ts` 大部分（保留必要 helper 或一併刪）。
-- [ ] `DatePicker.vue` / `DateRange.vue` 改宣告式 `:style="themeStyle"` `v-bind="themeAttrs"`，移除命令式 watch + 便利方法 export（`setTheme/setDarkMode…` 公開 API 評估保留薄包裝或移除，列 migration）。
-- [ ] 重寫 `useTheme.test.ts`（測 `resolvePrimaryColor`：色名/hex/oklch/非法；`themeStyle` 只在 theme prop 存在時有值）。
+### Phase 1 — 主題引擎重寫（✅ 完成 2026-06-16）
+- [x] `theme.css` 改寫為 §1 三層 token 模型（`--tia-*` + `--color-vdp-*` + `--vdp-*` + color-mix 衍生 + 深淺模式 + auto media query，範圍限定 `.date-picker-wrapper`/`.date-range-wrapper`）。
+- [x] `tailwind4-color.ts` 縮為「色名 → 單一 base oklch」（22 筆，`satisfies`，`TailwindColor = keyof typeof`）；`types/main.ts` 改 re-export（單一來源）。
+- [x] 重寫 `useTheme.ts`：`resolvePrimaryColor` + `themeStyle` + `themeAttrs` + dev warn（`[vue-datepicker]` 前綴）；移除單例/setTimeout/querySelector/監聽器。
+- [x] 刪 `themeManager.ts` + `colorUtils.ts`（全刪，~700 行）；JS bundle umd 191→176kB。
+- [x] `DatePicker.vue`/`DateRange.vue` 改宣告式 `:style="themeStyle"` `v-bind="themeAttrs"`；移除命令式 watch(theme/mode) 與 `setTheme/setDarkMode/...` defineExpose。
+- [x] 全部 9 個元件模板 `--color-vdt-*`→`--color-vdp-*`、色階→衍生變數（theme-500/700→primary、200/100→primary-subtle）。
+- [x] 重寫 `useTheme.test.ts`（resolvePrimaryColor 色名/hex/rgb/oklch + themeStyle/themeAttrs 響應式）；修 DatePicker/DateRange 主題測試（改檢 inline style + data-vdt-mode）；更新 e2e。**type-check 0 / build 0 / 499 測試全綠 / dist CSS 自包含（無 vdt-theme 殘留）。**
+
+> **本階段破壞性變更（寫入 Phase 5 migration / CHANGELOG）：**
+> 1. **預設主色 violet → indigo**：`theme` prop 預設由 `'violet'` 改為 `undefined`（未指定時走家族 `--tia-theme-primary`=indigo）。要維持 violet 請顯式 `theme="violet"`。
+> 2. **移除命令式主題 API**：`ref.setTheme/setDarkMode/setLightMode/setAutoMode/getCurrentMode/isDarkMode/isLightMode` 全移除 → 改用 `theme`/`mode` props（宣告式）。
+> 3. **CSS 變數命名空間 `--color-vdt-*` → `--color-vdp-*`**；**移除 11 階色票 `--color-vdt-theme-50…950`** → 改單一 `--color-vdp-primary` + color-mix 衍生（`-hover/-strong/-subtle/-border/-ring/-on-primary`）。曾覆寫舊變數的消費者需改名/改用新衍生變數。
+> 4. **取消「吸附最近 Tailwind 色」**：傳什麼色就用什麼色（hex/rgb/oklch/22 色名）；非法色 dev 模式 warn。
+> 注：`data-vdt-mode` 屬性**刻意沿用**（家族共用，與 datatable 一起切深淺）。
+
+> **✅ Playground 視覺驗證（2026-06-16，preview MCP + eval/screenshot）：**
+> 1. 預設（無 theme）→ `--color-vdp-primary` = indigo（家族 `--tia-theme-primary`）✓
+> 2. per-instance `theme`：violet/red/green/**#ff8800**/**oklch(...)**/rose/blue 全部原樣套用，**確認不吸附** ✓
+> 3. **家族換色**：在 **`:root`** 設 `--tia-theme-primary` → 預設 picker 主色即時改變 ✓
+> 4. mode light/dark/auto：surface 正確切換（auto 跟隨 `prefers-color-scheme`）✓
+> 5. 開啟日曆：focus 邊框 = primary、**選中日背景 = primary**、深色 surface ✓
+> 6. error：required 空值 → 紅框 + i18n 錯誤訊息（請輸入年份…）✓
+>
+> **⚠️ 重要 CSS 行為（須寫進 Phase 5 Theme 文件）**：`--color-vdp-primary` 在 `:root` 宣告，其 `var(--tia-theme-primary)` 於 :root 即代換完成、子層僅繼承結果。因此：
+> - **家族換色請在 `:root`（全域）設定 `--tia-theme-primary`** —— 在中間層（某 div/section）覆寫 `--tia-theme-primary` **不會**傳播到 `--color-vdp-primary`。
+> - **per-instance / 子樹換色請用 `theme` prop**（inline 覆寫 `--color-vdp-primary`，已驗證可用），或在該子樹直接覆寫 `--color-vdp-primary`。
 
 ### Phase 2 — CSS 語義 class + 自包含（最大塊）
 - [ ] 建 `src/styles/components.css`，定義 `.date-picker-container`（+`.error`）與各 `.vdp-*` hook，用 `--vdp-*` token 撰寫自包含字面 CSS。
@@ -258,7 +278,7 @@
 | Phase | 狀態 | 備註 |
 |-------|------|------|
 | 0 測試轉綠 + 清理盤點 | 🟡 進行中 | ✅ vitest 470 全綠（pnpm override 修重複 test-utils）；⬜ type-check 仍紅（→Phase 3）、清理盤點待辦 |
-| 1 主題引擎重寫 | ⬜ 未開始 | token 模型 + useTheme + 刪 themeManager/colorUtils |
+| 1 主題引擎重寫 | ✅ 完成 | 三層 token + 宣告式 useTheme + 刪 themeManager/colorUtils(~700行) + vdt→vdp + 色階→color-mix；499 測試綠、CSS 自包含。破壞性：violet→indigo 預設、移除命令式主題 API |
 | 2 CSS 語義 class + 自包含 | ⬜ 未開始 | .vdp-* 遷移 + 移除 Tailwind peer + 無-Tailwind 截圖驗證 |
 | 3 Packaging + dts | 🟡 進行中 | ✅ dts plugin-less 完成（vue-tsc -p tsconfig.build.json）；⬜ 移除 Tailwind peer / cssFileName 釘住 / npm pack 驗證待 Phase 2 後 |
 | 4 程式碼品質（主題以外） | 🟡 進行中 | ✅ 5.1 受控更新 / 5.2 computed 副作用 / 5.3 i18n / 5.7 部分清理（490 測試全綠）；⬜ 5.4 型別 / 5.5 console / 5.6 重複 / 5.7 殘項 |

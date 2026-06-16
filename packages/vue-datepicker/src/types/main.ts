@@ -1,27 +1,7 @@
 import { type SimpleDateValue } from '@/utils/dateUtils';
-export type TailwindColor =
-    | 'slate'
-    | 'gray'
-    | 'zinc'
-    | 'neutral'
-    | 'stone'
-    | 'red'
-    | 'orange'
-    | 'amber'
-    | 'yellow'
-    | 'lime'
-    | 'green'
-    | 'emerald'
-    | 'teal'
-    | 'cyan'
-    | 'sky'
-    | 'blue'
-    | 'indigo'
-    | 'violet'
-    | 'purple'
-    | 'fuchsia'
-    | 'pink'
-    | 'rose';
+
+// TailwindColor 的單一事實來源在 utils/tailwind4-color.ts（由 tailwindBaseColors 的鍵衍生）。
+export type { TailwindColor } from '@/utils/tailwind4-color';
 
 /**
  * 輸出資料類型

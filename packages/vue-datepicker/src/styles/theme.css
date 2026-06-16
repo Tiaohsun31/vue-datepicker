@@ -1,96 +1,143 @@
 :root {
-    /* 主題色變數 - 預設 violet（這些會被 JavaScript 動態更新） */
-    --color-vdt-theme-50: oklch(96.9% 0.016 293.756);
-    --color-vdt-theme-100: oklch(94.3% 0.029 294.588);
-    --color-vdt-theme-200: oklch(89.4% 0.057 293.283);
-    --color-vdt-theme-300: oklch(81.1% 0.111 293.571);
-    --color-vdt-theme-400: oklch(70.2% 0.183 293.541);
-    --color-vdt-theme-500: oklch(60.6% 0.25 292.717);
-    --color-vdt-theme-600: oklch(54.1% 0.281 293.009);
-    --color-vdt-theme-700: oklch(49.1% 0.27 292.581);
-    --color-vdt-theme-800: oklch(43.2% 0.232 292.759);
-    --color-vdt-theme-900: oklch(38% 0.189 293.745);
-    --color-vdt-theme-950: oklch(28.3% 0.141 291.089);
+    /* ===== 共用設計基元（@tiaohsun/vue-* 家族共用層） =====
+       設一次即可整組調整（含姊妹套件 vue-datatable 等）；各元件 token 引用這層。 */
+    --tia-theme-primary: oklch(58.5% 0.233 277.117); /* 家族預設主色：indigo */
+    --tia-text-xs: 0.75rem;
+    --tia-text-sm: 0.875rem;
+    --tia-leading-sm: 1.25rem;
+    --tia-space-1: 0.25rem;
+    --tia-space-1_5: 0.375rem;
+    --tia-space-2: 0.5rem;
+    --tia-space-3: 0.75rem;
+    --tia-space-4: 1rem;
+    --tia-radius-sm: 0.125rem;
+    --tia-radius: 0.375rem;
+    --tia-radius-full: 9999px;
+    --tia-font-medium: 500;
+    --tia-font-semibold: 600;
 
-    /* 語義化顏色 - 淺色模式 */
-    --color-vdt-light-surface: white;
-    --color-vdt-light-surface-secondary: oklch(98.5% 0.002 247.839);
-    --color-vdt-light-surface-elevated: white;
-    --color-vdt-light-content: oklch(21% 0.034 264.665);
-    --color-vdt-light-content-secondary: oklch(44.6% 0.03 256.802);
-    --color-vdt-light-content-muted: oklch(70.7% 0.022 261.325);
-    --color-vdt-light-outline: oklch(92.8% 0.006 264.531);
-    --color-vdt-light-interactive-hover: oklch(96.7% 0.003 264.542);
-    --color-vdt-light-interactive-active: oklch(87.2% 0.01 258.338);
+    /* ===== 本元件設計 token：引用共用基元，帶字面 fallback（單獨安裝也可運作） =====
+       要只調整本元件、不動家族層時，覆寫這些 --vdp-* 即可。 */
+    --vdp-text-xs: var(--tia-text-xs, 0.75rem);
+    --vdp-text-sm: var(--tia-text-sm, 0.875rem);
+    --vdp-leading-sm: var(--tia-leading-sm, 1.25rem);
+    --vdp-space-1: var(--tia-space-1, 0.25rem);
+    --vdp-space-1_5: var(--tia-space-1_5, 0.375rem);
+    --vdp-space-2: var(--tia-space-2, 0.5rem);
+    --vdp-space-3: var(--tia-space-3, 0.75rem);
+    --vdp-space-4: var(--tia-space-4, 1rem);
+    --vdp-radius-sm: var(--tia-radius-sm, 0.125rem);
+    --vdp-radius: var(--tia-radius, 0.375rem);
+    --vdp-radius-full: var(--tia-radius-full, 9999px);
+    --vdp-font-medium: var(--tia-font-medium, 500);
+    --vdp-font-semibold: var(--tia-font-semibold, 600);
 
-    /* 語義化顏色 - 深色模式 */
-    --color-vdt-dark-surface: oklch(20% 0.034 264.665);
-    --color-vdt-dark-surface-secondary: oklch(25% 0.033 256.848);
-    --color-vdt-dark-surface-elevated: oklch(32% 0.033 256.848);
-    --color-vdt-dark-content: oklch(96.7% 0.003 264.542);
-    --color-vdt-dark-content-secondary: oklch(87.2% 0.01 258.338);
-    --color-vdt-dark-content-muted: oklch(70.7% 0.022 261.325);
-    --color-vdt-dark-outline: oklch(40.3% 0.034 259.733);
-    --color-vdt-dark-interactive-hover: oklch(39.3% 0.034 259.733);
-    --color-vdt-dark-interactive-active: oklch(44.6% 0.03 256.802);
+    /* ===== 主題主色：預設引用共用基元；指定 theme prop 時由 useTheme 以 inline style 覆蓋（per-instance） ===== */
+    --color-vdp-primary: var(--tia-theme-primary, oklch(58.5% 0.233 277.117)); /* indigo 預設 */
 
-    /* 語義化顏色 - 淺色模式（預設） */
-    --color-vdt-surface: var(--color-vdt-light-surface);
-    --color-vdt-surface-secondary: var(--color-vdt-light-surface-secondary);
-    --color-vdt-surface-elevated: var(--color-vdt-light-surface-elevated);
-    --color-vdt-content: var(--color-vdt-light-content);
-    --color-vdt-content-secondary: var(--color-vdt-light-content-secondary);
-    --color-vdt-content-muted: var(--color-vdt-light-content-muted);
-    --color-vdt-outline: var(--color-vdt-light-outline);
-    --color-vdt-interactive-hover: var(--color-vdt-light-interactive-hover);
-    --color-vdt-interactive-active: var(--color-vdt-light-interactive-active);
+    /* ===== 由主色衍生的狀態色 =====
+       不需使用者提供；會隨主色與深淺模式（surface）自動調整。 */
+    --color-vdp-primary-hover: color-mix(in oklch, var(--color-vdp-primary), black 12%);   /* 取代 600 */
+    --color-vdp-primary-strong: color-mix(in oklch, var(--color-vdp-primary), black 26%);  /* 取代 700 */
+    --color-vdp-primary-subtle: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 88%); /* 取代 100/200 */
+    --color-vdp-primary-border: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 55%); /* 取代 300 */
+    --color-vdp-primary-ring: color-mix(in oklch, var(--color-vdp-primary), transparent 50%); /* 取代 400 25% */
+    --color-vdp-on-primary: white;
 
-    /* 狀態顏色 */
-    --color-vdt-error: oklch(63.7% 0.237 25.331);
+    /* ===== 中性語義色 - 淺色模式（自包含，不依賴外部 Tailwind 變數） ===== */
+    --color-vdp-light-surface: white;
+    --color-vdp-light-surface-secondary: oklch(98.5% 0.002 247.839);
+    --color-vdp-light-surface-elevated: white;
+    --color-vdp-light-content: oklch(21% 0.034 264.665);
+    --color-vdp-light-content-secondary: oklch(44.6% 0.03 256.802);
+    --color-vdp-light-content-muted: oklch(70.7% 0.022 261.325);
+    --color-vdp-light-outline: oklch(92.8% 0.006 264.531);
+    --color-vdp-light-interactive-hover: oklch(96.7% 0.003 264.542);
+    --color-vdp-light-interactive-active: oklch(87.2% 0.01 258.338);
+
+    /* ===== 中性語義色 - 深色模式 ===== */
+    --color-vdp-dark-surface: oklch(20% 0.034 264.665);
+    --color-vdp-dark-surface-secondary: oklch(25% 0.033 256.848);
+    --color-vdp-dark-surface-elevated: oklch(32% 0.033 256.848);
+    --color-vdp-dark-content: oklch(96.7% 0.003 264.542);
+    --color-vdp-dark-content-secondary: oklch(87.2% 0.01 258.338);
+    --color-vdp-dark-content-muted: oklch(70.7% 0.022 261.325);
+    --color-vdp-dark-outline: oklch(40.3% 0.034 259.733);
+    --color-vdp-dark-interactive-hover: oklch(39.3% 0.034 259.733);
+    --color-vdp-dark-interactive-active: oklch(44.6% 0.03 256.802);
+
+    /* ===== 套用：預設淺色 ===== */
+    --color-vdp-surface: var(--color-vdp-light-surface);
+    --color-vdp-surface-secondary: var(--color-vdp-light-surface-secondary);
+    --color-vdp-surface-elevated: var(--color-vdp-light-surface-elevated);
+    --color-vdp-content: var(--color-vdp-light-content);
+    --color-vdp-content-secondary: var(--color-vdp-light-content-secondary);
+    --color-vdp-content-muted: var(--color-vdp-light-content-muted);
+    --color-vdp-outline: var(--color-vdp-light-outline);
+    --color-vdp-interactive-hover: var(--color-vdp-light-interactive-hover);
+    --color-vdp-interactive-active: var(--color-vdp-light-interactive-active);
+
+    /* 狀態色 */
+    --color-vdp-error: oklch(63.7% 0.237 25.331);
 }
 
-/* 強制深色模式 - 當 data-vdt-mode="dark" 時 */
+/* 深色模式：明確指定 data-vdt-mode="dark"（家族共用屬性），或頁面全域 .dark */
 .dark,
 [data-vdt-mode="dark"] {
-    --color-vdt-surface: var(--color-vdt-dark-surface);
-    --color-vdt-surface-secondary: var(--color-vdt-dark-surface-secondary);
-    --color-vdt-surface-elevated: var(--color-vdt-dark-surface-elevated);
-    --color-vdt-content: var(--color-vdt-dark-content);
-    --color-vdt-content-secondary: var(--color-vdt-dark-content-secondary);
-    --color-vdt-content-muted: var(--color-vdt-dark-content-muted);
-    --color-vdt-outline: var(--color-vdt-dark-outline);
-    --color-vdt-interactive-hover: var(--color-vdt-dark-interactive-hover);
-    --color-vdt-interactive-active: var(--color-vdt-dark-interactive-active);
+    --color-vdp-surface: var(--color-vdp-dark-surface);
+    --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
+    --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);
+    --color-vdp-content: var(--color-vdp-dark-content);
+    --color-vdp-content-secondary: var(--color-vdp-dark-content-secondary);
+    --color-vdp-content-muted: var(--color-vdp-dark-content-muted);
+    --color-vdp-outline: var(--color-vdp-dark-outline);
+    --color-vdp-interactive-hover: var(--color-vdp-dark-interactive-hover);
+    --color-vdp-interactive-active: var(--color-vdp-dark-interactive-active);
 }
 
-/* 強制淺色模式 - 當 data-vdt-mode="light" 時 */
-.light,
+/* 明確指定 data-vdt-mode="light"：強制淺色（可覆蓋頁面全域 .dark） */
 [data-vdt-mode="light"] {
-    --color-vdt-surface: var(--color-vdt-light-surface);
-    --color-vdt-surface-secondary: var(--color-vdt-light-surface-secondary);
-    --color-vdt-surface-elevated: var(--color-vdt-light-surface-elevated);
-    --color-vdt-content: var(--color-vdt-light-content);
-    --color-vdt-content-secondary: var(--color-vdt-light-content-secondary);
-    --color-vdt-content-muted: var(--color-vdt-light-content-muted);
-    --color-vdt-outline: var(--color-vdt-light-outline);
-    --color-vdt-interactive-hover: var(--color-vdt-light-interactive-hover);
-    --color-vdt-interactive-active: var(--color-vdt-light-interactive-active);
+    --color-vdp-surface: var(--color-vdp-light-surface);
+    --color-vdp-surface-secondary: var(--color-vdp-light-surface-secondary);
+    --color-vdp-surface-elevated: var(--color-vdp-light-surface-elevated);
+    --color-vdp-content: var(--color-vdp-light-content);
+    --color-vdp-content-secondary: var(--color-vdp-light-content-secondary);
+    --color-vdp-content-muted: var(--color-vdp-light-content-muted);
+    --color-vdp-outline: var(--color-vdp-light-outline);
+    --color-vdp-interactive-hover: var(--color-vdp-light-interactive-hover);
+    --color-vdp-interactive-active: var(--color-vdp-light-interactive-active);
+}
+
+/* 自動模式：未明確指定 mode 時跟隨系統偏好（明確 light 可退出）。範圍限定到元件根，不影響全頁。 */
+@media (prefers-color-scheme: dark) {
+    .date-picker-wrapper:not([data-vdt-mode="light"]),
+    .date-range-wrapper:not([data-vdt-mode="light"]) {
+        --color-vdp-surface: var(--color-vdp-dark-surface);
+        --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
+        --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);
+        --color-vdp-content: var(--color-vdp-dark-content);
+        --color-vdp-content-secondary: var(--color-vdp-dark-content-secondary);
+        --color-vdp-content-muted: var(--color-vdp-dark-content-muted);
+        --color-vdp-outline: var(--color-vdp-dark-outline);
+        --color-vdp-interactive-hover: var(--color-vdp-dark-interactive-hover);
+        --color-vdp-interactive-active: var(--color-vdp-dark-interactive-active);
+    }
 }
 
 /* 輸入框容器 - 公開 CSS API，消費者可透過此 class 覆蓋樣式 */
 .date-picker-container {
-    border: 1px solid var(--color-vdt-outline);
+    border: 1px solid var(--color-vdp-outline);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .date-picker-container:focus-within {
-    border-color: var(--color-vdt-theme-500);
-    box-shadow: 0 0 0 2px var(--color-vdt-theme-200);
-    outline: 4px solid color-mix(in srgb, var(--color-vdt-theme-400) 25%, transparent);
+    border-color: var(--color-vdp-primary);
+    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
+    outline: 4px solid var(--color-vdp-primary-ring);
     outline-offset: -1px;
 }
 
 .date-picker-container.error {
-    border-color: var(--color-vdt-error);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-vdt-error) 20%, transparent);
+    border-color: var(--color-vdp-error);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-vdp-error) 20%, transparent);
 }

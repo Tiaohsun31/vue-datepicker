@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import DateRange from '@/DateRange.vue';
 import { nextTick } from 'vue';
+import { tailwindBaseColors } from '@/utils/tailwind4-color';
 
 describe('DateRange', () => {
     let user: ReturnType<typeof userEvent.setup>;
@@ -181,19 +182,15 @@ describe('DateRange', () => {
     });
 
     describe('主題樣式', () => {
-        it('應該應用預設主題類別', () => {
+        it('指定 theme/mode 應以 inline style 與 data-vdt-mode 套用', () => {
             const { container } = renderDateRange({
                 theme: 'red',
                 mode: 'dark'
             });
-            const inputContainer = container.querySelector('.date-range-wrapper');
+            const wrapper = container.querySelector('.date-range-wrapper') as HTMLElement;
 
-            // 檢查是否有主題類別
-            expect(inputContainer).toHaveClass('vdt-theme-red');
-            expect(inputContainer).toHaveClass('vdt-mode-dark');
-            // 或者檢查是否包含基本的主題結構
-            expect(inputContainer).toHaveClass('vdt-datepicker');
-            expect(inputContainer).toHaveClass('vdt-themed');
+            expect(wrapper.style.getPropertyValue('--color-vdp-primary')).toBe(tailwindBaseColors.red);
+            expect(wrapper.getAttribute('data-vdt-mode')).toBe('dark');
         });
 
         it('應該根據showTime調整最小寬度', () => {

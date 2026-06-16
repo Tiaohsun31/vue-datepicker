@@ -64,7 +64,7 @@ const cellClasses = computed(() => {
     // 禁用狀態
     if (props.disabled) {
         classes['opacity-40 cursor-not-allowed'] = true;
-        classes['bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)]'] = true;
+        classes['bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)]'] = true;
         return classes;
     }
 
@@ -72,43 +72,43 @@ const cellClasses = computed(() => {
     if (props.selectionMode === 'range') {
         // 範圍起始點和結束點
         if (props.isRangeStart || props.isRangeEnd) {
-            classes['bg-[var(--color-vdt-theme-500)] text-white'] = true;
+            classes['bg-[var(--color-vdp-primary)] text-white'] = true;
         }
         // 範圍內的日期
         else if (props.isInRange) {
-            classes['bg-[var(--color-vdt-outline)] text-[var(--color-vdt-content)]'] = true;
+            classes['bg-[var(--color-vdp-outline)] text-[var(--color-vdp-content)]'] = true;
         }
         // 預設狀態
         else {
-            classes['bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)]'] = true;
-            classes['hover:bg-[var(--color-vdt-interactive-hover)] cursor-pointer'] = true;
+            classes['bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)]'] = true;
+            classes['hover:bg-[var(--color-vdp-interactive-hover)] cursor-pointer'] = true;
         }
 
         // 今天的標記（範圍選擇模式）
         if (props.isToday && !props.isRangeStart && !props.isRangeEnd && !props.isInRange) {
-            classes['inset-ring-2 inset-ring-[var(--color-vdt-theme-500)]'] = true;
+            classes['inset-ring-2 inset-ring-[var(--color-vdp-primary)]'] = true;
         }
     }
     // 單一日期選擇模式
     else {
         if (props.selected) {
-            classes['bg-[var(--color-vdt-theme-500)] text-white'] = true;
+            classes['bg-[var(--color-vdp-primary)] text-white'] = true;
         } else {
-            classes['bg-[var(--color-vdt-surface)] text-[var(--color-vdt-content)]'] = true;
-            classes['hover:bg-[var(--color-vdt-interactive-hover)] cursor-pointer'] = true;
+            classes['bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)]'] = true;
+            classes['hover:bg-[var(--color-vdp-interactive-hover)] cursor-pointer'] = true;
         }
 
         // 今天的標記（單一選擇模式）
         if (props.isToday && !props.selected) {
-            classes['inset-ring-2 inset-ring-[var(--color-vdt-theme-500)]'] = true;
+            classes['inset-ring-2 inset-ring-[var(--color-vdp-primary)]'] = true;
         }
     }
 
     // 月外日期的文字顏色
     if (isOutsideMonth.value && !props.selected && !props.isRangeStart && !props.isRangeEnd) {
-        classes['text-[var(--color-vdt-content-muted)]'] = true;
+        classes['text-[var(--color-vdp-content-muted)]'] = true;
         // 移除預設文字顏色
-        classes['text-[var(--color-vdt-content)]'] = false;
+        classes['text-[var(--color-vdp-content)]'] = false;
     }
 
     return classes;
@@ -142,7 +142,7 @@ const handleSelect = () => {
     transform: translateX(-50%);
     width: 4px;
     height: 4px;
-    background-color: var(--color-vdt-theme-500);
+    background-color: var(--color-vdp-primary);
     border-radius: 50%;
 }
 </style>

@@ -39,6 +39,8 @@ export default defineConfig({
             entry: './src/index.ts',
             name: 'VueDatePicker',
             fileName: (format) => `vue-datepicker.${format}.js`,
+            // 釘住 CSS 輸出檔名，避免 vite 預設行為改變導致 `style` / `exports['./style']` 失準
+            cssFileName: 'vue-datepicker',
             formats: ['es', 'umd']
         },
         rollupOptions: {

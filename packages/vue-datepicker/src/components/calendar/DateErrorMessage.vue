@@ -41,7 +41,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useLocale } from '@/composables/useLocale';
+import { warn, logDebug } from '../../utils/logger';
+import { useLocale } from '../../composables/useLocale';
+import type { FieldErrorParams, MessageParams } from '../../types/internal';
 
 type ErrorsType = string | string[] | Record<string, string>;
 
@@ -53,7 +55,7 @@ interface ProcessedError {
 
 interface Props {
     errors?: ErrorsType;
-    errorParams?: Record<string, Record<string, any>>;
+    errorParams?: FieldErrorParams;
     locale?: string;
     useI18n?: boolean;
     customMessages?: Record<string, string>;
@@ -129,7 +131,7 @@ const processedErrors = computed(() => {
                 result[field] = translateMessage(error, field, fieldParams);
 
                 if (props.debug) {
-                    console.log(`Processing error for field "${field}":`, {
+                    logDebug(`Processing error for field "${field}":`, {
                         original: error,
                         params: fieldParams,
                         translated: result[field],
@@ -167,9 +169,9 @@ function getFieldType(field: string): string {
 }
 
 // 使用 useLocale 的 translateMessage
-function translateMessage(message: string, field?: string, params: Record<string, any> = {}): string {
+function translateMessage(message: string, field?: string, params: MessageParams = {}): string {
     if (props.debug) {
-        console.log(`翻譯訊息: "${message}", field: "${field}", params:`, params);
+        logDebug(`翻譯訊息: "${message}", field: "${field}", params:`, params);
     }
 
     // 1. 優先使用自定義訊息
@@ -189,13 +191,13 @@ function translateMessage(message: string, field?: string, params: Record<string
         try {
             const translated = getErrorMessage(message, params);
             if (props.debug) {
-                console.log(`Locale key 翻譯: "${message}" -> "${translated}" with params:`, params);
+                logDebug(`Locale key 翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== message) {
                 return translated;
             }
         } catch (error) {
-            if (props.debug) console.warn(`Locale key 翻譯失敗: ${message}`, error);
+            if (props.debug) warn(`Locale key 翻譯失敗: ${message}`, error);
         }
     }
 
@@ -205,13 +207,13 @@ function translateMessage(message: string, field?: string, params: Record<string
         try {
             const translated = getErrorMessage(i18nKey, params);
             if (props.debug) {
-                console.log(`MessageKeyMap 翻譯: "${message}" -> "${translated}" with params:`, params);
+                logDebug(`MessageKeyMap 翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== i18nKey) {
                 return translated;
             }
         } catch (error) {
-            if (props.debug) console.warn(`MessageKeyMap 翻譯失敗: ${i18nKey}`, error);
+            if (props.debug) warn(`MessageKeyMap 翻譯失敗: ${i18nKey}`, error);
         }
     }
 
@@ -220,9 +222,9 @@ function translateMessage(message: string, field?: string, params: Record<string
 }
 
 // 智能翻譯錯誤
-function smartTranslateError(message: string, field?: string, params: Record<string, any> = {}): string {
+function smartTranslateError(message: string, field?: string, params: MessageParams = {}): string {
     if (props.debug) {
-        console.log(`smartTranslateError: "${message}", field: "${field}", params:`, params);
+        logDebug(`smartTranslateError: "${message}", field: "${field}", params:`, params);
     }
 
     // 簡化的直接匹配表
@@ -242,13 +244,13 @@ function smartTranslateError(message: string, field?: string, params: Record<str
         try {
             const translated = getErrorMessage(directMatches[message], params);
             if (props.debug) {
-                console.log(`直接匹配翻譯: "${message}" -> "${translated}" with params:`, params);
+                logDebug(`直接匹配翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== directMatches[message]) {
                 return translated;
             }
         } catch (error) {
-            if (props.debug) console.warn(`直接匹配翻譯失敗: ${directMatches[message]}`, error);
+            if (props.debug) warn(`直接匹配翻譯失敗: ${directMatches[message]}`, error);
         }
     }
 
@@ -275,13 +277,13 @@ function smartTranslateError(message: string, field?: string, params: Record<str
         try {
             const translated = getErrorMessage(smartKey, params);
             if (props.debug) {
-                console.log(`智能匹配翻譯: "${message}" -> "${translated}" with params:`, params);
+                logDebug(`智能匹配翻譯: "${message}" -> "${translated}" with params:`, params);
             }
             if (translated && translated !== smartKey) {
                 return translated;
             }
         } catch (error) {
-            if (props.debug) console.warn(`智能匹配翻譯失敗: ${smartKey}`, error);
+            if (props.debug) warn(`智能匹配翻譯失敗: ${smartKey}`, error);
         }
     }
 
@@ -331,13 +333,13 @@ function smartTranslateError(message: string, field?: string, params: Record<str
                 try {
                     const translated = getErrorMessage(i18nKey, params);
                     if (props.debug) {
-                        console.log(`模式匹配翻譯: "${message}" -> "${translated}" (key: ${i18nKey}) with params:`, params);
+                        logDebug(`模式匹配翻譯: "${message}" -> "${translated}" (key: ${i18nKey}) with params:`, params);
                     }
                     if (translated && translated !== i18nKey) {
                         return translated;
                     }
                 } catch (error) {
-                    if (props.debug) console.warn(`模式匹配翻譯失敗: ${i18nKey}`, error);
+                    if (props.debug) warn(`模式匹配翻譯失敗: ${i18nKey}`, error);
                 }
             }
         }
@@ -345,7 +347,7 @@ function smartTranslateError(message: string, field?: string, params: Record<str
 
     // 如果都無法匹配，返回原始訊息
     if (props.debug) {
-        console.log(`無法翻譯，返回原始訊息: "${message}"`);
+        logDebug(`無法翻譯，返回原始訊息: "${message}"`);
     }
     return message;
 }

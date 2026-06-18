@@ -16,7 +16,8 @@ import {
     isValidTimeFormatPattern,
     fixDateFormat,
     fixTimeFormat,
-    isSimpleDateValue
+    isSimpleDateValue,
+    resolveTimeFormat
 } from '@/utils/dateUtils'
 
 describe('dateUtils', () => {
@@ -102,6 +103,24 @@ describe('dateUtils', () => {
             const dateOnly = createSimpleDate(2024, 6, 15)
             const result = formatSimpleDate(dateOnly, 'YYYY-MM-DD HH:mm:ss')
             expect(result).toBe('2024-06-15 00:00:00')
+        })
+    })
+
+    describe('resolveTimeFormat', () => {
+        it('明確 timeFormat 優先於自動推導', () => {
+            expect(resolveTimeFormat({ timeFormat: 'HH:mm', enableSeconds: true, use24Hour: false })).toBe('HH:mm')
+        })
+        it('24 小時 + 含秒 → HH:mm:ss', () => {
+            expect(resolveTimeFormat({ enableSeconds: true, use24Hour: true })).toBe('HH:mm:ss')
+        })
+        it('12 小時 + 含秒 → hh:mm:ss A', () => {
+            expect(resolveTimeFormat({ enableSeconds: true, use24Hour: false })).toBe('hh:mm:ss A')
+        })
+        it('24 小時 + 不含秒 → HH:mm', () => {
+            expect(resolveTimeFormat({ enableSeconds: false, use24Hour: true })).toBe('HH:mm')
+        })
+        it('12 小時 + 不含秒 → hh:mm A', () => {
+            expect(resolveTimeFormat({ enableSeconds: false, use24Hour: false })).toBe('hh:mm A')
         })
     })
 

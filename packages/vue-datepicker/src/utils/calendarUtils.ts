@@ -1,5 +1,6 @@
 // utils/CalendarUtils.ts - 日曆轉換工具
-import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
+import { RocFormatPlugin } from '../plugins/calendars/RocFormatPlugin';
+import { warn, logError } from './logger';
 import {
     CalendarDate,
     type Calendar,
@@ -30,7 +31,7 @@ export class CalendarUtils {
         try {
             return createCalendar(calendarId as any);
         } catch (error) {
-            console.warn(`無法創建日曆 ${calendarId}，回退到西元曆:`, error);
+            warn(`無法創建日曆 ${calendarId}，回退到西元曆:`, error);
             return new GregorianCalendar();
         }
     }
@@ -42,7 +43,7 @@ export class CalendarUtils {
         try {
             return toCalendar(date, targetCalendar);
         } catch (error) {
-            console.warn('日曆轉換失敗，返回原始日期:', error);
+            warn('日曆轉換失敗，返回原始日期:', error);
             return date;
         }
     }
@@ -83,7 +84,7 @@ export class CalendarUtils {
                 return this.safeToCalendar(gregorianDate, calendarInstance);
             }
         } catch (error) {
-            console.error('轉換為 CalendarDate 失敗:', error);
+            logError('轉換為 CalendarDate 失敗:', error);
             return null;
         }
     };
@@ -117,7 +118,7 @@ export class CalendarUtils {
                 return toCalendar(gregorianDateTime, calendarInstance);
             }
         } catch (error) {
-            console.error('轉換為 CalendarDateTime 失敗:', error);
+            logError('轉換為 CalendarDateTime 失敗:', error);
             return null;
         }
     };
@@ -148,7 +149,7 @@ export class CalendarUtils {
                 };
             }
         } catch (error) {
-            console.error('轉換從 CalendarDate 失敗:', error);
+            logError('轉換從 CalendarDate 失敗:', error);
             return null;
         }
     };
@@ -165,7 +166,7 @@ export class CalendarUtils {
     ): CalendarDate[] {
         try {
             if (!this.isCalendarSupported(calendarId)) {
-                console.warn(`不支持的日曆系統: ${calendarId}`);
+                warn(`不支持的日曆系統: ${calendarId}`);
                 return [];
             }
 
@@ -194,7 +195,7 @@ export class CalendarUtils {
 
             return days;
         } catch (error) {
-            console.error('生成日曆網格失敗:', error);
+            logError('生成日曆網格失敗:', error);
             return [];
         }
     }
@@ -237,7 +238,7 @@ export class CalendarUtils {
 
             return { localYear: localDate.year, isValid };
         } catch (error) {
-            console.warn(`年份轉換失敗 ${gregorianYear} -> ${targetCalendarId}:`, error);
+            warn(`年份轉換失敗 ${gregorianYear} -> ${targetCalendarId}:`, error);
             return { localYear: gregorianYear, isValid: false };
         }
     }
@@ -256,7 +257,7 @@ export class CalendarUtils {
             const gregorianDate = this.safeToCalendar(localDate, new GregorianCalendar());
             return gregorianDate.year;
         } catch (error) {
-            console.warn(`年份轉換失敗 ${localYear} ${sourceCalendarId} -> Gregory:`, error);
+            warn(`年份轉換失敗 ${localYear} ${sourceCalendarId} -> Gregory:`, error);
             return localYear;
         }
     }
@@ -275,7 +276,7 @@ export class CalendarUtils {
                 return formatter.format(date);
             });
         } catch (error) {
-            console.warn(`獲取月份名稱失敗 ${calendarId}:`, error);
+            warn(`獲取月份名稱失敗 ${calendarId}:`, error);
             // 基於語言的回退邏輯
             if (locale.startsWith('zh')) {
                 return Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
@@ -366,7 +367,7 @@ export class CalendarUtils {
         try {
 
             if (!this.isCalendarSupported(calendarId)) {
-                console.warn(`不支持的日曆系統: ${calendarId}`);
+                warn(`不支持的日曆系統: ${calendarId}`);
                 return false;
             }
 
@@ -399,7 +400,7 @@ export class CalendarUtils {
 
         } catch (error) {
             // 4. 如果日期創建失敗（例如年份超出範圍），則返回 false
-            console.warn(`日期驗證失敗 ${year}-${month}-${day} in ${calendarId}:`, error);
+            warn(`日期驗證失敗 ${year}-${month}-${day} in ${calendarId}:`, error);
             return false;
         }
     }
@@ -414,7 +415,6 @@ export class CalendarUtils {
     //     if (!input) return null;
 
     //     const result = parseUserDateInput(input, locale, calendar);
-    //     console.log(`解析輸入 "${input}" 為 ${calendar} 日曆系統:`, result);
     //     if (result.success && result.date) {
     //         // 如果是非西元曆且解析結果是西元日期，需要進行轉換
     //         if (calendar !== 'gregory' && result.calendarSystem === 'gregory') {
@@ -422,7 +422,6 @@ export class CalendarUtils {
     //             const gregorianDate = new CalendarDate(result.date.year, result.date.month, result.date.day);
     //             const targetCalendar = this.createSafeCalendar(calendar);
     //             const localDate = this.safeToCalendar(gregorianDate, targetCalendar);
-    //             console.log(`轉換日期 ${result.date.year}-${result.date.month}-${result.date.day} 從西元曆到 ${calendar} 成功:`, localDate);
     //             return {
     //                 year: localDate.year,
     //                 month: localDate.month,
@@ -526,7 +525,7 @@ export class CalendarUtils {
             return dayjs(jsDate).format(format);
 
         } catch (error) {
-            console.warn('所有格式化方法都失敗，使用基本回退:', error);
+            warn('所有格式化方法都失敗，使用基本回退:', error);
 
             // 4. 最基本的回退格式
             let result = `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;

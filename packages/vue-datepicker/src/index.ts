@@ -12,7 +12,7 @@ export { DatePicker, DateRange, RocFormatPlugin };
 
 // 類型導出
 export type { DatePickerProps, DateRangeProps } from './types/datePickerProps';
-export type { TailwindColor, OutputType } from './types/main';
+export type { TailwindColor, OutputType } from './types/public';
 export type { LocaleMessages, ErrorMessages } from './types/locale';
 
 // 插件安裝函數

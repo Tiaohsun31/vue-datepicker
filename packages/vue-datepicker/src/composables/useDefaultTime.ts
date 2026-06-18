@@ -4,6 +4,7 @@
  */
 
 import { computed } from 'vue';
+import { warn } from '../utils/logger';
 
 interface DefaultTimeOptions {
     customDefaultTime?: string;
@@ -25,7 +26,7 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
         // 檢查基本格式 HH:mm:ss 或 HH:mm
         const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])(?::([0-5]?[0-9]))?$/;
         if (!timeRegex.test(timeStr)) {
-            console.warn(`時間格式不正確: ${timeStr}，應為 HH:mm:ss 或 HH:mm 格式`);
+            warn(`時間格式不正確: ${timeStr}，應為 HH:mm:ss 或 HH:mm 格式`);
             return false;
         }
 
@@ -36,7 +37,7 @@ export function useDefaultTime(options: DefaultTimeOptions = {}) {
 
         // 驗證範圍
         if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
-            console.warn(`時間值超出範圍: ${timeStr}`);
+            warn(`時間值超出範圍: ${timeStr}`);
             return false;
         }
 

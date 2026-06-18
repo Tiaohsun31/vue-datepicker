@@ -14,8 +14,8 @@
 import { computed, onMounted } from 'vue';
 import { CalendarDate } from '@internationalized/date';
 import CalendarCell from './CalendarCell.vue';
-import { getTodaysDate, isTodayDate } from '@/utils/dateUtils';
-import { CalendarUtils } from '@/utils/calendarUtils';
+import { getTodaysDate, isTodayDate } from '../../utils/dateUtils';
+import { CalendarUtils } from '../../utils/calendarUtils';
 
 type SelectionMode = 'single' | 'range';
 

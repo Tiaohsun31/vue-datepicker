@@ -173,9 +173,10 @@ import { useDateRange } from './composables/useDateRange';
 import { useTheme } from './composables/useTheme';
 
 // Utils
-import { parseInputToSimpleDate, type DateTimeInput } from './utils/dateUtils';
-import type { DateRangeProps } from '@/types/datePickerProps';
-import { useLocale } from '@/composables/useLocale';
+import { parseInputToSimpleDate, resolveTimeFormat, type DateTimeInput } from './utils/dateUtils';
+import type { DateRangeProps } from './types/datePickerProps';
+import type { FieldErrorParams, DateTimeInputExpose } from './types/internal';
+import { useLocale } from './composables/useLocale';
 import { useWindowSize } from './composables/useWindowSize';
 
 const props = withDefaults(defineProps<DateRangeProps>(), {
@@ -231,16 +232,16 @@ const props = withDefaults(defineProps<DateRangeProps>(), {
 const emit = defineEmits<{
     'update:modelValue': [range: { start: DateTimeInput; end: DateTimeInput } | null];
     'change': [range: { start: DateTimeInput; end: DateTimeInput } | null];
-    'validation': [isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>];
+    'validation': [isValid: boolean, errors: Record<string, string>, errorParams?: FieldErrorParams];
 }>();
 
 // DOM 引用
 const containerRef = ref<HTMLElement | null>(null);
 const calendarRef = ref<HTMLElement | null>(null);
-const startDateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
-const endDateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
-const startTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
-const endTimeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
+const startDateInputRef = ref<DateTimeInputExpose | null>(null);
+const endDateInputRef = ref<DateTimeInputExpose | null>(null);
+const startTimeInputRef = ref<DateTimeInputExpose | null>(null);
+const endTimeInputRef = ref<DateTimeInputExpose | null>(null);
 
 const formatErrors = ref<Record<string, string>>({});
 
@@ -253,19 +254,11 @@ const displayMode = computed(() => {
     return windowWidth.value < 768 ? 'single' : 'dual';
 });
 
-const computedTimeFormat = computed(() => {
-    // 如果使用者明確提供了 timeFormat，就使用使用者的設定
-    if (props.timeFormat) {
-        return props.timeFormat;
-    }
-
-    // 否則根據 enableSeconds 和 use24Hour 自動決定
-    if (props.enableSeconds) {
-        return props.use24Hour ? 'HH:mm:ss' : 'hh:mm:ss A';
-    } else {
-        return props.use24Hour ? 'HH:mm' : 'hh:mm A';
-    }
-});
+const computedTimeFormat = computed(() => resolveTimeFormat({
+    timeFormat: props.timeFormat,
+    enableSeconds: props.enableSeconds,
+    use24Hour: props.use24Hour
+}));
 
 const { setLocale, getMessage, getPlaceholderMessage, currentLocale } = useLocale(props.locale);
 

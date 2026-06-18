@@ -1,4 +1,4 @@
-import type { LocaleMessages } from '@/types/locale';
+import type { LocaleMessages } from '../types/locale';
 
 export const jaJPLocaleMessages: LocaleMessages = {
     error: {

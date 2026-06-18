@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
-import { LocaleManager, interpolateMessage } from '@/locale/index';
-import type { LocaleMessages } from '@/types/locale';
+import { LocaleManager, interpolateMessage } from '../locale/index';
+import type { LocaleMessages } from '../types/locale';
+import type { MessageParams } from '../types/internal';
 
 export function useLocale(
     initialLocale: string = 'en-US',
@@ -28,19 +29,19 @@ export function useLocale(
         localeManager.setLocale(locale);
     };
 
-    const getMessage = (path: string, variables?: Record<string, any>) => {
+    const getMessage = (path: string, variables?: MessageParams) => {
         return localeManager.getMessage(path, variables);
     };
 
-    const getErrorMessage = (path: string, variables?: Record<string, any>) => {
+    const getErrorMessage = (path: string, variables?: MessageParams) => {
         return localeManager.getErrorMessage(path, variables);
     };
 
-    const getPlaceholderMessage = (path: string, variables?: Record<string, any>) => {
+    const getPlaceholderMessage = (path: string, variables?: MessageParams) => {
         return localeManager.getPlaceholderMessage(path, variables);
     };
 
-    const formatText = (template: string, params: Record<string, string | number>) => {
+    const formatText = (template: string, params: MessageParams) => {
         return interpolateMessage(template, params);
     };
 

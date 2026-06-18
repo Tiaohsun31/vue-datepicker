@@ -56,7 +56,7 @@ import { ref, computed, watch } from 'vue';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
 import YearSelector from '../selector/YearSelector.vue';
-import { CalendarUtils } from '@/utils/calendarUtils';
+import { CalendarUtils } from '../../utils/calendarUtils';
 import { CalendarDate, DateFormatter } from '@internationalized/date';
 
 interface Props {

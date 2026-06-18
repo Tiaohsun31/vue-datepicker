@@ -2,14 +2,16 @@
  * useDateTimePicker.ts
  */
 
-import { ref, computed, watch, toRef, toValue, type Ref, type ComputedRef, type MaybeRefOrGetter } from 'vue';
+import { computed, watch, toValue, type Ref, type MaybeRefOrGetter } from 'vue';
+import { warn, logError } from '../utils/logger';
 import { useInputNavigation } from './useInputNavigation';
 import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
 import { useDefaultTime } from './useDefaultTime';
 import { CalendarUtils } from '../utils/calendarUtils';
-import type { OutputType } from '@/types/main';
+import type { OutputType } from '../types/public';
+import type { FieldErrorParams, DateTimeInputExpose } from '../types/internal';
 import {
     parseInputToSimpleDate,
     formatOutput,
@@ -51,8 +53,8 @@ interface DateTimePickerOptions {
 interface DateTimePickerRefs {
     containerRef: Ref<HTMLElement | null>;
     calendarRef: Ref<HTMLElement | null>;
-    dateInputRef: Ref<any>;
-    timeInputRef: Ref<any>;
+    dateInputRef: Ref<DateTimeInputExpose | null>;
+    timeInputRef: Ref<DateTimeInputExpose | null>;
 }
 
 export function useDateTimePicker(
@@ -142,7 +144,7 @@ export function useDateTimePicker(
     // 事件發射器
     let emitUpdate: ((value: DateTimeInput) => void) | null = null;
     let emitChange: ((value: DateTimeInput) => void) | null = null;
-    let emitValidation: ((isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => void) | null = null;
+    let emitValidation: ((isValid: boolean, errors: Record<string, string>, errorParams?: FieldErrorParams) => void) | null = null;
 
     /**
      * 設置事件發射器
@@ -150,7 +152,7 @@ export function useDateTimePicker(
     const setEmitters = (emitters: {
         update?: (value: DateTimeInput) => void;
         change?: (value: DateTimeInput) => void;
-        validation?: (isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => void;
+        validation?: (isValid: boolean, errors: Record<string, string>, errorParams?: FieldErrorParams) => void;
     }) => {
         emitUpdate = emitters.update || null;
         emitChange = emitters.change || null;
@@ -203,7 +205,7 @@ export function useDateTimePicker(
     const validateDateInput = (
         isValid: boolean,
         validationErrors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>> = {}
+        errorParams: FieldErrorParams = {}
     ) => {
         validation.handleDateValidation(isValid, validationErrors, 'date', errorParams);
         emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value, validation.errorParams.value);
@@ -215,7 +217,7 @@ export function useDateTimePicker(
     const validateTimeInput = (
         isValid: boolean,
         validationErrors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>> = {}
+        errorParams: FieldErrorParams = {}
     ) => {
         validation.handleTimeValidation(isValid, validationErrors, 'time', errorParams);
         emitValidation?.(!validation.hasErrors.value, validation.mergedErrors.value, validation.errorParams.value);
@@ -287,7 +289,7 @@ export function useDateTimePicker(
                 calendarPopup.hideCalendar();
             }
         } catch (error) {
-            console.error('處理日曆選擇失敗:', error);
+            logError('處理日曆選擇失敗:', error);
         }
     };
 
@@ -330,8 +332,9 @@ export function useDateTimePicker(
      */
     const validate = async (): Promise<boolean> => {
         // 1. 觸發子組件驗證
-        const dateValid = await dateInputRef.value?.validate();
-        const timeValid = showTime ? await timeInputRef.value?.validate() : true;
+        // ref 未掛載時視為「無此欄位、不阻擋」→ true
+        const dateValid = (await dateInputRef.value?.validate()) ?? true;
+        const timeValid = showTime ? ((await timeInputRef.value?.validate()) ?? true) : true;
 
 
         // 2. 西元曆系統驗證（只驗證西元曆）
@@ -391,7 +394,7 @@ export function useDateTimePicker(
                 validation.clearFieldErrors(field);
             });
         } catch (error) {
-            console.warn('設置當前時間失敗:', error);
+            warn('設置當前時間失敗:', error);
 
             // 回退邏輯：手動設置輸入值然後更新
             const dateStr = `${simpleDate.year}-${simpleDate.month.toString().padStart(2, '0')}-${simpleDate.day.toString().padStart(2, '0')}`;

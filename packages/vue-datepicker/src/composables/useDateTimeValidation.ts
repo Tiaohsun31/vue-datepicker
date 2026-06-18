@@ -5,6 +5,7 @@
 
 import { ref, computed } from 'vue';
 import { parseInputToSimpleDate, formatSimpleDate, compareDates, type SimpleDateValue, type DateTimeInput } from '../utils/dateUtils';
+import type { FieldErrorParams } from '../types/internal';
 
 interface ValidationOptions {
     required?: boolean;
@@ -20,7 +21,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
     // 錯誤狀態
     const errors = ref<Record<string, string>>({});
     const formatErrors = ref<Record<string, string>>({});
-    const errorParams = ref<Record<string, Record<string, any>>>({}); // 新增：錯誤參數存儲
+    const errorParams = ref<FieldErrorParams>({}); // 新增：錯誤參數存儲
 
     // 合併所有錯誤
     const mergedErrors = computed(() => {
@@ -42,7 +43,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         isValid: boolean,
         validationErrors: Record<string, string>,
         fieldPrefix: string = 'date',
-        validationErrorParams: Record<string, Record<string, any>> = {}
+        validationErrorParams: FieldErrorParams = {}
     ) => {
         // 清除相關錯誤
         ['date', 'year', 'month', 'day'].forEach(field => {
@@ -65,7 +66,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
         isValid: boolean,
         validationErrors: Record<string, string>,
         fieldPrefix: string = 'time',
-        validationErrorParams: Record<string, Record<string, any>> = {}
+        validationErrorParams: FieldErrorParams = {}
     ) => {
         ['time', 'hour', 'minute', 'second'].forEach(field => {
             clearFieldErrors(`${fieldPrefix}.${field}`);
@@ -96,7 +97,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
                 handleDateValidation(false, {
                     date: 'date.beforeMin'
                 }, 'date', {
-                    date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) }
+                    date: { minDate: formatSimpleDate(minSimpleDate, dateFormat) ?? '' }
                 });
                 return false;
             }
@@ -108,7 +109,7 @@ export function useDateTimeValidation(options: ValidationOptions = {}) {
                 handleDateValidation(false, {
                     date: 'date.afterMax'
                 }, 'date', {
-                    date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) }
+                    date: { maxDate: formatSimpleDate(maxSimpleDate, dateFormat) ?? '' }
                 });
                 return false;
             }

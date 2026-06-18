@@ -1,7 +1,7 @@
-import { type SimpleDateValue } from '@/utils/dateUtils';
+import { type SimpleDateValue } from '../utils/dateUtils';
 
 // TailwindColor 的單一事實來源在 utils/tailwind4-color.ts（由 tailwindBaseColors 的鍵衍生）。
-export type { TailwindColor } from '@/utils/tailwind4-color';
+export type { TailwindColor } from '../utils/tailwind4-color';
 
 /**
  * 輸出資料類型

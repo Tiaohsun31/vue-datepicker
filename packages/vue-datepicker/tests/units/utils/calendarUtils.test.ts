@@ -446,7 +446,7 @@ describe('CalendarUtils', () => {
             const result = CalendarUtils.convertToCalendarDate(simpleDate, 'roc')
 
             expect(result).toBeNull()
-            expect(consoleErrorSpy).toHaveBeenCalledWith('轉換為 CalendarDate 失敗:', expect.any(Error))
+            expect(consoleErrorSpy).toHaveBeenCalledWith('[vue-datepicker]', '轉換為 CalendarDate 失敗:', expect.any(Error))
 
             // 恢復原始函數
             CalendarUtils.createSafeCalendar = originalCreateSafeCalendar

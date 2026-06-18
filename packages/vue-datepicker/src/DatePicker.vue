@@ -61,10 +61,6 @@
                 <template v-for="(_, slotName) in calendarSlotNames" #[slotName]="slotProps">
                     <slot :name="slotName" v-bind="slotProps" />
                 </template>
-                <!-- TODO: slot 須明確傳遞  -->
-                <!-- <template #year-display="slotProps">
-                    <slot name="year-display" v-bind="slotProps" />
-                </template> -->
             </CalendarGrid>
         </div>
     </div>
@@ -87,6 +83,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, watch, useSlots, toRef } from 'vue';
+import { warn } from './utils/logger';
 import { CalendarUtils } from './utils/calendarUtils';
 
 // 組件導入
@@ -109,10 +106,12 @@ import {
     parseInputToSimpleDate,
     fixDateFormat,
     fixTimeFormat,
+    resolveTimeFormat,
     type DateTimeInput,
 } from './utils/dateUtils';
 import type { DatePickerProps } from './types/datePickerProps';
-import { useLocale } from '@/composables/useLocale';
+import type { FieldErrorParams, DateTimeInputExpose } from './types/internal';
+import { useLocale } from './composables/useLocale';
 
 const props = withDefaults(defineProps<DatePickerProps>(), {
     modelValue: null,
@@ -167,7 +166,7 @@ const { setLocale, getPlaceholderMessage } = useLocale(
 const emit = defineEmits<{
     'update:modelValue': [date: DateTimeInput];
     'change': [date: DateTimeInput];
-    'validation': [isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>];
+    'validation': [isValid: boolean, errors: Record<string, string>, errorParams?: FieldErrorParams];
 }>();
 
 // Slot
@@ -190,23 +189,15 @@ const calendarSlotNames = computed(() => {
 // DOM 引用
 const containerRef = ref<HTMLElement | null>(null);
 const calendarRef = ref<HTMLElement | null>(null);
-const dateInputRef = ref<InstanceType<typeof DateInput> | null>(null);
-const timeInputRef = ref<InstanceType<typeof TimeInput> | null>(null);
+const dateInputRef = ref<DateTimeInputExpose | null>(null);
+const timeInputRef = ref<DateTimeInputExpose | null>(null);
 
 // 內部格式狀態
-const computedTimeFormat = computed(() => {
-    // 如果使用者明確提供了 timeFormat，就使用使用者的設定
-    if (props.timeFormat) {
-        return props.timeFormat;
-    }
-
-    // 否則根據 enableSeconds 和 use24Hour 自動決定
-    if (props.enableSeconds) {
-        return props.use24Hour ? 'HH:mm:ss' : 'hh:mm:ss A';
-    } else {
-        return props.use24Hour ? 'HH:mm' : 'hh:mm A';
-    }
-});
+const computedTimeFormat = computed(() => resolveTimeFormat({
+    timeFormat: props.timeFormat,
+    enableSeconds: props.enableSeconds,
+    use24Hour: props.use24Hour
+}));
 
 const internalDateFormat = ref(props.dateFormat);
 const internalTimeFormat = ref(computedTimeFormat.value);
@@ -333,7 +324,7 @@ onBeforeMount(() => {
         const fixedFormat = fixDateFormat(props.dateFormat);
 
         formatErrors.value.dateFormat = 'format.invalid';
-        console.warn(`日期格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
+        warn(`日期格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
 
         internalDateFormat.value = fixedFormat;
     }
@@ -347,11 +338,11 @@ onBeforeMount(() => {
         if (!isValidTimeFormatPattern(fixedFormat)) {
             const defaultFormat = computedTimeFormat.value; // 使用新的計算邏輯
             formatErrors.value.timeFormat = 'format.invalid';
-            console.warn(`時間格式 "${originalFormat}" 不正確，已使用預設格式 "${defaultFormat}"`);
+            warn(`時間格式 "${originalFormat}" 不正確，已使用預設格式 "${defaultFormat}"`);
             internalTimeFormat.value = defaultFormat;
         } else {
             formatErrors.value.timeFormat = 'format.invalid';
-            console.warn(`時間格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
+            warn(`時間格式 "${originalFormat}" 不正確，已自動修復為 "${fixedFormat}"`);
             internalTimeFormat.value = fixedFormat;
         }
     }

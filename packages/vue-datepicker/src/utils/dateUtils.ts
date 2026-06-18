@@ -1,5 +1,6 @@
 // dateUtils.ts
 import dayjs from 'dayjs';
+import { warn, logError } from './logger';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -7,7 +8,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import localeData from 'dayjs/plugin/localeData';
 import { parseUserDateInput } from './dateParsingUtils';
 import { CalendarUtils } from './calendarUtils';
-import type { OutputType } from '../types/main';
+import type { OutputType } from '../types/public';
 import { CalendarDate, today, getLocalTimeZone, toCalendar } from '@internationalized/date';
 
 
@@ -69,7 +70,7 @@ export function isTodayDate(date: CalendarDate): boolean {
 
         return date.compare(todayDate) === 0;
     } catch (error) {
-        console.error('Error checking if date is today:', error);
+        logError('Error checking if date is today:', error);
         return false;
     }
 }
@@ -139,7 +140,7 @@ export function parseInputToSimpleDate(input: DateTimeInput | undefined, locale:
 
         return null;
     } catch (error) {
-        console.error('Failed to parse date:', error);
+        logError('Failed to parse date:', error);
         return null;
     }
 }
@@ -166,9 +167,24 @@ export function formatSimpleDate(
 
         return dayjsDate.format(format);
     } catch (error) {
-        console.error('Failed to format date:', error);
+        logError('Failed to format date:', error);
         return null;
     }
+}
+
+/**
+ * 依使用者設定推導時間格式 pattern。
+ * `timeFormat` 優先；未指定時由 `enableSeconds` / `use24Hour` 決定。
+ * （DatePicker 與 DateRange 共用，消除重複的 `computedTimeFormat`。）
+ */
+export function resolveTimeFormat(opts: {
+    timeFormat?: string;
+    enableSeconds?: boolean;
+    use24Hour?: boolean;
+}): string {
+    if (opts.timeFormat) return opts.timeFormat;
+    if (opts.enableSeconds) return opts.use24Hour ? 'HH:mm:ss' : 'hh:mm:ss A';
+    return opts.use24Hour ? 'HH:mm' : 'hh:mm A';
 }
 
 /**
@@ -220,11 +236,11 @@ export function formatOutput(
                 return CalendarUtils.formatOutput(date, dateFormat, timeFormat, includeTime, calendar, locale);
 
             default:
-                console.warn(`不支援的輸出類型: ${outputType}，回退到 ISO 格式`);
+                warn(`不支援的輸出類型: ${outputType}，回退到 ISO 格式`);
                 return formatSimpleDate(date, 'YYYY-MM-DD');
         }
     } catch (error) {
-        console.error('formatOutput 失敗:', error);
+        logError('formatOutput 失敗:', error);
         // 最安全的回退
         return date;
     }
@@ -326,12 +342,12 @@ export function isValidFormatForDayjs(dateFormat: string, timeFormat?: string): 
 
         // 如果語義驗證失敗，直接返回 false
         if (!isDateFormatMeaningful) {
-            console.warn(`日期格式語義驗證失敗: "${dateFormat}"`);
+            warn(`日期格式語義驗證失敗: "${dateFormat}"`);
             return false;
         }
 
         if (timeFormat && !isTimeFormatMeaningful) {
-            console.warn(`時間格式語義驗證失敗: "${timeFormat}"`);
+            warn(`時間格式語義驗證失敗: "${timeFormat}"`);
             return false;
         }
 
@@ -344,7 +360,7 @@ export function isValidFormatForDayjs(dateFormat: string, timeFormat?: string): 
             const formattedDate = testDate.format(dateFormat);
             isDateFormatValid = formattedDate !== dateFormat && formattedDate.length > 0;
         } catch (error) {
-            console.warn(`日期格式 dayjs 驗證失敗: "${dateFormat}"`, error);
+            warn(`日期格式 dayjs 驗證失敗: "${dateFormat}"`, error);
             isDateFormatValid = false;
         }
 
@@ -355,7 +371,7 @@ export function isValidFormatForDayjs(dateFormat: string, timeFormat?: string): 
                 const formattedTime = testDate.format(timeFormat);
                 isTimeFormatValid = formattedTime !== timeFormat && formattedTime.length > 0;
             } catch (error) {
-                console.warn(`時間格式 dayjs 驗證失敗: "${timeFormat}"`, error);
+                warn(`時間格式 dayjs 驗證失敗: "${timeFormat}"`, error);
                 isTimeFormatValid = false;
             }
         }
@@ -368,7 +384,7 @@ export function isValidFormatForDayjs(dateFormat: string, timeFormat?: string): 
                 const formattedCombined = testDate.format(combinedFormat);
                 isCombinedFormatValid = formattedCombined !== combinedFormat && formattedCombined.length > 0;
             } catch (error) {
-                console.warn(`組合格式 dayjs 驗證失敗: "${dateFormat} ${timeFormat}"`, error);
+                warn(`組合格式 dayjs 驗證失敗: "${dateFormat} ${timeFormat}"`, error);
                 isCombinedFormatValid = false;
             }
         }
@@ -377,7 +393,7 @@ export function isValidFormatForDayjs(dateFormat: string, timeFormat?: string): 
         return finalResult;
 
     } catch (error) {
-        console.error('格式驗證時發生錯誤:', error);
+        logError('格式驗證時發生錯誤:', error);
         return false;
     }
 }
@@ -531,7 +547,6 @@ export function fixTimeFormat(format: string): string {
 //         const date = dayjs(trimmedStr, dateFormat, true); // strict mode
 
 //         if (date.isValid()) {
-//             console.log(`Parsing date with format "${dateFormat}":`, date.isValid() ? date.format() : 'Invalid date');
 //             return date;
 //         }
 //     }
@@ -568,17 +583,15 @@ export function fixTimeFormat(format: string): string {
 /**
  * 型別守衛：檢查是否為 SimpleDateValue (目前尚未使用)
  */
-export function isSimpleDateValue(value: any): value is SimpleDateValue {
-    // 明確檢查 falsy 值
-    if (!value) return false;
-
-    // 檢查是否為物件（排除 null，因為 typeof null === 'object'）
-    if (typeof value !== 'object') return false;
+export function isSimpleDateValue(value: unknown): value is SimpleDateValue {
+    // 明確檢查 falsy 值與非物件（排除 null，因為 typeof null === 'object'）
+    if (!value || typeof value !== 'object') return false;
 
     // 檢查必要屬性
-    return typeof value.year === 'number' &&
-        typeof value.month === 'number' &&
-        typeof value.day === 'number';
+    const v = value as Record<string, unknown>;
+    return typeof v.year === 'number' &&
+        typeof v.month === 'number' &&
+        typeof v.day === 'number';
 }
 
 // /**
@@ -602,7 +615,6 @@ export function isSimpleDateValue(value: any): value is SimpleDateValue {
 //     try {
 //         return new CalendarDate(value.year, value.month, value.day);
 //     } catch (error) {
-//         console.error('Failed to create CalendarDate:', error);
 //         return null;
 //     }
 // }
@@ -621,7 +633,6 @@ export function isSimpleDateValue(value: any): value is SimpleDateValue {
 //             value.second || 0
 //         );
 //     } catch (error) {
-//         console.error('Failed to create CalendarDateTime:', error);
 //         return null;
 //     }
 // }
@@ -711,7 +722,6 @@ export function isSimpleDateValue(value: any): value is SimpleDateValue {
 //     try {
 //         return date.format(format);
 //     } catch (error) {
-//         console.warn('日期格式化失敗:', error);
 //         return null;
 //     }
 // };

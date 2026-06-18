@@ -34,8 +34,8 @@ import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import DateGridView from './DateGridView.vue';
 import TimeSelector from '../selector/TimeSelector.vue';
-import { getTodaysDate, type SimpleDateValue } from '@/utils/dateUtils';
-import { CalendarUtils } from '@/utils/calendarUtils';
+import { getTodaysDate, type SimpleDateValue } from '../../utils/dateUtils';
+import { CalendarUtils } from '../../utils/calendarUtils';
 
 type SelectionMode = 'single' | 'range';
 

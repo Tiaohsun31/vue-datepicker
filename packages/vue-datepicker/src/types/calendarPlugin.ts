@@ -1,5 +1,5 @@
 // types/calendarPlugin.ts - 專注於格式化功能
-import { type SimpleDateValue } from '@/utils/dateUtils';
+import { type SimpleDateValue } from '../utils/dateUtils';
 
 /**
  * 簡化的日曆格式化插件介面

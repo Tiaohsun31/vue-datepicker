@@ -79,11 +79,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { warn } from '../../utils/logger';
 import { CalendarDate, DateFormatter } from '@internationalized/date';
 import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
-import { CalendarUtils } from '@/utils/calendarUtils';
-import { useLocale } from '@/composables/useLocale';
+import { CalendarUtils } from '../../utils/calendarUtils';
+import { useLocale } from '../../composables/useLocale';
 
 interface Props {
     selectedYear: number;
@@ -301,7 +302,7 @@ const goToSpecificYear = () => {
         yearInput.value = null;
     } else {
         // 簡化的錯誤提示
-        console.warn(`年份 ${yearInput.value} 超出範圍 ${calendarRange.value.min}-${calendarRange.value.max}`);
+        warn(`年份 ${yearInput.value} 超出範圍 ${calendarRange.value.min}-${calendarRange.value.max}`);
     }
 };
 

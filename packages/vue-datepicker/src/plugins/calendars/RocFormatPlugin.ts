@@ -1,6 +1,6 @@
 // plugins/calendars/RocFormatPlugin.ts  ROC 格式化插件
-import { type CalendarPlugin } from '@/types/calendarPlugin';
-import { type SimpleDateValue } from '@/utils/dateUtils';
+import { type CalendarPlugin } from '../../types/calendarPlugin';
+import { type SimpleDateValue } from '../../utils/dateUtils';
 import dayjs from 'dayjs';
 
 /**

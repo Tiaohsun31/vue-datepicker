@@ -3,7 +3,8 @@
  * 專門處理日期範圍選擇的 Composable
  */
 
-import { ref, computed, watch, toValue, type Ref, type MaybeRefOrGetter } from 'vue';
+import { computed, watch, nextTick, toValue, type Ref, type MaybeRefOrGetter } from 'vue';
+import { warn } from '../utils/logger';
 import { useDateTimeValidation } from './useDateTimeValidation';
 import { useDateTimeValue } from './useDateTimeValue';
 import { useCalendarPopup } from './useCalendarPopup';
@@ -21,7 +22,11 @@ import {
     type DateTimeInput,
     createSimpleDate
 } from '../utils/dateUtils';
-import type { OutputType, DateRangeShortcut } from '../types/main';
+import type { OutputType, DateRangeShortcut } from '../types/public';
+import type { FieldErrorParams, ErrorParams, DateTimeInputExpose } from '../types/internal';
+
+/** useDateTimeValidation 的回傳型別（驗證 API），供 handler 取代 `validation: any`。 */
+type ValidationApi = ReturnType<typeof useDateTimeValidation>;
 
 // 類型定義
 interface DateRangeOptions {
@@ -43,29 +48,29 @@ interface DateRangeOptions {
     minRange?: number;
     locale?: string;
     // i18n：由元件傳入（取自 useLocale），讓預設快捷選項標籤跟隨語系。
-    getMessage?: (path: string, variables?: Record<string, any>) => string;
+    getMessage?: (path: string, variables?: ErrorParams) => string;
     localeRef?: Readonly<Ref<string>>;
 }
 
 interface DateRangeRefs {
     containerRef: Ref<HTMLElement | null>;
     calendarRef: Ref<HTMLElement | null>;
-    startDateInputRef: Ref<any>;
-    endDateInputRef: Ref<any>;
-    startTimeInputRef: Ref<any>;
-    endTimeInputRef: Ref<any>;
+    startDateInputRef: Ref<DateTimeInputExpose | null>;
+    endDateInputRef: Ref<DateTimeInputExpose | null>;
+    startTimeInputRef: Ref<DateTimeInputExpose | null>;
+    endTimeInputRef: Ref<DateTimeInputExpose | null>;
 }
 
 interface DateRangeEmitters {
     update?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
     change?: (range: { start: DateTimeInput; end: DateTimeInput } | null) => void;
-    validation?: (isValid: boolean, errors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => void;
+    validation?: (isValid: boolean, errors: Record<string, string>, errorParams?: FieldErrorParams) => void;
 }
 
 interface RangeValidationResult {
     valid: boolean;
     error?: string;
-    params?: Record<string, any>;
+    params?: ErrorParams;
 }
 
 // 常量定義
@@ -370,7 +375,7 @@ export function useDateRange(
         emitters.validation?.(isValid, mergedErrors.value, mergedErrorParams.value);
     }
 
-    function clearFieldErrors(validation: any, fields: string[]) {
+    function clearFieldErrors(validation: ValidationApi, fields: string[]) {
         fields.forEach(field => validation.clearFieldErrors(field));
     }
 
@@ -382,109 +387,105 @@ export function useDateRange(
     const handleValidation = (
         isValid: boolean,
         validationErrors: Record<string, string>,
-        validation: any,
+        validation: ValidationApi,
         fieldPrefix: string,
-        errorParams?: Record<string, Record<string, any>>
+        errorParams?: FieldErrorParams
     ) => {
         validation.handleDateValidation(isValid, validationErrors, fieldPrefix, errorParams);
         emitters.validation?.(!hasErrors.value, mergedErrors.value, mergedErrorParams.value);
     };
 
-    const handleStartDateValidation = (isValid: boolean, validationErrors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => {
-        handleValidation(isValid, validationErrors, startValidation, 'startDate', errorParams);
-    };
-
-    const handleEndDateValidation = (isValid: boolean, validationErrors: Record<string, string>, errorParams?: Record<string, Record<string, any>>) => {
-        handleValidation(isValid, validationErrors, endValidation, 'endDate', errorParams);
-    };
-
-
-    const handleStartTimeValidation = (
-        isValid: boolean,
-        validationErrors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>> = {}
+    // start / end 兩側的事件處理近乎複製貼上，差別只在所用的 validation/dateTime/navigation 實例、
+    // 欄位前綴與預設時間 → 抽成 factory，消除重複（§5.6）。
+    const createSideHandlers = (
+        validation: ValidationApi,
+        dateTime: ReturnType<typeof useDateTimeValue>,
+        navigation: ReturnType<typeof useInputNavigation>,
+        config: {
+            datePrefix: 'startDate' | 'endDate';
+            timePrefix: 'startTime' | 'endTime';
+            defaultTime: string;
+            /** 日期完成後的額外副作用（如 start 在非時間模式時把焦點轉到 end 側）。 */
+            onDateComplete?: () => void;
+        }
     ) => {
-        startValidation.handleTimeValidation(isValid, validationErrors, 'startTime', errorParams);
-        emitters.validation?.(!hasErrors.value, mergedErrors.value);
-    };
+        const handleDateValidation = (
+            isValid: boolean,
+            validationErrors: Record<string, string>,
+            errorParams?: FieldErrorParams
+        ) => {
+            handleValidation(isValid, validationErrors, validation, config.datePrefix, errorParams);
+        };
 
-    const handleEndTimeValidation = (
-        isValid: boolean,
-        validationErrors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>> = {}
-    ) => {
-        endValidation.handleTimeValidation(isValid, validationErrors, 'endTime', errorParams);
-        emitters.validation?.(!hasErrors.value, mergedErrors.value, mergedErrorParams.value);
-    };
+        const handleTimeValidation = (
+            isValid: boolean,
+            validationErrors: Record<string, string>,
+            errorParams: FieldErrorParams = {}
+        ) => {
+            validation.handleTimeValidation(isValid, validationErrors, config.timePrefix, errorParams);
+            emitters.validation?.(!hasErrors.value, mergedErrors.value, mergedErrorParams.value);
+        };
 
-    const handleStartDateComplete = (dateStr: string) => {
-        startDateTime.inputDateValue.value = dateStr;
-        const updatedDateTime = startDateTime.updateFromInputs();
+        const handleDateComplete = (dateStr: string) => {
+            dateTime.inputDateValue.value = dateStr;
+            const updatedDateTime = dateTime.updateFromInputs();
 
-        if (!updatedDateTime) {
-            startValidation.handleDateValidation(false, { date: 'date.invalid' });
-            return;
-        }
+            if (!updatedDateTime) {
+                validation.handleDateValidation(false, { date: 'date.invalid' });
+                return;
+            }
 
-        if (!startValidation.validateDateRange(updatedDateTime)) {
-            return;
-        }
-        startNavigation.autoFocusTimeAfterDateComplete(
-            startDateTime,
-            DEFAULT_START_TIME
-        );
-        emitRangeEvents();
-
-        clearFieldErrors(startValidation, ['startDate', 'date.year', 'date.month', 'date.day']);
-
-        // 處理焦點轉移
-        if (!showTime) {
-            endNavigation.focusFirstInput();
-        }
-    };
-
-    const handleEndDateComplete = (dateStr: string) => {
-        endDateTime.inputDateValue.value = dateStr;
-        const updatedDateTime = endDateTime.updateFromInputs();
-
-        if (!updatedDateTime) {
-            endValidation.handleDateValidation(false, { date: 'date.invalid' });
-            return;
-        }
-
-        if (!endValidation.validateDateRange(updatedDateTime)) {
-            return;
-        }
-        endNavigation.autoFocusTimeAfterDateComplete(
-            endDateTime,
-            DEFAULT_END_TIME
-        );
-        emitRangeEvents();
-
-        clearFieldErrors(endValidation, ['endDate', 'date.year', 'date.month', 'date.day']);
-    };
-
-    const handleStartTimeComplete = (timeStr: string) => {
-        startDateTime.inputTimeValue.value = timeStr;
-        const updatedDateTime = startDateTime.updateFromInputs();
-
-        if (updatedDateTime) {
+            if (!validation.validateDateRange(updatedDateTime)) {
+                return;
+            }
+            navigation.autoFocusTimeAfterDateComplete(dateTime, config.defaultTime);
             emitRangeEvents();
-        }
 
-        clearFieldErrors(startValidation, ['startTime', 'time.hour', 'time.minute', 'time.second']);
+            clearFieldErrors(validation, [config.datePrefix, 'date.year', 'date.month', 'date.day']);
+
+            config.onDateComplete?.();
+        };
+
+        const handleTimeComplete = (timeStr: string) => {
+            dateTime.inputTimeValue.value = timeStr;
+            const updatedDateTime = dateTime.updateFromInputs();
+
+            if (updatedDateTime) {
+                emitRangeEvents();
+            }
+
+            clearFieldErrors(validation, [config.timePrefix, 'time.hour', 'time.minute', 'time.second']);
+        };
+
+        return { handleDateValidation, handleTimeValidation, handleDateComplete, handleTimeComplete };
     };
 
-    const handleEndTimeComplete = (timeStr: string) => {
-        endDateTime.inputTimeValue.value = timeStr;
-        const updatedDateTime = endDateTime.updateFromInputs();
-
-        if (updatedDateTime) {
-            emitRangeEvents();
+    const startHandlers = createSideHandlers(startValidation, startDateTime, startNavigation, {
+        datePrefix: 'startDate',
+        timePrefix: 'startTime',
+        defaultTime: DEFAULT_START_TIME,
+        // 非時間模式下，start 日期完成後把焦點轉到 end 側第一個輸入框。
+        onDateComplete: () => {
+            if (!showTime) {
+                endNavigation.focusFirstInput();
+            }
         }
+    });
 
-        clearFieldErrors(endValidation, ['endTime', 'time.hour', 'time.minute', 'time.second']);
-    };
+    const endHandlers = createSideHandlers(endValidation, endDateTime, endNavigation, {
+        datePrefix: 'endDate',
+        timePrefix: 'endTime',
+        defaultTime: DEFAULT_END_TIME
+    });
+
+    const handleStartDateValidation = startHandlers.handleDateValidation;
+    const handleEndDateValidation = endHandlers.handleDateValidation;
+    const handleStartTimeValidation = startHandlers.handleTimeValidation;
+    const handleEndTimeValidation = endHandlers.handleTimeValidation;
+    const handleStartDateComplete = startHandlers.handleDateComplete;
+    const handleEndDateComplete = endHandlers.handleDateComplete;
+    const handleStartTimeComplete = startHandlers.handleTimeComplete;
+    const handleEndTimeComplete = endHandlers.handleTimeComplete;
 
     const handleCalendarRangeSelect = (startDate: SimpleDateValue | null, endDate: SimpleDateValue | null) => {
         if (startDate && !endDate) {
@@ -620,25 +621,26 @@ export function useDateRange(
 
             // 檢查無效輸入
             if (newValue.start && !startDate) {
-                console.warn(`Invalid start date provided: ${newValue.start}`);
+                warn(`Invalid start date provided: ${newValue.start}`);
                 startValidation.handleDateValidation(false, { date: 'date.invalid' }, 'startDate');
             }
 
             if (newValue.end && !endDate) {
-                console.warn(`Invalid end date provided: ${newValue.end}`);
+                warn(`Invalid end date provided: ${newValue.end}`);
                 endValidation.handleDateValidation(false, { date: 'date.invalid' }, 'endDate');
             }
 
             // 只有在兩個日期都有效時才檢查順序
             if (startDate && endDate) {
                 if (compareDates(startDate, endDate) > 0) {
-                    console.warn('Initial date range has start > end, auto-swapping values');
+                    warn('Initial date range has start > end, auto-swapping values');
                     startDateTime.setExternalValue(newValue.end);
                     endDateTime.setExternalValue(newValue.start);
 
-                    setTimeout(() => {
+                    // 等內部 ref 更新沖刷後再 emit 交換後的範圍（取代 setTimeout(0) 排序 hack）。
+                    nextTick(() => {
                         emitRangeEvents();
-                    }, 0);
+                    });
                     return;
                 }
             }

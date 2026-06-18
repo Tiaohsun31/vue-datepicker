@@ -1,5 +1,6 @@
 // utils/dateParsingUtils.ts - 主要的輸入解析工具（支援多日曆系統）
-import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
+import { RocFormatPlugin } from '../plugins/calendars/RocFormatPlugin';
+import { warn } from './logger';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type { SimpleDateValue } from './dateUtils';
@@ -70,7 +71,7 @@ export class SmartDateParser {
             return this.fallbackParse(trimmed);
 
         } catch (error) {
-            console.warn('日期解析失敗:', error);
+            warn('日期解析失敗:', error);
             return { success: false, date: null, format: null, confidence: 0 };
         }
     }

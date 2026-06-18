@@ -4,10 +4,11 @@
  */
 
 import { ref, nextTick, type Ref } from 'vue';
+import type { DateTimeInputExpose } from '../types/internal';
 
 interface InputRefs {
-    dateInputRef: Ref<any>;
-    timeInputRef: Ref<any>;
+    dateInputRef: Ref<DateTimeInputExpose | null>;
+    timeInputRef: Ref<DateTimeInputExpose | null>;
 }
 
 interface NavigationOptions {

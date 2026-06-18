@@ -39,9 +39,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
-import { isNumeric } from '@/utils/validationUtils';
-import vAutowidthDirective from '@/directives/v-autowidth';
-import { type FieldError } from '@/types/internal';
+import { logError } from '../../utils/logger';
+import { isNumeric } from '../../utils/validationUtils';
+import vAutowidthDirective from '../../directives/v-autowidth';
+import { type FieldError, type FieldErrorParams } from '../../types/internal';
 
 export type TimePeriod = 'AM' | 'PM';
 export type TimeFieldType = 'hour' | 'minute' | 'second';
@@ -86,7 +87,7 @@ const emit = defineEmits<{
     'validation': [
         isValid: boolean,
         errors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>>
+        errorParams: FieldErrorParams
     ];
     'complete': [time: string];
     'navigate-to-date': []; // 導航到日期輸入的事件
@@ -98,7 +99,7 @@ const minuteValue = ref<string>('');
 const secondValue = ref<string>('');
 const periodValue = ref<TimePeriod>('AM');
 const errors = ref<Record<string, FieldError>>({});
-const errorParams = ref<Record<string, Record<string, any>>>({});
+const errorParams = ref<FieldErrorParams>({});
 const focused = ref<TimeFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
@@ -151,7 +152,7 @@ const localizedPeriod = computed(() => {
 
         return periodValue.value === 'AM' ? amPeriod : pmPeriod;
     } catch (error) {
-        console.error('Error getting localized period:', error);
+        logError('Error getting localized period:', error);
         return periodValue.value;
     }
 });
@@ -274,8 +275,8 @@ const togglePeriod = () => {
 };
 
 // 驗證並發送事件
-const validateAndEmit = () => {
-    if (!isInitialized.value) return;
+const validateAndEmit = (): boolean => {
+    if (!isInitialized.value) return true;
 
     // 清除所有錯誤
     errors.value = {};
@@ -331,6 +332,8 @@ const validateAndEmit = () => {
     } else if (isInitialized.value) {
         emit('update:modelValue', null);
     }
+
+    return !hasErrors.value;
 };
 
 // 輸入處理函數

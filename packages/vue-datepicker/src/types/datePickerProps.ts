@@ -1,11 +1,11 @@
-import { type TailwindColor, type OutputType } from './main';
-import type { DateTimeInput } from '@/utils/dateUtils';
-import type { LocaleMessages } from '@/types/locale';
+import { type TailwindColor, type OutputType } from './public';
+import type { DateTimeInput } from '../utils/dateUtils';
+import type { LocaleMessages } from './locale';
 
 interface BaseDatePickerProps {
     // 主題
     mode?: 'light' | 'dark' | 'auto';
-    theme?: TailwindColor | string;
+    theme?: TailwindColor | (string & {});
 
     // 日曆系統 ID，如 'gregory', 'roc', 'japanese'
     calendar?: string; // 日曆系統 預設為 'gregory'

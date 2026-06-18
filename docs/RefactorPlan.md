@@ -258,19 +258,23 @@
 
 ### Phase 3 — Packaging + dts（決策 E）
 - [x] **✅ dts plugin-less（2026-06-16，提前完成）**：新增 `tsconfig.build.json`；`build:types` = `vue-tsc -p tsconfig.build.json`；移除 `vite-plugin-dts`；types/exports → `dist/index.d.ts`；`src/shims-css.d.ts` 解 CSS import。
-- [ ] vite lib 釘 `cssFileName`；`exports` 補 `./style`。
-- [ ] `npm pack` 驗證：版本 2.0.0、CSS 一併打包、無 favicon、公開型別可解析、`TailwindColor` union 未塌成 string。
+- [x] **✅ vite lib 釘 `cssFileName: 'vue-datepicker'`（2026-06-18）**；`exports['./style']` 確認已存在（含 `.css.d.ts` types）。
+- [x] **✅ `package.json` 收尾（2026-06-18）**：`version` 1.0.5→**2.0.0**；`files` 移除不存在的 `"types"`；新增 `"sideEffects": ["**/*.css"]`；description 改為「self-contained（no Tailwind required）」。
+- [x] **✅ `npm pack` 驗證（2026-06-18）**：56 檔 / 464kB；含 `dist/index.d.ts` + `vue-datepicker.css` + `.css.d.ts`；**無 favicon/png**、**無殘留 `types/` 目錄**。
+- [x] **✅ 公開型別可解析（2026-06-18，本輪關鍵修正）**：原 16 個 emitted `.d.ts` 帶 `@/` alias（消費者端無法解析）→ 將 src 全部 **38 個 `@/` import 轉相對路徑**（25 檔；順勢完成 §5.7「統一 import 風格」）。dist d.ts `@/` 殘留歸零；`TailwindColor` union 保留 22 色名（`keyof typeof tailwindBaseColors`）；`theme?: TailwindColor | (string & {})` 保留色名補全（§5.8）。499 測試綠。
+- [x] **✅ `@tailwindcss/vite` 去留決議（2026-06-18）**：**保留**。library source 無任何 `@import "tailwindcss"`/`@apply`/`@theme`，plugin 對出貨 CSS 無實質處理（dist 已核實 `--tw-`/preflight 皆 0）；playground `pnpm dev` 的 chrome 仍需它 → 保留無害、移除有風險。
+- 📌 **dayjs 策略（文件待辦，Phase 5）**：維持 `dependencies` + `external`（ESM 由 node_modules 解析；UMD `<script>` 消費者需自備 dayjs 全域）。屬標準作法，於 README 註明即可，不改 code。
 
 ### Phase 4 — 程式碼品質與架構（§5，主題以外；可與 1–3 並行）
 > 先補測試鎖住現有行為，再重構，避免回歸。
 - [x] **✅ 5.1 響應式模型（modelValue）**：`options.modelValue` 改 `MaybeRefOrGetter` + 呼叫端傳 getter + watch 用 `toValue` → 受控更新生效；測試由 `it.fails` 轉 5 個正式通過。🔴 殘留 dateFormat/outputType 快照（可選）。
 - [x] **✅ 5.2 computed 副作用**：`isValidRange` 純函數化；範圍限制驗證副作用抽成 `applyRangeConstraintValidation`，由 `emitRangeEvents` 集中呼叫。🔴
 - [x] **✅ 5.3 i18n**：硬寫錯誤字串 `'無效的日期格式'`→`'date.invalid'` key；DateRange 預設 shortcut 標籤改走 locale（新增 `ShortcutMessages` + 5 語系；`getMessage`/`localeRef` 注入；缺漏回退繁中）。加 2 個 i18n 鎖定測試。🟡
-- [ ] **5.4 型別**：errorParams 具名型別、子元件 ref 用 `InstanceType`、削減 `any`。🟡
-- [ ] **5.5 console**：收斂 dev-gated `warn('[vue-datepicker]…')` helper，移除註解 log。🟡
-- [ ] **5.6 重複**：`useDateRange` start/end factory；`DatePicker`/`DateRange` shell 共用化。🟡
-- [~] **5.7 清理（部分）**：✅ `required` 預設對齊（true→false）、移除 useDateRange 死註解碼；⬜ `setTimeout(0)` hack、`useLocale` 每實例 LocaleManager 收斂待辦。⚪
-- [ ] **5.8 型別/命名**：`TailwindColor` 單一來源、`theme?: TailwindColor|(string&{})`、`types/main→public`、清 TODO。⚪
+- [x] **✅ 5.4 型別（2026-06-18）**：`any` 55→7（剩餘為 i18n 訊息樹遍歷 / `deepMerge` / slot map / lib calendar cast，皆屬合理動態）。新增具名型別 `ErrorParams`/`FieldErrorParams`/`MessageParams`（`types/internal.ts`）取代滿佈的 `Record<string,Record<string,any>>` 與 i18n 參數 `Record<string,any>`；子元件 ref 以窄介面 `DateTimeInputExpose`（validate/focus/focusLast）取代 `Ref<any>`（比完整 InstanceType 更貼合實際用途、不逼測試 mock 整個元件實例）；`clearFieldErrors/handleValidation` 的 `validation: any`→`ValidationApi=ReturnType<typeof useDateTimeValidation>`；`isSimpleDateValue(value:any)`→`unknown` type-guard。**順帶修一個被 `any` 遮蔽的潛在 bug**：`DateInput/TimeInput.validateAndEmit` 原回傳 `void`，使 picker `validate()` 永遠 resolve falsy → 改回傳 `!hasErrors.value`，picker 內 `?.validate() ?? true` 補 ref-null。🟡
+- [x] **✅ 5.5 console（2026-06-18）**：新增單一 dev-gated helper `src/utils/logger.ts`（`warn`/`logError`/`logDebug`，`[vue-datepicker]` 前綴，`import.meta.env.DEV` gate）。全 src 63 處 `console.*` 收斂至 helper（含 useTheme 既有 dev-warn）、移除註解 debug log。**出貨 ES/UMD bundle `console.*` 與前綴字串皆 0（production 整段 tree-shake，bundle 略縮）**。更新 3 處測試 console 斷言以含前綴。🟡
+- [x] **✅ 5.6 重複（2026-06-18）**：①`useDateRange` 8 個 `handleStart*/handleEnd*`（date/time validation + complete）抽成 `createSideHandlers(validation, dateTime, navigation, config)` factory，差異（欄位前綴/預設時間/start 專屬焦點轉移）以參數/`onDateComplete` callback 表達；順帶把 start 側 time-validation emit 補上 `mergedErrorParams`（與 end 對齊，原為 2 引數不一致）。②`DatePicker`/`DateRange` 逐字相同的 `computedTimeFormat` 抽成純函數 `resolveTimeFormat(opts)`（dateUtils，+5 單元測試）。**shell base composable 評估後不做**：Phase 1/2/4 已把主題（`useTheme`）/語系（`useLocale`）/驗證/日期邏輯抽進 composables，兩元件殘餘為真正分歧的膠水（DatePicker 有 format-fixing + customLocaleMessages watch；DateRange 有 shortcuts + 雙曆），強做共用 base 將是洩漏抽象、風險>收益。🟡
+- [x] **✅ 5.7 清理（2026-06-18 補完大部分）**：✅ `required` 預設對齊（true→false）、移除 useDateRange 死註解碼；✅ `setTimeout(0)` 排序 hack → `nextTick`（順帶移除未用的 `ref` import）。📌 `useLocale` 每實例 `new LocaleManager()`：**經查並非「重註冊內建語系」**（內建語系存於 module-level `localeMessages` const，建構子僅設 currentLocale，成本可忽略）；真正的潛在問題是 `registerLocale` 變動「共享的」module-level `localeMessages` → 自訂語系跨實例洩漏（與 §6.2 globalParser 同類共享狀態）。屬 locale 系統較大改動、低優先，**留待專門 pass**（不在本輪動）。⚪
+- [x] **✅ 5.8 型別/命名（2026-06-18）**：✅ `TailwindColor` 單一來源（`keyof typeof tailwindBaseColors`，Phase 1 已成）；✅ `theme?: TailwindColor | (string & {})`（本輪 Phase 3 補）；✅ `types/main.ts` → `types/public.ts`（`git mv` 保留歷史，8 處 import + index 再匯出 + playground 同步，dist 出 `types/public.d.ts`）；✅ 清掉 `DatePicker.vue` 的 TODO + 被通用 slot 轉發取代的死註解 `#year-display` 區塊。⚪
 
 ### Phase 6 — 核心日曆流程重構（§5.5；多曆法是核心價值，獨立大塊）
 > 先補曆法轉換/格式化/解析的單元測試（各曆法 round-trip），再重構。
@@ -285,6 +289,9 @@
 ### Phase 5 — 測試、文件、發佈
 - [ ] 單元/元件測試補齊（目標 27↑ 全綠）；主題相關行為測試。
 - [ ] 自建最小 playground 截圖 + eval：預設色、`theme` prop per-instance 覆蓋、設 `--tia-theme-primary` 家族換色生效、深淺模式、focus/error 狀態。
+- [ ] **（Phase 2 併入）響應式斷點視覺驗證**：`preview_resize` 驗 DateRange `md:`(768px)/`sm:`(640px)——單月↔雙月、輸入區 column↔row、彈窗 max-h/min-w。
+- [ ] **（Phase 2 併入）淺色模式無-Tailwind 截圖**：補一張 light 模式停用 Tailwind 後的元件截圖（深色已驗）。
+- [ ] **（Phase 2 併入）公開 class hook 文件化**：marker class（`date-picker-icon`/`date-placeholder`/`calendar-container`）+ `.date-picker-container(.error)` + 主要 `.vdp-*` 列為對外可覆寫 hook。
 - [ ] 更新 README（中英）：安裝段（免裝 Tailwind）、Theme 段（新模型 + `--tia` 分層）、Props（mode/theme 行為變更）。
 - [ ] CHANGELOG 2.0.0（breaking：色階移除、JS 動態移除、命名空間 vdt→vdp、Tailwind peer 移除）。
 - [ ] docs 站 theming 頁（中英）重寫為新模型。
@@ -297,9 +304,9 @@
 |-------|------|------|
 | 0 測試轉綠 + 清理盤點 | 🟡 進行中 | ✅ vitest 470 全綠（pnpm override 修重複 test-utils）；⬜ type-check 仍紅（→Phase 3）、清理盤點待辦 |
 | 1 主題引擎重寫 | ✅ 完成 | 三層 token + 宣告式 useTheme + 刪 themeManager/colorUtils(~700行) + vdt→vdp + 色階→color-mix；499 測試綠、CSS 自包含。破壞性：violet→indigo 預設、移除命令式主題 API |
-| 2 CSS 語義 class + 自包含 | ✅ 完成 | 13/13 元件 utility→字面 .vdp-* CSS（隔離 --vdp-* token）；移除 tailwindcss peer；無-Tailwind 截圖驗證 + dist 自包含核實（--tw-/preflight 0）；499 測試綠。錯誤狀態統一 .error(§3) |
-| 3 Packaging + dts | 🟡 進行中 | ✅ dts plugin-less 完成（vue-tsc -p tsconfig.build.json）；⬜ 移除 Tailwind peer / cssFileName 釘住 / npm pack 驗證待 Phase 2 後 |
-| 4 程式碼品質（主題以外） | 🟡 進行中 | ✅ 5.1 受控更新 / 5.2 computed 副作用 / 5.3 i18n / 5.7 部分清理（490 測試全綠）；⬜ 5.4 型別 / 5.5 console / 5.6 重複 / 5.7 殘項 |
+| 2 CSS 語義 class + 自包含 | ✅ 完成 | 13/13 元件 utility→字面 .vdp-* CSS（隔離 --vdp-* token）；移除 tailwindcss peer；無-Tailwind 截圖驗證 + dist 自包含核實（--tw-/preflight 0）；錯誤狀態統一 .error(§3)。殘留決策已定案（marker class 保留為公開 hook）；響應式/淺色視覺驗證併入 Phase 5 |
+| 3 Packaging + dts | ✅ 完成 | dts plugin-less + cssFileName 釘住 + version 2.0.0 + files/sideEffects + npm pack 驗證 + 公開型別可解析（38 個 @/→相對，d.ts 零 alias 殘留）；@tailwindcss/vite 保留決議。dayjs 文件待 Phase 5 |
+| 4 程式碼品質（主題以外） | ✅ 完成 | 5.1 受控更新 / 5.2 computed / 5.3 i18n / 5.4 型別（any 55→7、修潛在 validate() bug）/ 5.5 console（dev-gated logger、dist 0 console）/ 5.6 重複（side-handler factory + resolveTimeFormat）/ 5.7 清理（setTimeout→nextTick）/ 5.8 命名（types/main→public、清 TODO）。504 測試全綠、type-check/build 0。📌 殘留低優先：useLocale 共享 localeMessages 跨實例洩漏（併入 §6.2 類共享狀態 pass）、§5.4 合理動態 any |
 | 5 測試 / 文件 / 發佈 | ⬜ 未開始 | 2.0.0 CHANGELOG + README 中英 + docs |
 | 6 核心日曆流程重構 | ⬜ 未開始 | 插件 registry / globalParser 去單例 / metadata 收斂；先補 round-trip 測試 |
 
@@ -331,18 +338,18 @@
 - ✅ 後補修正：5 個 color-mix 衍生變數從 `:root` 移到 `.date-picker-wrapper, .date-range-wrapper`，使 per-instance `theme`（hex/rgb/oklch/色名）能驅動 ring/subtle/hover/strong/border（已 eval + 截圖驗證）。
 - 📌 跨 repo 註記（非本專案待辦）：`@tiaohsun/vue-datatable` 參考實作的衍生變數仍放在 `:root`，有同樣 per-instance bug；若要家族一致，建議在 datatable 套用相同 wrapper 修法。
 
-### Phase 2（CSS 自包含）— ✅ 主體完成；以下為殘留/待確認
+### Phase 2（CSS 自包含）— ✅ 完成（殘留決策已定案，視覺驗證併入 Phase 5）
 - ✅ 13/13 出貨元件 utility→字面 `.vdp-*` CSS（共用 components.css + 元件 scoped）、移除 `tailwindcss` peer、無-Tailwind 截圖驗證、dist 自包含核實（`--tw-`/preflight/Tailwind theme vars 皆 0）。
 - ⬜ **`TimePicker.vue` 死碼清理**：未在 `index.ts` 匯出、無任何元件 import、coverage 已排除；仍含 Tailwind utility 與不存在的 `bg-vdt-primary-500`。建議**直接刪除**（或若要保留則一併轉 `.vdp-*`）。不影響目前出貨自包含。
-- ⬜ **`@tailwindcss/vite` 是否從 library build 移除**：library 出貨 CSS 已純字面、不再需要 Tailwind 編譯；惟 playground `pnpm dev` 仍依賴。可評估改為僅 playground 使用，或保留（無害）。歸入 Phase 3 packaging。
-- ⬜ **marker class 去留**（`date-picker-icon`/`date-placeholder`/`calendar-container`）：目前為無對應 CSS 的純標記。決定要嘛文件化為公開 hook、要嘛移除。
-- ⬜ **響應式斷點視覺驗證**：DateRange 雙月 `md:`(768px) 與 `sm:`(640px) 已寫成字面 media query，但只在預設寬度截圖過；新 session 建議用 `preview_resize` 驗 mobile/desktop（單月↔雙月、輸入區 column↔row、彈窗 max-h/min-w）。
-- ⬜ **淺色模式無-Tailwind 截圖**：決定性驗證時瀏覽器處於 dark（已涵蓋深色）；淺色雖由 theme.css 預設涵蓋、風險低，仍建議補一張 light 模式無-Tailwind 截圖。
+- ✅ **`@tailwindcss/vite` 去留（2026-06-18 決議：保留）**：library source 無 Tailwind 指令，plugin 對出貨 CSS 無實質處理（dist `--tw-`/preflight 皆 0），playground dev chrome 仍需它 → 保留無害。
+- ✅ **marker class 決策（2026-06-18 使用者拍板：保留為公開 hook）**：`date-picker-icon`/`date-placeholder`/`calendar-container` 與 `.vdp-*` 並存、本身無對應 CSS（純標記）。決定**保留**作為對外穩定 class hook（符合 §0 目標、非破壞性）。📌 實際文件化（列入公開 hook 清單）為 **Phase 5** 工作項。
+- ⏭️ **響應式斷點視覺驗證 → 併入 Phase 5**：DateRange 雙月 `md:`(768px) 與 `sm:`(640px) 已寫成字面 media query，但只在預設寬度截圖過；新 session 以 `preview_resize` 驗 mobile/desktop（單月↔雙月、輸入區 column↔row、彈窗 max-h/min-w）。純驗證、不改 code。
+- ⏭️ **淺色模式無-Tailwind 截圖 → 併入 Phase 5**：先前決定性驗證時瀏覽器處於 dark（已涵蓋深色）；淺色由 theme.css 預設涵蓋、風險低，補一張 light 模式無-Tailwind 截圖即可。
 - 📌 文件連動（Phase 5）：錯誤樣式已由硬寫 `border-red-500` 改為 `.date-picker-container.error` hook（§3）；README/docs 若提及錯誤樣式或可覆蓋 class，需同步更新。
 
 ### 接手建議順序
-1. （可選）刪 `TimePicker.vue` 死碼。
-2. Phase 3 收尾：vite lib 釘 `cssFileName`、`exports` 補/確認 `./style`、`npm pack` 驗證（CSS 一併打包、bump 2.0.0）、評估 library build 是否移除 `@tailwindcss/vite`。
-3. Phase 4 其餘（§5.4 型別 / §5.5 console / §5.6 重複 / §5.7 殘項）。
-4. Phase 6 核心日曆流程（插件 registry / globalParser 去單例 / metadata 收斂）。
-5. Phase 5 測試補強 + README（中英，免裝 Tailwind + 新主題模型）+ CHANGELOG 2.0.0 + docs theming 頁；含上述響應式/淺色截圖驗證。
+1. ~~（可選）刪 `TimePicker.vue` 死碼。~~ → **使用者指示保留**（未來擴充候選），勿刪勿改。
+2. ~~Phase 3 收尾~~ → **✅ 完成（2026-06-18）**：cssFileName 釘住、`./style` 確認、version 2.0.0、files/sideEffects、npm pack 驗證、`@/`→相對修好公開型別可解析、`@tailwindcss/vite` 保留決議。
+3. ~~Phase 4 其餘~~ → **✅ 完成（2026-06-18）**：§5.4 型別（any 55→7 + 修 validate() 潛在 bug）/ §5.5 console（dev-gated logger、dist 0 console）/ §5.6 重複（side-handler factory + resolveTimeFormat；shell base 評估後不做）/ §5.7（setTimeout→nextTick）/ §5.8（types/main→public、清 TODO）。
+4. **（下一步）Phase 6 核心日曆流程**（插件 registry / globalParser 去單例 / metadata 收斂）；可一併處理 §5.7 留下的 useLocale 共享 localeMessages 跨實例洩漏（同類共享狀態）。
+5. Phase 5 測試補強 + README（中英，免裝 Tailwind + 新主題模型）+ CHANGELOG 2.0.0 + docs theming 頁；含響應式/淺色截圖驗證、**dayjs external 策略註明**。

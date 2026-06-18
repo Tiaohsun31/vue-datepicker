@@ -59,14 +59,14 @@ describe('useDefaultTime', () => {
             const { isValidTimeValue } = useDefaultTime();
 
             isValidTimeValue('invalid');
-            expect(consoleSpy).toHaveBeenCalledWith('時間格式不正確: invalid，應為 HH:mm:ss 或 HH:mm 格式');
+            expect(consoleSpy).toHaveBeenCalledWith('[vue-datepicker]', '時間格式不正確: invalid，應為 HH:mm:ss 或 HH:mm 格式');
         });
 
         it('應該在數值超出範圍時顯示警告', () => {
             const { isValidTimeValue } = useDefaultTime();
 
             isValidTimeValue('25:00:00');
-            expect(consoleSpy).toHaveBeenCalledWith('時間格式不正確: 25:00:00，應為 HH:mm:ss 或 HH:mm 格式');
+            expect(consoleSpy).toHaveBeenCalledWith('[vue-datepicker]', '時間格式不正確: 25:00:00，應為 HH:mm:ss 或 HH:mm 格式');
         });
     });
 

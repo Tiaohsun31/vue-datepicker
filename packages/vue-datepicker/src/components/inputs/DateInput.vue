@@ -37,11 +37,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
+import { warn } from '../../utils/logger';
 import dayjs from 'dayjs';
-import { isNumeric, isLeapYear } from '@/utils/validationUtils';
-import vAutowidthDirective from '@/directives/v-autowidth';
-import { parseInputToSimpleDate } from '@/utils/dateUtils';
-import type { FieldError } from '@/types/internal';
+import { isNumeric, isLeapYear } from '../../utils/validationUtils';
+import vAutowidthDirective from '../../directives/v-autowidth';
+import { parseInputToSimpleDate } from '../../utils/dateUtils';
+import type { FieldError, FieldErrorParams } from '../../types/internal';
 
 const vAutowidth = {
     mounted: vAutowidthDirective.mounted,
@@ -85,7 +86,7 @@ const emit = defineEmits<{
     'validation': [
         isValid: boolean,
         errors: Record<string, string>,
-        errorParams: Record<string, Record<string, any>>
+        errorParams: FieldErrorParams
     ];
     'complete': [date: string];
 }>();
@@ -95,7 +96,7 @@ const yearValue = ref<string>('');
 const monthValue = ref<string>('');
 const dayValue = ref<string>('');
 const errors = ref<Record<string, FieldError>>({});
-const errorParams = ref<Record<string, Record<string, any>>>({});
+const errorParams = ref<FieldErrorParams>({});
 const focused = ref<DateFieldType | null>(null);
 const isInitialized = ref<boolean>(false);
 
@@ -148,7 +149,7 @@ const dateSegments = computed(() => {
 
     // 確保有基本的三個組件
     if (segments.length !== 3) {
-        console.warn(`Invalid date format: ${props.dateFormat}, falling back to YYYY-MM-DD`);
+        warn(`Invalid date format: ${props.dateFormat}, falling back to YYYY-MM-DD`);
         return ['year', 'month', 'day'];
     }
 
@@ -214,7 +215,7 @@ const focusFirstInput = () => {
         try {
             inputElement.focus();
         } catch (error) {
-            console.warn('無法聚焦到輸入框:', error);
+            warn('無法聚焦到輸入框:', error);
         }
     } else {
         // 如果第一個輸入框不可用，嘗試其他輸入框
@@ -225,7 +226,7 @@ const focusFirstInput = () => {
                     element.focus();
                     break;
                 } catch (error) {
-                    console.warn('無法聚焦到輸入框:', error);
+                    warn('無法聚焦到輸入框:', error);
                 }
             }
         }
@@ -239,7 +240,7 @@ const safelyFocus = (fieldType: DateFieldType) => {
         try {
             element.focus();
         } catch (error) {
-            console.warn(`無法聚焦到 ${fieldType} 輸入框:`, error);
+            warn(`無法聚焦到 ${fieldType} 輸入框:`, error);
         }
     }
 };
@@ -261,7 +262,7 @@ const safelyFocusAndSetCursor = (fieldType: DateFieldType, position: 'start' | '
             element.setSelectionRange(length, length);
         }
     } catch (error) {
-        console.warn(`無法聚焦或設置游標位置到 ${fieldType} 輸入框:`, error);
+        warn(`無法聚焦或設置游標位置到 ${fieldType} 輸入框:`, error);
     }
 };
 
@@ -349,8 +350,8 @@ const validateField = (field: DateFieldType, value: string): { valid: boolean; e
 
 
 // 驗證並發送事件
-const validateAndEmit = () => {
-    if (!isInitialized.value) return;
+const validateAndEmit = (): boolean => {
+    if (!isInitialized.value) return true;
 
     // 清空之前的錯誤
     errors.value = {};
@@ -433,6 +434,8 @@ const validateAndEmit = () => {
 
     // 發送驗證結果
     emit('validation', !hasErrors.value, localizedErrors.value, errorParams.value);
+
+    return !hasErrors.value;
 };
 
 // 重置所有輸入欄位
@@ -519,7 +522,7 @@ const focusLastInput = () => {
                 const length = inputElement.value.length;
                 inputElement.setSelectionRange(length, length);
             } catch (error) {
-                console.warn('無法聚焦到最後一個輸入框:', error);
+                warn('無法聚焦到最後一個輸入框:', error);
             }
         }
     });

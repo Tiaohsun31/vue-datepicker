@@ -21,6 +21,7 @@ describe('useDateTimePicker Integration Tests', () => {
         timeInputRef: ref({
             validate: vi.fn().mockResolvedValue(true),
             focus: vi.fn(),
+            focusLast: vi.fn(),
             setTime: vi.fn()
         })
     })

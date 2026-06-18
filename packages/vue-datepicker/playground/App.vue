@@ -132,7 +132,7 @@
 import { ref } from 'vue';
 import DatePicker from '@/DatePicker.vue';
 import DateRange from '@/DateRange.vue';
-import type { OutputType } from '@/types/main';
+import type { OutputType } from '@/types/public';
 import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin';
 
 // 民國113年6月15日

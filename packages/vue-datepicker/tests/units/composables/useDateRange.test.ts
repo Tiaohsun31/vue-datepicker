@@ -27,11 +27,13 @@ describe('useDateRange Integration Tests', () => {
         startTimeInputRef: ref({
             validate: vi.fn().mockResolvedValue(true),
             focus: vi.fn(),
+            focusLast: vi.fn(),
             setTime: vi.fn()
         }),
         endTimeInputRef: ref({
             validate: vi.fn().mockResolvedValue(true),
             focus: vi.fn(),
+            focusLast: vi.fn(),
             setTime: vi.fn()
         })
     })

@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import CalendarGrid from './CalendarGrid.vue';
-import { getTodaysDate, type SimpleDateValue } from '@/utils/dateUtils';
+import { getTodaysDate, type SimpleDateValue } from '../../utils/dateUtils';
 
 type MonthDisplayMode = 'single' | 'dual';
 

@@ -12,7 +12,7 @@ import {
     type SimpleDateValue,
     type DateTimeInput,
 } from '../utils/dateUtils';
-import type { OutputType } from '../types/main';
+import type { OutputType } from '../types/public';
 
 interface DateTimeValueOptions {
     showTime?: boolean;
@@ -174,7 +174,6 @@ export function useDateTimeValue(
         }
         // internalDateTime.value = dateTime;
 
-        // console.log('setInternalDateTime', dateTime);
 
         // // 同步更新顯示值（西元格式）
         // if (dateTime) {

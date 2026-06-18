@@ -1,10 +1,12 @@
 // locale/index.ts
 import { zhTWLocaleMessages as zhTW } from './zh-TW';
+import { warn } from '../utils/logger';
 import { zhCNLocaleMessages as zhCN } from './zh-CN';
 import { enUSLocaleMessages as enUS } from './en-US';
 import { jaJPLocaleMessages as jaJP } from './ja-JP';
 import { koKRLocaleMessages as koKR } from './ko-KR';
-import type { ErrorMessages, LocaleMessages } from '@/types/locale';
+import type { ErrorMessages, LocaleMessages } from '../types/locale';
+import type { MessageParams } from '../types/internal';
 
 export type SupportedLocale = 'zh-TW' | 'zh-CN' | 'en-US' | 'ja-JP' | 'ko-KR';
 export type LocaleKey = SupportedLocale | string;
@@ -18,7 +20,7 @@ export const localeMessages: Record<string, LocaleMessages> = {
 };
 
 // 訊息插值函數
-export function interpolateMessage(template: string, variables: Record<string, any>): string {
+export function interpolateMessage(template: string, variables: MessageParams): string {
     return template.replace(/\{(\w+)\}/g, (match, key) => {
         return variables[key]?.toString() || match;
     });
@@ -30,7 +32,7 @@ export class LocaleManager {
 
     setLocale(locale: string): void {
         if (!localeMessages[locale]) {
-            console.warn(`Locale '${locale}' not found, falling back to 'zh-TW'`);
+            warn(`Locale '${locale}' not found, falling back to 'zh-TW'`);
             this.currentLocale = 'zh-TW';
             return;
         }
@@ -56,7 +58,7 @@ export class LocaleManager {
         return this.currentLocale;
     }
 
-    getMessage(path: string, variables?: Record<string, any>): string {
+    getMessage(path: string, variables?: MessageParams): string {
         const keys = path.split('.');
         let message: any = localeMessages[this.currentLocale];
 
@@ -65,25 +67,25 @@ export class LocaleManager {
         }
 
         if (typeof message !== 'string') {
-            console.warn(`Missing translation for path: ${path} in locale: ${this.currentLocale}`);
+            warn(`Missing translation for path: ${path} in locale: ${this.currentLocale}`);
             return path;
         }
 
         return variables ? interpolateMessage(message, variables) : message;
     }
 
-    getErrorMessage(path: string, variables?: Record<string, any>): string {
+    getErrorMessage(path: string, variables?: MessageParams): string {
         return this.getMessage(`error.${path}`, variables);
     }
 
-    getPlaceholderMessage(path: string, variables?: Record<string, any>): string {
+    getPlaceholderMessage(path: string, variables?: MessageParams): string {
         return this.getMessage(`placeholder.${path}`, variables);
     }
 
     // 支援自定義語言包
     addCustomMessages(locale: string, messages: Partial<LocaleMessages>): void {
         if (!localeMessages[locale]) {
-            console.warn(`Locale '${locale}' not found. Please register it first using registerLocale().`);
+            warn(`Locale '${locale}' not found. Please register it first using registerLocale().`);
             return;
         }
 
@@ -103,7 +105,7 @@ export class LocaleManager {
     /**
      * 獲取參數化錯誤訊息
      */
-    getParameterizedErrorMessage(key: string, params: Record<string, any> = {}): string {
+    getParameterizedErrorMessage(key: string, params: MessageParams = {}): string {
         const message = this.getErrorMessage(key);
         return this.interpolateParameters(message, params);
     }
@@ -111,7 +113,7 @@ export class LocaleManager {
     /**
      * 參數插值
      */
-    interpolateParameters(template: string, variables: Record<string, any> = {}): string {
+    interpolateParameters(template: string, variables: MessageParams = {}): string {
         if (!variables || Object.keys(variables).length === 0) {
             return template;
         }
@@ -121,7 +123,7 @@ export class LocaleManager {
 
             // 處理 undefined 或 null 值
             if (value === undefined || value === null) {
-                console.warn(`Missing variable '${key}' for template: "${template}"`);
+                warn(`Missing variable '${key}' for template: "${template}"`);
                 return match; // 保持原始佔位符
             }
 
@@ -152,14 +154,14 @@ export const localeManager = new LocaleManager();
 export function safeGetParameterizedMessage(
     localeManager: LocaleManager,
     key: string,
-    params: Record<string, any> = {},
+    params: MessageParams = {},
     fallback?: string
 ): string {
     try {
         const message = localeManager.getParameterizedErrorMessage(key, params);
         return message !== key ? message : (fallback || key);
     } catch (error) {
-        console.warn(`翻譯失敗: ${key}`, error);
+        warn(`翻譯失敗: ${key}`, error);
         return fallback || key;
     }
 }

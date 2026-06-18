@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useLocale } from '@/composables/useLocale';
+import { useLocale } from '../../composables/useLocale';
 interface Props {
     show?: boolean;
     timeValue?: string | null;

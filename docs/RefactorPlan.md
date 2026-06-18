@@ -228,15 +228,33 @@
 > 5. 開啟日曆：focus 邊框 = primary、**選中日背景 = primary**、深色 surface ✓
 > 6. error：required 空值 → 紅框 + i18n 錯誤訊息（請輸入年份…）✓
 >
+> **🔴→✅ 後續修正（2026-06-17，使用者回報）：衍生狀態色未跟隨 per-instance `theme`**。
+> 症狀：`theme="#ff0000"` 時 border 變紅（直接用 `var(--color-vdp-primary)`）但 **focus ring / subtle 仍 indigo**。
+> 根因：`-hover/-strong/-subtle/-border/-ring` 原宣告在 `:root`，其 `var(--color-vdp-primary)` 在 :root 就以家族色代換完成、子層只繼承結果；而 theme prop 是把 `--color-vdp-primary` inline 設在 wrapper，無法回頭驅動已在 :root 算好的衍生變數。
+> 修法：把 5 個 color-mix 衍生變數**從 `:root` 移到 `.date-picker-wrapper, .date-range-wrapper`**，依各實例有效的 `--color-vdp-primary`（inline 覆蓋 / 繼承家族）重新代換。已用 eval + 截圖驗證（紅色 theme 的 ring 變紅）。
+> （註：Phase 1 當時的 eval 數據其實已顯示每個實例 ring 都是 indigo，但未察覺；此為當時驗證的疏漏。）
+>
 > **⚠️ 重要 CSS 行為（須寫進 Phase 5 Theme 文件）**：`--color-vdp-primary` 在 `:root` 宣告，其 `var(--tia-theme-primary)` 於 :root 即代換完成、子層僅繼承結果。因此：
 > - **家族換色請在 `:root`（全域）設定 `--tia-theme-primary`** —— 在中間層（某 div/section）覆寫 `--tia-theme-primary` **不會**傳播到 `--color-vdp-primary`。
 > - **per-instance / 子樹換色請用 `theme` prop**（inline 覆寫 `--color-vdp-primary`，已驗證可用），或在該子樹直接覆寫 `--color-vdp-primary`。
 
-### Phase 2 — CSS 語義 class + 自包含（最大塊）
-- [ ] 建 `src/styles/components.css`，定義 `.date-picker-container`（+`.error`）與各 `.vdp-*` hook，用 `--vdp-*` token 撰寫自包含字面 CSS。
-- [ ] 逐元件把模板 Tailwind utility 搬進 `.vdp-*`（§3 清單），所有 `--color-vdt-*` → `--color-vdp-*`，色階 → 衍生變數。
-- [ ] 移除 `tailwindcss` peerDependency。
-- [ ] **決定性驗證**：playground 暫停 `@import "tailwindcss"` 後截圖，元件仍完整渲染 → 證明 dist CSS 自包含。
+### Phase 2 — CSS 語義 class + 自包含（最大塊，🟡 進行中）
+
+> **做法定案（2026-06-16，使用者確認）：採 A（手寫 `.vdp-*` 字面 CSS + 自有 `--vdp-*` token）。**
+> 否決 B（Tailwind 編譯出貨）原因：B 需把通用 `@theme` 變數（`--spacing`/`--text-sm`…）輸出到 `:root`，會與「也用 Tailwind 的消費者」**雙向干擾**（互相覆蓋同名變數）＋ preflight 污染。A 用自有 `--vdp-*` 命名空間完全隔離。
+
+- [x] 建 `src/styles/components.css`（theme.css 頂部 `@import`），`.date-picker-container`(+`.error`) 由 theme.css 移入。
+- [🟡] 逐元件把模板 utility → `.vdp-*` 字面 CSS（含動態色彩 class → 語義 modifier）：
+  - [x] **WeekdayHeader**（`.vdp-weekday-header/-cell`）、**CalendarCell**（`.vdp-cell` + `.vdp-cell-btn` + `--selected/--in-range/--today/--clickable/--disabled/--muted`）。已驗證（ROC 日曆截圖：星期列/日期格/今天標記/月外淡色皆正確）。
+  - [x] **DateInput** / **TimeInput**：版面/字級/分隔符/AM-PM utility 收進各自 scoped `<style>`（已有 `.date-input`/`.time-input` appearance reset，延伸加 `font-size/line-height/text-align` + `.date-input-container`/`.time-input-container` flex + `.date-sep`/`.time-sep` + `.time-period(--active)`）；`text-gray-400`→`--color-vdp-content-muted`（mode-aware）。已驗證（inspect：font-size 14px/置中/透明；截圖：年-月-日 時:分:秒 AM 整列正確）。
+  - [x] **TimeSelector** / **YearSelector**：共用 `.vdp-select`（components.css，與 CalendarHeader 共用）+ 各自 scoped class（TimeSelector：`.vdp-time-divider/-header/-label/-actions/-btn/-fields/-field` + `.vdp-period-group/-btn(--active)`；YearSelector：`.vdp-year-selector/-nav/-nav-btn/-range-text/-grid/-btn(--selected/--warning)/-num/-ref/-empty/-return-btn/-jump/-input/-jump-info`）。`text-gray-400`→content-muted、`ring-amber-400`→字面 amber。已驗證（截圖：日曆內時間選擇器 Now/Today+三下拉、年份格 4 欄+選中高亮+跳年輸入皆正確）。
+  - [x] **CalendarHeader** / **CalendarGrid** / **DateGridView**：components.css 新增 `.vdp-calendar-grid`（容器）、`.vdp-date-grid`（7 欄日期格）、`.vdp-cal-header/-nav-btn/-header-main/-year-wrap/-year-btn`（月份下拉用共用 `.vdp-select`）；新增跨元件 icon helper `.vdp-icon-sm`(1rem)/`.vdp-icon-md`(1.25rem) 取代 `h-4/w-4`、`h-5/w-5`、`size-5`（順手補回 YearSelector 漏掉的 icon class）。移除 CalendarGrid root 死 class `vdt-date-picker`。已驗證（截圖：日曆 header 導航鈕/月份下拉/年份鈕 + 7 欄日期格 + 容器 padding/圓角/陰影皆正確）。
+  - [x] **DateErrorMessage**（`.vdp-error-message`）、**RangeCalendar**（`.vdp-range-calendar(--single/--dual)` + `.vdp-range-month` + 響應式 media query 取代 `md:`）、**DatePicker shell**（`.vdp-wrapper` + 擴充 `.date-picker-container` 版面 + `.vdp-icon-btn/-clear-btn/-placeholder(--muted)/-popup` + scoped `.vdp-input-group/-display-btn/-disabled`；min-width 改 inline style；**錯誤狀態 `border-red-500` → `.error` hook（§3 統一）**）、**DateRange shell**（同上 + scoped `.vdp-range-display/-date/-sep/-popup(--dual)/-body/-inputs/-input-field/-shortcuts/-shortcut-btn/-cal-wrap`，含 `sm:`/`md:` 響應式 media query）。`size-5`→`.vdp-icon-md`。已更新對應測試斷言（min-w→inline style、border-red-500→.error、結構 class 改名）。
+- [x] **✅ 移除 `tailwindcss` peerDependency**（保留為 devDependency 供 playground/build）。
+- [x] **✅ 決定性驗證通過**：playground 停用 `@import "tailwindcss"` 後截圖 —— playground 自身 chrome 失樣式、但 **datepicker 元件（日曆 header/星期/日期格/TimeSelector/容器）完整正確渲染**，證明僅靠 dist CSS 即可運作。
+- [x] **✅ dist CSS 自包含核實**：20.7kB；`--tw-` 0 / Tailwind theme vars(`var(--spacing)`等) 0 / preflight 0；僅用自有 `--vdp-*`(118)/`--color-vdp-*`(193)/`--tia-*`，零 Tailwind 耦合（無 Q2 的雙向干擾風險）。
+
+> **Phase 2 完成（2026-06-17）**：13/13 元件全部 utility → 字面 `.vdp-*` CSS（共用放 components.css、元件內部放 scoped `<style>`）；type-check 0 / build 0 / 499 測試綠 / 無-Tailwind 截圖驗證 / dist 自包含。消費者**免裝 Tailwind**，`import '.../style.css'` 即可。
 
 ### Phase 3 — Packaging + dts（決策 E）
 - [x] **✅ dts plugin-less（2026-06-16，提前完成）**：新增 `tsconfig.build.json`；`build:types` = `vue-tsc -p tsconfig.build.json`；移除 `vite-plugin-dts`；types/exports → `dist/index.d.ts`；`src/shims-css.d.ts` 解 CSS import。
@@ -279,7 +297,7 @@
 |-------|------|------|
 | 0 測試轉綠 + 清理盤點 | 🟡 進行中 | ✅ vitest 470 全綠（pnpm override 修重複 test-utils）；⬜ type-check 仍紅（→Phase 3）、清理盤點待辦 |
 | 1 主題引擎重寫 | ✅ 完成 | 三層 token + 宣告式 useTheme + 刪 themeManager/colorUtils(~700行) + vdt→vdp + 色階→color-mix；499 測試綠、CSS 自包含。破壞性：violet→indigo 預設、移除命令式主題 API |
-| 2 CSS 語義 class + 自包含 | ⬜ 未開始 | .vdp-* 遷移 + 移除 Tailwind peer + 無-Tailwind 截圖驗證 |
+| 2 CSS 語義 class + 自包含 | ✅ 完成 | 13/13 元件 utility→字面 .vdp-* CSS（隔離 --vdp-* token）；移除 tailwindcss peer；無-Tailwind 截圖驗證 + dist 自包含核實（--tw-/preflight 0）；499 測試綠。錯誤狀態統一 .error(§3) |
 | 3 Packaging + dts | 🟡 進行中 | ✅ dts plugin-less 完成（vue-tsc -p tsconfig.build.json）；⬜ 移除 Tailwind peer / cssFileName 釘住 / npm pack 驗證待 Phase 2 後 |
 | 4 程式碼品質（主題以外） | 🟡 進行中 | ✅ 5.1 受控更新 / 5.2 computed 副作用 / 5.3 i18n / 5.7 部分清理（490 測試全綠）；⬜ 5.4 型別 / 5.5 console / 5.6 重複 / 5.7 殘項 |
 | 5 測試 / 文件 / 發佈 | ⬜ 未開始 | 2.0.0 CHANGELOG + README 中英 + docs |
@@ -300,3 +318,31 @@
 - **§5.9 測試套件紅燈是頭號阻擋**：48 個元件測試失敗（依賴版本不相容），未轉綠前任何重構都缺回歸防護 → Phase 0 最優先。
 - **核心日曆流程（§5.5 / Phase 6）**：插件 registry 與 metadata 收斂屬破壞性／高 churn，先補各曆法 round-trip 測試再動；`globalParser` 競態在 SSR/多實例下才顯現，易漏測。
 - 每 phase 完成跑 `pnpm type-check && pnpm build`。
+
+---
+
+## 9. Phase 1 / Phase 2 收尾盤點（2026-06-17 session 交接）
+
+> 本節為跨 session 交接用。下方「✅」為已完成、「⬜」為新 session 待處理。
+> 當前整體狀態：**type-check 0 / build 0 / 單元測試 499 全綠 / dist CSS 自包含**。
+
+### Phase 1（主題引擎）— ✅ 完成，無待辦
+- ✅ 三層 token（`--tia-*`/`--color-vdp-*`/`--vdp-*`）、`useTheme` 宣告式、刪 themeManager/colorUtils、`vdt`→`vdp`、11 階色票→color-mix 衍生、宣告式 `:style`/`v-bind`、移除命令式主題 API、測試重寫。
+- ✅ 後補修正：5 個 color-mix 衍生變數從 `:root` 移到 `.date-picker-wrapper, .date-range-wrapper`，使 per-instance `theme`（hex/rgb/oklch/色名）能驅動 ring/subtle/hover/strong/border（已 eval + 截圖驗證）。
+- 📌 跨 repo 註記（非本專案待辦）：`@tiaohsun/vue-datatable` 參考實作的衍生變數仍放在 `:root`，有同樣 per-instance bug；若要家族一致，建議在 datatable 套用相同 wrapper 修法。
+
+### Phase 2（CSS 自包含）— ✅ 主體完成；以下為殘留/待確認
+- ✅ 13/13 出貨元件 utility→字面 `.vdp-*` CSS（共用 components.css + 元件 scoped）、移除 `tailwindcss` peer、無-Tailwind 截圖驗證、dist 自包含核實（`--tw-`/preflight/Tailwind theme vars 皆 0）。
+- ⬜ **`TimePicker.vue` 死碼清理**：未在 `index.ts` 匯出、無任何元件 import、coverage 已排除；仍含 Tailwind utility 與不存在的 `bg-vdt-primary-500`。建議**直接刪除**（或若要保留則一併轉 `.vdp-*`）。不影響目前出貨自包含。
+- ⬜ **`@tailwindcss/vite` 是否從 library build 移除**：library 出貨 CSS 已純字面、不再需要 Tailwind 編譯；惟 playground `pnpm dev` 仍依賴。可評估改為僅 playground 使用，或保留（無害）。歸入 Phase 3 packaging。
+- ⬜ **marker class 去留**（`date-picker-icon`/`date-placeholder`/`calendar-container`）：目前為無對應 CSS 的純標記。決定要嘛文件化為公開 hook、要嘛移除。
+- ⬜ **響應式斷點視覺驗證**：DateRange 雙月 `md:`(768px) 與 `sm:`(640px) 已寫成字面 media query，但只在預設寬度截圖過；新 session 建議用 `preview_resize` 驗 mobile/desktop（單月↔雙月、輸入區 column↔row、彈窗 max-h/min-w）。
+- ⬜ **淺色模式無-Tailwind 截圖**：決定性驗證時瀏覽器處於 dark（已涵蓋深色）；淺色雖由 theme.css 預設涵蓋、風險低，仍建議補一張 light 模式無-Tailwind 截圖。
+- 📌 文件連動（Phase 5）：錯誤樣式已由硬寫 `border-red-500` 改為 `.date-picker-container.error` hook（§3）；README/docs 若提及錯誤樣式或可覆蓋 class，需同步更新。
+
+### 接手建議順序
+1. （可選）刪 `TimePicker.vue` 死碼。
+2. Phase 3 收尾：vite lib 釘 `cssFileName`、`exports` 補/確認 `./style`、`npm pack` 驗證（CSS 一併打包、bump 2.0.0）、評估 library build 是否移除 `@tailwindcss/vite`。
+3. Phase 4 其餘（§5.4 型別 / §5.5 console / §5.6 重複 / §5.7 殘項）。
+4. Phase 6 核心日曆流程（插件 registry / globalParser 去單例 / metadata 收斂）。
+5. Phase 5 測試補強 + README（中英，免裝 Tailwind + 新主題模型）+ CHANGELOG 2.0.0 + docs theming 頁；含上述響應式/淺色截圖驗證。

@@ -1,47 +1,42 @@
 <!-- src/components/selector/YearSelector.vue -->
 <template>
-    <div v-if="showSelector" ref="yearSelectorRef"
-        class="absolute top-full mt-1 right-0 min-w-56 max-h-72 overflow-auto bg-[var(--color-vdp-surface-elevated)] text-[var(--color-vdp-content)] border border-[var(--color-vdp-outline)] rounded-md shadow-lg z-20">
+    <div v-if="showSelector" ref="yearSelectorRef" class="vdp-year-selector">
 
         <!-- 年份選擇器頂部導航 -->
-        <div class="p-2 flex items-center justify-between border-b border-[var(--color-vdp-outline)]">
-            <button type="button" @click="previousYearRange"
-                class="p-1 hover:bg-[var(--color-vdp-interactive-hover)] rounded focus:outline-none"
-                :disabled="!canGoPrevious" :class="{ 'opacity-50 cursor-not-allowed': !canGoPrevious }"
+        <div class="vdp-year-nav">
+            <button type="button" @click="previousYearRange" class="vdp-year-nav-btn" :disabled="!canGoPrevious"
                 aria-label="previous year">
-                <DatePickerPrev class="h-4 w-4" />
+                <DatePickerPrev class="vdp-icon-sm" />
             </button>
-            <span class="text-sm font-medium">
+            <span class="vdp-year-range-text">
                 <slot name="year-range-display" :first-year="firstYear" :last-year="lastYear"
                     :display-text="displayRangeText">
                     {{ displayRangeText }}
                 </slot>
             </span>
-            <button type="button" @click="nextYearRange"
-                class="p-1 hover:bg-[var(--color-vdp-interactive-hover)] rounded focus:outline-none"
-                :disabled="!canGoNext" :class="{ 'opacity-50 cursor-not-allowed': !canGoNext }" aria-label="next year">
-                <DatePickerNext class="h-4 w-4" />
+            <button type="button" @click="nextYearRange" class="vdp-year-nav-btn" :disabled="!canGoNext"
+                aria-label="next year">
+                <DatePickerNext class="vdp-icon-sm" />
             </button>
         </div>
 
         <!-- 年份網格 -->
-        <div class="grid grid-cols-4 gap-1 p-2" v-if="visibleYears.length > 0">
+        <div class="vdp-year-grid" v-if="visibleYears.length > 0">
             <button type="button" v-for="yearData in visibleYears" :key="yearData.gregorianYear"
-                @click="selectYear(yearData.gregorianYear)" :class="[
-                    'p-1 text-xs rounded focus:outline-none focus:ring-1 focus:ring-[var(--color-vdp-primary)] leading-tight min-h-[2.5rem] flex flex-col justify-center items-center transition duration-200',
-                    selectedYear === yearData.gregorianYear ? 'bg-[var(--color-vdp-primary)] text-white' : 'hover:bg-[var(--color-vdp-interactive-hover)] text-[var(--color-vdp-content)]',
-                    yearData.displayWarning ? 'ring-1 ring-amber-400' : ''
-                ]" :title="yearData.warningMessage">
+                @click="selectYear(yearData.gregorianYear)" class="vdp-year-btn" :class="{
+                    'vdp-year-btn--selected': selectedYear === yearData.gregorianYear,
+                    'vdp-year-btn--warning': yearData.displayWarning
+                }" :title="yearData.warningMessage">
 
                 <!-- 主要顯示年份 -->
                 <slot name="year-display" :yearData="yearData" :isSelected="selectedYear === yearData.gregorianYear">
                     <!-- 預設顯示 -->
-                    <div class="font-medium">
+                    <div class="vdp-year-num">
                         <div v-if="isJapaneseCalendar"> {{ yearData.displayEra }} </div>
                         {{ yearData.displayYear }}
                     </div>
                     <!-- 輔助顯示（西元年參考） -->
-                    <div v-if="yearData.showReference" class="text-xs opacity-60 mt-0.5">
+                    <div v-if="yearData.showReference" class="vdp-year-ref">
                         {{ yearData.referenceYear }}
                     </div>
                 </slot>
@@ -49,30 +44,28 @@
         </div>
 
         <!-- 超出範圍提示 -->
-        <div v-else class="p-4 text-center text-sm text-[var(--color-vdp-content-muted)]">
+        <div v-else class="vdp-year-empty">
             <slot name="no-years-display" :calendar-range="calendarRange" :go-to-valid-range="goToValidRange">
-                <div class="mb-2">{{ getLocalizedText('noYearsToDisplay') }}</div>
-                <button type="button" @click="goToValidRange"
-                    class="text-xs bg-[var(--color-vdp-primary-subtle)] hover:bg-[var(--color-vdp-primary-subtle)] px-3 py-1 rounded text-[var(--color-vdp-primary)]">
+                <div class="vdp-year-empty-text">{{ getLocalizedText('noYearsToDisplay') }}</div>
+                <button type="button" @click="goToValidRange" class="vdp-year-return-btn">
                     {{ getLocalizedText('returnToValidRange') }}
                 </button>
             </slot>
         </div>
 
         <!-- 年份跳轉輸入 -->
-        <div class="p-2 border-t border-[var(--color-vdp-outline)]">
+        <div class="vdp-year-jump">
             <slot name="year-input" :year-input="yearInput" :calendar-range="calendarRange"
                 :calendar-display-name="calendarDisplayName" :go-to-specific-year="goToSpecificYear"
                 :get-localized-text="getLocalizedText" :format-text="formatText">
                 <!-- 預設顯示 -->
-                <div class="text-xs text-gray-400 mb-1">
+                <div class="vdp-year-jump-label">
                     {{ getLocalizedText('jumpToYear') }}
                 </div>
                 <input type="number" v-model="yearInput" @keydown.enter="goToSpecificYear"
                     :placeholder="getLocalizedText('inputYearPlaceholder')" :min="calendarRange.min"
-                    :max="calendarRange.max"
-                    class="w-full p-1 text-sm border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-vdp-primary-subtle)] focus-within:ring-[var(--color-vdp-primary)]" />
-                <div class="text-xs text-[var(--color-vdp-content-muted)] mt-1">
+                    :max="calendarRange.max" class="vdp-year-input" />
+                <div class="vdp-year-jump-info">
                     {{ formatText(getLocalizedText('yearRangeInfo'), {
                         calendar: calendarDisplayName,
                         min: calendarRange.min,
@@ -361,6 +354,157 @@ defineExpose({
 </script>
 
 <style scoped>
+.vdp-year-selector {
+    position: absolute;
+    top: 100%;
+    margin-top: var(--vdp-space-1);
+    right: 0;
+    min-width: 14rem;
+    max-height: 18rem;
+    overflow: auto;
+    background-color: var(--color-vdp-surface-elevated);
+    color: var(--color-vdp-content);
+    border: 1px solid var(--color-vdp-outline);
+    border-radius: var(--vdp-radius);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    z-index: 20;
+}
+
+.vdp-year-nav {
+    padding: var(--vdp-space-2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-vdp-outline);
+}
+
+.vdp-year-nav-btn {
+    padding: var(--vdp-space-1);
+    border-radius: var(--vdp-radius);
+    cursor: pointer;
+}
+
+.vdp-year-nav-btn:hover {
+    background-color: var(--color-vdp-interactive-hover);
+}
+
+.vdp-year-nav-btn:focus {
+    outline: none;
+}
+
+.vdp-year-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vdp-year-range-text {
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    font-weight: var(--vdp-font-medium);
+}
+
+.vdp-year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--vdp-space-1);
+    padding: var(--vdp-space-2);
+}
+
+.vdp-year-btn {
+    padding: var(--vdp-space-1);
+    font-size: var(--vdp-text-xs);
+    border-radius: var(--vdp-radius);
+    line-height: 1.25;
+    min-height: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: var(--color-vdp-content);
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vdp-year-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-vdp-primary);
+}
+
+.vdp-year-btn:not(.vdp-year-btn--selected):hover {
+    background-color: var(--color-vdp-interactive-hover);
+}
+
+.vdp-year-btn--selected {
+    background-color: var(--color-vdp-primary);
+    color: var(--color-vdp-on-primary);
+}
+
+.vdp-year-btn--warning {
+    box-shadow: 0 0 0 1px oklch(82.8% 0.189 84.429); /* amber-400 警告 */
+}
+
+.vdp-year-num {
+    font-weight: var(--vdp-font-medium);
+}
+
+.vdp-year-ref {
+    font-size: var(--vdp-text-xs);
+    opacity: 0.6;
+    margin-top: 0.125rem;
+}
+
+.vdp-year-empty {
+    padding: var(--vdp-space-4);
+    text-align: center;
+    font-size: var(--vdp-text-sm);
+    color: var(--color-vdp-content-muted);
+}
+
+.vdp-year-empty-text {
+    margin-bottom: var(--vdp-space-2);
+}
+
+.vdp-year-return-btn {
+    font-size: var(--vdp-text-xs);
+    background-color: var(--color-vdp-primary-subtle);
+    padding: var(--vdp-space-1) var(--vdp-space-3);
+    border-radius: var(--vdp-radius);
+    color: var(--color-vdp-primary);
+    cursor: pointer;
+}
+
+.vdp-year-jump {
+    padding: var(--vdp-space-2);
+    border-top: 1px solid var(--color-vdp-outline);
+}
+
+.vdp-year-jump-label {
+    font-size: var(--vdp-text-xs);
+    color: var(--color-vdp-content-muted);
+    margin-bottom: var(--vdp-space-1);
+}
+
+.vdp-year-input {
+    width: 100%;
+    padding: var(--vdp-space-1);
+    font-size: var(--vdp-text-sm);
+    border: 1px solid var(--color-vdp-outline);
+    background-color: var(--color-vdp-surface);
+    color: var(--color-vdp-content);
+    border-radius: var(--vdp-radius);
+}
+
+.vdp-year-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
+}
+
+.vdp-year-jump-info {
+    font-size: var(--vdp-text-xs);
+    color: var(--color-vdp-content-muted);
+    margin-top: var(--vdp-space-1);
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;

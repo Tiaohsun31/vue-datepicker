@@ -1,22 +1,19 @@
 <template>
-    <div class="date-picker-wrapper relative w-full min-w-0 justify-self-start"
-        :class="[showTime ? 'min-w-[270px]' : 'min-w-[150px]']" :style="themeStyle" v-bind="themeAttrs"
-        ref="containerRef">
+    <div class="date-picker-wrapper vdp-wrapper"
+        :style="[themeStyle, { minWidth: showTime ? '270px' : '150px' }]" v-bind="themeAttrs" ref="containerRef">
         <!-- Hidden input for form integration (name attribute only) -->
         <input v-if="name" type="hidden" :name="name" :value="modelValue || ''" />
 
         <!-- 日期時間輸入容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm transition-all duration-200"
-            :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
+        <div class="date-picker-container" :class="{ error: hasErrors }">
             <!-- 日曆圖標 (預設顯示) -->
-            <button v-if="showCalendarIcon" type="button"
-                class="date-picker-icon text-gray-400 hover:text-gray-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50 flex-shrink-0"
-                :disabled="disabled" aria-label="開啟日曆" @click.stop.prevent="toggleCalendar?.()">
-                <CalendarIcon class="size-5" />
+            <button v-if="showCalendarIcon" type="button" class="date-picker-icon vdp-icon-btn" :disabled="disabled"
+                aria-label="開啟日曆" @click.stop.prevent="toggleCalendar?.()">
+                <CalendarIcon class="vdp-icon-md" />
             </button>
-            <div v-if="isGregoryCalendar && inputEnabled" class=" flex-1 flex w-full items-center justify-start gap-2"
-                :class="[disabled ? 'cursor-not-allowed cursor-event-none opacity-50' : '']"
-                @click.stop="handleContainerClick" @mousedown="handleContainerMouseDown">
+            <div v-if="isGregoryCalendar && inputEnabled" class="vdp-input-group"
+                :class="{ 'vdp-disabled': disabled }" @click.stop="handleContainerClick"
+                @mousedown="handleContainerMouseDown">
                 <!-- 日期輸入部分 -->
                 <div>
                     <DateInput ref="dateInputRef" v-model="inputDateValue" :year-placeholder="computedPlaceholders.year"
@@ -36,29 +33,27 @@
                 </div>
             </div>
             <!-- 非西元曆或禁用輸入時的顯示區域 -->
-            <button v-else type="button" class="flex-1 flex w-full h-full items-center justify-start gap-1" :class="{
-                'cursor-not-allowed opacity-50': disabled
-            }" @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
+            <button v-else type="button" class="vdp-display-btn" :class="{ 'vdp-disabled': disabled }"
+                @click.stop="!disabled && toggleCalendar?.()" @keydown.enter.prevent="!disabled && toggleCalendar?.()"
                 @keydown.space.prevent="!disabled && toggleCalendar?.()">
                 <!-- 顯示值或 placeholder -->
-                <span v-if="hasDisplayValue" class="date-placeholder text-[var(--color-vdp-content)] truncate">
+                <span v-if="hasDisplayValue" class="date-placeholder vdp-placeholder">
                     {{ modelValue }}
                 </span>
-                <span v-else class="date-placeholder text-[var(--color-vdp-content-muted)] truncate">
+                <span v-else class="date-placeholder vdp-placeholder vdp-placeholder--muted">
                     {{ computedPlaceholders.selectDate }}
                 </span>
             </button>
             <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
-            <button v-if="hasValue && !disabled && showClearButton" type="button"
-                class="date-picker-icon text-gray-400 hover:text-red-500" aria-label="清除日期" @click.stop.prevent="reset">
-                <ClearIcon class="size-5" />
+            <button v-if="hasValue && !disabled && showClearButton" type="button" class="date-picker-icon vdp-clear-btn"
+                aria-label="清除日期" @click.stop.prevent="reset">
+                <ClearIcon class="vdp-icon-md" />
             </button>
         </div>
 
         <!-- 日曆彈出層 -->
-        <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="calendar-container absolute mt-1 bg-[var(--color-vdp-surface-elevated)] border border-[var(--color-vdp-outline)] rounded-lg shadow-lg z-10"
-            @click.stop role="dialog" aria-modal="true" aria-label="date-picker">
+        <div v-if="showCalendar && !disabled" ref="calendarRef" class="calendar-container vdp-popup" @click.stop
+            role="dialog" aria-modal="true" aria-label="date-picker">
             <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
                 :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"
                 :use24Hour="use24Hour" :default-time="getValidDefaultTime" :enableSeconds="enableSeconds"
@@ -445,3 +440,29 @@ const {
     reset,
 } = datePicker;
 </script>
+
+<style scoped>
+.vdp-input-group {
+    flex: 1 1 0%;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--vdp-space-2);
+}
+
+.vdp-display-btn {
+    flex: 1 1 0%;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--vdp-space-1);
+}
+
+.vdp-disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+</style>

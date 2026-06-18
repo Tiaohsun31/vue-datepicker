@@ -67,16 +67,7 @@
     "test:coverage": "vitest --coverage"
   },
   "peerDependencies": {
-    "tailwindcss": "^4.1.0",
     "vue": "^3.4.0"
-  },
-  "peerDependenciesMeta": {
-    "tailwindcss": {
-      "optional": false
-    },
-    "vue": {
-      "optional": false
-    }
   },
   "dependencies": {
     "@internationalized/date": "^3.12.2",

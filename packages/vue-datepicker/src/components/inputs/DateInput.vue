@@ -1,13 +1,13 @@
 <!-- components/inputs/DateInput.vue -->
 <template>
     <!-- 年份/月份/日期輸入組 -->
-    <div class="date-input-container flex items-center justify-start">
+    <div class="date-input-container">
         <!-- 根據格式順序動態排序輸入字段 -->
         <template v-for="(segment, index) in dateSegments" :key="segment">
             <!-- 渲染對應的輸入框 -->
             <input v-if="segment === 'year'" :ref="(el) => setInputRef(el as HTMLInputElement, 'year')"
                 v-model="yearValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="yearPlaceholder"
-                :maxlength="4" class="date-input text-sm text-center active:bg-[var(--color-vdp-primary-subtle)]"
+                :maxlength="4" class="date-input"
                 @input="handleYearInput" @keydown="handleKeydown($event, 'year')" @focus="handleFocus('year')"
                 @blur="handleBlur('year')" aria-label="year" :aria-invalid="!!localizedErrors.year"
                 :aria-errormessage="localizedErrors.year ? 'year-error' : undefined"
@@ -15,7 +15,7 @@
 
             <input v-else-if="segment === 'month'" :ref="(el) => setInputRef(el as HTMLInputElement, 'month')"
                 v-model="monthValue" v-autowidth="20" type="text" inputmode="numeric" :placeholder="monthPlaceholder"
-                :maxlength="2" class="date-input text-sm text-center" @input="handleMonthInput"
+                :maxlength="2" class="date-input" @input="handleMonthInput"
                 @keydown="handleKeydown($event, 'month')" @focus="handleFocus('month')" @blur="handleBlur('month')"
                 aria-label="month" :aria-invalid="!!localizedErrors.month"
                 :aria-errormessage="localizedErrors.month ? 'month-error' : undefined"
@@ -23,14 +23,14 @@
 
             <input v-else-if="segment === 'day'" :ref="(el) => setInputRef(el as HTMLInputElement, 'day')"
                 v-model="dayValue" type="text" v-autowidth="20" inputmode="numeric" :placeholder="dayPlaceholder"
-                :maxlength="2" class="date-input text-sm text-center" @input="handleDayInput"
+                :maxlength="2" class="date-input" @input="handleDayInput"
                 @keydown="handleKeydown($event, 'day')" @focus="handleFocus('day')" @blur="handleBlur('day')"
                 aria-label="day" :aria-invalid="!!localizedErrors.day"
                 :aria-errormessage="localizedErrors.day ? 'day-error' : undefined"
                 :id="index === 0 && inputId ? inputId : undefined" :disabled="disabled" />
 
             <!-- 分隔符，除非是最後一個段 -->
-            <span v-if="index < dateSegments.length - 1" class="text-gray-400">{{ separator }}</span>
+            <span v-if="index < dateSegments.length - 1" class="date-sep">{{ separator }}</span>
         </template>
     </div>
 </template>
@@ -611,6 +611,16 @@ defineExpose({
 </script>
 
 <style scoped>
+.date-input-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.date-sep {
+    color: var(--color-vdp-content-muted);
+}
+
 /* 處理輸入框樣式覆蓋 @tailwindcss/forms */
 .date-input {
     appearance: none !important;
@@ -622,6 +632,13 @@ defineExpose({
     outline: none !important;
     box-shadow: none !important;
     transition: background-color 0.2s ease;
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    text-align: center;
+}
+
+.date-input:active {
+    background-color: var(--color-vdp-primary-subtle) !important;
 }
 
 .date-input:focus {

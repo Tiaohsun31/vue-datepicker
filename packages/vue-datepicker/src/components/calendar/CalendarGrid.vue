@@ -1,5 +1,5 @@
 <template>
-    <div class="vdt-date-picker calendar-grid w-full max-w-xs rounded-lg shadow p-2">
+    <div class="vdp-calendar-grid">
         <!-- 月份導航和選擇器 -->
         <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
             :max-year="maxYear" :calendar="calendar">

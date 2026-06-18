@@ -1,28 +1,25 @@
 <template>
     <div v-if="show">
-        <hr class="my-2 border-[var(--color-vdp-outline)]" />
-        <div class="flex flex-row items-center justify-between">
-            <label class="text-sm font-medium text-[var(--color-vdp-content)] uppercase">
+        <hr class="vdp-time-divider" />
+        <div class="vdp-time-header">
+            <label class="vdp-time-label">
                 {{ getPlaceholderMessage('general.time') }}:
             </label>
-            <div class="flex flex-row items-center gap-1">
-                <button type="button" @click="setNowTime"
-                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-[var(--color-vdp-outline)] text-[var(--color-vdp-content)] hover:bg-[var(--color-vdp-interactive-active)] cursor-pointer">
+            <div class="vdp-time-actions">
+                <button type="button" @click="setNowTime" class="vdp-time-btn">
                     Now
                 </button>
-                <button v-if="selectionMode === 'single'" type="button" @click="emitTodayEvent"
-                    class="px-2 py-1 text-xs transition-colors rounded-sm bg-[var(--color-vdp-outline)] text-[var(--color-vdp-content)] hover:bg-[var(--color-vdp-interactive-active)] cursor-pointer">
+                <button v-if="selectionMode === 'single'" type="button" @click="emitTodayEvent" class="vdp-time-btn">
                     Today
                 </button>
             </div>
         </div>
-        <div class="time-selector-container pt-1">
+        <div class="vdp-time-fields-wrap">
             <!-- 簡化版時間選擇器 -->
-            <div class="flex flex-row items-center gap-1">
+            <div class="vdp-time-fields">
                 <!-- 小時選擇器 -->
-                <div class="flex-1">
-                    <select v-model="selectedHour"
-                        class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdp-primary-subtle)] focus:border-[var(--color-vdp-primary)]">
+                <div class="vdp-time-field">
+                    <select v-model="selectedHour" class="vdp-select">
                         <option v-for="hour in hourOptions" :key="hour" :value="hour">
                             {{ formatHour(hour) }}
                         </option>
@@ -30,9 +27,8 @@
                 </div>
 
                 <!-- 分鐘選擇器 -->
-                <div class="flex-1">
-                    <select v-model="selectedMinute"
-                        class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdp-primary-subtle)] focus:border-[var(--color-vdp-primary)]">
+                <div class="vdp-time-field">
+                    <select v-model="selectedMinute" class="vdp-select">
                         <option v-for="minute in minuteOptions" :key="minute" :value="minute">
                             {{ formatNumber(minute) }}
                         </option>
@@ -40,24 +36,22 @@
                 </div>
 
                 <!-- 秒鐘選擇器 -->
-                <div class="flex-1" v-if="enableSeconds">
-                    <select v-model="selectedSecond"
-                        class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdp-primary-subtle)] focus:border-[var(--color-vdp-primary)]">
+                <div class="vdp-time-field" v-if="enableSeconds">
+                    <select v-model="selectedSecond" class="vdp-select">
                         <option v-for="second in secondOptions" :key="second" :value="second">
                             {{ formatNumber(second) }}
                         </option>
                     </select>
                 </div>
 
-                <div v-if="!use24Hour" class="flex-shrink-0">
-                    <div
-                        class="isolate inline-flex rounded-md border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] overflow-hidden">
-                        <button type="button" @click="setPeriod('AM')" class="px-2 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'AM' ? 'bg-[var(--color-vdp-primary)] text-white' : 'text-[var(--color-vdp-content)] hover:bg-[var(--color-vdp-interactive-hover)]'">
+                <div v-if="!use24Hour" class="vdp-period-wrap">
+                    <div class="vdp-period-group">
+                        <button type="button" @click="setPeriod('AM')" class="vdp-period-btn"
+                            :class="{ 'vdp-period-btn--active': selectedPeriod === 'AM' }">
                             {{ getLocalizedPeriod('AM') }}
                         </button>
-                        <button type="button" @click="setPeriod('PM')" class="px-2 py-1 text-sm transition-colors"
-                            :class="selectedPeriod === 'PM' ? 'bg-[var(--color-vdp-primary)] text-white' : 'text-[var(--color-vdp-content)] hover:bg-[var(--color-vdp-interactive-hover)]'">
+                        <button type="button" @click="setPeriod('PM')" class="vdp-period-btn"
+                            :class="{ 'vdp-period-btn--active': selectedPeriod === 'PM' }">
                             {{ getLocalizedPeriod('PM') }}
                         </button>
                     </div>
@@ -265,3 +259,93 @@ defineExpose({
     resetToDefault: () => initializeWithDefaultTime(),
 });
 </script>
+
+<style scoped>
+.vdp-time-divider {
+    margin: var(--vdp-space-2) 0;
+    border: 0;
+    border-top: 1px solid var(--color-vdp-outline);
+}
+
+.vdp-time-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vdp-time-label {
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    font-weight: var(--vdp-font-medium);
+    color: var(--color-vdp-content);
+    text-transform: uppercase;
+}
+
+.vdp-time-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--vdp-space-1);
+}
+
+.vdp-time-btn {
+    padding: var(--vdp-space-1) var(--vdp-space-2);
+    font-size: var(--vdp-text-xs);
+    border-radius: var(--vdp-radius-sm);
+    background-color: var(--color-vdp-outline);
+    color: var(--color-vdp-content);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.vdp-time-btn:hover {
+    background-color: var(--color-vdp-interactive-active);
+}
+
+.vdp-time-fields-wrap {
+    padding-top: var(--vdp-space-1);
+}
+
+.vdp-time-fields {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--vdp-space-1);
+}
+
+.vdp-time-field {
+    flex: 1 1 0%;
+}
+
+.vdp-period-wrap {
+    flex-shrink: 0;
+}
+
+.vdp-period-group {
+    isolation: isolate;
+    display: inline-flex;
+    border-radius: var(--vdp-radius);
+    border: 1px solid var(--color-vdp-outline);
+    background-color: var(--color-vdp-surface);
+    overflow: hidden;
+}
+
+.vdp-period-btn {
+    padding: var(--vdp-space-1) var(--vdp-space-2);
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    cursor: pointer;
+    color: var(--color-vdp-content);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.vdp-period-btn:not(.vdp-period-btn--active):hover {
+    background-color: var(--color-vdp-interactive-hover);
+}
+
+.vdp-period-btn--active {
+    background-color: var(--color-vdp-primary);
+    color: var(--color-vdp-on-primary);
+}
+</style>

@@ -30,7 +30,7 @@ describe('RangeCalendar.vue', () => {
             const calendarGrids = wrapper.findAllComponents('[data-testid="calendar-grid"]')
 
             expect(calendarGrids).toHaveLength(1)
-            expect(wrapper.classes()).toContain('single-month')
+            expect(wrapper.classes()).toContain('vdp-range-calendar--single')
         })
 
         it('應該在雙月模式渲染兩個 CalendarGrid 組件', () => {
@@ -38,7 +38,7 @@ describe('RangeCalendar.vue', () => {
             const calendarGrids = wrapper.findAllComponents('[data-testid="calendar-grid"]')
 
             expect(calendarGrids).toHaveLength(2)
-            expect(wrapper.classes()).toContain('dual-month')
+            expect(wrapper.classes()).toContain('vdp-range-calendar--dual')
         })
 
         it('應該預設為雙月模式', () => {
@@ -46,16 +46,14 @@ describe('RangeCalendar.vue', () => {
             const calendarGrids = wrapper.findAllComponents('[data-testid="calendar-grid"]')
 
             expect(calendarGrids).toHaveLength(2)
-            expect(wrapper.classes()).toContain('dual-month')
+            expect(wrapper.classes()).toContain('vdp-range-calendar--dual')
         })
 
         it('應該正確設置容器樣式類別', () => {
             const wrapper = createWrapper({ monthDisplayMode: 'dual' })
-            const containers = wrapper.findAll('.calendar-container')
+            const containers = wrapper.findAll('.vdp-range-month')
 
             expect(containers).toHaveLength(2)
-            expect(containers[0]?.classes()).toContain('flex-1')
-            expect(containers[1]?.classes()).toContain('flex-1')
         })
     })
 

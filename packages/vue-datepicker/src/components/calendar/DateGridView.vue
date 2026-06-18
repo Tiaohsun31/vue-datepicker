@@ -1,6 +1,6 @@
 <!-- 修正後的 DateGridView.vue - 需要支援 calendar prop -->
 <template>
-    <div class="grid grid-cols-7 gap-1">
+    <div class="vdp-date-grid">
         <CalendarCell v-for="cellData in optimizedCellStates" :key="cellData.key" v-memo="cellData.memoKey"
             :date="cellData.date" :current-month="currentDisplayMonth" :selected="cellData.isSelected"
             :is-today="cellData.isToday" :disabled="cellData.isDisabled" :focusable="cellData.isFocusable"

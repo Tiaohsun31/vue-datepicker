@@ -1,6 +1,6 @@
 <!-- components/calendar/CalendarCell.vue -->
 <template>
-    <div class="calendar-cell text-center grid grid-cols-1 place-items-center">
+    <div class="vdp-cell">
         <!-- 日期按鈕 -->
         <button type="button" class="calendar-cell-button" :class="cellClasses" :disabled="disabled"
             :tabindex="focusable ? 0 : -1" :aria-selected="selected || isRangeStart || isRangeEnd"
@@ -54,61 +54,39 @@ const isOutsideMonth = computed(() => {
     return props.date.month !== props.currentMonth;
 });
 
-// 計算單元格樣式，支援範圍選擇
+// 計算單元格樣式，支援範圍選擇（語義 modifier class，樣式在 components.css）
 const cellClasses = computed(() => {
-    const classes: Record<string, boolean> = {};
+    const classes: Record<string, boolean> = { 'vdp-cell-btn': true };
 
-    // 基礎樣式
-    classes['flex justify-center items-center w-8 h-8 rounded-md col-start-1 row-start-1'] = true;
-
-    // 禁用狀態
+    // 禁用狀態（底色/文字由 .vdp-cell-btn 提供）
     if (props.disabled) {
-        classes['opacity-40 cursor-not-allowed'] = true;
-        classes['bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)]'] = true;
+        classes['vdp-cell-btn--disabled'] = true;
         return classes;
     }
 
-    // 範圍選擇模式
-    if (props.selectionMode === 'range') {
-        // 範圍起始點和結束點
-        if (props.isRangeStart || props.isRangeEnd) {
-            classes['bg-[var(--color-vdp-primary)] text-white'] = true;
-        }
-        // 範圍內的日期
-        else if (props.isInRange) {
-            classes['bg-[var(--color-vdp-outline)] text-[var(--color-vdp-content)]'] = true;
-        }
-        // 預設狀態
-        else {
-            classes['bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)]'] = true;
-            classes['hover:bg-[var(--color-vdp-interactive-hover)] cursor-pointer'] = true;
-        }
+    const isEndpoint = props.isRangeStart || props.isRangeEnd;
+    const isSelectedSingle = props.selectionMode === 'single' && props.selected;
+    const isWithinRange = props.selectionMode === 'range' && props.isInRange;
 
-        // 今天的標記（範圍選擇模式）
-        if (props.isToday && !props.isRangeStart && !props.isRangeEnd && !props.isInRange) {
-            classes['inset-ring-2 inset-ring-[var(--color-vdp-primary)]'] = true;
-        }
+    if (isEndpoint || isSelectedSingle) {
+        // 範圍端點 / 單選選中：主色底
+        classes['vdp-cell-btn--selected'] = true;
+    } else if (isWithinRange) {
+        // 範圍內（非端點）
+        classes['vdp-cell-btn--in-range'] = true;
+    } else {
+        // 預設：可點擊 + hover
+        classes['vdp-cell-btn--clickable'] = true;
     }
-    // 單一日期選擇模式
-    else {
-        if (props.selected) {
-            classes['bg-[var(--color-vdp-primary)] text-white'] = true;
-        } else {
-            classes['bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)]'] = true;
-            classes['hover:bg-[var(--color-vdp-interactive-hover)] cursor-pointer'] = true;
-        }
 
-        // 今天的標記（單一選擇模式）
-        if (props.isToday && !props.selected) {
-            classes['inset-ring-2 inset-ring-[var(--color-vdp-primary)]'] = true;
-        }
+    // 今天標記（未選中 / 不在範圍時）
+    if (props.isToday && !isEndpoint && !isSelectedSingle && !isWithinRange) {
+        classes['vdp-cell-btn--today'] = true;
     }
 
     // 月外日期的文字顏色
-    if (isOutsideMonth.value && !props.selected && !props.isRangeStart && !props.isRangeEnd) {
-        classes['text-[var(--color-vdp-content-muted)]'] = true;
-        // 移除預設文字顏色
-        classes['text-[var(--color-vdp-content)]'] = false;
+    if (isOutsideMonth.value && !props.selected && !isEndpoint) {
+        classes['vdp-cell-btn--muted'] = true;
     }
 
     return classes;

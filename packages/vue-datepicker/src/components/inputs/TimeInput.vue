@@ -1,27 +1,27 @@
 <!-- components/inputs/TimeInput.vue -->
 <template>
     <!-- 時間輸入 -->
-    <div class="time-input-container flex items-center justify-center">
+    <div class="time-input-container">
         <!-- 小時輸入 -->
         <input ref="hourRef" v-model="hourValue" v-autowidth="20" type="text" inputmode="numeric"
-            :placeholder="hourPlaceholder" :maxlength="2" class="time-input text-sm text-center"
+            :placeholder="hourPlaceholder" :maxlength="2" class="time-input"
             @input="handleHourInput" @keydown="handleKeydown($event, 'hour')" @focus="handleFocus('hour')"
             @blur="handleBlur('hour')" aria-label="hour" :aria-invalid="!!errors.hour"
             :aria-errormessage="errors.hour ? 'hour-error' : undefined" :disabled="disabled" />
-        <span class="text-gray-400 mx-1">:</span>
+        <span class="time-sep">:</span>
 
         <!-- 分鐘輸入 -->
         <input ref="minuteRef" v-model="minuteValue" v-autowidth="20" type="text" inputmode="numeric"
-            :placeholder="minutePlaceholder" :maxlength="2" class="time-input text-sm text-center"
+            :placeholder="minutePlaceholder" :maxlength="2" class="time-input"
             @input="handleMinuteInput" @keydown="handleKeydown($event, 'minute')" @focus="handleFocus('minute')"
             @blur="handleBlur('minute')" aria-label="minute" :aria-invalid="!!errors.minute"
             :aria-errormessage="errors.minute ? 'minute-error' : undefined" :disabled="disabled" />
 
         <!-- 秒鐘輸入（如果啟用） -->
         <template v-if="enableSeconds">
-            <span class="text-gray-400 mx-1">:</span>
+            <span class="time-sep">:</span>
             <input ref="secondRef" v-model="secondValue" v-autowidth="20" type="text" inputmode="numeric"
-                :placeholder="secondPlaceholder" :maxlength="2" class="time-input text-sm text-center"
+                :placeholder="secondPlaceholder" :maxlength="2" class="time-input"
                 @input="handleSecondInput" @keydown="handleKeydown($event, 'second')" @focus="handleFocus('second')"
                 @blur="handleBlur('second')" aria-label="second" :aria-invalid="!!errors.second"
                 :aria-errormessage="errors.second ? 'second-error' : undefined" :disabled="disabled" />
@@ -29,8 +29,8 @@
 
         <!-- AM/PM 選擇器 (12小時制) -->
         <template v-if="!use24Hour">
-            <button type="button" class="time-period pl-2 text-sm cursor-pointer"
-                :class="hourValue ? 'text-[var(--color-vdp-content)]' : 'text-gray-400'" @click.stop="togglePeriod">
+            <button type="button" class="time-period" :class="{ 'time-period--active': hourValue }"
+                @click.stop="togglePeriod">
                 {{ displayPeriod }}
             </button>
         </template>
@@ -548,6 +548,12 @@ defineExpose({
 </script>
 
 <style scoped>
+.time-input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .time-input {
     appearance: none !important;
     background-color: transparent !important;
@@ -558,6 +564,25 @@ defineExpose({
     outline: none !important;
     box-shadow: none !important;
     transition: background-color 0.2s ease;
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    text-align: center;
+}
+
+.time-sep {
+    color: var(--color-vdp-content-muted);
+    margin-inline: var(--vdp-space-1);
+}
+
+.time-period {
+    padding-left: var(--vdp-space-2);
+    font-size: var(--vdp-text-sm);
+    cursor: pointer;
+    color: var(--color-vdp-content-muted);
+}
+
+.time-period--active {
+    color: var(--color-vdp-content);
 }
 
 .time-input:focus {

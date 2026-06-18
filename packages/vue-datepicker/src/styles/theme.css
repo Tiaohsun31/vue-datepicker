@@ -1,7 +1,10 @@
+@import './components.css';
+
 :root {
     /* ===== 共用設計基元（@tiaohsun/vue-* 家族共用層） =====
        設一次即可整組調整（含姊妹套件 vue-datatable 等）；各元件 token 引用這層。 */
-    --tia-theme-primary: oklch(58.5% 0.233 277.117); /* 家族預設主色：indigo */
+    --tia-theme-primary: oklch(58.5% 0.233 277.117);
+    /* 家族預設主色：indigo */
     --tia-text-xs: 0.75rem;
     --tia-text-sm: 0.875rem;
     --tia-leading-sm: 1.25rem;
@@ -33,15 +36,13 @@
     --vdp-font-semibold: var(--tia-font-semibold, 600);
 
     /* ===== 主題主色：預設引用共用基元；指定 theme prop 時由 useTheme 以 inline style 覆蓋（per-instance） ===== */
-    --color-vdp-primary: var(--tia-theme-primary, oklch(58.5% 0.233 277.117)); /* indigo 預設 */
+    --color-vdp-primary: var(--tia-theme-primary, oklch(58.5% 0.233 277.117));
+    /* indigo 預設 */
 
-    /* ===== 由主色衍生的狀態色 =====
-       不需使用者提供；會隨主色與深淺模式（surface）自動調整。 */
-    --color-vdp-primary-hover: color-mix(in oklch, var(--color-vdp-primary), black 12%);   /* 取代 600 */
-    --color-vdp-primary-strong: color-mix(in oklch, var(--color-vdp-primary), black 26%);  /* 取代 700 */
-    --color-vdp-primary-subtle: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 88%); /* 取代 100/200 */
-    --color-vdp-primary-border: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 55%); /* 取代 300 */
-    --color-vdp-primary-ring: color-mix(in oklch, var(--color-vdp-primary), transparent 50%); /* 取代 400 25% */
+    /* 由主色衍生的狀態色（-hover/-strong/-subtle/-border/-ring）改宣告在元件 wrapper（見下方），
+       才能依各實例的 --color-vdp-primary（theme prop 的 inline 覆蓋）重新代換；
+       若放在 :root，var(--color-vdp-primary) 會在 :root 以家族色代換完、子層只繼承結果，
+       導致 per-instance theme 無法驅動衍生色（ring/subtle 等）。 */
     --color-vdp-on-primary: white;
 
     /* ===== 中性語義色 - 淺色模式（自包含，不依賴外部 Tailwind 變數） ===== */
@@ -81,9 +82,23 @@
     --color-vdp-error: oklch(63.7% 0.237 25.331);
 }
 
-/* 深色模式：明確指定 data-vdt-mode="dark"（家族共用屬性），或頁面全域 .dark */
+/* ===== 主色衍生狀態：宣告在元件根，依各實例有效的 --color-vdp-primary 重新衍生 =====
+   theme prop 由 useTheme 以 inline style 設 --color-vdp-primary 於 wrapper；
+   未指定時 wrapper 繼承 :root 的 --color-vdp-primary（家族 --tia-theme-primary）。
+   兩種情況下，下列 color-mix 都在 wrapper 重新代換 → per-instance theme 與家族換色皆生效。 */
+.date-picker-wrapper,
+.date-range-wrapper {
+    --color-vdp-primary-hover: color-mix(in oklch, var(--color-vdp-primary), black 12%);
+    --color-vdp-primary-strong: color-mix(in oklch, var(--color-vdp-primary), black 26%);
+    --color-vdp-primary-subtle: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 88%);
+    --color-vdp-primary-border: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 55%);
+    --color-vdp-primary-ring: color-mix(in oklch, var(--color-vdp-primary), transparent 50%);
+}
+
+/* 深色模式：明確指定 data-vdp-mode="dark"，或頁面全域 .dark */
 .dark,
-[data-vdt-mode="dark"] {
+[data-vdp-mode="dark"],
+[data-tai-mode="dark"] {
     --color-vdp-surface: var(--color-vdp-dark-surface);
     --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
     --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);
@@ -95,8 +110,9 @@
     --color-vdp-interactive-active: var(--color-vdp-dark-interactive-active);
 }
 
-/* 明確指定 data-vdt-mode="light"：強制淺色（可覆蓋頁面全域 .dark） */
-[data-vdt-mode="light"] {
+/* 明確指定 data-vdp-mode="light"：強制淺色（可覆蓋頁面全域 .dark） */
+[data-vdp-mode="light"],
+[data-tai-mode="light"] {
     --color-vdp-surface: var(--color-vdp-light-surface);
     --color-vdp-surface-secondary: var(--color-vdp-light-surface-secondary);
     --color-vdp-surface-elevated: var(--color-vdp-light-surface-elevated);
@@ -110,8 +126,9 @@
 
 /* 自動模式：未明確指定 mode 時跟隨系統偏好（明確 light 可退出）。範圍限定到元件根，不影響全頁。 */
 @media (prefers-color-scheme: dark) {
-    .date-picker-wrapper:not([data-vdt-mode="light"]),
-    .date-range-wrapper:not([data-vdt-mode="light"]) {
+
+    .date-picker-wrapper:not([data-vdt-mode="light"]):not([data-tai-mode="light"]),
+    .date-range-wrapper:not([data-vdt-mode="light"]):not([data-tai-mode="light"]) {
         --color-vdp-surface: var(--color-vdp-dark-surface);
         --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
         --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);
@@ -124,20 +141,4 @@
     }
 }
 
-/* 輸入框容器 - 公開 CSS API，消費者可透過此 class 覆蓋樣式 */
-.date-picker-container {
-    border: 1px solid var(--color-vdp-outline);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.date-picker-container:focus-within {
-    border-color: var(--color-vdp-primary);
-    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
-    outline: 4px solid var(--color-vdp-primary-ring);
-    outline-offset: -1px;
-}
-
-.date-picker-container.error {
-    border-color: var(--color-vdp-error);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-vdp-error) 20%, transparent);
-}
+/* 元件 class（.date-picker-container 等）已移至 components.css（本檔頂部 @import）。 */

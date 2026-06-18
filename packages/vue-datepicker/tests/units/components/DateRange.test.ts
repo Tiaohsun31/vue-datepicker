@@ -167,7 +167,7 @@ describe('DateRange', () => {
             });
 
             const warpper = container.querySelector('.date-picker-container');
-            expect(warpper).toHaveClass('border-red-500');
+            expect(warpper).toHaveClass('error');
         });
 
         it('showErrorMessage為false時不應該顯示錯誤訊息', () => {
@@ -196,15 +196,15 @@ describe('DateRange', () => {
         it('應該根據showTime調整最小寬度', () => {
             const { container } = renderDateRange({ showTime: true });
 
-            const wrapper = container.querySelector('.date-range-wrapper');
-            expect(wrapper).toHaveClass('min-w-[300px]');
+            const wrapper = container.querySelector('.date-range-wrapper') as HTMLElement;
+            expect(wrapper.style.minWidth).toBe('300px');
         });
 
         it('不顯示時間時應該使用較小的最小寬度', () => {
             const { container } = renderDateRange({ showTime: false });
 
-            const wrapper = container.querySelector('.date-range-wrapper');
-            expect(wrapper).toHaveClass('min-w-[200px]');
+            const wrapper = container.querySelector('.date-range-wrapper') as HTMLElement;
+            expect(wrapper.style.minWidth).toBe('200px');
         });
     });
 
@@ -241,7 +241,7 @@ describe('DateRange', () => {
                 expect(screen.getByLabelText('date-range-picker')).toBeVisible();
                 // 快捷選項容器應該存在
                 const calendar = screen.getByLabelText('date-range-picker');
-                expect(calendar.querySelector('.flex.flex-wrap.gap-2')).toBeInTheDocument();
+                expect(calendar.querySelector('.vdp-range-shortcuts')).toBeInTheDocument();
             });
         });
 
@@ -279,7 +279,7 @@ describe('DateRange', () => {
                 expect(screen.getByLabelText('date-range-picker')).toBeVisible();
                 // 輸入區域應該存在
                 const calendar = screen.getByLabelText('date-range-picker');
-                expect(calendar.querySelector('.flex.flex-col.md\\:flex-row')).toBeInTheDocument();
+                expect(calendar.querySelector('.vdp-range-inputs')).toBeInTheDocument();
             });
         });
     });

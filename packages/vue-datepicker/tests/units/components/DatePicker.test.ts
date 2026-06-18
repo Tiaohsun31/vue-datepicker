@@ -106,11 +106,12 @@ describe('DatePicker', () => {
             const { container: withTime } = renderDatePicker({ showTime: true });
             const { container: withoutTime } = renderDatePicker({ showTime: false });
 
-            const withTimeWrapper = withTime.querySelector('.date-picker-wrapper');
-            const withoutTimeWrapper = withoutTime.querySelector('.date-picker-wrapper');
+            const withTimeWrapper = withTime.querySelector('.date-picker-wrapper') as HTMLElement;
+            const withoutTimeWrapper = withoutTime.querySelector('.date-picker-wrapper') as HTMLElement;
 
-            expect(withTimeWrapper).toHaveClass('min-w-[270px]');
-            expect(withoutTimeWrapper).toHaveClass('min-w-[150px]');
+            // 最小寬度改以 inline style 套用（隨 showTime 切換）
+            expect(withTimeWrapper.style.minWidth).toBe('270px');
+            expect(withoutTimeWrapper.style.minWidth).toBe('150px');
         });
 
         it('錯誤狀態下應該顯示錯誤樣式', async () => {
@@ -122,7 +123,8 @@ describe('DatePicker', () => {
 
             await waitFor(() => {
                 const inputContainer = container.querySelector('.date-picker-container');
-                expect(inputContainer).toHaveClass('border-red-500');
+                // 錯誤狀態改用 .error hook（取代硬寫 border-red-500）
+                expect(inputContainer).toHaveClass('error');
             });
         });
     });

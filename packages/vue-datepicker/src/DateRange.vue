@@ -1,80 +1,62 @@
 <!-- DateRange.vue -->
 <template>
-    <div class="date-range-wrapper relative w-full"
-        :class="[showTime ? 'min-w-[300px]' : 'min-w-[200px]']" :style="themeStyle" v-bind="themeAttrs"
-        ref="containerRef">
+    <div class="date-range-wrapper vdp-wrapper"
+        :style="[themeStyle, { minWidth: showTime ? '300px' : '200px' }]" v-bind="themeAttrs" ref="containerRef">
 
         <!-- 日期範圍顯示容器 -->
-        <div class="date-picker-container flex w-full items-center px-2 py-1 gap-1 rounded-sm transition-all duration-200 bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="[{ 'border-red-500 ring-2 ring-red-200': hasErrors }]">
+        <div class="date-picker-container" :class="{ error: hasErrors }">
             <!-- 日曆圖標 (預設顯示) -->
-            <button v-if="showCalendarIcon" type="button" aria-label="開啟日曆"
-                class="date-picker-icon text-gray-400 hover:text-gray-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50 flex-shrink-0"
+            <button v-if="showCalendarIcon" type="button" aria-label="開啟日曆" class="date-picker-icon vdp-icon-btn"
                 :disabled="disabled" @click.stop.prevent="toggleCalendar?.()">
-                <CalendarIcon class="size-5" />
+                <CalendarIcon class="vdp-icon-md" />
             </button>
-            <button type="button"
-                class="grid grid-cols-[1fr_auto_1fr] gap-1 w-full cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="disabled" @click="toggleCalendar" aria-label="選擇日期範圍">
+            <button type="button" class="vdp-range-display" :disabled="disabled" @click="toggleCalendar"
+                aria-label="選擇日期範圍">
                 <!-- 開始日期 -->
-                <div class="text-center min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.start"
-                    aria-label="開始日期">
-                    <span v-if="modelValue?.start"
-                        class="date-placeholder text-[var(--color-vdp-content)] truncate block">
+                <div class="vdp-range-date" :title="computedPlaceholders.start" aria-label="開始日期">
+                    <span v-if="modelValue?.start" class="date-placeholder vdp-placeholder">
                         {{ modelValue?.start }}
                     </span>
-                    <span v-else class="date-placeholder text-[var(--color-vdp-content-muted)] truncate block">
+                    <span v-else class="date-placeholder vdp-placeholder vdp-placeholder--muted">
                         {{ computedPlaceholders.start }}
                     </span>
                 </div>
 
                 <!-- 分隔符 -->
-                <div class="text-[var(--color-vdp-content-muted)] text-sm px-1" aria-label="日期範圍分隔符"
-                    data-testid="separator">
+                <div class="vdp-range-sep" aria-label="日期範圍分隔符" data-testid="separator">
                     {{ separator }}
                 </div>
 
                 <!-- 結束日期 -->
-                <div class="text-center  min-w-0 max-w-[130px] sm:max-w-none" :title="computedPlaceholders.end"
-                    aria-label="結束日期">
-                    <span v-if="modelValue?.end"
-                        class="date-placeholder text-[var(--color-vdp-content)] truncate block">
+                <div class="vdp-range-date" :title="computedPlaceholders.end" aria-label="結束日期">
+                    <span v-if="modelValue?.end" class="date-placeholder vdp-placeholder">
                         {{ modelValue?.end }}
                     </span>
-                    <span v-else class="date-placeholder text-[var(--color-vdp-content-muted)] truncate block">
+                    <span v-else class="date-placeholder vdp-placeholder vdp-placeholder--muted">
                         {{ computedPlaceholders.end }}
                     </span>
                 </div>
             </button>
             <!-- 清除按鈕 (hover時顯示，當有值且不禁用且允許清除時) -->
             <button v-if="hasRangeValue && !disabled && showClearButton" type="button" aria-label="清除日期"
-                class="date-picker-icon text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                @click.stop="clearRange" :title="'清除日期' + (showTime ? '時間' : '')">
-                <ClearIcon class="size-5" />
+                class="date-picker-icon vdp-clear-btn" @click.stop="clearRange"
+                :title="'清除日期' + (showTime ? '時間' : '')">
+                <ClearIcon class="vdp-icon-md" />
             </button>
         </div>
 
         <!-- 日期範圍選擇彈窗 -->
-        <div v-if="showCalendar && !disabled" ref="calendarRef"
-            class="absolute mt-1 bg-[var(--color-vdp-surface-elevated)] border border-[var(--color-vdp-outline)] rounded-lg shadow-lg z-10 overflow-auto"
-            :class="[
-                // 基本尺寸控制
-                'max-w-[95vw]',
-                // 響應式最大高度和滾動
-                'max-h-[80vh] overflow-auto',
-                // 小螢幕時確保足夠的邊距
-                'sm:max-h-[70vh]',
-                displayMode === 'single' ? 'min-w-[275px]' : 'min-w-[275px] md:min-w-[570px]'
-            ]" @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
+        <div v-if="showCalendar && !disabled" ref="calendarRef" class="vdp-range-popup"
+            :class="{ 'vdp-range-popup--dual': displayMode !== 'single' }" @click.stop role="dialog" aria-modal="true"
+            aria-label="date-range-picker">
 
             <!-- 範圍選擇器內容 -->
-            <div class="p-2 space-y-2">
+            <div class="vdp-range-body">
                 <!-- 輸入區域 -->
-                <div v-if="inputEnabled && displayMode === 'dual'"
-                    class="w-full flex flex-col md:flex-row flex-justify-between gap-2">
+                <div v-if="inputEnabled && displayMode === 'dual'" class="vdp-range-inputs">
                     <!-- 開始日期輸入 -->
                     <div data-testid="start-date-inputs" aria-label="開始日期輸入區域" @click.stop="focusStartDate"
-                        class="flex-1 flex w-full items-center px-2 py-1 gap-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdp-primary)] focus-within:ring-[var(--color-vdp-primary-subtle)] transition-all duration-200">
+                        class="vdp-range-input-field">
 
                         <DateInput ref="startDateInputRef" v-model="startDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -95,7 +77,7 @@
 
                     <!-- 結束日期輸入 -->
                     <div data-testid="end-date-inputs" aria-label="結束日期輸入區域" @click.stop="focusEndDate"
-                        class="flex-1 flex w-full items-center gap-2 px-2 py-1 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm focus-within:ring-2 focus-within:border-[var(--color-vdp-primary)] focus-within:ring-[var(--color-vdp-primary-subtle)] transition-all duration-200">
+                        class="vdp-range-input-field">
 
                         <DateInput ref="endDateInputRef" v-model="endDateTime.inputDateValue.value"
                             :year-placeholder="computedPlaceholders.year"
@@ -117,13 +99,12 @@
 
                 <!-- 快捷選項 -->
                 <div v-if="shortcuts.length > 0 && showShortcuts" aria-label="日期範圍快捷選項">
-                    <div class="flex flex-wrap gap-2">
+                    <div class="vdp-range-shortcuts">
                         <!-- 預設快捷選項 -->
                         <button v-for="shortcut in shortcuts" :key="shortcut.label" type="button"
                             :aria-label="`選擇${shortcut.label}範圍`"
                             :data-testid="`shortcut-${shortcut.label.toLowerCase().replace(/\s+/g, '-')}`"
-                            class="px-3 py-1 text-xs bg-[var(--color-vdp-outline)] text-[var(--color-vdp-content)] hover:bg-[var(--color-vdp-interactive-hover)] rounded-sm transition-colors"
-                            @click="applyShortcut(shortcut)">
+                            class="vdp-shortcut-btn" @click="applyShortcut(shortcut)">
                             {{ shortcut.label }}
                         </button>
 
@@ -136,7 +117,7 @@
 
                 <!-- 如果只有自定義快捷選項但沒有預設快捷選項 -->
                 <div v-else-if="$slots.shortcuts && showShortcuts">
-                    <div class="flex flex-wrap gap-2">
+                    <div class="vdp-range-shortcuts">
                         <slot name="shortcuts" :apply-shortcut="applyShortcut" :shortcuts="shortcuts"
                             :current-range="modelValue">
                         </slot>
@@ -144,7 +125,7 @@
                 </div>
 
                 <!-- 雙月日曆 -->
-                <div class="calendar-container overflow-auto">
+                <div class="vdp-range-cal-wrap">
                     <RangeCalendar :month-display-mode="displayMode" :showTimeSelector="showTime" :calendar="calendar"
                         :range-start="startDateTime.internalDateTime.value"
                         :range-end="endDateTime.internalDateTime.value"
@@ -453,3 +434,128 @@ const {
     focusEndDate,
 } = dateRange;
 </script>
+
+<style scoped>
+.vdp-range-display {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--vdp-space-1);
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.vdp-range-display:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vdp-range-date {
+    text-align: center;
+    min-width: 0;
+    max-width: 130px;
+}
+
+@media (min-width: 640px) {
+    .vdp-range-date {
+        max-width: none;
+    }
+}
+
+.vdp-range-sep {
+    color: var(--color-vdp-content-muted);
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    padding-inline: var(--vdp-space-1);
+}
+
+.vdp-range-popup {
+    position: absolute;
+    margin-top: var(--vdp-space-1);
+    background-color: var(--color-vdp-surface-elevated);
+    border: 1px solid var(--color-vdp-outline);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    z-index: 10;
+    overflow: auto;
+    max-width: 95vw;
+    max-height: 80vh;
+    min-width: 275px;
+}
+
+@media (min-width: 640px) {
+    .vdp-range-popup {
+        max-height: 70vh;
+    }
+}
+
+@media (min-width: 768px) {
+    .vdp-range-popup--dual {
+        min-width: 570px;
+    }
+}
+
+.vdp-range-body {
+    padding: var(--vdp-space-2);
+}
+
+.vdp-range-body> * + * {
+    margin-top: var(--vdp-space-2);
+}
+
+.vdp-range-inputs {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--vdp-space-2);
+}
+
+@media (min-width: 768px) {
+    .vdp-range-inputs {
+        flex-direction: row;
+    }
+}
+
+.vdp-range-input-field {
+    flex: 1 1 0%;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--vdp-space-2);
+    padding: var(--vdp-space-1) var(--vdp-space-2);
+    border: 1px solid var(--color-vdp-outline);
+    background-color: var(--color-vdp-surface);
+    color: var(--color-vdp-content);
+    border-radius: var(--vdp-radius-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vdp-range-input-field:focus-within {
+    border-color: var(--color-vdp-primary);
+    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
+}
+
+.vdp-range-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--vdp-space-2);
+}
+
+.vdp-shortcut-btn {
+    padding: var(--vdp-space-1) var(--vdp-space-3);
+    font-size: var(--vdp-text-xs);
+    background-color: var(--color-vdp-outline);
+    color: var(--color-vdp-content);
+    border-radius: var(--vdp-radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.vdp-shortcut-btn:hover {
+    background-color: var(--color-vdp-interactive-hover);
+}
+
+.vdp-range-cal-wrap {
+    overflow: auto;
+}
+</style>

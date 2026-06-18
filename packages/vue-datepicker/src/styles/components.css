@@ -1,0 +1,290 @@
+/**
+ * components.css — 自包含元件樣式（字面 CSS + 自有 --vdp-* token，不依賴 Tailwind）。
+ * 與 theme.css 的 token / 深淺模式分離；由 theme.css @import 一併打包進出貨 CSS。
+ * Phase 2 進行中：逐元件把模板 Tailwind utility 收斂到此處的 .vdp-* class。
+ */
+
+/* ===== 元件根容器（DatePicker / DateRange 共用） ===== */
+.vdp-wrapper {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    justify-self: start;
+}
+
+/* ===== 公開 CSS API：輸入框容器（消費者可覆蓋） ===== */
+.date-picker-container {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--vdp-space-1);
+    padding: var(--vdp-space-1) var(--vdp-space-2);
+    background-color: var(--color-vdp-surface);
+    color: var(--color-vdp-content);
+    border: 1px solid var(--color-vdp-outline);
+    border-radius: var(--vdp-radius-sm);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.date-picker-container:focus-within {
+    border-color: var(--color-vdp-primary);
+    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
+    outline: 2px solid var(--color-vdp-primary-ring);
+    outline-offset: -1px;
+}
+
+.date-picker-container.error {
+    border-color: var(--color-vdp-error);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-vdp-error) 20%, transparent);
+}
+
+/* ===== 圖示按鈕（日曆/時間圖示、清除鈕；DatePicker/DateRange 共用） ===== */
+.vdp-icon-btn {
+    flex-shrink: 0;
+    color: var(--color-vdp-content-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.vdp-icon-btn:hover {
+    color: var(--color-vdp-content-secondary);
+}
+
+.vdp-icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.vdp-clear-btn {
+    flex-shrink: 0;
+    color: var(--color-vdp-content-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.vdp-clear-btn:hover {
+    color: var(--color-vdp-error);
+}
+
+.vdp-clear-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ===== 顯示值 / placeholder（truncate） ===== */
+.vdp-placeholder {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-vdp-content);
+}
+
+.vdp-placeholder--muted {
+    color: var(--color-vdp-content-muted);
+}
+
+/* ===== 日曆彈出層（DatePicker 單一） ===== */
+.vdp-popup {
+    position: absolute;
+    margin-top: var(--vdp-space-1);
+    background-color: var(--color-vdp-surface-elevated);
+    border: 1px solid var(--color-vdp-outline);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    z-index: 10;
+}
+
+/* ===== 錯誤訊息（DateErrorMessage） ===== */
+.vdp-error-message {
+    margin-top: var(--vdp-space-1);
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    color: var(--color-vdp-error);
+}
+
+/* ===== 星期標題列（WeekdayHeader） ===== */
+.vdp-weekday-header {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin-bottom: var(--vdp-space-2);
+}
+
+.vdp-weekday-cell {
+    text-align: center;
+    color: var(--color-vdp-content);
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    padding-top: var(--vdp-space-2);
+    padding-bottom: var(--vdp-space-2);
+}
+
+/* ===== 日期格（CalendarCell） ===== */
+.vdp-cell {
+    text-align: center;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    place-items: center;
+}
+
+.vdp-cell-btn {
+    grid-column-start: 1;
+    grid-row-start: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--vdp-radius);
+    background-color: var(--color-vdp-surface);
+    color: var(--color-vdp-content);
+}
+
+.vdp-cell-btn--clickable {
+    cursor: pointer;
+}
+
+.vdp-cell-btn--clickable:hover {
+    background-color: var(--color-vdp-interactive-hover);
+}
+
+/* 選中 / 範圍端點：主色底 + on-primary 文字 */
+.vdp-cell-btn--selected {
+    background-color: var(--color-vdp-primary);
+    color: var(--color-vdp-on-primary);
+}
+
+/* 範圍內（非端點） */
+.vdp-cell-btn--in-range {
+    background-color: var(--color-vdp-outline);
+    color: var(--color-vdp-content);
+}
+
+/* 今天標記（未選中時的內框） */
+.vdp-cell-btn--today {
+    box-shadow: inset 0 0 0 2px var(--color-vdp-primary);
+}
+
+/* 禁用 */
+.vdp-cell-btn--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* 月外日期文字 */
+.vdp-cell-btn--muted {
+    color: var(--color-vdp-content-muted);
+}
+
+/* ===== 共用下拉選單（TimeSelector / CalendarHeader 月份選擇） ===== */
+.vdp-select {
+    appearance: none;
+    background-image: none;
+    width: 100%;
+    padding: var(--vdp-space-1) var(--vdp-space-2);
+    border: 1px solid var(--color-vdp-outline);
+    background-color: var(--color-vdp-surface);
+    color: var(--color-vdp-content);
+    border-radius: var(--vdp-radius-sm);
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+}
+
+.vdp-select:focus {
+    outline: none;
+    border-color: var(--color-vdp-primary);
+    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
+}
+
+/* ===== 圖示尺寸 helper（取代 Tailwind h-4/w-4、h-5/w-5、size-5） ===== */
+.vdp-icon-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.vdp-icon-md {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ===== 日曆容器（CalendarGrid） ===== */
+.vdp-calendar-grid {
+    width: 100%;
+    max-width: 20rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    padding: var(--vdp-space-2);
+}
+
+/* ===== 日期網格容器（DateGridView） ===== */
+.vdp-date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--vdp-space-1);
+}
+
+/* ===== 月份/年份導覽列（CalendarHeader） ===== */
+.vdp-cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--vdp-space-4);
+    gap: var(--vdp-space-2);
+}
+
+.vdp-cal-nav-btn {
+    padding: var(--vdp-space-2);
+    color: var(--color-vdp-content-secondary);
+    border-radius: var(--vdp-radius-full);
+    cursor: pointer;
+}
+
+.vdp-cal-nav-btn:hover {
+    background-color: var(--color-vdp-interactive-hover);
+}
+
+.vdp-cal-nav-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-vdp-primary);
+}
+
+.vdp-cal-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vdp-cal-header-main {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--vdp-space-2);
+}
+
+.vdp-cal-year-wrap {
+    position: relative;
+}
+
+.vdp-cal-year-btn {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    padding: var(--vdp-space-1) var(--vdp-space-2);
+    background-color: var(--color-vdp-surface);
+    color: var(--color-vdp-content);
+    border: 1px solid var(--color-vdp-outline);
+    border-radius: var(--vdp-radius-sm);
+    font-size: var(--vdp-text-sm);
+    line-height: var(--vdp-leading-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vdp-cal-year-btn:focus,
+.vdp-cal-year-btn:focus-within {
+    outline: none;
+    border-color: var(--color-vdp-primary);
+    box-shadow: 0 0 0 2px var(--color-vdp-primary-subtle);
+}

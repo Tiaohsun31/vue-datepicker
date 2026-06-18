@@ -1,16 +1,10 @@
 <!-- components/calendar/RangeCalendar.vue -->
 <!-- 統一的範圍選擇日曆：可以顯示單月或雙月 -->
 <template>
-    <div class="range-calendar" :class="[
-        monthDisplayMode === 'single' ? 'single-month' : 'dual-month',
-        'flex flex-col gap-4',
-        monthDisplayMode === 'dual' ? 'min-w-auto md:min-w-[570px] md:flex-row' : 'min-w-auto max-w-[300px]',
-        'm-1'
-    ]">
+    <div class="vdp-range-calendar"
+        :class="monthDisplayMode === 'single' ? 'vdp-range-calendar--single' : 'vdp-range-calendar--dual'">
         <!-- 主要月份（單月模式時為唯一月份，雙月模式時為左側月份） -->
-        <div class="calendar-container flex-1" :class="[
-            monthDisplayMode === 'dual' ? 'min-w-auto md:min-w-[280px]' : 'min-w-auto'
-        ]">
+        <div class="vdp-range-month">
             <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'" :year="primaryYear"
                 :month="primaryMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
                 :week-starts-on="weekStartsOn" :calendar="calendar" :showTimeSelector="showTimeSelector"
@@ -20,7 +14,7 @@
         </div>
 
         <!-- 次要月份（僅雙月模式顯示） -->
-        <div v-if="monthDisplayMode === 'dual'" class="calendar-container flex-1 md:min-w-[280px] min-w-auto">
+        <div v-if="monthDisplayMode === 'dual'" class="vdp-range-month">
             <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'"
                 :year="secondaryYear" :month="secondaryMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
                 :week-starts-on="weekStartsOn" :calendar="calendar" :showTimeSelector="showTimeSelector"
@@ -319,3 +313,31 @@ defineExpose({
     handleRangeSelect,
 });
 </script>
+
+<style scoped>
+.vdp-range-calendar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--vdp-space-4);
+    margin: var(--vdp-space-1);
+}
+
+.vdp-range-calendar--single {
+    max-width: 300px;
+}
+
+.vdp-range-month {
+    flex: 1 1 0%;
+}
+
+@media (min-width: 768px) {
+    .vdp-range-calendar--dual {
+        min-width: 570px;
+        flex-direction: row;
+    }
+
+    .vdp-range-calendar--dual .vdp-range-month {
+        min-width: 280px;
+    }
+}
+</style>

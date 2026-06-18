@@ -1,20 +1,18 @@
 <!-- /src/components/calendar/CalendarHeader.vue -->
 <template>
-    <div class="flex justify-between items-center mb-4 gap-2">
+    <div class="vdp-cal-header">
         <!-- 上個月按鈕 -->
-        <button type="button" @click="previousMonth"
-            class="p-2 text-[var(--color-vdp-content-secondary)] hover:bg-[var(--color-vdp-interactive-hover)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-vdp-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="上個月" :disabled="!canNavigatePrevious">
-            <DatePickerPrev class="h-5 w-5" />
+        <button type="button" @click="previousMonth" class="vdp-cal-nav-btn" aria-label="上個月"
+            :disabled="!canNavigatePrevious">
+            <DatePickerPrev class="vdp-icon-md" />
         </button>
 
-        <div class="grow grid grid-cols-2 gap-2">
+        <div class="vdp-cal-header-main">
             <!-- 月份選擇器 -->
             <slot name="month-selector" :month-names="monthNames" :selected-month="selectedMonthLocal"
                 :on-month-change="onMonthChangeWithValue">
-                <select v-model="selectedMonthLocal" @change="onMonthChange"
-                    class="appearance-none bg-none w-full py-1 px-2 border border-[var(--color-vdp-outline)] bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] rounded-sm text-sm focus:ring-2 focus:ring-[var(--color-vdp-primary-subtle)] focus:border-[var(--color-vdp-primary)]"
-                    aria-label="選擇月份" role="combobox">
+                <select v-model="selectedMonthLocal" @change="onMonthChange" class="vdp-select" aria-label="選擇月份"
+                    role="combobox">
                     <option v-for="(month, index) in monthNames" :key="index" :value="index + 1">
                         {{ month }}
                     </option>
@@ -22,12 +20,11 @@
             </slot>
 
             <!-- 年份輸入/選擇器 -->
-            <div class="relative">
+            <div class="vdp-cal-year-wrap">
                 <!-- 顯示年份的按鈕 -->
                 <slot name="year-selector" :display-year="displayYear" :toggle-year-selector="toggleYearSelector"
                     :show-year-selector="showYearSelector">
-                    <button type="button" @click="toggleYearSelector" data-year-selector-button
-                        class="inline-flex truncate items-center px-2 py-1 bg-[var(--color-vdp-surface)] text-[var(--color-vdp-content)] w-full border border-[var(--color-vdp-outline)] rounded-sm text-sm focus-within:ring-2 focus-within:border-[var(--color-vdp-primary)] focus-within:ring-[var(--color-vdp-primary-subtle)]"
+                    <button type="button" @click="toggleYearSelector" data-year-selector-button class="vdp-cal-year-btn"
                         aria-label="選擇年份">
                         {{ displayYear }}
                     </button>
@@ -47,10 +44,9 @@
         </div>
 
         <!-- 下個月按鈕 -->
-        <button type="button" @click="nextMonth"
-            class="p-2 text-[var(--color-vdp-content-secondary)] hover:bg-[var(--color-vdp-interactive-hover)] rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-vdp-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="下個月" :disabled="!canNavigateNext">
-            <DatePickerNext class="h-5 w-5" />
+        <button type="button" @click="nextMonth" class="vdp-cal-nav-btn" aria-label="下個月"
+            :disabled="!canNavigateNext">
+            <DatePickerNext class="vdp-icon-md" />
         </button>
     </div>
 </template>

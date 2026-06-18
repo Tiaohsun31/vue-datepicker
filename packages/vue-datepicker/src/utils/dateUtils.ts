@@ -193,7 +193,6 @@ export function resolveTimeFormat(opts: {
 export function formatOutput(
     date: SimpleDateValue | null,
     outputType: OutputType = 'iso',
-    // customFormat?: string,
     dateFormat: string = 'YYYY-MM-DD',
     timeFormat?: string,
     includeTime: boolean = false,
@@ -232,7 +231,6 @@ export function formatOutput(
                 return date;
 
             case 'custom':
-                // const format = customFormat || (includeTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD');
                 return CalendarUtils.formatOutput(date, dateFormat, timeFormat, includeTime, calendar, locale);
 
             default:

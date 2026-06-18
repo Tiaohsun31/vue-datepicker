@@ -1,5 +1,5 @@
 // utils/dateParsingUtils.ts - 主要的輸入解析工具（支援多日曆系統）
-import { RocFormatPlugin } from '../plugins/calendars/RocFormatPlugin';
+import { getCalendarDescriptor } from '../plugins/calendars/registry';
 import { warn } from './logger';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -77,19 +77,20 @@ export class SmartDateParser {
     }
 
     private tryParseWithPlugins(input: string): DateParseResult {
-        switch (this.calendar) {
-            case 'roc':
-                const rocPlugin = new RocFormatPlugin();
-                if (rocPlugin.canParseInput(input)) {
-                    const result = rocPlugin.parseInput(input, this.locale);
-                    if (result) {
-                        return {
-                            success: true, date: result, format: 'roc-plugin',
-                            confidence: 0.95, calendarSystem: 'roc'
-                        };
-                    }
-                }
-                break;
+        // 查 registry：當前曆法若有自訂文字 plugin（如 ROC 民國年）就委派解析。
+        // 注意：使用者已「明確」選定此曆法（calendar prop），故直接呼叫 plugin.parseInput，
+        // 不再以 canParseInput（要求民國/ROC 前綴）當 gate —— 這正是 §5.5#9 / Phase 6.8 的修正：
+        // ROC 模式下無前綴的純數字（如 '114-06-18'）也應被當成民國年解析。
+        // 非該曆法格式的輸入（如 ROC 模式打 '2023-12-25'）plugin 會回傳 null，再回退一般解析。
+        const plugin = getCalendarDescriptor(this.calendar)?.plugin;
+        if (plugin) {
+            const result = plugin.parseInput(input, this.locale);
+            if (result) {
+                return {
+                    success: true, date: result, format: `${this.calendar}-plugin`,
+                    confidence: 0.95, calendarSystem: this.calendar
+                };
+            }
         }
         return { success: false, date: null, format: null, confidence: 0 };
     }
@@ -157,22 +158,17 @@ export class SmartDateParser {
     }
 }
 
-// 全域解析器實例
-const globalParser = new SmartDateParser();
-
 /**
  * 便利函數：解析日期字符串
+ *
+ * 無狀態：每次以指定 locale/calendar 建立一個 SmartDateParser 解析，
+ * 避免先前「全域單例 + setLocale/setCalendar 就地改狀態」在多實例/不同 locale 下的競態（Phase 6.2）。
+ * SmartDateParser 建構成本極低（僅組合 preferredFormats 陣列）。
  */
 export function parseUserDateInput(
     input: string,
     locale: string = 'zh-TW',
     calendar: string = 'gregory'
 ): DateParseResult {
-    if (locale !== globalParser['locale']) {
-        globalParser.setLocale(locale);
-    }
-    if (calendar !== globalParser['calendar']) {
-        globalParser.setCalendar(calendar);
-    }
-    return globalParser.parse(input);
+    return new SmartDateParser(locale, calendar).parse(input);
 }

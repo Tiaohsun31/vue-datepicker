@@ -175,7 +175,8 @@
 1. **🔴 插件系統「看似可擴展、實則寫死」（最大問題）**：`CalendarPlugin` 介面 + `RocFormatPlugin` 都有，且從 `index.ts` 匯出，但**沒有任何 registry / 註冊 API**。`CalendarUtils.formatOutput` 與 `SmartDateParser.tryParseWithPlugins` 都是**硬寫 `case 'roc': new RocFormatPlugin()`**。後果：
    - 消費者**無法新增自己的曆法格式插件**（如日本令和、泰國佛曆文字），必須改套件內部 switch —— 匯出的介面/類別給了「可擴展」的錯覺。
    - 每次 format/parse 都 `new RocFormatPlugin()`（無生命週期、浪費）。
-   - **建議**：做成真正的 registry —— `Map<id, CalendarPlugin>` + `registerCalendarPlugin(plugin)`（從 `index.ts` 匯出），dispatch 改查表而非 switch。曆法 metadata（range/displayName）也內聚到各 plugin。
+   - **另一層成本（第四輪補）**：`createSafeCalendar` 用動態 `createCalendar(calendarId)`，而 `@internationalized/date` 的 `createCalendar` 是對**所有曆法類別的大 switch** → 全部曆法數學**無法 tree-shake**，即使只用西元曆也整包帶走。
+   - **建議（定案見 Phase 6 擴展模型定案）**：做成 registry，但**不是「都有 plugin」而是「統一 `CalendarDescriptor` + 全部非西元曆 opt-in 註冊」**：`Map<id, CalendarDescriptor>` + `registerCalendar(descriptor)`（`index.ts` 匯出，附內建描述子模組）；描述子帶 metadata（range/displayName）+ **自帶 lib 曆法類別**（取代動態 `createCalendar`、換 tree-shaking）+ 可選 format/parse plugin；dispatch 與 metadata 全改查表。
 2. **🟡 `formatOutput` 命名/位置/簽名問題（review 中真的踩到）**：
    - **同名兩份**：`CalendarUtils.formatOutput`（曆法 god-class 內）與 `dateUtils.formatOutput`（composables 實際用、`outputType==='custom'` 時委派給前者）—— 同名不同責、易混淆。
    - **死參數誤導**：`dateUtils.formatOutput` 第 3 位曾是 `customFormat`，移除時只把它**註解掉留在簽名裡**（`// customFormat?: string,`），導致照簽名數位置的呼叫者把 `dateFormat` 餵到 `timeFormat` 位（本次 review 即因此誤判一次）。
@@ -187,6 +188,15 @@
 6. **🟡 曆法清單三處不一致**：`isCalendarSupported`（含 `islamic-civil/tbla/umalqura`）、`getCalendarRange`（用 `'islamic'`，不在支援清單）、`getCalendarDisplayName`（又一組）三份 id 清單彼此對不上 → 收斂為單一 metadata 來源（理想由 plugin registry 提供）。
 7. **🟡 ROC 格式表硬寫 + 字串 replace 脆弱**：`formatDatePart` 用 Record 列舉特定 format，未命中就 `dayjs(...).format` 後 `.replace(西元年, 民國年)`（位置盲、有誤替風險）；ROC `yearRange.max=200` 與 `getCalendarRange` roc 的 `currentYear+100` 不一致；ROC `displayName` 在 plugin 與 `CalendarUtils` 重複定義。
 8. **⚪ `CalendarUtils` 570 行 god-class**：混了轉換/網格/年轉換/顯示名/驗證/格式化 → 評估拆分（conversion / grid / metadata / formatting）。
+
+### 第四輪 review 補充（2026-06-18，Phase 6 動工前重讀核心碼新發現）
+
+> 重點：以下幾項是 6.1/6.5 重構時**最容易被「順順地搬過去」而帶著走的隱性錯誤**，先寫測試鎖住再動。
+
+9. **🔴 ROC 數字輸入無前綴會被誤判成西元年（真正確性 bug）**：`RocFormatPlugin.canParseInput`(:155) 要求字串以「民國/民国/ROC」開頭才認領。所以當 `calendar='roc'`、使用者輸入 `114-06-18`（無前綴）時，`dateParsingUtils.tryParseWithPlugins`(:79) 的 gate 不通過 → 落到 `tryParseWithFormat` → 被當成**西元 114 年**解析（`calendarSystem='gregory'`）。plugin 內其實有 `tryParseWithSeparator` 能處理，卻被前綴 gate 擋在外面。→ **registry 化時要讓「ROC 模式下的純數字」也能正確進入 ROC 解析**；先補測試（無前綴 `114/06/18`、`114-06-18` round-trip）。
+10. **🟡 `formatOutput` 用 `canParseInput` 檢查「格式字串」（語義錯置）**：`calendarUtils.formatOutput`(:487) `if (rocPlugin.supportsFormat(format) && rocPlugin.canParseInput(format))` —— `canParseInput` 是判斷**使用者輸入**是否為 ROC 字串的，這裡卻拿去檢查 **format pattern**（如 `'ROC-YYYY-MM-DD'`）。目前因 `'ROC-'` 剛好命中前綴正則而僥倖能動，換個沒有 `ROC-` 前綴的 ROC 格式就掉進 Intl 長格式（即第 5 項）。→ registry 化時「此 plugin 是否支援此 format」單純交給 `supportsFormat`，移除 `canParseInput(format)` 誤用。
+11. **⚪ `formatOutput` 死分支**：`calendarUtils.formatOutput`(:467) `const defaultTimeFormat = hasTime ? 'HH:mm:ss' : 'HH:mm:ss';` 兩邊相同，`hasTime` 判斷無作用 → 清理時移除。
+12. **🟡 ROC 在不同路徑用了兩套機制**：格式化/解析走 plugin（`YEAR_OFFSET=1911`），但年份轉換 `convertGregorianYear`(:223)/`convertToGregorianYear`(:249) 卻走 `createCalendar('roc')` + `@internationalized/date`。目前數值一致（114+1911=2025），但屬架構不一致 → 設計 registry 時要決定 ROC 的 year 換算歸 plugin 還是歸 Intl，避免日後加第二個「Intl 不支援的曆法」再踩。
 
 ## 6. 分階段任務（低風險優先）
 
@@ -278,13 +288,54 @@
 
 ### Phase 6 — 核心日曆流程重構（§5.5；多曆法是核心價值，獨立大塊）
 > 先補曆法轉換/格式化/解析的單元測試（各曆法 round-trip），再重構。
-- [ ] **6.1 插件 registry**：`Map<id,CalendarPlugin>` + `registerCalendarPlugin`，format/parse 改查表 dispatch；移除硬寫 switch；`index.ts` 匯出註冊 API。🔴
-- [ ] **6.2 `globalParser` 去單例**：改無狀態/傳參，消除跨實例競態與私有索引 hack。🔴
-- [ ] **6.3 收斂 formatOutput**：`CalendarUtils.formatOutput` 與 `dateUtils.formatOutput` 二選一為單一事實來源。🟡
-- [ ] **6.4 曆法 metadata 單一來源**：合併 `isCalendarSupported`/`getCalendarRange`/`getCalendarDisplayName` 三份清單（理想由 plugin 提供）；修 `getMonthNames` 忽略 calendarId。🟡
-- [ ] **6.5 非西元曆 `dateFormat` 行為**：補格式支援或文件明確化（目前被 Intl 長格式覆蓋）。🟡
-- [ ] **6.6 ROC 插件**：格式表/字串 replace 脆弱性、yearRange 不一致、displayName 重複。🟡
+>
+> **擴展模型定案（2026-06-18 使用者拍板）：採「統一描述子註冊，全部非西元曆皆 opt-in」。**
+> 理由：`@internationalized/date` 的 `createCalendar(動態id)` 是對所有曆法類別的大 switch，會讓全部曆法數學**無法 tree-shake**、無條件打包進 bundle。多數使用者只用西元曆 → 預設不該背著全部曆法。改為「按需註冊、各描述子自帶曆法類別」可把未用曆法 tree-shake 掉。
+> - **西元曆**：永遠內建、預設、免註冊。
+> - **其餘所有曆法（含 ROC / 佛 / 和 / 波斯 / 希伯來 / 伊斯蘭…）**：一律以 `registerCalendar(descriptor)` **顯式註冊**，不內建、不預設註冊。未註冊就用 → dev-warn（提示「忘了 `registerCalendar`？」）+ fallback 西元曆。
+> - **統一描述子（CalendarDescriptor）**，避免「有些 magic、有些要 plugin」雙軌。每個描述子帶：
+>   - `id` / `displayName` / `yearRange`（← 收斂 6.4 三份 metadata 清單）。
+>   - **自己的曆法類別 / factory**（直接 import 具名類別 `BuddhistCalendar`/`PersianCalendar`/`HebrewCalendar`/`JapaneseCalendar`/`TaiwanCalendar`(ROC)…），**取代動態 `createCalendar`** → 換來 tree-shaking。
+>   - **可選**的 `format`/`parse` plugin：只有「Intl 做不到的自訂文字」曆法才有（ROC 民國年）；佛/和/波斯… 無 plugin，格式化 fall through 到 `DateFormatter`。
+> - **registry 不強制每個曆法都有 plugin**：dispatch 先查 registry 取描述子；有 plugin 就委派 format/parse，否則走 `@internationalized/date`/`DateFormatter` 基底路徑。registry 持 **singleton 描述子實例**（plugin 須無狀態，順解 6.2 與「每次 `new`」浪費）。
+> - **公開 API（`index.ts` 匯出）**：`registerCalendar()` + `CalendarDescriptor`/`CalendarPlugin` 型別 + **內建描述子模組**（`rocCalendar`/`buddhistCalendar`/`japaneseCalendar`/`persianCalendar`/`hebrewCalendar`/`islamicCalendar`…，各自 import 對應 lib 類別）。第三方也能用同一 API 新增自訂文字曆法（令和文字、泰文佛曆…）—— dogfood 公開 API。`RocFormatPlugin` 類別不再直接對外匯出（包進 `rocCalendar` 描述子）。
+> - **registry 同時是 metadata 單一來源（接 6.4）**：`getCalendarRange`/`getCalendarDisplayName`/`isCalendarSupported`/`getMonthNames`/`createSafeCalendar` 一律改查 registry（查不到 → 西元曆 fallback + dev-warn）。
+> - **建議順序**：先補各曆法 round-trip 測試（含 6.8 ROC 無前綴）→ 建 registry + `CalendarDescriptor` + metadata 模型 → 把 `createSafeCalendar` 從動態 `createCalendar` 改查表 → 遷移 format/parse dispatch → 拆出內建描述子模組（驗證 tree-shaking：只 import 西元曆時 dist 不含其他曆法類別）→ 再做 ROC plugin 自身清理（6.6）。
+> - **破壞性（寫入 Phase 5 migration / CHANGELOG）**：`calendar="buddhist"` 等不再開箱即用，須先 `registerCalendar(buddhistCalendar)`；移除舊 `RocFormatPlugin` 直接匯出。
+
+- [x] ✅ **補 round-trip 安全網測試（2026-06-18，動工前置）**：`tests/units/calendar-roundtrip.test.ts`（35 tests）鎖住①西元⇄各曆法(roc/buddhist/japanese/persian/hebrew)⇄西元 日期轉換 identity；②offset 曆法(gregory/roc/buddhist)年份 round-trip identity + persian 年初偏移現狀記錄；③ROC 格式化⇄解析 round-trip（日期/24h/中文12h）；④§5.5#9/6.8 ROC 無前綴 bug：plugin 能解析(診斷鎖)+現狀誤判為西元(鎖)+`it.fails` 編碼期望(修好自動轉綠)。全套 **538 passed / 1 expected-fail（18 檔）**。
+- [x] ✅ **6.1 曆法 registry + 統一描述子（公開 opt-in API）— 輸出端（Session A, 2026-06-18）**：新增 `CalendarDescriptor`（`types/calendarPlugin.ts`）；`plugins/calendars/registry.ts`（`Map` singleton + `registerCalendar`/`getCalendarDescriptor`/`isCalendarRegistered`，內建 gregory 免註冊）；內建描述子 `roc.ts`(TaiwanCalendar+RocFormatPlugin) + `builtins.ts`(buddhist/japanese/persian/hebrew/indian/coptic/ethiopic/ethioaa/islamic-civil/-tbla/-umalqura，各自 import lib 類別)；`index.ts` 匯出 registry API + 型別 + 描述子，**移除 `RocFormatPlugin` 直接匯出（破壞性）**。`calendarUtils.formatOutput` 改查 `descriptor.plugin`（移除硬寫 `case 'roc'`）。📌 **解析端（`dateParsingUtils.tryParseWithPlugins` 仍硬寫 `new RocFormatPlugin()`）留 Session B**。🔴
+- [x] ✅ **6.2 `globalParser` 去單例（Session B, 2026-06-18）**：移除 module-level `globalParser` 與 `globalParser['locale']/['calendar']` 私有索引 hack；`parseUserDateInput` 改每次 `new SmartDateParser(locale,calendar).parse()` 無狀態，消除跨實例競態。📌 `useLocale` 共享 `localeMessages` 跨實例洩漏**未處理**（屬 locale 系統獨立議題，留專門 pass）。🔴
+- [🟡] **6.3 收斂 formatOutput（dispatch + 死參數已清；options 簽名刻意保留）**：✅ Session A：dispatch 改查 registry plugin、移除硬寫 switch、移除死分支。✅ Session B：清掉 `dateUtils.formatOutput` 的死註解參數 `// customFormat`（§5.5#2 的具體 footgun）。⬜ **同名收斂 + 位置→options 物件簽名：評估後不做**——兩個 formatOutput 實為分層（dateUtils 管 outputType、Calendar 管曆法格式化）非真重複；options 改造純為防呆、屬機械式大量測試 churn、無正確性收益，風險>收益，留日後低優先 polish。🟡
+- [x] ✅ **6.4 曆法 metadata 單一來源（併入 registry）— 大部分（Session A）**：✅ `isCalendarSupported`/`getCalendarRange`/`getCalendarDisplayName`/`createSafeCalendar` 全改查 registry 描述子（未註冊 → 西元曆 fallback + dev-warn）。⬜ **`getMonthNames` 原生月名改造留 Session B/後續**：與 CalendarHeader 的「12 西元式月份」導航模型脫鉤（希伯來 13 月等），屬「是否支援原生月份」的更大架構決策，非單純 registry 工作。🟡
+- [ ] **6.5 非西元曆 `dateFormat` 行為 → 文件化（Phase 5）**：非西元/非 plugin 曆法的 `formatOutput` 仍走 Intl 長格式、忽略 `dateFormat` pattern。屬「Intl 不提供任意 pattern 的曆法感知 token 格式化」之產品取捨 → **決定文件明確化**（README/docs 講清此行為），不在 Phase 6 強行補 pattern。🟡
+- [🟡] **6.6 ROC 插件**：✅ Session A：移除 `formatOutput` 對 `canParseInput(format)` 的誤用（§5.5-10）改純 `supportsFormat`。✅ Session B：slim `CalendarPlugin` 介面（移除 id/displayName/yearRange，metadata 全歸描述子）、ROC plugin displayName 重複消除、`yearRange` 改 private 僅供解析驗證、`rocCalendar.getYearRange` 對齊民國 1–200（1912–2111）解決年範圍不一致。⬜ `formatDatePart` 格式表/字串 replace 脆弱性**未動**（ROC 內部健壯性，低優先留後續）。🟡
 - [ ] **6.7（評估）拆分 `CalendarUtils` god-class**。⚪
+- [x] ✅ **6.8 🔴 ROC 無前綴數字輸入修正（Session B, 2026-06-18）**：解析端 dispatch 直接委派 `plugin.parseInput`（不再以 `canParseInput` 前綴 gate），ROC 模式無前綴 `114-06-18` → 民國年=西元 2025。`calendar-roundtrip.test.ts` 的 `it.fails` 轉正式通過斷言 + 加回歸保護（ROC 超範圍數字回退西元）。
+- [x] ✅ **6.9 ⚪ 清 `formatOutput` 死分支（§5.5-11，Session A）**：移除恆等的 `defaultTimeFormat` 三元判斷。
+- [x] ✅ **6.10 🟡 統一 ROC year 換算路徑（§5.5-12，Session A）**：年份數學經 registry 的 `createCalendar()`（TaiwanCalendar，@internationalized/date）為單一來源；plugin 僅負責文字 format/parse。
+
+> **Phase 6 session 切分建議（2026-06-18 評估；本重構量大、跨破壞性，建議分兩個 session）**
+>
+> 切分原則：以「輸出/格式化路徑」與「輸入/解析路徑」為界，兩個 session 各自結束時 `pnpm type-check && pnpm build` + 全套測試綠（含 round-trip 安全網）。registry 地基放第一個 session，因其餘項目都要 dispatch 經過它。
+>
+> **Session A — Registry 地基 + metadata + 輸出路徑**（重，含最大破壞性）
+> - 建 `CalendarDescriptor` + `Map<id, descriptor>` registry + `registerCalendar()`；`index.ts` 匯出 API + 內建描述子模組（roc/buddhist/japanese/persian/hebrew/islamic…，各自 import lib 曆法類別）。
+> - `createSafeCalendar` 由動態 `createCalendar` 改查描述子（取得 tree-shaking）；驗證「只 import 西元曆時 dist 不含其他曆法類別」。
+> - **6.4** metadata 全併入 registry（range/displayName/`getMonthNames`/`isCalendarSupported`）；修 `getMonthNames` 忽略 calendarId。
+> - **6.3** 收斂 `formatOutput`（單一事實來源 + options 物件簽名）；format 端 dispatch 改查表。
+> - **6.10** ROC year 路徑統一、**6.9** 死分支清除。
+> - DoD：所有曆法改 opt-in 註冊後（測試 setup 補 `registerCalendar`），round-trip + 既有測試綠；tree-shaking 核實；type-check/build 0。
+>
+> **Session B — 解析路徑 + 去單例 + ROC 自身 + bug 修正**
+> - **6.1（解析端）** `tryParseWithPlugins` → registry 查表 dispatch；移除硬寫 switch。
+> - **6.2** `globalParser` 去單例（無狀態/傳參）+ `useLocale` 共享 `localeMessages` 跨實例洩漏。
+> - **6.8** ROC 無前綴數字輸入修正（`it.fails` 轉綠）、**6.6** ROC plugin 清理（移除 `canParseInput(format)` 誤用、格式表/replace 脆弱性、yearRange/displayName 重複）。
+> - **6.5** 非西元曆 `dateFormat` 行為（補支援或文件明確化）。
+> - **6.7（可選，行有餘力）** 拆 `CalendarUtils` god-class。
+> - DoD：6.8 的 `it.fails` 移除並轉正式斷言；全套綠；type-check/build 0；migration/CHANGELOG 重點記入 Phase 5。
+>
+> 風險提示：Session A 的「全部曆法改 opt-in」一落地，**所有既有元件測試凡用到非西元曆者都需在 setup 註冊**，否則大量轉紅 —— 這是預期的、可控的 churn，但別誤判為回歸。建議 Session A 先加一個共用 test setup（註冊全部內建曆法）降低噪音。
 
 ### Phase 5 — 測試、文件、發佈
 - [ ] 單元/元件測試補齊（目標 27↑ 全綠）；主題相關行為測試。
@@ -308,7 +359,7 @@
 | 3 Packaging + dts | ✅ 完成 | dts plugin-less + cssFileName 釘住 + version 2.0.0 + files/sideEffects + npm pack 驗證 + 公開型別可解析（38 個 @/→相對，d.ts 零 alias 殘留）；@tailwindcss/vite 保留決議。dayjs 文件待 Phase 5 |
 | 4 程式碼品質（主題以外） | ✅ 完成 | 5.1 受控更新 / 5.2 computed / 5.3 i18n / 5.4 型別（any 55→7、修潛在 validate() bug）/ 5.5 console（dev-gated logger、dist 0 console）/ 5.6 重複（side-handler factory + resolveTimeFormat）/ 5.7 清理（setTimeout→nextTick）/ 5.8 命名（types/main→public、清 TODO）。504 測試全綠、type-check/build 0。📌 殘留低優先：useLocale 共享 localeMessages 跨實例洩漏（併入 §6.2 類共享狀態 pass）、§5.4 合理動態 any |
 | 5 測試 / 文件 / 發佈 | ⬜ 未開始 | 2.0.0 CHANGELOG + README 中英 + docs |
-| 6 核心日曆流程重構 | ⬜ 未開始 | 插件 registry / globalParser 去單例 / metadata 收斂；先補 round-trip 測試 |
+| 6 核心日曆流程重構 | 🟢 主體完成（A+B ✅；3 項低優先留後續） | **Session A+B 完成（2026-06-18）**：registry + `CalendarDescriptor` + `registerCalendar` + 內建描述子（各自帶 lib 類別、tree-shakeable）；輸出端+解析端 dispatch 全改查表；移除硬寫 `new RocFormatPlugin()`（輸出 A、解析 B）；6.2 globalParser 去單例；6.8 ROC 無前綴修正；6.6 slim CalendarPlugin 介面 + metadata 收斂描述子 + ROC 年範圍對齊；6.9 死分支、6.10 ROC year 統一；移除 `RocFormatPlugin` 直接匯出（破壞性）。**tree-shaking 驗證**：只 import DatePicker → 非西元曆描述子/類別/RocFormatPlugin 全數 0（僅 YearSelector 殘 1 個 `民國前` 字面，見下）。**type-check 0 / build 0 / 542 passed**。**留後續（低優先）**：6.3 options 簽名（評估後不做）、6.5 非西元 dateFormat（→Phase 5 文件）、getMonthNames 原生月名（架構決策）、ROC `formatDatePart` 健壯性、`useLocale` 共享 localeMessages、YearSelector catch-fallback 的 `民國前` 硬編字串 |
 
 > 接手 session：完成項目請勾選對應 checkbox，並更新本表狀態（⬜未開始 / 🟡進行中 / ✅完成）。
 

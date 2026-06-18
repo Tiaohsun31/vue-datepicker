@@ -8,19 +8,11 @@ import dayjs from 'dayjs';
  * 只處理 @internationalized/date 無法處理的特殊格式
  */
 class RocFormatPlugin implements CalendarPlugin {
-    readonly id = 'roc';
-
-    readonly yearRange = {
+    // 解析時的民國年有效範圍（民國1年=1912 ~ 民國200年=2111）。
+    // 僅供 parseInput 驗證使用；對外 metadata（displayName / 年範圍）由 rocCalendar 描述子提供。
+    private readonly yearRange = {
         min: 1,    // 民國1年 (1912年)
         max: 200   // 民國200年 (2111年)
-    };
-
-    readonly displayName = {
-        'zh-TW': '民國曆',
-        'zh-CN': '民国历',
-        'en-US': 'ROC Calendar',
-        'ja-JP': '中華民国暦',
-        'ko-KR': '중화민국력'
     };
 
     private readonly YEAR_OFFSET = 1911;

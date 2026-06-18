@@ -1,10 +1,9 @@
 // utils/CalendarUtils.ts - 日曆轉換工具
-import { RocFormatPlugin } from '../plugins/calendars/RocFormatPlugin';
+import { getCalendarDescriptor, isCalendarRegistered } from '../plugins/calendars/registry';
 import { warn, logError } from './logger';
 import {
     CalendarDate,
     type Calendar,
-    createCalendar,
     toCalendar,
     GregorianCalendar,
     getWeeksInMonth,
@@ -19,7 +18,6 @@ import type { SimpleDateValue } from './dateUtils';
 import { isValidFormatForDayjs } from './dateUtils';
 import dayjs from 'dayjs';
 
-// const rocPlugin = new RocFormatPlugin();
 /**
  * 統一的日曆工具類 - 基於 @internationalized/date
  */
@@ -28,8 +26,13 @@ export class CalendarUtils {
      * 安全地創建日曆實例
      */
     static createSafeCalendar(calendarId: string): Calendar {
+        const descriptor = getCalendarDescriptor(calendarId);
+        if (!descriptor) {
+            warn(`日曆 ${calendarId} 未註冊（是否忘了 registerCalendar？），回退到西元曆`);
+            return new GregorianCalendar();
+        }
         try {
-            return createCalendar(calendarId as any);
+            return descriptor.createCalendar();
         } catch (error) {
             warn(`無法創建日曆 ${calendarId}，回退到西元曆:`, error);
             return new GregorianCalendar();
@@ -205,16 +208,8 @@ export class CalendarUtils {
      */
     static getCalendarRange(calendar: string): { min: number; max: number } {
         const currentYear = new Date().getFullYear();
-        const ranges: Record<string, { min: number; max: number }> = {
-            'gregory': { min: 1, max: currentYear + 100 },
-            'japanese': { min: 1868, max: currentYear + 100 },
-            'roc': { min: 1912, max: currentYear + 100 },
-            'buddhist': { min: 544, max: currentYear + 643 },
-            'islamic': { min: 622, max: currentYear + 100 },
-            'persian': { min: 622, max: currentYear + 100 },
-            'hebrew': { min: 1, max: currentYear + 3860 }
-        };
-        return ranges[calendar] || { min: 1, max: currentYear + 100 };
+        const descriptor = getCalendarDescriptor(calendar);
+        return descriptor?.getYearRange(currentYear) ?? { min: 1, max: currentYear + 100 };
     }
 
     /**
@@ -297,59 +292,8 @@ export class CalendarUtils {
      * 獲取日曆系統的顯示名稱
      */
     static getCalendarDisplayName(calendarId: string, locale: string = 'zh-TW'): string {
-        const names: Record<string, Record<string, string>> = {
-            'gregory': {
-                'zh-TW': '西元',
-                'zh-CN': '西元',
-                'en-US': 'Gregorian',
-                'ja-JP': '西暦',
-                'ko-KR': '서력'
-            },
-            'roc': {
-                'zh-TW': '民國',
-                'zh-CN': '民国',
-                'en-US': 'ROC',
-                'ja-JP': '中華民国',
-                'ko-KR': '중화민국'
-            },
-            'buddhist': {
-                'zh-TW': '佛曆',
-                'zh-CN': '佛历',
-                'en-US': 'Buddhist',
-                'ja-JP': '仏暦',
-                'ko-KR': '불력'
-            },
-            'japanese': {
-                'zh-TW': '和曆',
-                'zh-CN': '和历',
-                'en-US': 'Japanese',
-                'ja-JP': '和暦',
-                'ko-KR': '일본력'
-            },
-            'islamic': {
-                'zh-TW': '伊斯蘭曆',
-                'zh-CN': '伊斯兰历',
-                'en-US': 'Islamic',
-                'ja-JP': 'イスラム暦',
-                'ko-KR': '이슬람력'
-            },
-            'persian': {
-                'zh-TW': '波斯曆',
-                'zh-CN': '波斯历',
-                'en-US': 'Persian',
-                'ja-JP': 'ペルシア暦',
-                'ko-KR': '페르시아력'
-            },
-            'hebrew': {
-                'zh-TW': '希伯來曆',
-                'zh-CN': '希伯来历',
-                'en-US': 'Hebrew',
-                'ja-JP': 'ヘブライ暦',
-                'ko-KR': '히브리력'
-            }
-        };
-
-        return names[calendarId]?.[locale] || names[calendarId]?.['en-US'] || calendarId;
+        const displayName = getCalendarDescriptor(calendarId)?.displayName;
+        return displayName?.[locale] || displayName?.['en-US'] || calendarId;
     }
 
 
@@ -436,12 +380,7 @@ export class CalendarUtils {
     // }
 
     static isCalendarSupported(calendar: string | CalendarIdentifier): boolean {
-        const validCalendars = [
-            'gregory', 'buddhist', 'ethiopic', 'ethioaa', 'coptic', 'hebrew',
-            'indian', 'islamic-civil', 'islamic-tbla', 'islamic-umalqura',
-            'japanese', 'persian', 'roc'
-        ];
-        return validCalendars.includes(calendar);
+        return isCalendarRegistered(calendar);
     }
 
 
@@ -457,48 +396,35 @@ export class CalendarUtils {
         calendar: string = 'gregory',
         locale: string = 'zh-TW'): string {
         if (!date) return '';
-        // let format = includeTime ? `${dateFormat} ${timeFormat}` : dateFormat || 'YYYY-MM-DD HH:mm:ss';
         let format: string;
         if (includeTime && timeFormat) {
             format = `${dateFormat} ${timeFormat}`;
         } else if (includeTime) {
             // 如果需要時間但沒有提供時間格式，使用默認
-            const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
-            const defaultTimeFormat = hasTime ? 'HH:mm:ss' : 'HH:mm:ss';
-            format = `${dateFormat} ${defaultTimeFormat}`;
+            format = `${dateFormat} HH:mm:ss`;
         } else {
             format = dateFormat;
         }
         try {
-            // 1. 優先嘗試專用插件解析
-            switch (calendar) {
-                case 'gregory':
-                    // 使用 dateUtils 的格式驗證
-                    if (!isValidFormatForDayjs(dateFormat, timeFormat)) {
-                        const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
-                        format = hasTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
-                    }
-                    const jsDate = new Date(date.year, date.month - 1, date.day,
-                        date.hour || 0, date.minute || 0, date.second || 0);
-                    return dayjs(jsDate).format(format);
-                case 'roc':
-                    const rocPlugin = new RocFormatPlugin();
-
-                    if (rocPlugin.supportsFormat(format) && rocPlugin.canParseInput(format)) {
-                        return rocPlugin.format(date, format, locale);
-                    }
-                    break;
-                // 其他日曆插件可以在這裡添加
-                case 'buddhist':
-                case 'japanese':
-                case 'islamic':
-                case 'persian':
-                case 'hebrew':
-                    // 目前這些日曆還沒有專用插件，跳到下一步
-                    break;
+            // 1. 西元曆：直接走 dayjs
+            if (calendar === 'gregory') {
+                // 使用 dateUtils 的格式驗證
+                if (!isValidFormatForDayjs(dateFormat, timeFormat)) {
+                    const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
+                    format = hasTime ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
+                }
+                const jsDate = new Date(date.year, date.month - 1, date.day,
+                    date.hour || 0, date.minute || 0, date.second || 0);
+                return dayjs(jsDate).format(format);
             }
 
-            // 2. 嘗試使用 @internationalized/date 的 DateFormatter
+            // 2. 該曆法若有自訂文字 plugin（如 ROC 民國年）且支援此格式 → 委派 plugin
+            const plugin = getCalendarDescriptor(calendar)?.plugin;
+            if (plugin?.supportsFormat(format)) {
+                return plugin.format(date, format, locale);
+            }
+
+            // 3. 嘗試使用 @internationalized/date 的 DateFormatter
             const calendarDate = this.convertToCalendarDateSmart(date, calendar);
             if (calendarDate) {
                 const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;
@@ -519,7 +445,7 @@ export class CalendarUtils {
                 return formatter.format(calendarDate.toDate(Intl.DateTimeFormat().resolvedOptions().timeZone));
             }
 
-            // 3. 回退到 dayjs 格式化
+            // 4. 回退到 dayjs 格式化
             const jsDate = new Date(date.year, date.month - 1, date.day,
                 date.hour || 0, date.minute || 0, date.second || 0);
             return dayjs(jsDate).format(format);
@@ -527,7 +453,7 @@ export class CalendarUtils {
         } catch (error) {
             warn('所有格式化方法都失敗，使用基本回退:', error);
 
-            // 4. 最基本的回退格式
+            // 5. 最基本的回退格式
             let result = `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`;
 
             if (date.hour !== undefined || date.minute !== undefined || date.second !== undefined) {

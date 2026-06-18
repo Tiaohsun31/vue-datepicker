@@ -5,22 +5,8 @@ import type { SimpleDateValue } from '@/utils/dateUtils';
 describe('RocFormatPlugin', () => {
     const plugin = new RocFormatPlugin();
 
-    describe('基本屬性測試', () => {
-        it('應該有正確的插件 ID', () => {
-            expect(plugin.id).toBe('roc');
-        });
-
-        it('應該有正確的年份範圍', () => {
-            expect(plugin.yearRange.min).toBe(1);
-            expect(plugin.yearRange.max).toBe(200);
-        });
-
-        it('應該有多語言顯示名稱', () => {
-            expect(plugin.displayName['zh-TW']).toBe('民國曆');
-            expect(plugin.displayName['zh-CN']).toBe('民国历');
-            expect(plugin.displayName['en-US']).toBe('ROC Calendar');
-        });
-    });
+    // 註（Phase 6.6）：插件的 id / displayName / 年範圍 metadata 已收斂到 rocCalendar 描述子，
+    // 不再是 plugin 的公開屬性；插件只保留 format/parse 行為。對應描述子 metadata 測試見 calendar-registry.test.ts。
 
     describe('canParseInput 測試', () => {
         it('應該識別民國格式輸入', () => {

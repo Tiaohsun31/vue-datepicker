@@ -520,7 +520,7 @@ describe('parseUserDateInput 便利函數', () => {
         expect(result.date).toMatchObject({ year: 2023, month: 12, day: 25 });
     });
 
-    it('應該有效率地重複使用全域解析器實例', () => {
+    it('應該無狀態地處理連續解析請求（Phase 6.2 去單例）', () => {
         parseUserDateInput('2023-12-25', 'zh-TW', 'gregory');
         parseUserDateInput('2023-12-26', 'zh-TW', 'gregory');
 

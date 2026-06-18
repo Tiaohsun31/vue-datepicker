@@ -1,4 +1,4 @@
 @import "tailwindcss";
 @import "@/styles/theme.css";
-@custom-variant dark (&:where([data-vdt-mode="dark"], [data-vdt-mode="dark"] *, .dark, .dark *));
+@custom-variant dark (&:where([data-vdp-mode="dark"], [data-vdp-mode="dark"] *, [data-tia-mode="dark"], [data-tia-mode="dark"] *, .dark, .dark *));
 /* @plugin '@tailwindcss/forms'; */

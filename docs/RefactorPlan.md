@@ -24,7 +24,7 @@
 - **決策 A — 中性語義色改命名空間**：`--color-vdt-*` → **`--color-vdp-*`**，並接上 `--tia-*` 家族共用層。破壞性，須 migration。
 - **決策 B — 範圍做到完整自包含**：主題引擎 + 模板 utility 收斂為自包含 `.vdp-*` class + **移除 `tailwindcss` peerDependency** + 出貨自包含 CSS（對齊 datatable v3）。
 - **決策 C — 主色模型**：單一輸入 `--color-vdp-primary` + `color-mix()` 衍生狀態色；**取消「吸附最近 Tailwind 色」**，使用者傳什麼色就用什麼色（hex/rgb/oklch/色名）。
-- **決策 D — 深淺模式屬性**：沿用家族同一屬性 `data-vdt-mode`（家族一起切深淺）；未指定跟隨 `prefers-color-scheme`。
+- **決策 D — 深淺模式屬性（2026-06-18 修訂）**：per-instance 用 **`data-vdp-mode`**（對齊決策 A 的 vdt→vdp 命名空間）；家族層（跨 datepicker/datatable 一起切）用 **`data-tia-mode`**（對齊 `--tia-*` token 前綴）；未指定跟隨 `prefers-color-scheme`。**`data-vdt-mode` 全面移除（曾是 datatable 舊命名空間）。** ⚠️ 舊版本曾誤定為沿用 `data-vdt-mode`，且 CSS 已半改名為 `data-vdp-mode`/`data-tai-mode` 而 emit 未跟上 → 造成 `mode` prop 深色失效的 bug，已於本日修正並以 preview 驗證（見 §6/§7）。
 - **決策 E — dts plugin-less**：移除 `vite-plugin-dts`，改 `vue-tsc -p tsconfig.build.json` 產逐檔 `.d.ts`。
 
 ---
@@ -58,8 +58,8 @@
 }
 ```
 
-- **中性語義色**（surface/content/outline/interactive，含 light/dark 兩套 + `[data-vdt-mode]` 切換）：全部由 `--color-vdt-*` 改名 `--color-vdp-*`，並接上 `--tia-*` 共用層。這套深淺設計本身是好的，保留結構、只換命名空間。
-- **深色模式**：`.dark, [data-vdt-mode="dark"]` 切深色；`[data-vdt-mode="light"]` 強制淺色；未指定時用 `@media (prefers-color-scheme: dark)` 範圍限定到 `.date-picker-wrapper:not([data-vdt-mode="light"])`（對齊 datatable，避免硬吃全域 `.dark`、SSR 安全）。
+- **中性語義色**（surface/content/outline/interactive，含 light/dark 兩套 + `[data-vdp-mode]`/`[data-tia-mode]` 切換）：全部由 `--color-vdt-*` 改名 `--color-vdp-*`，並接上 `--tia-*` 共用層。這套深淺設計本身是好的，保留結構、只換命名空間。
+- **深色模式（2026-06-18 修訂後）**：`.dark, [data-vdp-mode="dark"], [data-tia-mode="dark"]` 切深色；`[data-vdp-mode="light"], [data-tia-mode="light"]` 強制淺色；未指定時用 `@media (prefers-color-scheme: dark)` 範圍限定到 `.date-picker-wrapper:not([data-vdp-mode="light"]):not([data-tia-mode="light"])`（避免硬吃全域 `.dark`、SSR 安全）。
 - **狀態色** `--color-vdp-error` 保留。
 
 ---
@@ -68,7 +68,7 @@
 
 - `resolvePrimaryColor(input)`：色名 → 查 `tailwind4-color.ts`（縮為「色名 → 單一 base oklch」約 22–26 筆）；hex/rgb/oklch/合法 CSS 色 → 原樣 pass-through。
 - `themeStyle` computed：**只有指定 `theme` prop 時才 inline 設 `--color-vdp-primary`**；未指定就交給 `:root` 的 `--color-vdp-primary`（引用 `--tia-theme-primary`），家族換色才會生效，也尊重消費者全域覆寫。**（最易漏，務必照做。）**
-- `themeAttrs` computed：`mode` prop → `data-vdt-mode`；未給不設，跟隨系統。
+- `themeAttrs` computed：`mode` prop → `data-vdp-mode`（per-instance）；未給不設，跟隨系統。
 - dev 模式對「既非色名、`CSS.supports('color', input)` 亦 false」的輸入 `console.warn`（前綴 `[vue-datepicker]`）。
 - 元件改**宣告式綁定**：`:style="themeStyle"` `v-bind="themeAttrs"`，移除 `watch(theme)→setColor` / `watch(mode)→setMode` 命令式呼叫與 `data-vdt-instance` 機制。
 
@@ -228,7 +228,7 @@
 > 2. **移除命令式主題 API**：`ref.setTheme/setDarkMode/setLightMode/setAutoMode/getCurrentMode/isDarkMode/isLightMode` 全移除 → 改用 `theme`/`mode` props（宣告式）。
 > 3. **CSS 變數命名空間 `--color-vdt-*` → `--color-vdp-*`**；**移除 11 階色票 `--color-vdt-theme-50…950`** → 改單一 `--color-vdp-primary` + color-mix 衍生（`-hover/-strong/-subtle/-border/-ring/-on-primary`）。曾覆寫舊變數的消費者需改名/改用新衍生變數。
 > 4. **取消「吸附最近 Tailwind 色」**：傳什麼色就用什麼色（hex/rgb/oklch/22 色名）；非法色 dev 模式 warn。
-> 注：`data-vdt-mode` 屬性**刻意沿用**（家族共用，與 datatable 一起切深淺）。
+> 注：深淺模式屬性後續修訂為 per-instance `data-vdp-mode` + 家族 `data-tia-mode`（移除 `data-vdt-mode`），見決策 D 與 §8。
 
 > **✅ Playground 視覺驗證（2026-06-16，preview MCP + eval/screenshot）：**
 > 1. 預設（無 theme）→ `--color-vdp-primary` = indigo（家族 `--tia-theme-primary`）✓
@@ -304,6 +304,7 @@
 > - **破壞性（寫入 Phase 5 migration / CHANGELOG）**：`calendar="buddhist"` 等不再開箱即用，須先 `registerCalendar(buddhistCalendar)`；移除舊 `RocFormatPlugin` 直接匯出。
 
 - [x] ✅ **補 round-trip 安全網測試（2026-06-18，動工前置）**：`tests/units/calendar-roundtrip.test.ts`（35 tests）鎖住①西元⇄各曆法(roc/buddhist/japanese/persian/hebrew)⇄西元 日期轉換 identity；②offset 曆法(gregory/roc/buddhist)年份 round-trip identity + persian 年初偏移現狀記錄；③ROC 格式化⇄解析 round-trip（日期/24h/中文12h）；④§5.5#9/6.8 ROC 無前綴 bug：plugin 能解析(診斷鎖)+現狀誤判為西元(鎖)+`it.fails` 編碼期望(修好自動轉綠)。全套 **538 passed / 1 expected-fail（18 檔）**。
+- [x] ✅ **🔴 修 `mode` 深淺模式 emit/CSS 不一致 bug（2026-06-18，Phase 5 動工前 review 發現）**：useTheme emit `data-vdt-mode` 但 theme.css 明確選擇器只認 `data-vdp-mode`/`data-tai-mode` → `mode` prop 深色靜默失效（jsdom 測試只驗屬性字串故未抓到）。統一為 **per-instance `data-vdp-mode` + 家族 `data-tia-mode`**（修正決策 D；`data-tai-mode`→`data-tia-mode` 對齊 `--tia-` token；移除全部 `data-vdt-mode`）。改點：useTheme emit/註解、theme.css 3 處選擇器、DatePicker/DateRange 註解、playground `@custom-variant`、useTheme/DatePicker/DateRange/e2e 測試斷言。**已 preview 計算樣式驗證**：`data-vdp-mode`/`data-tia-mode` 的 dark→dark surface、light→light surface 皆正確。
 - [x] ✅ **6.1 曆法 registry + 統一描述子（公開 opt-in API）— 輸出端（Session A, 2026-06-18）**：新增 `CalendarDescriptor`（`types/calendarPlugin.ts`）；`plugins/calendars/registry.ts`（`Map` singleton + `registerCalendar`/`getCalendarDescriptor`/`isCalendarRegistered`，內建 gregory 免註冊）；內建描述子 `roc.ts`(TaiwanCalendar+RocFormatPlugin) + `builtins.ts`(buddhist/japanese/persian/hebrew/indian/coptic/ethiopic/ethioaa/islamic-civil/-tbla/-umalqura，各自 import lib 類別)；`index.ts` 匯出 registry API + 型別 + 描述子，**移除 `RocFormatPlugin` 直接匯出（破壞性）**。`calendarUtils.formatOutput` 改查 `descriptor.plugin`（移除硬寫 `case 'roc'`）。📌 **解析端（`dateParsingUtils.tryParseWithPlugins` 仍硬寫 `new RocFormatPlugin()`）留 Session B**。🔴
 - [x] ✅ **6.2 `globalParser` 去單例（Session B, 2026-06-18）**：移除 module-level `globalParser` 與 `globalParser['locale']/['calendar']` 私有索引 hack；`parseUserDateInput` 改每次 `new SmartDateParser(locale,calendar).parse()` 無狀態，消除跨實例競態。📌 `useLocale` 共享 `localeMessages` 跨實例洩漏**未處理**（屬 locale 系統獨立議題，留專門 pass）。🔴
 - [🟡] **6.3 收斂 formatOutput（dispatch + 死參數已清；options 簽名刻意保留）**：✅ Session A：dispatch 改查 registry plugin、移除硬寫 switch、移除死分支。✅ Session B：清掉 `dateUtils.formatOutput` 的死註解參數 `// customFormat`（§5.5#2 的具體 footgun）。⬜ **同名收斂 + 位置→options 物件簽名：評估後不做**——兩個 formatOutput 實為分層（dateUtils 管 outputType、Calendar 管曆法格式化）非真重複；options 改造純為防呆、屬機械式大量測試 churn、無正確性收益，風險>收益，留日後低優先 polish。🟡
@@ -369,7 +370,7 @@
 
 - **自包含鐵則**：Phase 2 build 後務必確認出貨 CSS 無 consumer-only 變數、無 `--color-vdt-theme-*` 殘留。
 - **命名空間遷移**：`--color-vdt-*` → `--color-vdp-*` 是破壞性，曾覆寫舊變數的消費者要在 migration 明確列出對照表。
-- **深淺模式屬性沿用 `data-vdt-mode`**：刻意與 datatable 同名（家族一起切），勿改成 `data-vdp-mode`。
+- **深淺模式屬性（2026-06-18 修訂，見決策 D）**：per-instance = `data-vdp-mode`、家族 = `data-tia-mode`，`data-vdt-mode` 已全面移除。⚠️ emit（useTheme）與 CSS 選擇器**必須同名**——先前 emit `data-vdt-mode` 而 CSS 改 `data-vdp-mode` 導致 `mode` prop 深色靜默失效；jsdom 測試只驗屬性字串、抓不到 CSS 套用，故須以 preview 計算樣式驗證。
 - **`theme` prop inline 規則**：只有 prop 存在才 inline，否則家族層換色失效 —— 最易漏。
 - **playground 可能在 .gitignore**：接手 session 跑 dev 前先確認，必要時自建最小 playground。
 - **§5.1 響應式重構（🔴 已確認 bug）先補測試再動**：外部 `v-model` 更新不傳播已實證；重構前以測試鎖住預期行為。

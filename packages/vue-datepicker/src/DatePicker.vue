@@ -237,7 +237,7 @@ datePicker.setEmitters({
     validation: (isValid, errors, errorParams) => emit('validation', isValid, errors, errorParams)
 });
 
-// 使用主題 composable（宣告式：只輸出 inline style 與 data-vdt-mode 屬性）
+// 使用主題 composable（宣告式：只輸出 inline style 與 data-vdp-mode 屬性）
 const { themeStyle, themeAttrs } = useTheme(
     toRef(props, 'theme'),
     toRef(props, 'mode')

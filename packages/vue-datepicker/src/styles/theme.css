@@ -95,10 +95,10 @@
     --color-vdp-primary-ring: color-mix(in oklch, var(--color-vdp-primary), transparent 50%);
 }
 
-/* 深色模式：明確指定 data-vdp-mode="dark"，或頁面全域 .dark */
+/* 深色模式：per-instance data-vdp-mode="dark"、家族 data-tia-mode="dark"，或頁面全域 .dark */
 .dark,
 [data-vdp-mode="dark"],
-[data-tai-mode="dark"] {
+[data-tia-mode="dark"] {
     --color-vdp-surface: var(--color-vdp-dark-surface);
     --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
     --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);
@@ -110,9 +110,9 @@
     --color-vdp-interactive-active: var(--color-vdp-dark-interactive-active);
 }
 
-/* 明確指定 data-vdp-mode="light"：強制淺色（可覆蓋頁面全域 .dark） */
+/* 明確指定淺色（per-instance data-vdp-mode="light" / 家族 data-tia-mode="light"）：強制淺色（可覆蓋頁面全域 .dark） */
 [data-vdp-mode="light"],
-[data-tai-mode="light"] {
+[data-tia-mode="light"] {
     --color-vdp-surface: var(--color-vdp-light-surface);
     --color-vdp-surface-secondary: var(--color-vdp-light-surface-secondary);
     --color-vdp-surface-elevated: var(--color-vdp-light-surface-elevated);
@@ -127,8 +127,8 @@
 /* 自動模式：未明確指定 mode 時跟隨系統偏好（明確 light 可退出）。範圍限定到元件根，不影響全頁。 */
 @media (prefers-color-scheme: dark) {
 
-    .date-picker-wrapper:not([data-vdt-mode="light"]):not([data-tai-mode="light"]),
-    .date-range-wrapper:not([data-vdt-mode="light"]):not([data-tai-mode="light"]) {
+    .date-picker-wrapper:not([data-vdp-mode="light"]):not([data-tia-mode="light"]),
+    .date-range-wrapper:not([data-vdp-mode="light"]):not([data-tia-mode="light"]) {
         --color-vdp-surface: var(--color-vdp-dark-surface);
         --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
         --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);

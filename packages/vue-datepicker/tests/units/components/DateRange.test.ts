@@ -182,7 +182,7 @@ describe('DateRange', () => {
     });
 
     describe('主題樣式', () => {
-        it('指定 theme/mode 應以 inline style 與 data-vdt-mode 套用', () => {
+        it('指定 theme/mode 應以 inline style 與 data-vdp-mode 套用', () => {
             const { container } = renderDateRange({
                 theme: 'red',
                 mode: 'dark'
@@ -190,7 +190,7 @@ describe('DateRange', () => {
             const wrapper = container.querySelector('.date-range-wrapper') as HTMLElement;
 
             expect(wrapper.style.getPropertyValue('--color-vdp-primary')).toBe(tailwindBaseColors.red);
-            expect(wrapper.getAttribute('data-vdt-mode')).toBe('dark');
+            expect(wrapper.getAttribute('data-vdp-mode')).toBe('dark');
         });
 
         it('應該根據showTime調整最小寬度', () => {

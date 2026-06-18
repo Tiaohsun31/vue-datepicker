@@ -104,9 +104,9 @@ test.describe('DatePicker E2E Tests', () => {
         const firstDatePicker = page.locator('.date-picker-wrapper').first()
         await expect(firstDatePicker).toBeVisible()
 
-        // 新模型：mode 為 auto（預設）時不設 data-vdt-mode，跟隨系統 prefers-color-scheme；
+        // 新模型：mode 為 auto（預設）時不設 data-vdp-mode，跟隨系統 prefers-color-scheme；
         // 指定 light/dark 時才會有該屬性。
-        const mode = await firstDatePicker.getAttribute('data-vdt-mode')
+        const mode = await firstDatePicker.getAttribute('data-vdp-mode')
         expect(mode === null || mode === 'light' || mode === 'dark').toBeTruthy()
     })
 

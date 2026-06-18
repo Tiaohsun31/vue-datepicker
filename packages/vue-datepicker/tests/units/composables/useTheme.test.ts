@@ -43,20 +43,20 @@ describe('useTheme', () => {
         expect(themeStyle.value['--color-vdp-primary']).toBe(tailwindBaseColors.blue);
     });
 
-    it('themeAttrs：light/dark 設 data-vdt-mode；auto/未指定 不設', () => {
-        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>('dark')).themeAttrs.value['data-vdt-mode']).toBe('dark');
-        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>('light')).themeAttrs.value['data-vdt-mode']).toBe('light');
-        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>('auto')).themeAttrs.value['data-vdt-mode']).toBeUndefined();
-        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>(undefined)).themeAttrs.value['data-vdt-mode']).toBeUndefined();
+    it('themeAttrs：light/dark 設 data-vdp-mode；auto/未指定 不設', () => {
+        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>('dark')).themeAttrs.value['data-vdp-mode']).toBe('dark');
+        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>('light')).themeAttrs.value['data-vdp-mode']).toBe('light');
+        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>('auto')).themeAttrs.value['data-vdp-mode']).toBeUndefined();
+        expect(useTheme(ref(undefined), ref<ThemeMode | undefined>(undefined)).themeAttrs.value['data-vdp-mode']).toBeUndefined();
     });
 
     it('themeAttrs：mode 變更時響應式更新', () => {
         const mode = ref<ThemeMode | undefined>('light');
         const { themeAttrs } = useTheme(ref(undefined), mode);
-        expect(themeAttrs.value['data-vdt-mode']).toBe('light');
+        expect(themeAttrs.value['data-vdp-mode']).toBe('light');
         mode.value = 'dark';
-        expect(themeAttrs.value['data-vdt-mode']).toBe('dark');
+        expect(themeAttrs.value['data-vdp-mode']).toBe('dark');
         mode.value = 'auto';
-        expect(themeAttrs.value['data-vdt-mode']).toBeUndefined();
+        expect(themeAttrs.value['data-vdp-mode']).toBeUndefined();
     });
 });

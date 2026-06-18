@@ -11,7 +11,7 @@ interface BaseDatePickerProps {
     calendar?: string; // 日曆系統 預設為 'gregory'
     locale?: string; // 語言環境 預設為 'zh-TW'
     customLocaleMessages?: LocaleMessages; // 完整的自定義語言包
-    outputType?: OutputType;  // 輸出格式 預設為 'iso'，如果設置了 outputFormat，則會忽略 dateFormat 和 timeFormat 的設置
+    outputType?: OutputType;  // 輸出格式 預設為 'iso'。為 'custom' 時才會依 dateFormat / timeFormat 格式化輸出
     useStrictISO?: boolean; // 是否使用嚴格的 ISO 8601 格式輸出 預設為 false
 
     // 日期選項

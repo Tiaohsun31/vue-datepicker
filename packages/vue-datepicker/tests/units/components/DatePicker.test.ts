@@ -77,7 +77,7 @@ describe('DatePicker', () => {
     });
 
     describe('主題和樣式測試', () => {
-        it('指定 theme/mode 應以 inline style 與 data-vdt-mode 套用', () => {
+        it('指定 theme/mode 應以 inline style 與 data-vdp-mode 套用', () => {
             const { container } = renderDatePicker({
                 theme: 'red',
                 mode: 'dark'
@@ -86,8 +86,8 @@ describe('DatePicker', () => {
 
             // 主色以 inline CSS 變數套用（單一輸入，其餘由 color-mix 衍生）
             expect(wrapper.style.getPropertyValue('--color-vdp-primary')).toBe(tailwindBaseColors.red);
-            // 深淺模式以家族共用屬性 data-vdt-mode 套用
-            expect(wrapper.getAttribute('data-vdt-mode')).toBe('dark');
+            // 深淺模式以 per-instance 屬性 data-vdp-mode 套用
+            expect(wrapper.getAttribute('data-vdp-mode')).toBe('dark');
         });
 
         it('未指定 theme 時不 inline 覆蓋（交給 :root 家族層）', () => {
@@ -96,10 +96,10 @@ describe('DatePicker', () => {
             expect(wrapper.style.getPropertyValue('--color-vdp-primary')).toBe('');
         });
 
-        it('mode 為 auto（預設）時不設 data-vdt-mode', () => {
+        it('mode 為 auto（預設）時不設 data-vdp-mode', () => {
             const { container } = renderDatePicker();
             const wrapper = container.querySelector('.date-picker-wrapper') as HTMLElement;
-            expect(wrapper.getAttribute('data-vdt-mode')).toBeNull();
+            expect(wrapper.getAttribute('data-vdp-mode')).toBeNull();
         });
 
         it('應該根據時間顯示設定最小寬度', () => {

@@ -5,8 +5,8 @@
         :class="monthDisplayMode === 'single' ? 'vdp-range-calendar--single' : 'vdp-range-calendar--dual'">
         <!-- 主要月份（單月模式時為唯一月份，雙月模式時為左側月份） -->
         <div class="vdp-range-month">
-            <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'" :year="primaryYear"
-                :month="primaryMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
+            <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'"
+                :view-date="primaryViewDate" :min-date="minDate" :max-date="maxDate" :locale="locale"
                 :week-starts-on="weekStartsOn" :calendar="calendar" :showTimeSelector="showTimeSelector"
                 :time-value="primaryTimeValue" :enable-seconds="enableSeconds" :use24-hour="use24Hour"
                 @range-select="handleRangeSelect"
@@ -16,7 +16,7 @@
         <!-- 次要月份（僅雙月模式顯示） -->
         <div v-if="monthDisplayMode === 'dual'" class="vdp-range-month">
             <CalendarGrid :range-start="rangeStart" :range-end="rangeEnd" :selection-mode="'range'"
-                :year="secondaryYear" :month="secondaryMonth" :min-date="minDate" :max-date="maxDate" :locale="locale"
+                :view-date="secondaryViewDate" :min-date="minDate" :max-date="maxDate" :locale="locale"
                 :week-starts-on="weekStartsOn" :calendar="calendar" :showTimeSelector="showTimeSelector"
                 :time-value="secondaryTimeValue" :enable-seconds="enableSeconds" :use24-hour="use24Hour"
                 @range-select="handleRangeSelect" @time-select="(timeStr) => handleTimeSelect(timeStr, 'end')" />
@@ -25,9 +25,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, shallowRef, computed, watch } from 'vue';
+import { CalendarDate, startOfMonth } from '@internationalized/date';
 import CalendarGrid from './CalendarGrid.vue';
 import { getTodaysDate, type SimpleDateValue } from '../../utils/dateUtils';
+import { CalendarUtils } from '../../utils/calendarUtils';
 
 type MonthDisplayMode = 'single' | 'dual';
 
@@ -91,34 +93,54 @@ const rangeSelectionState = ref<{
     activeTimeTarget: 'start'
 });
 
-// 初始化年月
-const getInitialYearMonth = () => {
-    if (props.rangeStart) {
-        return { year: props.rangeStart.year, month: props.rangeStart.month };
-    }
+// §D：原生曆法視圖狀態
+const targetCalendar = computed(() => CalendarUtils.createSafeCalendar(props.calendar));
 
-    if (props.initialYear && props.initialMonth) {
-        return { year: props.initialYear, month: props.initialMonth };
-    }
-
-    const today = getTodaysDate();
-    return { year: today.year, month: today.month };
+// 把「西元年月」錨成目標曆法的原生月 1 號
+const gregorianToNativeMonthStart = (gYear: number, gMonth: number): CalendarDate => {
+    const greg = new CalendarDate(gYear, gMonth, 1);
+    const native = props.calendar === 'gregory'
+        ? greg
+        : CalendarUtils.safeToCalendar(greg, targetCalendar.value);
+    return startOfMonth(native);
 };
 
-const { year: displayYear, month: displayMonth } = getInitialYearMonth();
+// 計算主要月份視圖（優先序：rangeStart > initialYear/Month > 今天）
+const computePrimaryViewDate = (): CalendarDate => {
+    if (props.rangeStart) {
+        const native = CalendarUtils.convertToCalendarDate(props.rangeStart, props.calendar);
+        if (native) return startOfMonth(native);
+    }
+    if (props.initialYear && props.initialMonth) {
+        return gregorianToNativeMonthStart(props.initialYear, props.initialMonth);
+    }
+    const today = getTodaysDate();
+    return gregorianToNativeMonthStart(today.year, today.month);
+};
 
 // 主要月份（左側月份或單月）
-const primaryYear = ref(displayYear);
-const primaryMonth = ref(displayMonth);
+// shallowRef：避免 Vue 對含私有欄位的 CalendarDate 做深層 UnwrapRef 而剝離型別品牌
+const primaryViewDate = shallowRef<CalendarDate>(computePrimaryViewDate());
 
-// 次要月份（右側月份，僅雙月模式）
-const secondaryYear = computed(() => {
-    return primaryMonth.value === 12 ? primaryYear.value + 1 : primaryYear.value;
-});
+// 次要月份（右側月份，僅雙月模式）= 主要月份的下一個原生月
+const secondaryViewDate = computed(() => primaryViewDate.value.add({ months: 1 }));
 
-const secondaryMonth = computed(() => {
-    return primaryMonth.value === 12 ? 1 : primaryMonth.value + 1;
+// 對外以「原生年月」投影暴露（西元曆下與西元年月一致 → 既有測試行為不變）
+// 可寫：設定時改寫 primaryViewDate（保留原 ref 可賦值的相容行為）
+const primaryYear = computed({
+    get: () => primaryViewDate.value.year,
+    set: (y: number) => {
+        primaryViewDate.value = new CalendarDate(targetCalendar.value, y, primaryViewDate.value.month, 1);
+    },
 });
+const primaryMonth = computed({
+    get: () => primaryViewDate.value.month,
+    set: (m: number) => {
+        primaryViewDate.value = new CalendarDate(targetCalendar.value, primaryViewDate.value.year, m, 1);
+    },
+});
+const secondaryYear = computed(() => secondaryViewDate.value.year);
+const secondaryMonth = computed(() => secondaryViewDate.value.month);
 
 // 根據選擇狀態和模式決定時間值和目標
 const primaryTimeValue = computed(() => {
@@ -148,10 +170,10 @@ const primaryTimeTarget = computed(() => {
 
 // 監聽外部範圍變化，調整顯示月份和選擇狀態
 watch(() => [props.rangeStart, props.rangeEnd], ([newStart, newEnd]) => {
-    // 調整顯示月份
+    // 調整顯示月份（原生曆法）
     if (newStart && !props.initialYear && !props.initialMonth) {
-        primaryYear.value = newStart.year;
-        primaryMonth.value = newStart.month;
+        const native = CalendarUtils.convertToCalendarDate(newStart, props.calendar);
+        if (native) primaryViewDate.value = startOfMonth(native);
     }
 
     // 更新選擇狀態（僅單月模式需要複雜的狀態管理）
@@ -249,23 +271,13 @@ const handleTimeSelect = (timeStr: string, source: 'start' | 'end') => {
     emit('time-select', timeStr, source);
 };
 
-// 月份導航（僅影響主要月份）
+// 月份導航（僅影響主要月份；原生曆法月份算術）
 const previousMonth = () => {
-    if (primaryMonth.value === 1) {
-        primaryMonth.value = 12;
-        primaryYear.value -= 1;
-    } else {
-        primaryMonth.value -= 1;
-    }
+    primaryViewDate.value = primaryViewDate.value.subtract({ months: 1 });
 };
 
 const nextMonth = () => {
-    if (primaryMonth.value === 12) {
-        primaryMonth.value = 1;
-        primaryYear.value += 1;
-    } else {
-        primaryMonth.value += 1;
-    }
+    primaryViewDate.value = primaryViewDate.value.add({ months: 1 });
 };
 
 defineExpose({
@@ -284,10 +296,9 @@ defineExpose({
         }
     },
 
-    // 設置顯示月份
+    // 設置顯示月份（year/month 為目標曆法的原生年月；西元曆下即西元年月）
     setDisplayMonth: (year: number, month: number) => {
-        primaryYear.value = year;
-        primaryMonth.value = month;
+        primaryViewDate.value = new CalendarDate(targetCalendar.value, year, month, 1);
     },
 
     // 重置範圍選擇狀態

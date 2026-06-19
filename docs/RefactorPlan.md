@@ -308,13 +308,36 @@
 - [x] ✅ **6.1 曆法 registry + 統一描述子（公開 opt-in API）— 輸出端（Session A, 2026-06-18）**：新增 `CalendarDescriptor`（`types/calendarPlugin.ts`）；`plugins/calendars/registry.ts`（`Map` singleton + `registerCalendar`/`getCalendarDescriptor`/`isCalendarRegistered`，內建 gregory 免註冊）；內建描述子 `roc.ts`(TaiwanCalendar+RocFormatPlugin) + `builtins.ts`(buddhist/japanese/persian/hebrew/indian/coptic/ethiopic/ethioaa/islamic-civil/-tbla/-umalqura，各自 import lib 類別)；`index.ts` 匯出 registry API + 型別 + 描述子，**移除 `RocFormatPlugin` 直接匯出（破壞性）**。`calendarUtils.formatOutput` 改查 `descriptor.plugin`（移除硬寫 `case 'roc'`）。📌 **解析端（`dateParsingUtils.tryParseWithPlugins` 仍硬寫 `new RocFormatPlugin()`）留 Session B**。🔴
 - [x] ✅ **6.2 `globalParser` 去單例（Session B, 2026-06-18）**：移除 module-level `globalParser` 與 `globalParser['locale']/['calendar']` 私有索引 hack；`parseUserDateInput` 改每次 `new SmartDateParser(locale,calendar).parse()` 無狀態，消除跨實例競態。✅ `useLocale`/`LocaleManager` 共享 `localeMessages` 跨實例洩漏**已於 2026-06-19 修復**（每實例 customLocales 覆蓋層，見 §5.7）。🔴
 - [🟡] **6.3 收斂 formatOutput（dispatch + 死參數已清；options 簽名刻意保留）**：✅ Session A：dispatch 改查 registry plugin、移除硬寫 switch、移除死分支。✅ Session B：清掉 `dateUtils.formatOutput` 的死註解參數 `// customFormat`（§5.5#2 的具體 footgun）。⬜ **同名收斂 + 位置→options 物件簽名：評估後不做**——兩個 formatOutput 實為分層（dateUtils 管 outputType、Calendar 管曆法格式化）非真重複；options 改造純為防呆、屬機械式大量測試 churn、無正確性收益，風險>收益，留日後低優先 polish。🟡
-- [x] ✅ **6.4 曆法 metadata 單一來源（併入 registry）**：✅ `isCalendarSupported`/`getCalendarRange`/`getCalendarDisplayName`/`createSafeCalendar` 全改查 registry 描述子（未註冊 → 西元曆 fallback + dev-warn）。✅ **`getMonthNames` 經調查決定不改（2026-06-19 使用者拍板「文件化西元月模型」）**：本元件對**所有曆法**採「12 西元式月份」導航（`CalendarHeader` 月狀態 1–12、`generateCalendarDays` 以西元月起算），故 `getMonthNames` 回西元月名與導航一致；改原生月名（希伯來 13 月/伊斯蘭月名）反而與下拉索引脫鉤。原生月份導航屬**新 feature**（需重建 grid/header/月年狀態），排程於 2.0 之後，非本輪清理。→ Phase 5 docs 須說明此模型。🟡
+- [x] ✅ **6.4 曆法 metadata 單一來源（併入 registry）**：✅ `isCalendarSupported`/`getCalendarRange`/`getCalendarDisplayName`/`createSafeCalendar` 全改查 registry 描述子（未註冊 → 西元曆 fallback + dev-warn）。✅ **`getMonthNames` 原生月名改造已於 §6.11 完成**（2026-06-19 拍板的「西元月模型」已升級為原生視圖模型）：改為曆法感知（依該曆法當年原生月份數與原生月名，含希伯來閏年 13 月），與 `CalendarHeader`/`generateCalendarDays` 一同改為原生 `viewDate` 模型。詳見下方 §6.11。🟡
 - [ ] **6.5 非西元曆 `dateFormat` 行為 → 文件化（2.0 後再評估「曆法感知數字 parser」）**：⛔ **2026-06-19 一度補做（`formatCalendarNumericPattern` 以該曆法數字填入 pattern）後回退**。原因：使輸出變成與西元年同形的純數字（ROC `115-06-19`、佛曆 `2566/...`），**re-parse 時被當成西元年 → round-trip 損壞**（使用者實測 ROC 選今天再開→顯示「民國前1797年」）。要正確支援需同時做「曆法感知數字 parser」，但 `2566` 無法區分佛曆/西元、本質歧義，屬大且風險高的新功能 → 回退設計，維持 Intl 長格式輸出（含標記、可 round-trip），文件講清此行為。加 `calendar-roundtrip.test.ts`「ROC 自訂輸出 round-trip」回歸鎖。🟡
 - [x] ✅ **6.6 ROC 插件**：✅ Session A：移除 `formatOutput` 對 `canParseInput(format)` 的誤用（§5.5-10）改純 `supportsFormat`。✅ Session B：slim `CalendarPlugin` 介面（移除 id/displayName/yearRange，metadata 全歸描述子）、ROC plugin displayName 重複消除、`yearRange` 改 private、`rocCalendar.getYearRange` 對齊民國 1–200（1912–2111）。✅ **2026-06-19：`formatDatePart` 脆弱性修除** —— 廢除「dayjs 輸出後做位置盲字串 replace（會誤替與西元年同數字的日/分）」，改 `replaceYearTokensWithRoc` 在**格式字串層級**把 YYYY/YY token 換成民國年字面量（`[..]` 逸出、長 token 先比對），加 3 個回歸測試（含 `MM/DD/YY` 日=25 誤替案例）。🟡
 - [x] ✅ **6.7 拆分 `CalendarUtils` god-class — 暫緩（2026-06-19 使用者拍板）**：純機械式 reorg、零行為變動、churn 大（~8 consumer + 測試），發版前風險>價值；類為純靜態工具且已有獨立函式匯出。**排程於 2.0 發版後**再以 facade 方式拆。⚪
 - [x] ✅ **6.8 🔴 ROC 無前綴數字輸入修正（Session B, 2026-06-18）**：解析端 dispatch 直接委派 `plugin.parseInput`（不再以 `canParseInput` 前綴 gate），ROC 模式無前綴 `114-06-18` → 民國年=西元 2025。`calendar-roundtrip.test.ts` 的 `it.fails` 轉正式通過斷言 + 加回歸保護（ROC 超範圍數字回退西元）。
 - [x] ✅ **6.9 ⚪ 清 `formatOutput` 死分支（§5.5-11，Session A）**：移除恆等的 `defaultTimeFormat` 三元判斷。
 - [x] ✅ **6.10 🟡 統一 ROC year 換算路徑（§5.5-12，Session A）**：年份數學經 registry 的 `createCalendar()`（TaiwanCalendar，@internationalized/date）為單一來源；plugin 僅負責文字 format/parse。
+
+### 6.11 原生曆法網格（2026-06-19 完成；原 ROADMAP §D，源自 6.4）
+
+> 6.4 當時把「getMonthNames 原生月名」延後並暫以「12 西元式月份」模型文件化（理由：grid/header/月年狀態皆綁西元月，改月名會與下拉索引脫鉤）。本節即實作那個「新 feature」：把視圖層由西元月模型升級為**原生 `viewDate` 模型**，讓 Hebrew/Islamic 等非對齊曆法原生渲染。
+
+**問題本質**：瓶頸不在「哪個元件渲染」，而在**視圖狀態綁死西元月**——`generateCalendarDays` 其實已用 `@internationalized/date` 把每格產成原生 `CalendarDate`，唯一錯在**錨點是「西元月 1 號」而非「目標曆法那個月 1 號」**；Hebrew/Islamic 的西元月 1 號落在原生月中間 → 窗格以西元邊界對齊。連帶 `isOutsideMonth`（native 月比西元月）、`previous/nextMonth`（西元 `month±1`）、`getMonthNames`（固定 12 西元月）皆用西元單位。→ 收斂為「把導航視圖狀態錨點原生化」，非重寫。
+
+**已定案決策**：
+- **架構**：單一泛用 grid + registry metadata（**不**做 `v-if` 硬鏈 per-calendar 組件——會回退 registry 可擴展性、95% grid 邏輯重複）。
+- **資料流**：**canonical 儲存值維持西元 `SimpleDateValue`（現狀即如此）**，只有「視圖狀態」變原生 `CalendarDate`。兩平面只在邊界轉換：渲染時 `convertToCalendarDate`（西元→native）、選取時 `convertFromCalendarDate`（native→西元）；導航整段在 native，值平面不動。→ 維持跨曆法比較/min·max/輸出的西元座標不變式。
+- **`descriptor.component` 逃生艙**：評估後**延後**（Intl 表達不了的曆法才需要），本輪不做、介面不阻擋。
+
+**實作（改點）**：
+- `calendarUtils.generateCalendarDays(viewDate, locale, weekStartsOn)`：簽名改吃原生 `viewDate`，錨在 `startOfMonth(viewDate)`（原生月）。
+- `calendarUtils.getMonthNames(locale, calendarId, referenceDate?)`：非西元曆依 `referenceDate.calendar.getMonthsInYear()` 的原生月份數 + `DateFormatter({month:'long'})` 原生月名（取該月 15 號避免時區換日誤判）；西元曆/無 referenceDate 維持 12 西元月名（向下相容）。
+- `CalendarGrid.vue`：導航狀態由西元 `currentYear/currentMonth` 改為原生 `currentViewDate`（`shallowRef<CalendarDate>`，避免 Vue 深層 UnwrapRef 剝離 CalendarDate 私有品牌）；`previousMonth/nextMonth` 用 `viewDate.add/subtract({months:1})`（自動處理 13 月）；對外仍以 `currentYear/currentMonth` computed 投影暴露（西元曆下與西元年月一致 → 既有測試行為不變）。新增可選 `viewDate` prop 供 RangeCalendar 驅動。
+- `CalendarHeader.vue`：prop 改 `viewDate` + emit `update:view-date`；月份下拉用原生月數/月名；年份系統**維持西元**（YearSelector/範圍檢查/年顯示經 `gregorianView` 西元投影）。
+- `DateGridView.vue`：prop 由西元 `year/month` 改原生 `viewDate`；`isOutsideMonth/isFocusable` 比原生 `viewDate.month`。
+- `RangeCalendar.vue`：主要月份改原生 `primaryViewDate`（`shallowRef`），次要月份 = `primaryViewDate.add({months:1})`（原生連續月）；對外 `primaryYear/primaryMonth` 以可寫 computed 投影保留相容。
+
+**驗證**：type-check 0 / build 0 / dts 0；單元測試 **554 passed**（新增 `calendarUtils.test.ts` 原生 grid/月名測試：希伯來閏年 13 月名、伊斯蘭 12 月名、原生月錨定、伊斯蘭 29/30 日；`generateCalendarDays` 簽名測試同步更新）。preview MCP 驗證（playground port 3000）：Hebrew → 原生月名（提斯利月/瑪西班月…）+ 原生年號「創世紀元 5786 年」+ 30 日原生月；Islamic(Umalqura) → 原生月名（穆哈蘭姆月…賴買丹月…）+「伊斯蘭曆 1447 年」+ 29 日陰曆月；無 console error。
+
+**留後續（低優先，非本輪）**：`descriptor.component` 逃生艙；6.5 非西元曆任意 `dateFormat` pattern（Intl 限制，維持文件化）；6.7 拆 `CalendarUtils` god-class；鍵盤上下週導航（`DateGridView` up/down 尚未實作，與原生網格無關）。
 
 > **Phase 6 session 切分建議（2026-06-18 評估；本重構量大、跨破壞性，建議分兩個 session）**
 >
@@ -365,7 +388,7 @@
 | 3 Packaging + dts | ✅ 完成 | dts plugin-less + cssFileName 釘住 + version 2.0.0 + files/sideEffects + npm pack 驗證 + 公開型別可解析（38 個 @/→相對，d.ts 零 alias 殘留）；@tailwindcss/vite 保留決議。dayjs 文件待 Phase 5 |
 | 4 程式碼品質（主題以外） | ✅ 完成 | 5.1 受控更新 / 5.2 computed / 5.3 i18n / 5.4 型別（any 55→7、修潛在 validate() bug）/ 5.5 console（dev-gated logger、dist 0 console）/ 5.6 重複（side-handler factory + resolveTimeFormat）/ 5.7 清理（setTimeout→nextTick）/ 5.8 命名（types/main→public、清 TODO）。504 測試全綠、type-check/build 0。📌 殘留低優先：useLocale 共享 localeMessages 跨實例洩漏（併入 §6.2 類共享狀態 pass）、§5.4 合理動態 any |
 | 5 測試 / 文件 / 發佈 | ✅ 完成 | **2026-06-19**：CHANGELOG 2.0.0（breaking + 6 步 migration）+ README 中英（免裝 Tailwind / 新主題模型 / 曆法 opt-in）+ docs 站重寫（theming/installation/calendars/roc-plugin 中英 + props 表 + theme/index.ts 註冊曆法）+ 公開 class hook 文件化。preview MCP 視覺驗證：預設 indigo / per-instance theme 衍生色 / 家族換色 / 深淺 surface / ROC 民國曆 / DateRange 響應式單↔雙月 / 淺色截圖。542 測試綠、type-check/build/docs build 0 |
-| 6 核心日曆流程重構 | ✅ 完成（殘留項已清，2 項排程 2.0 後） | **Session A+B（2026-06-18）**：registry + `CalendarDescriptor` + `registerCalendar` + 內建描述子（tree-shakeable）；輸出端+解析端 dispatch 全改查表；6.2 globalParser 去單例；6.8 ROC 無前綴；6.6 slim 介面 + metadata 收斂 + ROC 年範圍對齊；6.9 死分支、6.10 ROC year 統一；移除 `RocFormatPlugin` 直接匯出（破壞性）。**殘留項清理（2026-06-19）**：✅ §5.7 useLocale 跨實例洩漏（每實例 customLocales 層 + 4 測試）✅ 6.6 ROC formatDatePart token-safe（+3 測試）✅ 民國前 i18n（2 鍵 ×5 locale）。⛔ **6.5 非西元曆數字 dateFormat：補做後回退**（純數字輸出破壞 ROC/非西元 round-trip，使用者實測「民國前1797」；需曆法感知 parser、本質歧義 → 留 2.0 後 + 文件化；加 round-trip 回歸鎖）。**決策**：6.2 getMonthNames 維持西元月模型（→docs）、6.7 god-class 拆分排程 2.0 後、6.3 options 簽名不做、原生月份導航為 2.0 後 feature。**type-check 0 / build 0 / 550 passed**。tree-shaking：只 import DatePicker → 非西元曆/RocFormatPlugin 全數 0 |
+| 6 核心日曆流程重構 | ✅ 完成（殘留項已清；§6.11 原生曆法網格已補做） | **Session A+B（2026-06-18）**：registry + `CalendarDescriptor` + `registerCalendar` + 內建描述子（tree-shakeable）；輸出端+解析端 dispatch 全改查表；6.2 globalParser 去單例；6.8 ROC 無前綴；6.6 slim 介面 + metadata 收斂 + ROC 年範圍對齊；6.9 死分支、6.10 ROC year 統一；移除 `RocFormatPlugin` 直接匯出（破壞性）。**殘留項清理（2026-06-19）**：✅ §5.7 useLocale 跨實例洩漏（每實例 customLocales 層 + 4 測試）✅ 6.6 ROC formatDatePart token-safe（+3 測試）✅ 民國前 i18n（2 鍵 ×5 locale）。⛔ **6.5 非西元曆數字 dateFormat：補做後回退**（純數字輸出破壞 ROC/非西元 round-trip，使用者實測「民國前1797」；需曆法感知 parser、本質歧義 → 留 2.0 後 + 文件化；加 round-trip 回歸鎖）。**決策**：6.3 options 簽名不做、6.7 god-class 拆分排程 2.0 後。**§6.11 原生曆法網格（2026-06-19）**：視圖層由西元月模型升級為原生 `viewDate` 模型 → Hebrew/Islamic 等非對齊曆法原生渲染（原生月名/年號/月長、希伯來閏年 13 月）；canonical 維持西元；`getMonthNames` 曆法感知（取代 6.4 暫緩項）。**type-check 0 / build 0 / 554 passed**（含原生 grid 測試）；Hebrew/Islamic preview 驗證。tree-shaking：只 import DatePicker → 非西元曆/RocFormatPlugin 全數 0 |
 
 > 接手 session：完成項目請勾選對應 checkbox，並更新本表狀態（⬜未開始 / 🟡進行中 / ✅完成）。
 

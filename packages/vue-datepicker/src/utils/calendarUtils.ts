@@ -8,6 +8,7 @@ import {
     GregorianCalendar,
     getWeeksInMonth,
     startOfWeek,
+    startOfMonth,
     getDayOfWeek,
     DateFormatter,
     CalendarDateTime,
@@ -158,28 +159,22 @@ export class CalendarUtils {
     };
 
     /**
-     * 安全地生成日曆網格
+     * 安全地生成日曆網格（§D：原生曆法網格）
+     *
+     * 以「目標曆法的原生月份」為錨點（`startOfMonth(viewDate)`），而非過去的「西元月 1 號轉曆法」。
+     * 對齊曆法（西元/ROC/佛/和…）結果相同；對非對齊曆法（希伯來 13 月、伊斯蘭陰曆）才會正確
+     * 對齊到原生月邊界。`viewDate` 必須是目標曆法的 CalendarDate（由 CalendarGrid 提供）。
      */
     static generateCalendarDays(
-        year: number,
-        month: number,
-        calendarId: string,
+        viewDate: CalendarDate,
         locale: string,
         weekStartsOn: number = 0
     ): CalendarDate[] {
         try {
-            if (!this.isCalendarSupported(calendarId)) {
-                warn(`不支持的日曆系統: ${calendarId}`);
-                return [];
-            }
+            if (!viewDate) return [];
 
-            const calendar = this.createSafeCalendar(calendarId);
-            const gregorianDate = new CalendarDate(year, month, 1);
-
-            // 然後轉換為目標日曆
-            const firstDayOfMonth = calendarId === 'gregory'
-                ? gregorianDate
-                : this.safeToCalendar(gregorianDate, calendar);
+            // 錨在目標曆法「該月 1 號」（原生月，非西元月）
+            const firstDayOfMonth = startOfMonth(viewDate);
 
             const weeksInMonth = getWeeksInMonth(firstDayOfMonth, locale) ?? 6;
 
@@ -258,33 +253,43 @@ export class CalendarUtils {
     }
 
     /**
-     * 獲取月份名稱
+     * 獲取月份名稱（§D：曆法感知）
+     *
+     * - 西元曆或未提供 `referenceDate`：維持 12 個西元式月名（既有行為，向下相容）。
+     * - 非西元曆且提供 `referenceDate`：依該曆法「當年」的原生月份數（含希伯來閏年 13 月）
+     *   與原生月名輸出，解決舊版固定 12 個西元月名的錯誤（6.4）。
      */
-    static getMonthNames(locale: string, calendarId: string = 'gregory'): string[] {
-        try {
-            // 對於大多數日曆系統，月份名稱相同
-            const formatter = new Intl.DateTimeFormat(locale, { month: 'short' });
+    static getMonthNames(locale: string, calendarId: string = 'gregory', referenceDate?: CalendarDate): string[] {
+        // 西元曆或無參考日期 → 12 個西元式月名
+        if (calendarId === 'gregory' || !referenceDate) {
+            try {
+                const formatter = new Intl.DateTimeFormat(locale, { month: 'short' });
+                return Array.from({ length: 12 }, (_, i) => formatter.format(new Date(2000, i, 1)));
+            } catch (error) {
+                warn(`獲取月份名稱失敗 ${calendarId}:`, error);
+                if (locale.startsWith('zh') || locale.startsWith('ja')) {
+                    return Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
+                }
+                return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            }
+        }
 
-            return Array.from({ length: 12 }, (_, i) => {
-                // 使用固定的西元年避免轉換問題
-                const date = new Date(2000, i, 1);
-                return formatter.format(date);
+        // 非西元曆 → 該曆法當年的原生月份數與原生月名
+        try {
+            const monthsInYear = referenceDate.calendar.getMonthsInYear(referenceDate);
+            const formatter = new DateFormatter(locale, { calendar: calendarId, month: 'long' });
+            return Array.from({ length: monthsInYear }, (_, i) => {
+                // 取該月 15 號避免時區換日造成月名誤判
+                const monthDate = referenceDate.set({ month: i + 1, day: 15 });
+                return formatter.format(monthDate.toDate('UTC'));
             });
         } catch (error) {
             warn(`獲取月份名稱失敗 ${calendarId}:`, error);
-            // 基於語言的回退邏輯
-            if (locale.startsWith('zh')) {
-                return Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
-            } else if (locale.startsWith('ja')) {
-                return Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
-            } else {
-                // 英文回退 short 月份名稱
-                const monthNames = [
-                    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                ];
-                return monthNames;
-            }
+            let monthsInYear = 12;
+            try {
+                monthsInYear = referenceDate.calendar.getMonthsInYear(referenceDate);
+            } catch { /* 用預設 12 */ }
+            return Array.from({ length: monthsInYear }, (_, i) => `${i + 1}`);
         }
     }
 

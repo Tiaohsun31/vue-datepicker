@@ -20,8 +20,8 @@ import { CalendarUtils } from '../../utils/calendarUtils';
 type SelectionMode = 'single' | 'range';
 
 interface Props {
-    year: number;          // 西元曆年份（用於導航顯示）
-    month: number;         // 西元曆月份（用於導航顯示）
+    // §D：原生曆法視圖狀態（目標曆法的 CalendarDate，錨定當前顯示的原生月份）
+    viewDate: CalendarDate;
     selectedDate?: CalendarDate | null;
 
     // 範圍選擇屬性
@@ -56,8 +56,9 @@ const emit = defineEmits<{
     'navigate': [direction: 'prev-month' | 'next-month' | 'prev-year' | 'next-year'];
 }>();
 
-const currentDisplayMonth = computed(() => props.month);
-const currentDisplayYear = computed(() => props.year);
+// §D：以原生視圖月份/年份為準（目標曆法）
+const currentDisplayMonth = computed(() => props.viewDate.month);
+const currentDisplayYear = computed(() => props.viewDate.year);
 
 // 緩存今天的日期鍵值
 const todayKey = computed(() => {
@@ -68,9 +69,7 @@ const todayKey = computed(() => {
 // 生成當月的日曆數據 - 修正版本
 const calendarDays = computed(() => {
     return CalendarUtils.generateCalendarDays(
-        props.year,          // 西元年
-        props.month,         // 西元月
-        props.calendar,
+        props.viewDate,      // 原生曆法視圖日期（錨定原生月份）
         props.locale,
         props.weekStartsOn
     );

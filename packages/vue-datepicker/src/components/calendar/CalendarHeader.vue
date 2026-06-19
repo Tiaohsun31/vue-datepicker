@@ -31,7 +31,7 @@
                 </slot>
 
                 <!-- 年份選擇面板 -->
-                <YearSelector :selected-year="selectedYearLocal" v-model:show-selector="showYearSelector"
+                <YearSelector :selected-year="gregorianYear" v-model:show-selector="showYearSelector"
                     :calendar="calendarId" :locale="locale" @year-selected="onYearSelected">
                     <template v-for="(_, slotName) in $slots" #[slotName]="slotProps" :key="slotName">
                         <slot :name="slotName" v-bind="slotProps"></slot>
@@ -57,14 +57,14 @@ import DatePickerPrev from '../icons/DatePickerPrev.vue';
 import DatePickerNext from '../icons/DatePickerNext.vue';
 import YearSelector from '../selector/YearSelector.vue';
 import { CalendarUtils } from '../../utils/calendarUtils';
-import { CalendarDate, DateFormatter } from '@internationalized/date';
+import { CalendarDate, DateFormatter, startOfMonth } from '@internationalized/date';
 
 interface Props {
-    month: number;
-    year: number;
+    // §D：原生曆法視圖日期（目標曆法 CalendarDate）
+    viewDate: CalendarDate;
     locale?: string;
-    minYear?: number;
-    maxYear?: number;
+    minYear?: number;   // 西元年下限
+    maxYear?: number;   // 西元年上限
     calendar?: string;
 }
 
@@ -76,154 +76,94 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    'update:month': [value: number];
-    'update:year': [value: number];
+    'update:view-date': [value: CalendarDate];
 }>();
 
-// 內部狀態
-const selectedMonthLocal = ref(props.month);
-const selectedYearLocal = ref(props.year);
 const showYearSelector = ref(false);
 
 // 計算當前使用的日曆 ID
 const calendarId = computed(() => props.calendar || 'gregory');
 
-// 日曆年份的範圍
+// 西元投影：年份系統維持西元（YearSelector / 範圍檢查 / 顯示回退皆以西元年）
+const gregorianView = computed(() =>
+    CalendarUtils.safeToCalendar(props.viewDate, CalendarUtils.createSafeCalendar('gregory'))
+);
+const gregorianYear = computed(() => gregorianView.value.year);
+
+// 日曆年份的範圍（西元）
 const calendarRange = computed(() => CalendarUtils.getCalendarRange(props.calendar));
 
-// 監聽 props 變化
-watch(() => props.month, (newMonth) => {
-    selectedMonthLocal.value = newMonth;
+// 原生視圖月份（月份下拉選取值）
+const selectedMonthLocal = ref(props.viewDate.month);
+watch(() => props.viewDate, (vd) => {
+    selectedMonthLocal.value = vd.month;
 }, { immediate: true });
 
-watch(() => props.year, (newYear) => {
-    selectedYearLocal.value = newYear;
-}, { immediate: true });
-
-// 年份顯示邏輯
+// 年份顯示（原生年號/年；西元曆直接顯示數字）
 const displayYear = computed(() => {
     if (props.calendar === 'gregory') {
-        return selectedYearLocal.value.toString();
+        return gregorianYear.value.toString();
     }
-
     try {
-        // 使用 @internationalized/date 格式化，會自動顯示正確年號
-        const gregorianDate = new CalendarDate(selectedYearLocal.value, 6, 1); // 用年中日期
-        const calendarDate = CalendarUtils.safeToCalendar(
-            gregorianDate,
-            CalendarUtils.createSafeCalendar(props.calendar)
-        );
-
+        // 直接格式化原生視圖日期，自動顯示正確年號
         const formatter = new DateFormatter(props.locale, {
             calendar: props.calendar,
             year: 'numeric'
         });
-
-        return formatter.format(calendarDate.toDate('UTC'));
+        return formatter.format(props.viewDate.toDate('UTC'));
     } catch (error) {
-        // 回退
-        return selectedYearLocal.value.toString();
+        return gregorianYear.value.toString();
     }
 });
 
-// 月份名稱
+// 月份名稱（曆法感知：原生月數與月名，含希伯來 13 月）
 const monthNames = computed(() => {
-    return CalendarUtils.getMonthNames(props.locale, props.calendar);
+    return CalendarUtils.getMonthNames(props.locale, props.calendar, props.viewDate);
 });
 
-// 檢查是否可以導航到上個月
-const canNavigatePrevious = computed(() => {
-    let prevYear = selectedYearLocal.value;
-    let prevMonth = selectedMonthLocal.value - 1;
+// 以「候選視圖的西元年」判定導航是否超出範圍
+const candidateGregorianYear = (monthOffset: number): number => {
+    const candidate = monthOffset < 0
+        ? props.viewDate.subtract({ months: Math.abs(monthOffset) })
+        : props.viewDate.add({ months: monthOffset });
+    return CalendarUtils.safeToCalendar(candidate, CalendarUtils.createSafeCalendar('gregory')).year;
+};
 
-    // 計算上個月的年份
-    if (prevMonth < 1) {
-        prevMonth = 12;
-        prevYear = selectedYearLocal.value - 1;
-    }
+const canNavigatePrevious = computed(() => candidateGregorianYear(-1) >= calendarRange.value.min);
+const canNavigateNext = computed(() => candidateGregorianYear(1) <= calendarRange.value.max);
 
-    // 檢查是否會超出日曆年份範圍
-    return prevYear >= calendarRange.value.min;
-});
-
-// 檢查是否可以導航到下個月
-const canNavigateNext = computed(() => {
-    let nextYear = selectedYearLocal.value;
-    let nextMonth = selectedMonthLocal.value + 1;
-
-    // 計算下個月的年份
-    if (nextMonth > 12) {
-        nextMonth = 1;
-        nextYear = selectedYearLocal.value + 1;
-    }
-
-    // 檢查是否會超出日曆年份範圍
-    return nextYear <= calendarRange.value.max;
-});
-
-// 月份切換邏輯
+// 月份切換（原生曆法月份算術，自動處理希伯來 13 月等）
 const previousMonth = () => {
     if (!canNavigatePrevious.value) return;
-
-    let newMonth = selectedMonthLocal.value - 1;
-    let newYear = selectedYearLocal.value;
-
-    if (newMonth < 1) {
-        newMonth = 12;
-        newYear -= 1;
-    }
-
-    // 最終安全檢查
-    if (newYear >= calendarRange.value.min) {
-        updateDate(newMonth, newYear);
-    }
+    emit('update:view-date', startOfMonth(props.viewDate.subtract({ months: 1 })));
 };
 
 const nextMonth = () => {
     if (!canNavigateNext.value) return;
-
-    let newMonth = selectedMonthLocal.value + 1;
-    let newYear = selectedYearLocal.value;
-
-    if (newMonth > 12) {
-        newMonth = 1;
-        newYear += 1;
-    }
-
-    // 最終安全檢查
-    if (newYear <= calendarRange.value.max) {
-        updateDate(newMonth, newYear);
-    }
+    emit('update:view-date', startOfMonth(props.viewDate.add({ months: 1 })));
 };
 
-// 處理月份變更
+// 月份下拉變更（原生月份）
 const onMonthChange = () => {
-    updateDate(selectedMonthLocal.value, selectedYearLocal.value);
+    emit('update:view-date', props.viewDate.set({ month: selectedMonthLocal.value, day: 1 }));
 };
 
 const onMonthChangeWithValue = (monthValue?: number) => {
     if (monthValue !== undefined) {
         selectedMonthLocal.value = monthValue;
     }
-    updateDate(selectedMonthLocal.value, selectedYearLocal.value);
+    onMonthChange();
 };
 
-// 處理年份變更
-const onYearSelected = (year: number) => {
-    // 確保年份在有效範圍內
-    if (year >= calendarRange.value.min && year <= calendarRange.value.max) {
-        selectedYearLocal.value = year;
-        updateDate(selectedMonthLocal.value, year);
-    }
-};
-
-// 更新日期並發送事件
-const updateDate = (month: number, year: number) => {
-    selectedMonthLocal.value = month;
-    selectedYearLocal.value = year;
-
-    emit('update:month', month);
-    emit('update:year', year);
+// 年份選擇（YearSelector 發出西元年）→ 維持原生月份，換到該西元年對應的原生月
+const onYearSelected = (gYear: number) => {
+    if (gYear < calendarRange.value.min || gYear > calendarRange.value.max) return;
+    const gMonth = gregorianView.value.month;
+    const greg = new CalendarDate(gYear, gMonth, 1);
+    const native = props.calendar === 'gregory'
+        ? greg
+        : CalendarUtils.safeToCalendar(greg, CalendarUtils.createSafeCalendar(props.calendar));
+    emit('update:view-date', startOfMonth(native));
 };
 
 // 切換年份選擇器

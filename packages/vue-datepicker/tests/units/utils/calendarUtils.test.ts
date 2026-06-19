@@ -1,6 +1,7 @@
 
 // tests/units/utils/calendarUtils.test.ts
 import { describe, it, expect, vi } from 'vitest'
+import { CalendarDate, toCalendar } from '@internationalized/date'
 import { CalendarUtils } from '@/utils/calendarUtils'
 
 describe('CalendarUtils', () => {
@@ -187,18 +188,55 @@ describe('CalendarUtils', () => {
             expect(months).toHaveLength(12)
             expect(months[0]).toBe('Jan')
         })
+
+        // §D：曆法感知月份名稱（原生月數與月名）
+        it('希伯來閏年應回傳 13 個原生月份名稱', () => {
+            // 希伯來 5784 年為閏年（含 Adar I/II）→ 13 個月
+            const leapHebrew = toCalendar(new CalendarDate(2024, 1, 1), CalendarUtils.createSafeCalendar('hebrew'))
+            const months = CalendarUtils.getMonthNames('en-US', 'hebrew', leapHebrew)
+            expect(months).toHaveLength(13)
+            // 應為原生希伯來月名，而非西元月名
+            expect(months).not.toContain('Jan')
+        })
+
+        it('伊斯蘭曆應回傳 12 個原生月份名稱', () => {
+            const islamic = toCalendar(new CalendarDate(2024, 6, 1), CalendarUtils.createSafeCalendar('islamic-umalqura'))
+            const months = CalendarUtils.getMonthNames('en-US', 'islamic-umalqura', islamic)
+            expect(months).toHaveLength(12)
+            expect(months).not.toContain('Jan')
+        })
     })
 
     describe('generateCalendarDays', () => {
-        it('應該生成日曆網格', () => {
-            const days = CalendarUtils.generateCalendarDays(2024, 6, 'gregory', 'zh-TW')
+        it('應該生成日曆網格（西元曆）', () => {
+            const days = CalendarUtils.generateCalendarDays(new CalendarDate(2024, 6, 1), 'zh-TW')
             expect(days.length).toBeGreaterThan(28)
             expect(days.length).toBeLessThanOrEqual(42)
         })
 
-        it('應該處理錯誤並返回空陣列', () => {
-            const days = CalendarUtils.generateCalendarDays(0, 0, 'invalid', 'zh-TW')
+        it('無效 viewDate 應返回空陣列', () => {
+            const days = CalendarUtils.generateCalendarDays(null as any, 'zh-TW')
             expect(days).toEqual([])
+        })
+
+        // §D：原生曆法網格——格子錨在原生月，當月日期皆屬同一原生月
+        it('希伯來曆網格應錨在原生月（當月日期同屬一個原生月）', () => {
+            const hebrewView = toCalendar(new CalendarDate(2024, 6, 1), CalendarUtils.createSafeCalendar('hebrew'))
+            const days = CalendarUtils.generateCalendarDays(hebrewView, 'en-US')
+            expect(days.length % 7).toBe(0)
+            // 屬於當前原生月的格子，其原生月份應與 viewDate 相同
+            const inMonth = days.filter(d => d.month === hebrewView.month)
+            expect(inMonth.length).toBeGreaterThanOrEqual(28)
+            expect(inMonth.every(d => d.month === hebrewView.month)).toBe(true)
+            // 第一個當月日為 1 號
+            expect(inMonth[0]!.day).toBe(1)
+        })
+
+        it('伊斯蘭曆網格當月天數應為 29 或 30', () => {
+            const islamicView = toCalendar(new CalendarDate(2024, 6, 1), CalendarUtils.createSafeCalendar('islamic-umalqura'))
+            const days = CalendarUtils.generateCalendarDays(islamicView, 'en-US')
+            const inMonth = days.filter(d => d.month === islamicView.month)
+            expect([29, 30]).toContain(inMonth.length)
         })
     })
 

@@ -1,8 +1,8 @@
 <template>
     <div class="vdp-calendar-grid">
         <!-- 月份導航和選擇器 -->
-        <CalendarHeader v-model:month="currentMonth" v-model:year="currentYear" :locale="locale" :min-year="minYear"
-            :max-year="maxYear" :calendar="calendar">
+        <CalendarHeader :view-date="currentViewDate" @update:view-date="currentViewDate = $event" :locale="locale"
+            :min-year="minYear" :max-year="maxYear" :calendar="calendar">
             <template v-for="(_, slotName) in $slots" #[slotName]="slotProps" :key="slotName">
                 <slot :name="slotName" v-bind="slotProps" />
             </template>
@@ -15,7 +15,7 @@
         <WeekdayHeader :locale="locale" :week-starts-on="weekStartsOn" :calendar="calendar" />
 
         <!-- 日期網格 -->
-        <DateGridView :year="currentYear" :month="currentMonth" :selected-date="selectedCalendarDate"
+        <DateGridView :view-date="currentViewDate" :selected-date="selectedCalendarDate"
             :range-start="rangeStartCalendarDate" :range-end="rangeEndCalendarDate" :selection-mode="selectionMode"
             :min-date="minCalendarDate" :max-date="maxCalendarDate" :locale="locale" :week-starts-on="weekStartsOn"
             :calendar="calendar" @select="handleSelect" @range-select="handleRangeSelect" />
@@ -28,8 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { CalendarDate } from '@internationalized/date';
+import { ref, shallowRef, computed, watch } from 'vue';
+import { CalendarDate, startOfMonth } from '@internationalized/date';
 import CalendarHeader from './CalendarHeader.vue';
 import WeekdayHeader from './WeekdayHeader.vue';
 import DateGridView from './DateGridView.vue';
@@ -51,6 +51,10 @@ interface Props {
     // 外部控制的年月（西元曆，用於日曆導航顯示）
     year?: number;    // 西元年
     month?: number;   // 西元月 (1-12)
+
+    // §D：外部直接指定的原生視圖日期（目標曆法 CalendarDate）。
+    // 由 RangeCalendar 提供以驅動雙月顯示；優先序高於 year/month。
+    viewDate?: CalendarDate | null;
 
     // 通用屬性
     minDate?: SimpleDateValue | null;
@@ -76,6 +80,7 @@ const props = withDefaults(defineProps<Props>(), {
     selectionMode: 'single',
     year: undefined,
     month: undefined,
+    viewDate: undefined,
     locale: 'en-US',
     weekStartsOn: 0,
     minDate: undefined,
@@ -97,31 +102,42 @@ const emit = defineEmits<{
     'range-select': [startDate: SimpleDateValue | null, endDate: SimpleDateValue | null];
 }>();
 
-// 獲取當前日期的西元年月
-const getInitialYearMonth = () => {
-    // 1. 優先使用 props 提供的年月
-    if (props.year !== undefined && props.month !== undefined) {
-        return { year: props.year, month: props.month };
-    }
+// §D：原生曆法視圖狀態（目標曆法 CalendarDate，恆錨在原生月 1 號）
+const targetCalendar = computed(() => CalendarUtils.createSafeCalendar(props.calendar));
 
-    // 2. 從 value 中提取
-    if (props.value) {
-        return { year: props.value.year, month: props.value.month };
-    }
-
-    // 3. 從 rangeStart 中提取
-    if (props.rangeStart) {
-        return { year: props.rangeStart.year, month: props.rangeStart.month };
-    }
-
-    // 4. 使用今天的日期
-    const today = getTodaysDate();
-    return { year: today.year, month: today.month };
+// 把「西元年月」錨成目標曆法的原生月 1 號
+const gregorianToNativeMonthStart = (gYear: number, gMonth: number): CalendarDate => {
+    const greg = new CalendarDate(gYear, gMonth, 1);
+    const native = props.calendar === 'gregory'
+        ? greg
+        : CalendarUtils.safeToCalendar(greg, targetCalendar.value);
+    return startOfMonth(native);
 };
 
-const { year: initialYear, month: initialMonth } = getInitialYearMonth();
-const currentYear = ref<number>(initialYear);
-const currentMonth = ref<number>(initialMonth);
+// 計算視圖日期（優先序：view-date prop > 西元 year/month > value/rangeStart > 今天）
+const computeViewDate = (): CalendarDate => {
+    if (props.viewDate) return startOfMonth(props.viewDate);
+
+    if (props.year !== undefined && props.month !== undefined) {
+        return gregorianToNativeMonthStart(props.year, props.month);
+    }
+
+    const sourceDate = props.selectionMode === 'range' ? props.rangeStart : props.value;
+    if (sourceDate) {
+        const native = CalendarUtils.convertToCalendarDate(sourceDate, props.calendar);
+        if (native) return startOfMonth(native);
+    }
+
+    const today = getTodaysDate();
+    return gregorianToNativeMonthStart(today.year, today.month);
+};
+
+// shallowRef：避免 Vue 對含私有欄位的 CalendarDate 做深層 UnwrapRef 而剝離型別品牌
+const currentViewDate = shallowRef<CalendarDate>(computeViewDate());
+
+// 對外仍以「原生年月」投影暴露（西元曆下與西元年月一致 → 既有測試行為不變）
+const currentYear = computed(() => currentViewDate.value.year);
+const currentMonth = computed(() => currentViewDate.value.month);
 
 // 內部時間值
 const timeValue = ref<string | null>(props.timeValue);
@@ -156,27 +172,21 @@ const maxCalendarDate = computed(() => {
 const minYear = computed(() => props.minDate?.year || 1900);
 const maxYear = computed(() => props.maxDate?.year || 2100);
 
-// 計算當前應該顯示的年月
-const displayYearMonth = computed(() => {
-    // 1. 優先使用外部指定
-    if (props.year !== undefined && props.month !== undefined) {
-        return { year: props.year, month: props.month };
+// 外部來源（view-date / 西元年月 / 值 / 曆法）變動時重新定位視圖。
+// 內部導航（previousMonth/nextMonth）改的是 currentViewDate，不在依賴中 → 不會被覆蓋。
+watch(
+    [
+        () => props.viewDate,
+        () => props.year,
+        () => props.month,
+        () => props.value,
+        () => props.rangeStart,
+        () => props.calendar,
+    ],
+    () => {
+        currentViewDate.value = computeViewDate();
     }
-
-    // 2. 從值推導
-    const sourceDate = props.selectionMode === 'range' ? props.rangeStart : props.value;
-    if (sourceDate) {
-        return { year: sourceDate.year, month: sourceDate.month };
-    }
-
-    // 3. 保持當前值
-    return { year: currentYear.value, month: currentMonth.value };
-});
-
-watch(displayYearMonth, ({ year, month }) => {
-    currentYear.value = year;
-    currentMonth.value = month;
-}, { immediate: true });
+);
 
 // 監聽時間值變化
 watch(() => props.timeValue, (newValue) => {
@@ -217,8 +227,7 @@ const emitTimeSelect = (time: string) => {
 const setTodaysDate = () => {
     if (props.selectionMode === 'single') {
         const today = getTodaysDate();
-        currentYear.value = today.year;
-        currentMonth.value = today.month;
+        currentViewDate.value = gregorianToNativeMonthStart(today.year, today.month);
         emit('select', today, false);
     }
 };
@@ -231,30 +240,19 @@ defineExpose({
     // 獲取當前範圍（範圍模式）
     getSelectedRange: () => ({ start: props.rangeStart, end: props.rangeEnd }),
 
-    // 設置顯示的月份
+    // 設置顯示的月份（year/month 為目標曆法的原生年月；西元曆下即西元年月）
     setDisplayMonth: (year: number, month: number) => {
-        currentYear.value = year;
-        currentMonth.value = month;
+        currentViewDate.value = new CalendarDate(targetCalendar.value, year, month, 1);
     },
 
-    // 導航到上個月
+    // 導航到上個月（原生曆法月份算術，自動處理希伯來 13 月等）
     previousMonth: () => {
-        if (currentMonth.value === 1) {
-            currentMonth.value = 12;
-            currentYear.value -= 1;
-        } else {
-            currentMonth.value -= 1;
-        }
+        currentViewDate.value = currentViewDate.value.subtract({ months: 1 });
     },
 
     // 導航到下個月
     nextMonth: () => {
-        if (currentMonth.value === 12) {
-            currentMonth.value = 1;
-            currentYear.value += 1;
-        } else {
-            currentMonth.value += 1;
-        }
+        currentViewDate.value = currentViewDate.value.add({ months: 1 });
     }
 });
 </script>

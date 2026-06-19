@@ -139,7 +139,7 @@ export default defineConfig({
                 nav: [
                     { text: '首頁', link: '/zh-tw/' },
                     { text: '指南', link: '/zh-tw/guide/installation' },
-                    { text: 'v1.0.X', link: 'https://github.com/Tiaohsun31/vue-datatable/releases' }
+                    { text: 'v2.0.X', link: 'https://github.com/Tiaohsun31/vue-datatable/releases' }
                 ],
                 sidebar: [
                     {

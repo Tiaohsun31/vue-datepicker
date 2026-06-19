@@ -57,7 +57,7 @@ const selectedDate = ref<string>('')
 
 ## 🎨 Theming
 
-Recolor via the `theme` prop (a hex / rgb / oklch value or one of 22 built-in color names — used exactly, no snapping):
+Recolor via the `theme` prop (a hex / rgb / oklch value or one of 26 built-in color names — used exactly, no snapping):
 
 ```vue
 <DatePicker v-model="date" theme="#0ea5e9" mode="dark" />
@@ -79,9 +79,9 @@ See the [Theme & Mode guide](https://vue-datepicker.tiaohsun.dev/en-us/customiza
 Only the Gregorian calendar is built in. Register any other calendar once (keeps the bundle tree-shakeable):
 
 ```ts
-import { registerCalendar, rocCalendar } from "@tiaohsun/vue-datepicker";
+import { registerCalendar, rocCalendar } from '@tiaohsun/vue-datepicker'
 
-registerCalendar(rocCalendar);
+registerCalendar(rocCalendar)
 ```
 
 ```vue

@@ -59,11 +59,11 @@ The `mode` prop accepts `'light'`, `'dark'`, or `'auto'` (default). Internally i
 
 You can also switch mode with attributes instead of (or in addition to) the prop:
 
-| Attribute        | Scope                                                          |
-| ---------------- | ------------------------------------------------------------- |
-| `data-vdp-mode`  | Per-instance (what the `mode` prop sets)                      |
-| `data-tia-mode`  | The whole `@tiaohsun/vue-*` family (datepicker + datatable…)  |
-| `.dark`          | A page-global dark class is also honored                      |
+| Attribute       | Scope                                                        |
+| --------------- | ------------------------------------------------------------ |
+| `data-vdp-mode` | Per-instance (what the `mode` prop sets)                     |
+| `data-tia-mode` | The whole `@tiaohsun/vue-*` family (datepicker + datatable…) |
+| `.dark`         | A page-global dark class is also honored                     |
 
 ```html
 <!-- switch the whole family at once -->
@@ -76,7 +76,7 @@ You can also switch mode with attributes instead of (or in addition to) the prop
 
 ## Theme Colors
 
-The `theme` prop accepts one of 22 built-in color names, or any hex / rgb / oklch value. **Whatever you pass is used exactly** — there is no "snap to nearest color".
+The `theme` prop accepts one of 26 built-in color names, or any hex / rgb / oklch value. **Whatever you pass is used exactly** — there is no "snap to nearest color".
 
 ::: raw
 
@@ -109,7 +109,7 @@ If you pass something that is neither a built-in color name nor a valid CSS colo
 
 ### Built-in Color Names
 
-`slate`, `gray`, `zinc`, `neutral`, `stone`, `red`, `orange`, `amber`, `yellow`, `lime`, `green`, `emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo` (default), `violet`, `purple`, `fuchsia`, `pink`, `rose`
+`slate`, `gray`, `zinc`, `neutral`, `stone`, `red`, `orange`, `amber`, `yellow`, `lime`, `green`, `emerald`, `teal`, `cyan`, `sky`, `blue`, `indigo` (default), `violet`, `purple`, `fuchsia`, `pink`, `rose`, `taupe`, `mauve`, `mist`, and `olive`
 
 ## CSS Variable Model
 
@@ -202,15 +202,15 @@ To override only the dark palette, scope it under a dark selector:
 
 These class names are part of the public API and are safe to target for overrides. Structural `.vdp-*` classes also exist for fine-grained styling, but the marker classes below are the stable hooks:
 
-| Class                              | Element                                   |
-| ---------------------------------- | ----------------------------------------- |
-| `.date-picker-wrapper`             | DatePicker root                           |
-| `.date-range-wrapper`              | DateRange root                            |
-| `.date-picker-container`           | Input container                           |
-| `.date-picker-container.error`     | Input container, error state              |
-| `.date-picker-icon`                | Calendar / clear icon buttons             |
-| `.date-placeholder`                | Displayed value / placeholder text        |
-| `.calendar-container`              | Calendar popup                            |
+| Class                          | Element                            |
+| ------------------------------ | ---------------------------------- |
+| `.date-picker-wrapper`         | DatePicker root                    |
+| `.date-range-wrapper`          | DateRange root                     |
+| `.date-picker-container`       | Input container                    |
+| `.date-picker-container.error` | Input container, error state       |
+| `.date-picker-icon`            | Calendar / clear icon buttons      |
+| `.date-placeholder`            | Displayed value / placeholder text |
+| `.calendar-container`          | Calendar popup                     |
 
 ```css
 /* Example: customize the calendar popup and error border */

@@ -57,7 +57,7 @@ const selectedDate = ref('')
 
 ## 🎨 主題
 
-以 `theme` prop 換色（hex / rgb / oklch 或 22 個內建色名，傳什麼用什麼、不吸附）：
+以 `theme` prop 換色（hex / rgb / oklch 或 26 個內建色名，傳什麼用什麼、不吸附）：
 
 ```vue
 <DatePicker v-model="date" theme="#0ea5e9" mode="dark" />
@@ -79,9 +79,9 @@ const selectedDate = ref('')
 僅西元曆內建。其餘曆法需先註冊一次（讓 bundle 可 tree-shake）：
 
 ```ts
-import { registerCalendar, rocCalendar } from "@tiaohsun/vue-datepicker";
+import { registerCalendar, rocCalendar } from '@tiaohsun/vue-datepicker'
 
-registerCalendar(rocCalendar);
+registerCalendar(rocCalendar)
 ```
 
 ```vue

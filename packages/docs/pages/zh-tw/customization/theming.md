@@ -76,7 +76,7 @@ import "@tiaohsun/vue-datepicker/style";
 
 ## 主題顏色
 
-`theme` prop 接受 22 個內建色名，或任意 hex / rgb / oklch 值。**傳什麼色就用什麼色**——不會「吸附最近的顏色」。
+`theme` prop 接受 26 個內建色名，或任意 hex / rgb / oklch 值。**傳什麼色就用什麼色**——不會「吸附最近的顏色」。
 
 ::: raw
 
@@ -109,7 +109,7 @@ import "@tiaohsun/vue-datepicker/style";
 
 ### 內建色名
 
-`slate`、`gray`、`zinc`、`neutral`、`stone`、`red`、`orange`、`amber`、`yellow`、`lime`、`green`、`emerald`、`teal`、`cyan`、`sky`、`blue`、`indigo`（預設）、`violet`、`purple`、`fuchsia`、`pink`、`rose`
+`slate`、`gray`、`zinc`、`neutral`、`stone`、`red`、`orange`、`amber`、`yellow`、`lime`、`green`、`emerald`、`teal`、`cyan`、`sky`、`blue`、`indigo`（預設）、`violet`、`purple`、`fuchsia`、`pink`、`rose`、`taupe`, `mauve`, `mist`, and `olive`
 
 ## CSS 變數模型
 

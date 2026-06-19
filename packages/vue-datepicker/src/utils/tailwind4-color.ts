@@ -28,6 +28,10 @@ export const tailwindBaseColors = {
     fuchsia: 'oklch(66.7% 0.295 322.15)',
     pink: 'oklch(65.6% 0.241 354.308)',
     rose: 'oklch(64.5% 0.246 16.439)',
+    taupe: 'oklch(54.7% 0.021 43.1)',
+    mauve: 'oklch(54.2% 0.034 322.5)',
+    olive: 'oklch(58% 0.031 107.3)',
+    mist: 'oklch(56% 0.021 213.5)',
 } satisfies Record<string, string>;
 
 /** 色名 union（由 tailwindBaseColors 的鍵衍生，單一事實來源）。 */

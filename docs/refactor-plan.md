@@ -1,5 +1,7 @@
 # @tiaohsun/vue-datepicker 重構計畫書
 
+> 📌 想快速理解「設計決策與理由」請看精煉版 [`design-decisions.md`](./design-decisions.md)；本檔保留完整的逐步過程與試錯紀錄（考古用）。
+>
 > 本檔為跨 session 工作文件。任何接手的 session 請**先完整讀過本檔**，再依「§7 進度追蹤」接續。
 > 套件名：`@tiaohsun/vue-datepicker`　當前版本：1.0.5　目標版本：**2.0.0（major / 允許合理破壞性變更）**
 > 姊妹套件：`@tiaohsun/vue-datatable`（已完成同型重構至 v3，本計畫沿用其已驗證決策）。

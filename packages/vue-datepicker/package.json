@@ -22,7 +22,6 @@
     "datepicker",
     "calendar",
     "typescript",
-    "tailwindcss",
     "internationalization",
     "i18n",
     "date-picker",
@@ -51,18 +50,21 @@
   "sideEffects": [
     "**/*.css"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only && pnpm run build:types",
     "preview": "vite preview",
     "build-only": "vite build",
-    "build:types": "vue-tsc -p tsconfig.build.json",
+    "build:types": "vue-tsc -p tsconfig.build.json && node scripts/strip-css-dts.mjs",
     "type-check": "vue-tsc --build",
     "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix",
     "lint": "run-s lint:*",
     "format": "prettier --write src/",
-    "prepublishOnly": "npm run build-only",
+    "prepublishOnly": "pnpm run build",
     "test:unit": "vitest",
     "test:watch": "vitest --watch",
     "test:e2e": "playwright test",

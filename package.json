@@ -2,6 +2,7 @@
   "name": "vue-datepicker-workspace",
   "private": true,
   "description": "A powerful and flexible Vue 3 DatePicker component with TypeScript and Tailwind CSS",
+  "packageManager": "pnpm@11.5.2",
   "keywords": [
     "vue",
     "vue3",

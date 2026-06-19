@@ -338,15 +338,20 @@
 >
 > 風險提示：Session A 的「全部曆法改 opt-in」一落地，**所有既有元件測試凡用到非西元曆者都需在 setup 註冊**，否則大量轉紅 —— 這是預期的、可控的 churn，但別誤判為回歸。建議 Session A 先加一個共用 test setup（註冊全部內建曆法）降低噪音。
 
-### Phase 5 — 測試、文件、發佈
-- [ ] 單元/元件測試補齊（目標 27↑ 全綠）；主題相關行為測試。
-- [ ] 自建最小 playground 截圖 + eval：預設色、`theme` prop per-instance 覆蓋、設 `--tia-theme-primary` 家族換色生效、深淺模式、focus/error 狀態。
-- [ ] **（Phase 2 併入）響應式斷點視覺驗證**：`preview_resize` 驗 DateRange `md:`(768px)/`sm:`(640px)——單月↔雙月、輸入區 column↔row、彈窗 max-h/min-w。
-- [ ] **（Phase 2 併入）淺色模式無-Tailwind 截圖**：補一張 light 模式停用 Tailwind 後的元件截圖（深色已驗）。
-- [ ] **（Phase 2 併入）公開 class hook 文件化**：marker class（`date-picker-icon`/`date-placeholder`/`calendar-container`）+ `.date-picker-container(.error)` + 主要 `.vdp-*` 列為對外可覆寫 hook。
-- [ ] 更新 README（中英）：安裝段（免裝 Tailwind）、Theme 段（新模型 + `--tia` 分層）、Props（mode/theme 行為變更）。
-- [ ] CHANGELOG 2.0.0（breaking：色階移除、JS 動態移除、命名空間 vdt→vdp、Tailwind peer 移除）。
-- [ ] docs 站 theming 頁（中英）重寫為新模型。
+### Phase 5 — 測試、文件、發佈（✅ 完成 2026-06-19）
+- [x] ✅ 單元/元件測試：`pnpm test:unit` → **542 passed / 19 檔全綠**；主題相關行為測試（useTheme/DatePicker/DateRange）皆在。type-check 0 / build 0 / docs build 0。
+- [x] ✅ **playground 截圖 + eval**（preview MCP，port 3000 的套件 playground，已註冊全部曆法）：
+  - 預設色：12 個 wrapper 的 `--color-vdp-primary` = indigo（`oklch(58.5% 0.233 277.117)`）；`:root --tia-theme-primary` 同值。
+  - `theme` per-instance：`#ff0000` / `rgb(255,0,0)` wrapper 的 primary 原樣套用，且 `-ring`/`-subtle` color-mix **跟隨該實例主色**（per-instance 衍生色已驗）。
+  - 家族換色：eval 設 `:root --tia-theme-primary`=blue → 預設 wrapper primary 即時變 blue；移除後回 indigo。
+  - 深淺模式：`data-vdp-mode="light"` → surface=white；`="dark"` → surface=`oklch(20% …)`。
+  - focus/今天：ROC picker 開啟，今天(19) 帶 indigo focus ring（截圖）。
+- [x] ✅ **響應式斷點視覺驗證**：DateRange 桌面(961px) → `vdp-range-calendar--dual` / `flex-direction:row` / 2 月並排（截圖：6月｜7月 2026 + shortcuts）；mobile(375px) → `--single` / `column` / 單月（截圖）。元件自動隨 viewport 切換單↔雙月。
+- [x] ✅ **淺色模式截圖**：light colorScheme 下 ROC 日曆（民國115年）、雙月 DateRange、單月 DateRange 皆正確；元件以自包含 CSS 渲染（Phase 2 已做停用 Tailwind 的決定性驗證 + dist `--tw-`/preflight 0 核實，故此處不重做停用）。
+- [x] ✅ **公開 class hook 文件化**：theming 頁（中英）新增「公開 class hook」表：`.date-picker-wrapper`/`.date-range-wrapper`/`.date-picker-container`(`.error`)/`.date-picker-icon`/`.date-placeholder`/`.calendar-container`。
+- [x] ✅ **更新 README（中英）**：套件 README.md / README.zh-TW.md + root README：tagline 改自包含免裝 Tailwind、Features 改寫、新增 Theming（`--color-vdp-primary`/`--tia-theme-primary`）與 Calendar Systems（`registerCalendar` opt-in）段、Requirements 移除 Tailwind、連結 CHANGELOG migration。
+- [x] ✅ **CHANGELOG 2.0.0**：完整 breaking（色階移除/命令式 API 移除/vdt→vdp/Tailwind peer 移除/曆法 opt-in/`RocFormatPlugin` 不再匯出/`data-vdt-mode` 移除/violet→indigo）+ Added/Changed/Fixed + 6 步 Migration（含對照表）。
+- [x] ✅ **docs 站重寫（中英）**：`customization/theming.md`（三層 token + color-mix + data-vdp/tia-mode + class hook）、`guide/installation.md`（免裝 Tailwind + 曆法註冊 troubleshooting + 移除 `RocFormatPlugin` 型別匯入）、`calendars/basic.md`（新增「註冊日曆」段 + 內建描述子表）、`calendars/roc-plugin.md`（`rocCalendar.plugin` 取代 `new RocFormatPlugin()` + 自訂 plugin 範例）、component props 表 `theme` 預設 violet→undefined(indigo)、index 技術棧。**關鍵修正**：`.vitepress/theme/index.ts` 註冊全部內建曆法（否則 v2 起 demo 的非西元曆會 fallback 西元）。docs build exit 0。
 
 ---
 
@@ -359,7 +364,7 @@
 | 2 CSS 語義 class + 自包含 | ✅ 完成 | 13/13 元件 utility→字面 .vdp-* CSS（隔離 --vdp-* token）；移除 tailwindcss peer；無-Tailwind 截圖驗證 + dist 自包含核實（--tw-/preflight 0）；錯誤狀態統一 .error(§3)。殘留決策已定案（marker class 保留為公開 hook）；響應式/淺色視覺驗證併入 Phase 5 |
 | 3 Packaging + dts | ✅ 完成 | dts plugin-less + cssFileName 釘住 + version 2.0.0 + files/sideEffects + npm pack 驗證 + 公開型別可解析（38 個 @/→相對，d.ts 零 alias 殘留）；@tailwindcss/vite 保留決議。dayjs 文件待 Phase 5 |
 | 4 程式碼品質（主題以外） | ✅ 完成 | 5.1 受控更新 / 5.2 computed / 5.3 i18n / 5.4 型別（any 55→7、修潛在 validate() bug）/ 5.5 console（dev-gated logger、dist 0 console）/ 5.6 重複（side-handler factory + resolveTimeFormat）/ 5.7 清理（setTimeout→nextTick）/ 5.8 命名（types/main→public、清 TODO）。504 測試全綠、type-check/build 0。📌 殘留低優先：useLocale 共享 localeMessages 跨實例洩漏（併入 §6.2 類共享狀態 pass）、§5.4 合理動態 any |
-| 5 測試 / 文件 / 發佈 | ⬜ 未開始 | 2.0.0 CHANGELOG + README 中英 + docs |
+| 5 測試 / 文件 / 發佈 | ✅ 完成 | **2026-06-19**：CHANGELOG 2.0.0（breaking + 6 步 migration）+ README 中英（免裝 Tailwind / 新主題模型 / 曆法 opt-in）+ docs 站重寫（theming/installation/calendars/roc-plugin 中英 + props 表 + theme/index.ts 註冊曆法）+ 公開 class hook 文件化。preview MCP 視覺驗證：預設 indigo / per-instance theme 衍生色 / 家族換色 / 深淺 surface / ROC 民國曆 / DateRange 響應式單↔雙月 / 淺色截圖。542 測試綠、type-check/build/docs build 0 |
 | 6 核心日曆流程重構 | 🟢 主體完成（A+B ✅；3 項低優先留後續） | **Session A+B 完成（2026-06-18）**：registry + `CalendarDescriptor` + `registerCalendar` + 內建描述子（各自帶 lib 類別、tree-shakeable）；輸出端+解析端 dispatch 全改查表；移除硬寫 `new RocFormatPlugin()`（輸出 A、解析 B）；6.2 globalParser 去單例；6.8 ROC 無前綴修正；6.6 slim CalendarPlugin 介面 + metadata 收斂描述子 + ROC 年範圍對齊；6.9 死分支、6.10 ROC year 統一；移除 `RocFormatPlugin` 直接匯出（破壞性）。**tree-shaking 驗證**：只 import DatePicker → 非西元曆描述子/類別/RocFormatPlugin 全數 0（僅 YearSelector 殘 1 個 `民國前` 字面，見下）。**type-check 0 / build 0 / 542 passed**。**留後續（低優先）**：6.3 options 簽名（評估後不做）、6.5 非西元 dateFormat（→Phase 5 文件）、getMonthNames 原生月名（架構決策）、ROC `formatDatePart` 健壯性、`useLocale` 共享 localeMessages、YearSelector catch-fallback 的 `民國前` 硬編字串 |
 
 > 接手 session：完成項目請勾選對應 checkbox，並更新本表狀態（⬜未開始 / 🟡進行中 / ✅完成）。

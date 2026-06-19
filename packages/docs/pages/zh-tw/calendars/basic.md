@@ -16,6 +16,59 @@ Vue DatePicker 支援多種日曆系統，基於強大的 [@internationalized/da
 | 印度曆     | `indian`                | 印度             |
 | 其他       | `ethiopic`, `coptic` 等 | 特定地區         |
 
+## 註冊日曆
+
+自 v2.0 起，僅**西元曆**內建。其餘所有曆法皆為**按需註冊**——在應用程式啟動時註冊一次，未使用的曆法即可被 tree-shake 移出 bundle。
+
+```ts
+// main.ts
+import {
+  registerCalendar,
+  rocCalendar,
+  buddhistCalendar,
+  japaneseCalendar,
+} from "@tiaohsun/vue-datepicker";
+
+registerCalendar(rocCalendar);
+registerCalendar(buddhistCalendar);
+registerCalendar(japaneseCalendar);
+```
+
+```vue
+<DatePicker v-model="date" calendar="roc" />
+```
+
+使用未註冊的曆法會回退為西元曆，並於開發模式記錄警告。
+
+### 內建描述子
+
+| 匯入名稱                   | `calendar` id        |
+| -------------------------- | -------------------- |
+| `rocCalendar`              | `roc`                |
+| `buddhistCalendar`         | `buddhist`           |
+| `japaneseCalendar`         | `japanese`           |
+| `persianCalendar`          | `persian`            |
+| `hebrewCalendar`           | `hebrew`             |
+| `indianCalendar`           | `indian`             |
+| `copticCalendar`           | `coptic`             |
+| `ethiopicCalendar`         | `ethiopic`           |
+| `ethioaaCalendar`          | `ethioaa`            |
+| `islamicCivilCalendar`     | `islamic-civil`      |
+| `islamicTabularCalendar`   | `islamic-tbla`       |
+| `islamicUmalquraCalendar`  | `islamic-umalqura`   |
+
+### 輔助函式
+
+```ts
+import {
+  isCalendarRegistered,
+  getCalendarDescriptor,
+} from "@tiaohsun/vue-datepicker";
+
+isCalendarRegistered("roc"); // boolean
+getCalendarDescriptor("roc"); // CalendarDescriptor | undefined
+```
+
 ## 基本使用
 
 ::: raw

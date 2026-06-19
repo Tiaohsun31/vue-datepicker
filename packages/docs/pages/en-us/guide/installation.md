@@ -4,8 +4,12 @@
 
 - Node.js 18.0 or higher
 - Vue.js 3.4 or higher
-- Tailwind CSS 4.1 or higher
 - TypeScript 5.0+ (optional)
+- A browser supporting CSS `color-mix()` (all modern evergreen browsers)
+
+::: tip No Tailwind required
+Since v2.0 the component ships fully self-contained CSS. You do **not** need Tailwind CSS or any `@source` configuration — just import the stylesheet.
+:::
 
 ## Installation
 
@@ -27,17 +31,13 @@ pnpm add @tiaohsun/vue-datepicker
 
 ## Usage
 
-### Tailwind CSS Integration
+Import the stylesheet once, anywhere in your app entry (e.g. `main.ts`):
 
-For Tailwind CSS, you need to configure it to load component styles:
-
-```css
-/* In your main CSS file */
-@import "tailwindcss";
-
-/* Scan vue-datepicker components to generate necessary styles */
-@source "../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,vue}";
+```js
+import "@tiaohsun/vue-datepicker/style";
 ```
+
+That's it — the styles are self-contained, no Tailwind setup needed.
 
 ### Method 1: Global Registration
 
@@ -196,7 +196,7 @@ import type {
   TailwindColor,
   OutputType,
   LocaleMessages,
-  RocFormatPlugin,
+  CalendarDescriptor,
 } from "@tiaohsun/vue-datepicker";
 
 // Using types
@@ -238,16 +238,28 @@ const datePickerProps: DatePickerProps = {
    import "@tiaohsun/vue-datepicker/style";
    ```
 
-2. For Tailwind CSS, ensure configuration is correct:
-   ```css
-   @import "tailwindcss";
-   @source "../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,vue}";
-   ```
+2. The CSS is self-contained — no Tailwind configuration is required. If styles are still missing, confirm the import path resolves and that your bundler isn't tree-shaking the side-effect CSS import.
+
+### A Non-Gregorian Calendar Shows Gregorian Dates
+
+**Issue**: Setting `calendar="roc"` (or another non-Gregorian calendar) still renders Gregorian dates, with a console warning in development.
+
+**Solution**: Non-Gregorian calendars are opt-in since v2.0. Register the calendar once at app startup:
+
+```ts
+import { registerCalendar, rocCalendar } from "@tiaohsun/vue-datepicker";
+
+registerCalendar(rocCalendar);
+```
+
+See [Calendar Systems](../calendars/basic.md) for the full list of built-in descriptors.
 
 ## Version Compatibility
 
-| Vue.js | Node.js | TypeScript | Tailwind |
-| ------ | ------- | ---------- | -------- |
-| 3.4+   | 18.0+   | 5.0+       | 4.1+     |
+| Vue.js | Node.js | TypeScript |
+| ------ | ------- | ---------- |
+| 3.4+   | 18.0+   | 5.0+       |
+
+Tailwind CSS is **not** required.
 
 If you encounter other issues, please report them at [GitHub Issues](https://github.com/Tiaohsun31/vue-datepicker/issues).

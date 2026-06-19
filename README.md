@@ -1,6 +1,6 @@
 # Vue DatePicker
 
-A powerful and flexible Vue 3 DatePicker component with TypeScript and Tailwind CSS support.
+A powerful and flexible Vue 3 DatePicker component with TypeScript support and a self-contained theme — no Tailwind required.
 
 ## 📦 Packages
 

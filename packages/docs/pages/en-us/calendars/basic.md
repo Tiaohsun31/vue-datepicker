@@ -16,6 +16,59 @@ Vue DatePicker supports multiple calendar systems, powered by the robust [@inter
 | Indian            | `indian`                 | India                   |
 | Others            | `ethiopic`, `coptic` etc | Specific Regions        |
 
+## Registering Calendars
+
+Since v2.0, only the **Gregorian** calendar is built in. Every other calendar is **opt-in** — register it once at app startup so unused calendars can be tree-shaken out of your bundle.
+
+```ts
+// main.ts
+import {
+  registerCalendar,
+  rocCalendar,
+  buddhistCalendar,
+  japaneseCalendar,
+} from "@tiaohsun/vue-datepicker";
+
+registerCalendar(rocCalendar);
+registerCalendar(buddhistCalendar);
+registerCalendar(japaneseCalendar);
+```
+
+```vue
+<DatePicker v-model="date" calendar="roc" />
+```
+
+Using a calendar that hasn't been registered falls back to the Gregorian calendar and logs a warning in development.
+
+### Built-in Descriptors
+
+| Import                     | `calendar` id        |
+| -------------------------- | -------------------- |
+| `rocCalendar`              | `roc`                |
+| `buddhistCalendar`         | `buddhist`           |
+| `japaneseCalendar`         | `japanese`           |
+| `persianCalendar`          | `persian`            |
+| `hebrewCalendar`           | `hebrew`             |
+| `indianCalendar`           | `indian`             |
+| `copticCalendar`           | `coptic`             |
+| `ethiopicCalendar`         | `ethiopic`           |
+| `ethioaaCalendar`          | `ethioaa`            |
+| `islamicCivilCalendar`     | `islamic-civil`      |
+| `islamicTabularCalendar`   | `islamic-tbla`       |
+| `islamicUmalquraCalendar`  | `islamic-umalqura`   |
+
+### Helpers
+
+```ts
+import {
+  isCalendarRegistered,
+  getCalendarDescriptor,
+} from "@tiaohsun/vue-datepicker";
+
+isCalendarRegistered("roc"); // boolean
+getCalendarDescriptor("roc"); // CalendarDescriptor | undefined
+```
+
 ## Basic Usage
 
 ::: raw

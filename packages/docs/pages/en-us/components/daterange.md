@@ -222,8 +222,8 @@ Input functionality is only available when displayMode is set to 'dual'
 
 | Property | Type                          | Default    | Description |
 | -------- | ----------------------------- | ---------- | ----------- |
-| `mode`   | `'light' \| 'dark' \| 'auto'` | `'auto'`   | Theme mode  |
-| `theme`  | `TailwindColor \| string`     | `'violet'` | Theme color |
+| `mode`   | `'light' \| 'dark' \| 'auto'` | `'auto'`     | Theme mode (light / dark / follow system) |
+| `theme`  | `TailwindColor \| string`     | `undefined` | Theme color — a built-in name, hex, rgb, or oklch. Defaults to the family primary (`indigo`). |
 
 ### Internationalization & Error Handling
 

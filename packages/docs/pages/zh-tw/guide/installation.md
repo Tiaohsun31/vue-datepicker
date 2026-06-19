@@ -4,8 +4,12 @@
 
 - Node.js 18.0 或更高版本
 - Vue.js 3.4 或更高版本
-- Tailwind CSS 4.1 或更高版本
 - TypeScript 5.0+ (可選)
+- 支援 CSS `color-mix()` 的瀏覽器（所有現代瀏覽器）
+
+::: tip 免裝 Tailwind
+自 v2.0 起元件出貨完全自包含的 CSS，**不需要** Tailwind CSS 或任何 `@source` 設定——只要匯入樣式即可。
+:::
 
 ## 安裝
 
@@ -27,17 +31,13 @@ pnpm add @tiaohsun/vue-datepicker
 
 ## 使用方式
 
-### Tailwind CSS 整合
+在應用程式入口（例如 `main.ts`）匯入一次樣式：
 
-Tailwind CSS，需要配置以載入組件樣式：
-
-```css
-/* 在您的主要 CSS 檔案中 */
-@import "tailwindcss";
-
-/* 掃描 vue-datepicker 組件以產生必要的樣式 */
-@source "../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,vue}";
+```js
+import "@tiaohsun/vue-datepicker/style";
 ```
+
+如此即可——樣式自包含，不需任何 Tailwind 設定。
 
 ### 方法一：全域註冊
 
@@ -196,7 +196,7 @@ import type {
   TailwindColor,
   OutputType,
   LocaleMessages,
-  RocFormatPlugin,
+  CalendarDescriptor,
 } from "@tiaohsun/vue-datepicker";
 
 // 使用型別
@@ -238,16 +238,28 @@ const datePickerProps: DatePickerProps = {
    import "@tiaohsun/vue-datepicker/style";
    ```
 
-2. Tailwind CSS，確保配置正確：
-   ```css
-   @import "tailwindcss";
-   @source "../../node_modules/@tiaohsun/vue-datepicker/dist/**/*.{js,vue}";
-   ```
+2. CSS 自包含，不需任何 Tailwind 設定。若樣式仍缺失，請確認匯入路徑可解析，且打包工具沒有把這個 side-effect CSS 匯入 tree-shake 掉。
+
+### 非西元曆顯示為西元日期
+
+**問題**：設定 `calendar="roc"`（或其他非西元曆）仍顯示西元日期，且開發模式有 console 警告。
+
+**解決方案**：自 v2.0 起非西元曆改為按需註冊。在應用程式啟動時註冊一次：
+
+```ts
+import { registerCalendar, rocCalendar } from "@tiaohsun/vue-datepicker";
+
+registerCalendar(rocCalendar);
+```
+
+完整內建描述子清單見[日曆系統](../calendars/basic.md)。
 
 ## 版本相容性
 
-| Vue.js | Node.js | TypeScript | Tailwind |
-| ------ | ------- | ---------- | -------- |
-| 3.4+   | 18.0+   | 5.0+       | 4.1+     |
+| Vue.js | Node.js | TypeScript |
+| ------ | ------- | ---------- |
+| 3.4+   | 18.0+   | 5.0+       |
+
+不需要 Tailwind CSS。
 
 如果遇到其他問題，請到 [GitHub Issues](https://github.com/Tiaohsun31/vue-datepicker/issues) 回報。

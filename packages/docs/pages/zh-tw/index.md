@@ -110,7 +110,7 @@ const rocDate = ref(null);
 
 ### 🚀 現代技術棧
 
-Vue 3 + TypeScript + Tailwind CSS + @internationalized/date + dayjs
+Vue 3 + TypeScript + 自包含 CSS（免裝 Tailwind）+ @internationalized/date + dayjs
 
 ## 瀏覽器支援
 

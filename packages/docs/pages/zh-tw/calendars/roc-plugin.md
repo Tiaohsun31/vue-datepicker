@@ -2,6 +2,17 @@
 
 雖然 [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) 提供了強大的日曆系統支援，但在某些特殊格式化需求上仍有限制。ROC 格式化插件專門用來處理中華民國曆的自訂格式，特別是在時間處理和中文格式化方面。
 
+::: tip 請先註冊 ROC 曆法
+自 v2.0 起，ROC 曆法（內含此插件）改為按需註冊。使用 `calendar="roc"` 前，請在應用程式啟動時註冊一次：
+
+```ts
+import { registerCalendar, rocCalendar } from "@tiaohsun/vue-datepicker";
+
+registerCalendar(rocCalendar);
+```
+
+:::
+
 ## 插件功能
 
 ROC 格式化插件主要提供以下功能：
@@ -297,12 +308,12 @@ const inputs = [
 
 ### 程式化使用插件
 
-您也可以直接在程式中使用 ROC 插件：
+插件實例位於 `rocCalendar` 描述子上（`RocFormatPlugin` 不再直接匯出）。透過 `rocCalendar.plugin` 取得：
 
 ```typescript
-import { RocFormatPlugin } from "@tiaohsun/vue-datepicker";
+import { rocCalendar } from "@tiaohsun/vue-datepicker";
 
-const rocPlugin = new RocFormatPlugin();
+const rocPlugin = rocCalendar.plugin!; // CalendarPlugin
 
 // 檢查是否可以解析輸入
 const canParse = rocPlugin.canParseInput("民國113年12月25日");
@@ -358,6 +369,30 @@ console.log(outOfRange); // null
 // 無效日期（如2月30日）
 const invalidDate = rocPlugin.parseInput("民國113年02月30日", "zh-TW");
 console.log(invalidDate); // null
+```
+
+### 撰寫自己的曆法插件
+
+同一套 `CalendarPlugin` 介面可用於任何自訂文字曆法。建立描述子並註冊，registry 會自動把 format/parse 分派給你的 `plugin`：
+
+```typescript
+import {
+  registerCalendar,
+  type CalendarDescriptor,
+} from "@tiaohsun/vue-datepicker";
+import { JapaneseCalendar } from "@internationalized/date";
+
+const reiwaCalendar: CalendarDescriptor = {
+  id: "japanese",
+  displayName: { "ja-JP": "和暦", "en-US": "Japanese" },
+  getYearRange: (currentYear) => ({ min: 1868, max: currentYear + 100 }),
+  createCalendar: () => new JapaneseCalendar(),
+  plugin: {
+    /* format / canParseInput / parseInput / supportsFormat */
+  },
+};
+
+registerCalendar(reiwaCalendar);
 ```
 
 ## 限制與注意事項

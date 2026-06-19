@@ -2,6 +2,17 @@
 
 While [@internationalized/date](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) provides powerful calendar system support, it still has limitations for certain special formatting requirements. The ROC formatting plugin is specifically designed to handle custom formats for the Republic of China (Taiwan) calendar, particularly in time handling and Chinese formatting.
 
+::: tip Register the ROC calendar first
+Since v2.0, the ROC calendar (which bundles this plugin) is opt-in. Register it once at app startup before using `calendar="roc"`:
+
+```ts
+import { registerCalendar, rocCalendar } from "@tiaohsun/vue-datepicker";
+
+registerCalendar(rocCalendar);
+```
+
+:::
+
 ## Plugin Features
 
 The ROC formatting plugin mainly provides the following features:
@@ -298,12 +309,12 @@ const inputs = [
 
 ### Programmatic Plugin Usage
 
-You can also use the ROC plugin directly in your code:
+The plugin instance lives on the `rocCalendar` descriptor (`RocFormatPlugin` is no longer exported directly). Access it via `rocCalendar.plugin`:
 
 ```typescript
-import { RocFormatPlugin } from "@tiaohsun/vue-datepicker";
+import { rocCalendar } from "@tiaohsun/vue-datepicker";
 
-const rocPlugin = new RocFormatPlugin();
+const rocPlugin = rocCalendar.plugin!; // CalendarPlugin
 
 // Check if input can be parsed
 const canParse = rocPlugin.canParseInput("民國113年12月25日");
@@ -359,6 +370,30 @@ console.log(outOfRange); // null
 // Invalid date (e.g., February 30th)
 const invalidDate = rocPlugin.parseInput("民國113年02月30日", "zh-TW");
 console.log(invalidDate); // null
+```
+
+### Writing Your Own Calendar Plugin
+
+The same `CalendarPlugin` interface powers any custom-text calendar. Build a descriptor and register it — the registry dispatches format/parse to your `plugin` automatically:
+
+```typescript
+import {
+  registerCalendar,
+  type CalendarDescriptor,
+} from "@tiaohsun/vue-datepicker";
+import { JapaneseCalendar } from "@internationalized/date";
+
+const reiwaCalendar: CalendarDescriptor = {
+  id: "japanese",
+  displayName: { "ja-JP": "和暦", "en-US": "Japanese" },
+  getYearRange: (currentYear) => ({ min: 1868, max: currentYear + 100 }),
+  createCalendar: () => new JapaneseCalendar(),
+  plugin: {
+    /* format / canParseInput / parseInput / supportsFormat */
+  },
+};
+
+registerCalendar(reiwaCalendar);
 ```
 
 ## Limitations and Notes

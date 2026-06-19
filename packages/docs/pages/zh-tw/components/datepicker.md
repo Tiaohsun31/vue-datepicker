@@ -152,8 +152,8 @@ DatePicker 是一個功能豐富的日期時間選擇器組件，支援多種日
 
 | 屬性    | 類型                          | 預設值     | 說明     |
 | ------- | ----------------------------- | ---------- | -------- |
-| `mode`  | `'light' \| 'dark' \| 'auto'` | `'auto'`   | 主題模式 |
-| `theme` | `TailwindColor \| string`     | `'violet'` | 主題顏色 |
+| `mode`  | `'light' \| 'dark' \| 'auto'` | `'auto'`    | 主題模式（淺色 / 深色 / 跟隨系統） |
+| `theme` | `TailwindColor \| string`     | `undefined` | 主題顏色——內建色名、hex、rgb 或 oklch；未指定時跟隨家族主色（`indigo`） |
 
 ### 國際化與錯誤處理
 

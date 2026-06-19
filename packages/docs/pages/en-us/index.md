@@ -110,7 +110,7 @@ From basic date formats to complex calendar plugins, meeting various usage scena
 
 ### 🚀 Modern Technology Stack
 
-Vue 3 + TypeScript + Tailwind CSS + @internationalized/date + dayjs
+Vue 3 + TypeScript + self-contained CSS (no Tailwind) + @internationalized/date + dayjs
 
 ## Browser Support
 

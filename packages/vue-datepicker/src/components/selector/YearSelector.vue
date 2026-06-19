@@ -198,12 +198,14 @@ const formatYear = (gregorianYear: number): YearDisplayData => {
     } catch (error) {
         // 回退邏輯：簡化版
         result.displayWarning = true;
-        result.warningMessage = `無法轉換為${calendarDisplayName.value}`;
+        result.warningMessage = formatText(getLocalizedText('conversionFailed'), { calendar: calendarDisplayName.value });
 
-        // 簡單的手動轉換
+        // 簡單的手動轉換（ROC：紀元前年份走 i18n）
         if (props.calendar === 'roc') {
             const rocYear = gregorianYear - 1911;
-            result.displayYear = rocYear > 0 ? rocYear.toString() : `民國前${Math.abs(rocYear - 1)}年`;
+            result.displayYear = rocYear > 0
+                ? rocYear.toString()
+                : formatText(getLocalizedText('beforeEra'), { year: Math.abs(rocYear - 1) });
         }
     }
 

@@ -82,6 +82,8 @@ export const koKRLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar}년 범위: {min} - {max}',
         noYearsToDisplay: '표시한 연도는 없습니다',
         returnToValidRange: '유효한 범위로 이동',
+        conversionFailed: '{calendar}(으)로 변환할 수 없습니다',
+        beforeEra: '민국전 {year}년',
     },
     shortcuts: {
         today: '오늘',

@@ -307,6 +307,8 @@ const frFRLocaleMessages = {
         yearRangeInfo: 'Plage d\'années {calendar}: {min} - {max}',
         noYearsToDisplay: 'Aucune année à afficher',
         returnToValidRange: 'Retour à la plage valide',
+        conversionFailed: 'Impossible de convertir en {calendar}',
+        beforeEra: 'Avant ROC {year}',
     }
 };
 

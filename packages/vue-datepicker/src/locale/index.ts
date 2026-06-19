@@ -27,11 +27,21 @@ export function interpolateMessage(template: string, variables: MessageParams): 
 }
 
 // 語言包管理器
+//
+// 內建語系 `localeMessages` 為 module-level 唯讀共享資料；
+// 自訂語系（registerLocale / addCustomMessages）一律寫入「每實例」的 customLocales 覆蓋層，
+// 不再就地改寫共享的 localeMessages，避免自訂語系跨 DatePicker 實例洩漏 / 污染內建語系（§5.7）。
 export class LocaleManager {
     private currentLocale: LocaleKey = 'zh-TW';
+    // 每實例的自訂語系覆蓋層（不污染共享的內建 localeMessages）
+    private customLocales: Record<string, LocaleMessages> = {};
+
+    private resolveLocale(locale: string): LocaleMessages | undefined {
+        return this.customLocales[locale] ?? localeMessages[locale];
+    }
 
     setLocale(locale: string): void {
-        if (!localeMessages[locale]) {
+        if (!this.resolveLocale(locale)) {
             warn(`Locale '${locale}' not found, falling back to 'zh-TW'`);
             this.currentLocale = 'zh-TW';
             return;
@@ -39,31 +49,39 @@ export class LocaleManager {
         this.currentLocale = locale;
     }
 
-    // 註冊自定義語言包
+    // 註冊自定義語言包（僅作用於此實例）
     registerLocale(locale: string, messages: LocaleMessages): void {
-        localeMessages[locale] = messages;
+        this.customLocales[locale] = messages;
     }
 
-    // 檢查語言包是否存在
+    // 檢查語言包是否存在（含此實例的自訂語系）
     hasLocale(locale: string): boolean {
-        return !!localeMessages[locale];
+        return !!this.customLocales[locale] || !!localeMessages[locale];
     }
 
-    // 獲取所有可用語言
+    // 獲取所有可用語言（內建 + 此實例自訂）
     getAvailableLocales(): string[] {
-        return Object.keys(localeMessages);
+        return Array.from(new Set([...Object.keys(localeMessages), ...Object.keys(this.customLocales)]));
     }
 
     getCurrentLocale(): LocaleKey {
         return this.currentLocale;
     }
 
-    getMessage(path: string, variables?: MessageParams): string {
-        const keys = path.split('.');
-        let message: any = localeMessages[this.currentLocale];
-
+    private lookupPath(tree: LocaleMessages | undefined, keys: string[]): unknown {
+        let message: any = tree;
         for (const key of keys) {
             message = message?.[key];
+        }
+        return message;
+    }
+
+    getMessage(path: string, variables?: MessageParams): string {
+        const keys = path.split('.');
+        // 先查此實例的自訂語系，缺鍵再回退內建（支援部分覆寫）
+        let message = this.lookupPath(this.customLocales[this.currentLocale], keys);
+        if (typeof message !== 'string') {
+            message = this.lookupPath(localeMessages[this.currentLocale], keys);
         }
 
         if (typeof message !== 'string') {
@@ -82,17 +100,15 @@ export class LocaleManager {
         return this.getMessage(`placeholder.${path}`, variables);
     }
 
-    // 支援自定義語言包
+    // 支援自定義語言包（合併進此實例的覆蓋層，不污染共享的內建 localeMessages）
     addCustomMessages(locale: string, messages: Partial<LocaleMessages>): void {
-        if (!localeMessages[locale]) {
+        const base = this.resolveLocale(locale);
+        if (!base) {
             warn(`Locale '${locale}' not found. Please register it first using registerLocale().`);
             return;
         }
 
-        localeMessages[locale] = {
-            ...localeMessages[locale],
-            ...this.deepMerge(localeMessages[locale], messages)
-        };
+        this.customLocales[locale] = this.deepMerge(base, messages);
     }
 
     // addCustomMessages(locale: LocaleKey, messages: Partial<ErrorMessages>): void {

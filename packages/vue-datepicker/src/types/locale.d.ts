@@ -92,6 +92,8 @@ export interface YearSelectorMessages {
     yearRangeInfo: string;
     noYearsToDisplay: string;
     returnToValidRange: string;
+    conversionFailed: string; // 年份轉換失敗提示（{calendar} 佔位）
+    beforeEra: string; // 紀元前年份顯示（如民國前 N 年，{year} 佔位）
 }
 
 // DateRange 預設快捷選項標籤

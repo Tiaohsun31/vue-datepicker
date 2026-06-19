@@ -82,6 +82,8 @@ export const zhCNLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar}年范围: {min} - {max}',
         noYearsToDisplay: '没有可显示的年份',
         returnToValidRange: '返回有效范围',
+        conversionFailed: '无法转换为{calendar}',
+        beforeEra: '民国前{year}年',
     },
     shortcuts: {
         today: '今天',

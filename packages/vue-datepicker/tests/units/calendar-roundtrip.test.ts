@@ -15,6 +15,7 @@ import { describe, it, expect } from 'vitest'
 import { CalendarUtils } from '@/utils/calendarUtils'
 import { parseUserDateInput } from '@/utils/dateParsingUtils'
 import { RocFormatPlugin } from '@/plugins/calendars/RocFormatPlugin'
+import { formatOutput } from '@/utils/dateUtils'
 import type { SimpleDateValue } from '@/utils/dateUtils'
 
 // 取樣西元日期（含閏年 2/29、年初、年末）
@@ -132,5 +133,23 @@ describe('§5.5#9 / Phase 6.8 — ROC 無前綴數字輸入（Session B 已修�
         expect(result.success).toBe(true)
         expect(result.calendarSystem).toBe('gregory')
         expect(result.date).toMatchObject({ year: 2023, month: 12, day: 25 })
+    })
+})
+
+// 回歸鎖：ROC「自訂輸出 → 再解析」必須 round-trip 回同一西元日期。
+// （曾因 §6.5 讓 ROC 自訂輸出變成純數字 '115-06-19'，re-parse 被當成西元 115 → 民國前1797；已回退。）
+describe('ROC 自訂輸出 round-trip（§6.5 回退回歸鎖）', () => {
+    it('outputType=custom、預設 dateFormat、含時間：輸出再解析回同一西元日期', () => {
+        const date: SimpleDateValue = { year: 2026, month: 6, day: 19, hour: 0, minute: 0, second: 0 }
+        // 元件實際輸出路徑：dateUtils.formatOutput(outputType='custom')
+        const out = formatOutput(date, 'custom', 'YYYY-MM-DD', 'HH:mm:ss', true, 'roc', 'zh-TW')
+        expect(typeof out).toBe('string')
+        // 不應是會被當成西元年的純數字（不得以 '115' 起頭的純數字日期）
+        expect(out).not.toMatch(/^\d{1,3}[-/]/)
+
+        // 再解析（ROC 模式）→ 日期須回到西元 2026-06-19（年份為本次回歸重點）
+        const parsed = parseUserDateInput(out as string, 'zh-TW', 'roc')
+        expect(parsed.success).toBe(true)
+        expect(parsed.date).toMatchObject({ year: 2026, month: 6, day: 19 })
     })
 })

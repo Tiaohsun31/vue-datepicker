@@ -383,7 +383,6 @@ export class CalendarUtils {
         return isCalendarRegistered(calendar);
     }
 
-
     /**
      * 格式化輸出 - 統一執行順序：插件 → @internationalized/date → dayjs → 基本回退
      * 格式化含日曆系統的格式，如民國XX年XX月XX日 XX時XX分XX秒
@@ -425,6 +424,11 @@ export class CalendarUtils {
             }
 
             // 3. 嘗試使用 @internationalized/date 的 DateFormatter
+            // 註：非西元/非 plugin 曆法輸出走 Intl 長格式（含曆法年號/月名等標記），此格式可被對應
+            //     plugin 或標記辨識而正確 round-trip。曾試以「該曆法數字填入 dateFormat」(§6.5) 改善，
+            //     但會產生與西元年同形的純數字（如 ROC '115-06-19'、佛曆 '2566/...'），re-parse 時
+            //     被當成西元年 → round-trip 損壞（民國前1797 等）。要正確支援需「曆法感知數字 parser」
+            //     （且 2566 無法區分佛曆/西元，本質歧義），故回退此設計，留待 2.0 後評估。
             const calendarDate = this.convertToCalendarDateSmart(date, calendar);
             if (calendarDate) {
                 const hasTime = date.hour !== undefined || date.minute !== undefined || date.second !== undefined;

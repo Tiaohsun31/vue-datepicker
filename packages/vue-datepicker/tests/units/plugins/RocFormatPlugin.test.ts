@@ -217,6 +217,25 @@ describe('RocFormatPlugin', () => {
         });
     });
 
+    describe('formatDatePart 一般格式 token-safe（§6.6 脆弱性修正）', () => {
+        it('非預設格式的 YYYY 應填入民國全年', () => {
+            const date: SimpleDateValue = { year: 2025, month: 6, day: 18 };
+            expect(plugin.format(date, '民國YYYY年MM月DD日', 'zh-TW')).toBe('民國114年06月18日');
+        });
+
+        it('YY 應填入民國末兩位，且不誤替到與西元年同數字的「日」', () => {
+            // 西元 2025（末兩位 25）、日=25：舊版事後 replace 會把「日 25」誤替成民國末兩位。
+            const date: SimpleDateValue = { year: 2025, month: 1, day: 25 };
+            expect(plugin.format(date, '民國MM/DD/YY', 'zh-TW')).toBe('民國01/25/14');
+        });
+
+        it('逸出區塊 [..] 內的年份字樣應原樣保留', () => {
+            const date: SimpleDateValue = { year: 2025, month: 6, day: 18 };
+            // [YYYY] 為 dayjs 逸出字面，不應被當成 token 替換
+            expect(plugin.format(date, '民國[YYYY]YYYY', 'zh-TW')).toBe('民國YYYY114');
+        });
+    });
+
     describe('邊界條件測試', () => {
         it('應該處理空輸入', () => {
             expect(plugin.parseInput('', 'zh-TW')).toBeNull();

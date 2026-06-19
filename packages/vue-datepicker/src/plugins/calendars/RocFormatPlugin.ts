@@ -262,19 +262,26 @@ class RocFormatPlugin implements CalendarPlugin {
             return rocFormats[format];
         }
 
-        // 標準格式，替換年份
+        // 一般格式：先把「年份 token」換成民國年的字面量（dayjs [..] 逸出），再交給 dayjs 處理其餘 token。
+        // 不再對 dayjs 輸出字串做事後 replace —— 舊作法位置盲，會把與西元年同數字的「日/分」誤替
+        // （例如 'MM/DD/YY' 且日=25、西元 2025 → 舊版會替到日期 25）。
         const jsDate = new Date(date.year, date.month - 1, date.day);
-        let formatted = dayjs(jsDate).format(format);
+        const rocFormat = this.replaceYearTokensWithRoc(format, rocYear);
+        return dayjs(jsDate).format(rocFormat);
+    }
 
-        // 將西元年替換為民國年
-        if (format.includes('YYYY')) {
-            formatted = formatted.replace(date.year.toString(), rocYear.toString());
-        } else if (format.includes('YY')) {
-            const shortYear = date.year.toString().slice(-2);
-            const rocShortYear = rocYear.toString().slice(-2);
-            formatted = formatted.replace(shortYear, rocShortYear);
-        }
-        return formatted;
+    /**
+     * 將 dayjs 格式字串中的「年份 token」(YYYY / YY) 換成民國年的字面量（以 dayjs `[..]` 逸出）。
+     * 逸出區塊 `[..]` 內原樣保留；YYYY 在 YY 之前比對，避免被拆成兩個 YY。
+     * 在「格式字串」層級替換，杜絕對輸出字串事後 replace 的位置盲誤替。
+     */
+    private replaceYearTokensWithRoc(format: string, rocYear: number): string {
+        const rocFull = rocYear.toString();
+        const rocShort = rocFull.slice(-2);
+        return format.replace(/\[[^\]]*\]|YYYY|YY/g, (token) => {
+            if (token.startsWith('[')) return token; // 逸出區塊，保留
+            return token === 'YYYY' ? `[${rocFull}]` : `[${rocShort}]`;
+        });
     }
 
     /**

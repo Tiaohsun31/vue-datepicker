@@ -82,6 +82,8 @@ export const zhTWLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar}年範圍: {min} - {max}',
         noYearsToDisplay: '沒有可顯示的年份',
         returnToValidRange: '返回有效範圍',
+        conversionFailed: '無法轉換為{calendar}',
+        beforeEra: '民國前{year}年',
     },
     shortcuts: {
         today: '今天',

@@ -279,9 +279,9 @@ describe('CalendarUtils', () => {
                 expect(result).toContain('5784')
             })
 
-            // 行為記錄（非理想）：非西元/非 ROC 曆法目前「忽略」使用者的 dateFormat pattern，
-            // 一律輸出 Intl 長格式。對應 RefactorPlan §5.5#4 / Phase 6.5；改善後此測試需更新。
-            it('[現狀記錄] 非西元曆忽略 dateFormat pattern，輸出 Intl 長格式而非 2023/12/25', () => {
+            // 行為記錄：非西元/非 ROC 曆法輸出走 Intl 長格式（含曆法年號/月名標記，可正確 round-trip）。
+            // 曾嘗試以「該曆法數字填入 dateFormat」(§6.5) 改善，但破壞 round-trip（純數字被當成西元年）→ 已回退。
+            it('[行為記錄] 非西元曆走 Intl 長格式而非純數字 2023/12/25', () => {
                 const result = CalendarUtils.formatOutput(d, 'YYYY/MM/DD', undefined, false, 'buddhist', 'en-US')
                 expect(result).not.toBe('2023/12/25')
                 expect(result).not.toMatch(/^\d{4}\/\d{2}\/\d{2}$/)

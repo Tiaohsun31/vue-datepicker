@@ -82,6 +82,8 @@ export const enUSLocaleMessages: LocaleMessages = {
         yearRangeInfo: '{calendar} Year Range: {min} - {max}',
         noYearsToDisplay: 'No years to display',
         returnToValidRange: 'Return to valid range',
+        conversionFailed: 'Cannot convert to {calendar}',
+        beforeEra: 'Before ROC {year}',
     },
     shortcuts: {
         today: 'Today',

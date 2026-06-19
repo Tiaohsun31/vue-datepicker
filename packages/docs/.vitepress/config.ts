@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
     srcDir: './pages',
     vite: {
-        plugins: [tailwindcss()],
+        plugins: [tailwindcss() as any],
         publicDir: '../public',
         resolve: {
             preserveSymlinks: true,
@@ -67,7 +67,7 @@ export default defineConfig({
                 nav: [
                     { text: 'Home', link: '/en-us/' },
                     { text: 'Guide', link: '/en-us/guide/installation' },
-                    { text: 'v1.0.X', link: 'https://github.com/Tiaohsun31/vue-datatable/releases' }
+                    { text: 'v2.0.X', link: 'https://github.com/Tiaohsun31/vue-datatable/releases' }
                 ],
                 sidebar: [
                     {
@@ -104,7 +104,7 @@ export default defineConfig({
                     options: {
                         miniSearch: {
                             options: {
-                                tokenize: (string) => string.split(/[\s\-]+/),
+                                tokenize: (string) => string.split(/[\s-]+/),
                                 processTerm: (term) => term.toLowerCase()
                             },
                             searchOptions: {

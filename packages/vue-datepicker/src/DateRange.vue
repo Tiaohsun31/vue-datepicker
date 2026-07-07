@@ -45,10 +45,12 @@
             </button>
         </div>
 
-        <!-- 日期範圍選擇彈窗 -->
+        <!-- 日期範圍選擇彈窗：Teleport 到 body 以脫離 transform / overflow 祖先；
+             以 themeStyle / themeAttrs 攜帶主題變數與深淺模式。 -->
+        <Teleport to="body">
         <div v-if="showCalendar && !disabled" ref="calendarRef" class="vdp-range-popup"
-            :class="{ 'vdp-range-popup--dual': displayMode !== 'single' }" @click.stop role="dialog" aria-modal="true"
-            aria-label="date-range-picker">
+            :class="{ 'vdp-range-popup--dual': displayMode !== 'single' }" :style="themeStyle" v-bind="themeAttrs"
+            @click.stop role="dialog" aria-modal="true" aria-label="date-range-picker">
 
             <!-- 範圍選擇器內容 -->
             <div class="vdp-range-body">
@@ -138,6 +140,7 @@
                 </div>
             </div>
         </div>
+        </Teleport>
     </div>
 
     <!-- 錯誤訊息顯示 - 可選且可自定義 -->
@@ -463,13 +466,16 @@ const {
 }
 
 .vdp-range-popup {
-    position: absolute;
-    margin-top: var(--vdp-space-1);
+    /* 由 floating-ui 以 fixed 定位並 Teleport 到 body；top/left 由 JS 設定。 */
+    position: fixed;
+    top: 0;
+    left: 0;
     background-color: var(--color-vdp-surface-elevated);
     border: 1px solid var(--color-vdp-outline);
     border-radius: 0.5rem;
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    z-index: 10;
+    /* 高於一般 Modal；可用 --vdp-popup-z-index 覆蓋 */
+    z-index: var(--vdp-popup-z-index, 1100);
     overflow: auto;
     max-width: 95vw;
     max-height: 80vh;

@@ -1,14 +1,27 @@
 /**
  * useCalendarPopup.ts
- * 管理日曆彈窗的顯示、隱藏和定位
+ * 管理日曆彈窗的顯示、隱藏和定位。
+ *
+ * 定位改用 @floating-ui/dom（computePosition + autoUpdate），搭配模板端的
+ * `<Teleport to="body">`：
+ *   - Teleport 讓彈窗脫離具有 transform / filter / overflow 的祖先（例如 Modal），
+ *     徹底解決舊版「position: fixed 以視窗座標計算、卻被 transformed 祖先當成相對定位」
+ *     導致的錯位／溢出，以及被可滾動容器裁切的問題。
+ *   - floating-ui 的 flip/shift middleware 負責貼邊翻轉與內縮，維持在視窗內。
  */
 
-import { ref, nextTick, onMounted, onBeforeUnmount, type Ref, type ComputedRef } from 'vue';
+import { ref, nextTick, onBeforeUnmount, type Ref, type ComputedRef } from 'vue';
+import { computePosition, autoUpdate, offset, flip, shift, limitShift } from '@floating-ui/dom';
 
 interface CalendarPopupOptions {
     disabled?: ComputedRef<boolean>;
     onOutsideClick?: () => void;
 }
+
+/** 觸發框與彈窗的間距（px），對應舊版 margin-top 的視覺間隙。 */
+const POPUP_OFFSET = 4;
+/** flip/shift 與視窗邊緣的安全內距（px）。 */
+const VIEWPORT_PADDING = 8;
 
 export function useCalendarPopup(
     containerRef: Ref<HTMLElement | null>,
@@ -19,6 +32,56 @@ export function useCalendarPopup(
 
     const showCalendar = ref(false);
 
+    // autoUpdate 的清理函式；彈窗開啟時註冊、關閉/卸載時呼叫。
+    let stopAutoUpdate: (() => void) | null = null;
+
+    /** 取得定位參考元素：優先用實際輸入框容器，退回 wrapper。 */
+    const getReferenceEl = (): HTMLElement | null => {
+        const container = containerRef.value;
+        if (!container) return null;
+        return (container.querySelector('.date-picker-container') as HTMLElement | null) ?? container;
+    };
+
+    /** 以 floating-ui 計算並套用一次位置。 */
+    const updateCalendarPosition = () => {
+        const reference = getReferenceEl();
+        const floating = calendarRef.value;
+        if (!reference || !floating) return;
+
+        computePosition(reference, floating, {
+            strategy: 'fixed',
+            placement: 'bottom-start',
+            middleware: [
+                offset(POPUP_OFFSET),
+                flip({ padding: VIEWPORT_PADDING }),
+                shift({ padding: VIEWPORT_PADDING, limiter: limitShift() }),
+            ],
+        }).then(({ x, y }) => {
+            Object.assign(floating.style, {
+                position: 'fixed',
+                left: `${x}px`,
+                top: `${y}px`,
+            });
+        });
+    };
+
+    /** 開啟後啟動 autoUpdate（scroll/resize/reflow 皆自動重算）。 */
+    const startPositioning = () => {
+        const reference = getReferenceEl();
+        const floating = calendarRef.value;
+        if (!reference || !floating) return;
+
+        // 先固定於左上角，避免首次計算前的版面跳動。
+        Object.assign(floating.style, { position: 'fixed', top: '0', left: '0' });
+        stopAutoUpdate = autoUpdate(reference, floating, updateCalendarPosition);
+    };
+
+    /** 停止 autoUpdate。 */
+    const stopPositioning = () => {
+        stopAutoUpdate?.();
+        stopAutoUpdate = null;
+    };
+
     /**
      * 切換日曆顯示狀態
      */
@@ -28,9 +91,9 @@ export function useCalendarPopup(
         showCalendar.value = !showCalendar.value;
 
         if (showCalendar.value) {
-            nextTick(() => {
-                updateCalendarPosition();
-            });
+            nextTick(startPositioning);
+        } else {
+            stopPositioning();
         }
     };
 
@@ -41,9 +104,7 @@ export function useCalendarPopup(
         if (disabled?.value) return;
 
         showCalendar.value = true;
-        nextTick(() => {
-            updateCalendarPosition();
-        });
+        nextTick(startPositioning);
     };
 
     /**
@@ -51,66 +112,7 @@ export function useCalendarPopup(
      */
     const hideCalendar = () => {
         showCalendar.value = false;
-    };
-
-    /**
-     * 更新日曆位置
-     */
-    const updateCalendarPosition = () => {
-        if (!containerRef.value || !calendarRef.value) return;
-
-        const containerRect = containerRef.value.getBoundingClientRect();
-        const calendar = calendarRef.value;
-        const viewport = {
-            width: window.innerWidth,
-            height: window.innerHeight
-        };
-
-        // 重置樣式以獲取真實尺寸
-        calendar.style.position = 'fixed';
-        calendar.style.visibility = 'hidden';
-        calendar.style.display = 'block';
-
-        const calendarRect = calendar.getBoundingClientRect();
-
-        // 計算基本位置（輸入框下方）
-        let top = containerRect.bottom + 5;
-        let left = containerRect.left;
-
-        // 檢查垂直空間
-        const spaceBelow = viewport.height - containerRect.bottom;
-        const spaceAbove = containerRect.top;
-        const calendarHeight = calendarRect.height;
-
-        // 如果下方空間不足且上方空間更大，則顯示在上方
-        if (spaceBelow < calendarHeight && spaceAbove > spaceBelow) {
-            top = containerRect.top - calendarHeight - 10;
-        }
-
-        // 水平位置調整
-        const spaceRight = viewport.width - containerRect.left;
-        const calendarWidth = calendarRect.width;
-
-        if (spaceRight < calendarWidth) {
-            // 如果右側空間不足，向左調整
-            left = Math.max(viewport.width - calendarWidth - 10, 10);
-        }
-
-        // 確保不會超出左邊界
-        if (left < 10) {
-            left = 10;
-        }
-
-        // 確保不會超出右邊界
-        if (left + calendarWidth > viewport.width - 10) {
-            left = viewport.width - calendarWidth - 10;
-        }
-
-        // 應用位置
-        calendar.style.top = `${top}px`;
-        calendar.style.left = `${left}px`;
-        calendar.style.zIndex = '50';
-        calendar.style.visibility = 'visible';
+        stopPositioning();
     };
 
     /**
@@ -176,35 +178,16 @@ export function useCalendarPopup(
         }
     };
 
-    /**
-     * 處理窗口大小變化
-     */
-    const handleResize = () => {
-        if (showCalendar.value) {
-            updateCalendarPosition();
-        }
-    };
-
-    /**
-     * 處理滾動事件
-     */
-    const handleScroll = () => {
-        if (showCalendar.value) {
-            updateCalendarPosition();
-        }
-    };
-
-    // 事件監聽器
-    onMounted(() => {
+    // 事件監聽器（定位交給 floating-ui 的 autoUpdate，這裡只處理點擊外部關閉）
+    if (typeof document !== 'undefined') {
         document.addEventListener('mousedown', handleClickOutside);
-        window.addEventListener('resize', handleResize);
-        window.addEventListener('scroll', handleScroll);
-    });
+    }
 
     onBeforeUnmount(() => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('scroll', handleScroll);
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+        stopPositioning();
     });
 
     return {

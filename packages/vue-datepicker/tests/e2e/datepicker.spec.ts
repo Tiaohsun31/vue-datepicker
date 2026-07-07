@@ -50,11 +50,8 @@ test.describe('DatePicker E2E Tests', () => {
         await monthInput.fill('06')
         await dayInput.fill('15')
 
-        // hover 到圖標容器來顯示清除按鈕
-        await page.hover('.date-picker-icon-container')
-
-        // 點擊清除按鈕
-        await page.click('button[aria-label="清除日期"]')
+        // 有值時清除按鈕即渲染（無需 hover）；點擊第一個 picker 的清除按鈕
+        await page.locator('button[aria-label="清除日期"]').first().click()
 
         // 驗證輸入框被清空
         await expect(yearInput).toHaveValue('')
@@ -82,22 +79,19 @@ test.describe('DatePicker E2E Tests', () => {
     })
 
     test('應該能正確處理時間選擇', async ({ page }) => {
-        // 選擇日期
-        await page.click('button[aria-label="開啟日曆"]')
-        await expect(page.locator('[role="dialog"]')).toBeVisible()
-        await page.click('button:has-text("15")')
+        // 使用具時間的 DatePicker（showTime 的時間輸入為 inline，非 teleport）
+        const dp = page.locator('[data-testid="dp-time"]')
+        const hourInput = dp.locator('input[placeholder*="時"]')
+        const minuteInput = dp.locator('input[placeholder*="分"]')
 
-        // 時間輸入框應該可見（你的 DatePicker 預設 showTime=true）
-        await expect(page.locator('input[placeholder*="時"]').first()).toBeVisible()
-        await expect(page.locator('input[placeholder*="分"]').first()).toBeVisible()
+        await expect(hourInput).toBeVisible()
+        await expect(minuteInput).toBeVisible()
 
-        // 輸入時間
-        await page.fill('input[placeholder*="時"]', '14')
-        await page.fill('input[placeholder*="分"]', '30')
+        await hourInput.fill('14')
+        await minuteInput.fill('30')
 
-        // 驗證時間值
-        await expect(page.locator('input[placeholder*="時"]').first()).toHaveValue('14')
-        await expect(page.locator('input[placeholder*="分"]').first()).toHaveValue('30')
+        await expect(hourInput).toHaveValue('14')
+        await expect(minuteInput).toHaveValue('30')
     })
 
     test('應該能正確處理主題（宣告式模型）', async ({ page }) => {
@@ -125,7 +119,7 @@ test.describe('DatePicker E2E Tests', () => {
         await page.keyboard.press('Tab')
 
         // 應該顯示錯誤訊息
-        await expect(page.locator('.date-error-message')).toBeVisible()
+        await expect(page.locator('.vdp-error-message')).toBeVisible()
     })
 
     test('應該能正確處理禁用狀態', async ({ page }) => {

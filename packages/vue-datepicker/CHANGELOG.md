@@ -1,10 +1,16 @@
 # Changelog
 
-## [2.0.1] - 2026-07-07
+## [2.0.2] - 2026-07-07
 
 ### 🐛 Fixed / 修正
 
-- 🐛 **DatePicker 彈出層在受限寬度容器內被壓扁。** `.vdp-popup` 原為 `position:absolute` 且 `width:auto`，寬度採 shrink-to-fit、受限於「靜態位置到 containing block 右緣的剩餘空間」；當 DatePicker 位於很窄的容器（兩欄表單右欄、Modal 邊緣）時，日曆格 `minmax(0,1fr)` 會塌陷、星期標題逐字換行。改為 `width:max-content` + `min-width:275px` + `max-width:95vw`（與 `.vdp-range-popup` 一致）。/ The DatePicker popup could collapse (squish) inside narrow containers because `.vdp-popup` used `position:absolute` with `width:auto` (shrink-to-fit). Now uses `width:max-content` with a `min-width`/`max-width` clamp, matching `.vdp-range-popup`.
+- 🐛 **彈出層在 transform / overflow 祖先（尤其 Modal）內錯位、溢出、被壓扁或被裁切（DatePicker + DateRange）。** 舊版定位 (`useCalendarPopup`) 以 `position: fixed` 搭配「視窗座標」手算 `top/left`；只要任一祖先具有 `transform` / `filter` / `will-change` / `contain`（Modal 常見），`fixed` 會改為相對該祖先定位，導致座標錯置、彈窗大幅偏移並溢出視窗；行內彈窗也會被 `overflow` 容器裁切。改用 **`@floating-ui/dom`（`computePosition` + `autoUpdate`，含 `offset`/`flip`/`shift`）** 搭配 **`<Teleport to="body">`**：彈窗脫離受限祖先、以 flip/shift 維持在視窗內，並提高 `z-index`（可用 `--vdp-popup-z-index` 覆蓋）。/ The calendar popup could be misplaced, overflow, squish, or get clipped when rendered inside an ancestor with `transform`/`filter`/`overflow` (typically a Modal), because the old positioning computed viewport-space coordinates but applied them via `position: fixed` — which resolves against a transformed ancestor. Positioning now uses `@floating-ui/dom` (`computePosition` + `autoUpdate` with `offset`/`flip`/`shift`) together with `<Teleport to="body">`, so the popup escapes constraining ancestors and stays within the viewport. Applies to both `DatePicker` and `DateRange`.
+
+### 📦 Dependencies / 相依
+
+- ➕ 新增 `@floating-ui/dom`（彈出層定位）。/ Added `@floating-ui/dom` for popup positioning.
+
+> ⚠️ 2.0.1 為不完整修正（僅 CSS `min-width`，未解決 transform/overflow 祖先問題），已作廢；請使用 2.0.2。/ 2.0.1 was an incomplete fix (CSS `min-width` only) and has been superseded by 2.0.2.
 
 ## [2.0.0] - 2026-06-19
 

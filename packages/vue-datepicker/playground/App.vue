@@ -139,7 +139,34 @@
         <DatePicker v-model="edgeDate" />
     </div>
 
-    <!-- Modal 內：驗證日曆彈出層不會壓在 Modal 底下（z-index / 堆疊） -->
+    <!-- transform 祖先：重現 position:fixed 被 transformed ancestor 破壞的情境 -->
+    <h3>transformed 祖先定位測試</h3>
+    <div data-testid="transform-ancestor"
+        style="transform: translateZ(0); position: relative; width: 320px; margin-left: auto; margin-right: 0; border: 1px dashed #f00;">
+        <DatePicker v-model="transformDate" />
+    </div>
+
+    <!-- 具時間的 DatePicker（供時間選擇 e2e 使用；time input 為 inline，非 teleport） -->
+    <div data-testid="dp-time" style="width: 260px;">
+        <DatePicker v-model="dpTimeVal" :showTime="true" />
+    </div>
+
+    <!-- clipping 祖先：可滾動的 overflow:auto 容器，驗證彈出層不被裁切（Teleport 逃脫） -->
+    <h3>clipping（overflow）祖先測試</h3>
+    <div data-testid="clip-container"
+        style="overflow: auto; width: 320px; height: 120px; border: 1px dashed #08f; padding: 8px;">
+        <DatePicker v-model="clipDate" />
+        <div style="height: 300px;"></div>
+    </div>
+
+    <!-- DateRange 在 transformed 祖先內 -->
+    <h3>DateRange transformed 祖先測試</h3>
+    <div data-testid="range-transform-ancestor"
+        style="transform: translateZ(0); position: relative; width: 360px; margin-left: auto; margin-right: 0; border: 1px dashed #0a0;">
+        <DateRange v-model="rangeTransform" />
+    </div>
+
+    <!-- Modal 內（面板帶 transform，重現真實 Modal 情境）：驗證彈出層不壓在 Modal 底下、不溢出、不被裁切 -->
     <h3>Modal 內彈出層堆疊測試</h3>
     <button data-testid="open-modal" type="button"
         class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md" @click="modalOpen = true">
@@ -148,10 +175,14 @@
     <div v-if="modalOpen" data-testid="modal-backdrop"
         style="position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);"
         @click.self="modalOpen = false">
+        <!-- transform + overflow：真實 Modal 常見的兩個殺手同時存在 -->
         <div data-testid="modal-panel"
-            style="position: relative; z-index: 51; width: 420px; max-width: 90vw; padding: 24px; background: #fff; border-radius: 8px;">
+            style="position: relative; z-index: 51; width: 420px; max-width: 90vw; max-height: 80vh; overflow: auto; padding: 24px; background: #fff; border-radius: 8px; transform: translateZ(0);">
             <h4 class="font-semibold" style="margin-bottom: 12px;">Modal 內的 DatePicker</h4>
             <DatePicker v-model="modalDate" />
+            <div style="height: 24px;"></div>
+            <h4 class="font-semibold" style="margin-bottom: 12px;">Modal 內的 DateRange</h4>
+            <DateRange v-model="modalRange" />
         </div>
     </div>
 </template>
@@ -168,7 +199,7 @@ const rocDate1 = ref(null);
 const dateTime = ref(''); // ISO 8601 格式
 const dateTime2 = ref('2025-05-22 06:22:12');
 
-const disabledStatus = ref(true);
+const disabledStatus = ref(false);
 
 // 新增 DateRange 測試變數
 const selectedDate = ref({
@@ -370,7 +401,12 @@ const time12Range = ref({
 });
 
 // 定位回歸測試用
+const dpTimeVal = ref('');
 const edgeDate = ref('');
+const transformDate = ref('');
+const clipDate = ref('');
+const rangeTransform = ref({ start: '', end: '' });
 const modalOpen = ref(false);
 const modalDate = ref('');
+const modalRange = ref({ start: '', end: '' });
 </script>

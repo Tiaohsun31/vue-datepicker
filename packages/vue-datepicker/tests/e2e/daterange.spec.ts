@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('DateRange E2E Tests', () => {
+    // 雙月 + 時間的範圍彈窗較高；給足視窗高度避免內部滾動與 floating-ui autoUpdate 互相拉扯
+    test.use({ viewport: { width: 1280, height: 1024 } })
+
     test.beforeEach(async ({ page }) => {
         await page.goto('/')
     })
@@ -11,12 +14,10 @@ test.describe('DateRange E2E Tests', () => {
         await firstDateRange.locator('[aria-label="選擇日期範圍"]').click()
         await expect(page.locator('[aria-label="date-range-picker"]')).toBeVisible()
 
-        // 選擇開始日期 - 在日曆容器內尋找
+        // 選擇開始/結束日期 - 限定日期格 .vdp-cell-btn，避免誤中年份鈕「2026」
         const calendar = page.locator('[aria-label="date-range-picker"]')
-        await calendar.locator('button:has-text("10")').first().click()
-
-        // 選擇結束日期 - 同樣在日曆容器內尋找
-        await calendar.locator('button:has-text("20")').first().click()
+        await calendar.locator('.vdp-cell-btn:has-text("10")').first().click()
+        await calendar.locator('.vdp-cell-btn:has-text("20")').first().click()
 
         // 點擊外部關閉日曆
         await page.click('body')
@@ -63,15 +64,15 @@ test.describe('DateRange E2E Tests', () => {
         await firstDateRange.click()
         await expect(page.locator('[aria-label="date-range-picker"]')).toBeVisible()
 
-        // 先選擇開始日期
-        await page.click('button:has-text("10")')
+        // 先選擇開始日期（限定日期格；彈窗已 Teleport 到 body，用 page 層定位）
+        await page.locator('.vdp-range-popup .vdp-cell-btn:has-text("10")').first().click()
 
-        // 等待時間輸入區域出現
-        await expect(firstDateRange.locator('[data-testid="start-time-inputs"]')).toBeVisible()
+        // 等待時間輸入區域出現（彈窗內容已 teleport，改用 page 層）
+        await expect(page.locator('[data-testid="start-time-inputs"]')).toBeVisible()
 
         // 定位到具體的時間輸入框
-        const startHourInput = firstDateRange.locator('[data-testid="start-time-inputs"] input[placeholder*="時"]')
-        const startMinuteInput = firstDateRange.locator('[data-testid="start-time-inputs"] input[placeholder*="分"]')
+        const startHourInput = page.locator('[data-testid="start-time-inputs"] input[placeholder*="時"]')
+        const startMinuteInput = page.locator('[data-testid="start-time-inputs"] input[placeholder*="分"]')
 
         // 確保輸入框可見且可用
         await expect(startHourInput).toBeVisible()
@@ -85,8 +86,8 @@ test.describe('DateRange E2E Tests', () => {
         await startMinuteInput.fill('30')
 
         // 輸入結束時間
-        const endHourInput = firstDateRange.locator('[data-testid="end-time-inputs"] input[placeholder*="時"]')
-        const endMinuteInput = firstDateRange.locator('[data-testid="end-time-inputs"] input[placeholder*="分"]')
+        const endHourInput = page.locator('[data-testid="end-time-inputs"] input[placeholder*="時"]')
+        const endMinuteInput = page.locator('[data-testid="end-time-inputs"] input[placeholder*="分"]')
 
         await endHourInput.click()
         await endHourInput.fill('17')
@@ -102,26 +103,25 @@ test.describe('DateRange E2E Tests', () => {
     })
 
     test('應該能使用清除按鈕', async ({ page }) => {
-        // 先設置一個日期範圍
-        await page.click('[aria-label="選擇日期範圍"]')
-        await page.click('button:has-text("10")')
-        await page.click('button:has-text("20")')
+        const firstDateRange = page.locator('.date-range-wrapper').first()
+
+        // 先設置一個日期範圍（限定日期格；彈窗已 teleport 到 body）
+        await firstDateRange.locator('[aria-label="選擇日期範圍"]').click()
+        await page.locator('.vdp-range-popup .vdp-cell-btn:has-text("10")').first().click()
+        await page.locator('.vdp-range-popup .vdp-cell-btn:has-text("20")').first().click()
 
         // 關閉日曆
-        await page.click('body')
+        await page.mouse.click(5, 5)
 
-        // hover 到圖標容器以顯示清除按鈕
-        await page.hover('.date-picker-icon-container')
+        // 有值時清除按鈕即渲染於 wrapper（非 teleport）；點擊清除
+        await firstDateRange.locator('[aria-label="清除日期"]').click()
 
-        // 點擊清除按鈕
-        await page.click('[aria-label="清除日期"]')
+        // 驗證日期範圍被清空 - 應顯示 muted placeholder
+        const startPlaceholder = firstDateRange.locator('.vdp-placeholder').first()
+        const endPlaceholder = firstDateRange.locator('.vdp-placeholder').last()
 
-        // 驗證日期範圍被清空 - 應該顯示 placeholder
-        const startPlaceholder = page.locator('.date-range-wrapper span').first()
-        const endPlaceholder = page.locator('.date-range-wrapper span').last()
-
-        await expect(startPlaceholder).toHaveClass(/text-vdt-content-muted/)
-        await expect(endPlaceholder).toHaveClass(/text-vdt-content-muted/)
+        await expect(startPlaceholder).toHaveClass(/vdp-placeholder--muted/)
+        await expect(endPlaceholder).toHaveClass(/vdp-placeholder--muted/)
     })
 
     test('應該能使用快捷選項', async ({ page }) => {
@@ -156,7 +156,7 @@ test.describe('DateRange E2E Tests', () => {
         await page.keyboard.press('Tab')
 
         // 應該顯示錯誤訊息
-        await expect(page.locator('.date-error-message')).toBeVisible()
+        await expect(page.locator('.vdp-error-message')).toBeVisible()
     })
 
     test('應該能處理鍵盤導航', async ({ page }) => {

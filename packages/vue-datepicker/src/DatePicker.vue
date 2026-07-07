@@ -51,18 +51,23 @@
             </button>
         </div>
 
-        <!-- 日曆彈出層 -->
-        <div v-if="showCalendar && !disabled" ref="calendarRef" class="calendar-container vdp-popup" @click.stop
-            role="dialog" aria-modal="true" aria-label="date-picker">
-            <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
-                :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"
-                :use24Hour="use24Hour" :default-time="getValidDefaultTime" :enableSeconds="enableSeconds"
-                :locale="locale" :calendar="calendar" @select="handleCalendarSelect" @time-select="handleTimeSelect">
-                <template v-for="(_, slotName) in calendarSlotNames" #[slotName]="slotProps">
-                    <slot :name="slotName" v-bind="slotProps" />
-                </template>
-            </CalendarGrid>
-        </div>
+        <!-- 日曆彈出層：Teleport 到 body 以脫離 transform / overflow 祖先；
+             以 themeStyle / themeAttrs 攜帶主題變數與深淺模式（脫離 wrapper 的 CSS 作用域後仍生效）。 -->
+        <Teleport to="body">
+            <div v-if="showCalendar && !disabled" ref="calendarRef" class="calendar-container vdp-popup"
+                :style="themeStyle" v-bind="themeAttrs" @click.stop role="dialog" aria-modal="true"
+                aria-label="date-picker">
+                <CalendarGrid :value="internalDateTime" :weekStartsOn="weekStartsOn" :min-date="calendarMinDate"
+                    :max-date="calendarMaxDate" :showTimeSelector="showTime" :time-value="inputTimeValue"
+                    :use24Hour="use24Hour" :default-time="getValidDefaultTime" :enableSeconds="enableSeconds"
+                    :locale="locale" :calendar="calendar" @select="handleCalendarSelect"
+                    @time-select="handleTimeSelect">
+                    <template v-for="(_, slotName) in calendarSlotNames" #[slotName]="slotProps">
+                        <slot :name="slotName" v-bind="slotProps" />
+                    </template>
+                </CalendarGrid>
+            </div>
+        </Teleport>
     </div>
 
     <!-- 錯誤訊息顯示 - 可選且可自定義 -->

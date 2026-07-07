@@ -39,8 +39,8 @@ export default defineConfig({
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
         trace: 'on-first-retry',
 
-        /* Only on CI systems run the tests headless */
-        headless: !!process.env.CI,
+        /* 預設 headless（不開視窗，避免誤關）；要肉眼看時用 `--headed` 或設 PWHEADED=1 */
+        headless: !process.env.PWHEADED,
     },
 
     /* Configure projects for major browsers */

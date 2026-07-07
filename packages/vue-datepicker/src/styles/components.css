@@ -87,22 +87,21 @@
 
 /* ===== 日曆彈出層（DatePicker 單一） ===== */
 .vdp-popup {
-    position: absolute;
-    /*
-     * width 為 auto 的 absolute 元素採 shrink-to-fit，其寬度受「靜態位置到 containing block
-     * 右緣的剩餘空間」限制；當 DatePicker 位於容器右側（如兩欄表單的右欄、Modal 邊緣）時，
-     * 剩餘空間不足會讓日曆塌陷、星期標題逐字換行（壓扁）。改用 max-content 讓寬度取決於
-     * 內容而非剩餘空間，並以 min/max-width 設下限與視窗上限。與 .vdp-range-popup 一致。
-     */
+    /* 由 floating-ui 以 fixed 定位並 Teleport 到 body；top/left 由 JS 設定，
+       flip/shift middleware 負責貼邊翻轉與內縮。width 用 max-content 取決於內容，
+       min/max-width 設下限與視窗上限，避免任何情況下被壓扁。 */
+    position: fixed;
+    top: 0;
+    left: 0;
     width: max-content;
     min-width: 275px;
     max-width: 95vw;
-    margin-top: var(--vdp-space-1);
     background-color: var(--color-vdp-surface-elevated);
     border: 1px solid var(--color-vdp-outline);
     border-radius: 0.5rem;
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    z-index: 10;
+    /* 高於一般 Modal；可用 --vdp-popup-z-index 覆蓋 */
+    z-index: var(--vdp-popup-z-index, 1100);
 }
 
 /* ===== 錯誤訊息（DateErrorMessage） ===== */

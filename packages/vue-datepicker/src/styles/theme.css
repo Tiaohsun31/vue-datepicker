@@ -87,7 +87,9 @@
    未指定時 wrapper 繼承 :root 的 --color-vdp-primary（家族 --tia-theme-primary）。
    兩種情況下，下列 color-mix 都在 wrapper 重新代換 → per-instance theme 與家族換色皆生效。 */
 .date-picker-wrapper,
-.date-range-wrapper {
+.date-range-wrapper,
+.vdp-popup,
+.vdp-range-popup {
     --color-vdp-primary-hover: color-mix(in oklch, var(--color-vdp-primary), black 12%);
     --color-vdp-primary-strong: color-mix(in oklch, var(--color-vdp-primary), black 26%);
     --color-vdp-primary-subtle: color-mix(in oklch, var(--color-vdp-primary), var(--color-vdp-surface) 88%);
@@ -128,7 +130,9 @@
 @media (prefers-color-scheme: dark) {
 
     .date-picker-wrapper:not([data-vdp-mode="light"]):not([data-tia-mode="light"]),
-    .date-range-wrapper:not([data-vdp-mode="light"]):not([data-tia-mode="light"]) {
+    .date-range-wrapper:not([data-vdp-mode="light"]):not([data-tia-mode="light"]),
+    .vdp-popup:not([data-vdp-mode="light"]):not([data-tia-mode="light"]),
+    .vdp-range-popup:not([data-vdp-mode="light"]):not([data-tia-mode="light"]) {
         --color-vdp-surface: var(--color-vdp-dark-surface);
         --color-vdp-surface-secondary: var(--color-vdp-dark-surface-secondary);
         --color-vdp-surface-elevated: var(--color-vdp-dark-surface-elevated);

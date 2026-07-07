@@ -1,87 +1,143 @@
 // tests/e2e/positioning.spec.ts
 //
-// 彈出層定位回歸測試。
-// 背景：.vdp-popup 原本為 position:absolute 且 width:auto，寬度採 shrink-to-fit，
-// 會被「靜態位置到 containing block 右緣的剩餘空間」限制。當 DatePicker 位於很窄的
-// 容器（兩欄表單右欄、Modal 邊緣）時，日曆格 minmax(0,1fr) 會塌陷、星期標題逐字換行
-// （被壓扁）。修正：改用 width:max-content + min-width:275px + max-width:95vw。
-import { test, expect } from '@playwright/test'
+// 彈出層定位回歸測試（DatePicker + DateRange）。
+//
+// 背景：彈窗改用 @floating-ui/dom + `<Teleport to="body">`。本檔重點在「情境祖先」，
+// 而非 picker 本身——舊版在下列祖先下會錯位／溢出／被壓扁／被裁切：
+//   1. 很窄的容器（shrink-to-fit 壓扁）
+//   2. transformed 祖先（position:fixed 被當成相對定位 → 大幅偏移、溢出視窗）
+//   3. clipping 祖先（overflow:auto/hidden 把行內彈窗裁掉）
+//   4. 真實 Modal（transform + overflow 同時存在）
+//
+// 斷言用幾何量測（jsdom 無 layout，只能用 Playwright 真實瀏覽器）。
+import { test, expect, type Page, type Locator } from '@playwright/test'
+
+const TOL = 2 // 幾何容差（px）
+
+async function viewport(page: Page) {
+    return page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }))
+}
+
+/** 開啟某容器內 picker 的彈窗，回傳彈窗與觸發框的幾何。 */
+async function openPicker(page: Page, containerSelector: string, popupSelector: string) {
+    const trigger = page.locator(`${containerSelector} .date-picker-container`).first()
+    await trigger.scrollIntoViewIfNeeded()
+    await trigger.click()
+    const popup = page.locator(popupSelector)
+    await popup.waitFor({ state: 'visible' })
+    // 等一個 rAF 讓 floating-ui 首次計算落定
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))))
+    const popupBox = await popup.boundingBox()
+    const triggerBox = await trigger.boundingBox()
+    const vp = await viewport(page)
+    return { popup, trigger, popupBox: popupBox!, triggerBox: triggerBox!, vp }
+}
+
+/** 斷言矩形完整落在視窗內（含容差）。 */
+function expectWithinViewport(
+    box: { x: number; y: number; width: number; height: number },
+    vp: { w: number; h: number },
+) {
+    expect(box.x).toBeGreaterThanOrEqual(-TOL)
+    expect(box.y).toBeGreaterThanOrEqual(-TOL)
+    expect(box.x + box.width).toBeLessThanOrEqual(vp.w + TOL)
+    expect(box.y + box.height).toBeLessThanOrEqual(vp.h + TOL)
+}
+
+/** 在某元素中心點做 hit-test，確認最上層命中的是彈窗（沒被 Modal / 背景遮住）。 */
+async function isOnTop(page: Page, target: Locator, popupSelector: string) {
+    const box = (await target.boundingBox())!
+    return page.evaluate(
+        ({ x, y, sel }) => {
+            const el = document.elementFromPoint(x, y)
+            return !!el?.closest(sel)
+        },
+        { x: box.x + box.width / 2, y: box.y + box.height / 2, sel: popupSelector },
+    )
+}
 
 test.describe('DatePicker 彈出層定位', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/')
     })
 
-    test('在很窄的容器內彈出層不會被壓扁（維持最小寬度且星期列單行）', async ({ page }) => {
-        const container = page.locator('[data-testid="edge-container"]')
-        await expect(container).toBeVisible()
+    test('很窄的容器內不被壓扁（最小寬度 + 星期列單行）', async ({ page }) => {
+        const { popup, popupBox, vp } = await openPicker(page, '[data-testid="edge-container"]', '.vdp-popup')
+        expect(popupBox.width).toBeGreaterThanOrEqual(275)
+        expectWithinViewport(popupBox, vp)
 
-        // 容器本身刻意設為 140px（比日曆窄），用來重現舊 CSS 的塌陷情境
-        const containerBox = await container.boundingBox()
-        expect(containerBox!.width).toBeLessThan(200)
-
-        // 開啟這個 picker 的日曆
-        await container.locator('.date-picker-container').click()
-        const popup = container.locator('.vdp-popup')
-        await expect(popup).toBeVisible()
-
-        // 彈出層寬度不應塌陷到容器寬度，應維持 min-width（275px）以上
-        const popupBox = await popup.boundingBox()
-        expect(popupBox!.width).toBeGreaterThanOrEqual(275)
-
-        // 星期標題列必須是單行（7 格同一 y、且整列高度接近一行）
         const weekdayCells = popup.locator('.vdp-weekday-cell')
         await expect(weekdayCells).toHaveCount(7)
-
-        const tops = await weekdayCells.evaluateAll((els) =>
-            els.map((el) => Math.round(el.getBoundingClientRect().top)),
-        )
-        // 所有星期格的頂端 y 應一致（同一行，容許 1px 誤差）
-        const minTop = Math.min(...tops)
-        const maxTop = Math.max(...tops)
-        expect(maxTop - minTop).toBeLessThanOrEqual(1)
-
-        // 星期列高度不應因逐字換行而變高（單行高度合理上限）
-        const headerHeight = await popup
-            .locator('.vdp-weekday-header')
-            .evaluate((el) => el.getBoundingClientRect().height)
-        expect(headerHeight).toBeLessThan(48)
+        const tops = await weekdayCells.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)))
+        expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1)
     })
 
-    test('Modal 內開啟日曆時，彈出層堆疊在 Modal 之上（不被壓在底下）', async ({ page }) => {
+    test('transformed 祖先內：對齊觸發框、完全在視窗內、不溢出（核心回歸）', async ({ page }) => {
+        const { popupBox, triggerBox, vp } = await openPicker(page, '[data-testid="transform-ancestor"]', '.vdp-popup')
+        // 舊版此處左緣會偏移約 936px 並溢出右界；修正後應對齊觸發框且在視窗內
+        expect(Math.abs(popupBox.x - triggerBox.x)).toBeLessThanOrEqual(8)
+        expect(popupBox.width).toBeGreaterThanOrEqual(275)
+        expectWithinViewport(popupBox, vp)
+    })
+
+    test('clipping（overflow）祖先內：不被裁切、可點到日期', async ({ page }) => {
+        const { popup, popupBox, vp } = await openPicker(page, '[data-testid="clip-container"]', '.vdp-popup')
+        expectWithinViewport(popupBox, vp)
+        // Teleport 到 body → 不受 overflow 容器裁切：某日期格中心點應由彈窗命中
+        const day = popup.locator('.vdp-cell-btn').first()
+        await expect(day).toBeVisible()
+        expect(await isOnTop(page, day, '.vdp-popup')).toBe(true)
+    })
+
+    test('Modal（transform + overflow 面板）內：堆疊在上、在視窗內、可選日期', async ({ page }) => {
+        await page.locator('[data-testid="open-modal"]').click()
+        await expect(page.locator('[data-testid="modal-panel"]')).toBeVisible()
+
+        // 面板中第一個 picker 是 DatePicker
+        const { popup, popupBox, vp } = await openPicker(page, '[data-testid="modal-panel"]', '.vdp-popup')
+        expect(popupBox.width).toBeGreaterThanOrEqual(275)
+        expectWithinViewport(popupBox, vp)
+
+        const day = popup.locator('.vdp-cell-btn').first()
+        expect(await isOnTop(page, day, '.vdp-popup')).toBe(true)
+        await day.click()
+        await expect(popup).not.toBeVisible()
+    })
+
+    test('Teleport 後點擊外部仍能關閉', async ({ page }) => {
+        const { popup } = await openPicker(page, '[data-testid="edge-container"]', '.vdp-popup')
+        await expect(popup).toBeVisible()
+        await page.mouse.click(5, 5)
+        await expect(popup).not.toBeVisible()
+    })
+})
+
+test.describe('DateRange 彈出層定位', () => {
+    test.beforeEach(async ({ page }) => {
+        await page.goto('/')
+    })
+
+    test('transformed 祖先內：完全在視窗內、不溢出、不被壓扁', async ({ page }) => {
+        const { popupBox, vp } = await openPicker(page, '[data-testid="range-transform-ancestor"]', '.vdp-range-popup')
+        expect(popupBox.width).toBeGreaterThanOrEqual(275)
+        expectWithinViewport(popupBox, vp)
+    })
+
+    test('Modal 內：堆疊在上、在視窗內', async ({ page }) => {
         await page.locator('[data-testid="open-modal"]').click()
         const panel = page.locator('[data-testid="modal-panel"]')
         await expect(panel).toBeVisible()
 
-        // 開啟 Modal 內 picker 的日曆
-        await panel.locator('.date-picker-container').click()
-        const popup = panel.locator('.vdp-popup')
-        await expect(popup).toBeVisible()
+        // Modal 內的 DateRange 是面板中第二個 picker
+        const trigger = panel.locator('.date-picker-container').nth(1)
+        await trigger.scrollIntoViewIfNeeded()
+        await trigger.click()
+        const popup = page.locator('.vdp-range-popup')
+        await popup.waitFor({ state: 'visible' })
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))))
 
-        // 彈出層不應被壓扁
-        const popupBox = await popup.boundingBox()
-        expect(popupBox!.width).toBeGreaterThanOrEqual(275)
-
-        // 彈出層必須位於 Modal 面板與遮罩之上：
-        // 在日曆內某個日期格中心點做 hit-test，最上層命中的元素應屬於彈出層，
-        // 而非 modal 面板 / 遮罩（代表沒有被壓在 Modal 底下）。
-        const dayCell = popup.locator('.vdp-cell-btn').first()
-        await expect(dayCell).toBeVisible()
-        const cellBox = await dayCell.boundingBox()
-        const cx = cellBox!.x + cellBox!.width / 2
-        const cy = cellBox!.y + cellBox!.height / 2
-
-        const topMostInPopup = await page.evaluate(
-            ({ x, y }) => {
-                const el = document.elementFromPoint(x, y)
-                return !!el?.closest('.vdp-popup')
-            },
-            { x: cx, y: cy },
-        )
-        expect(topMostInPopup).toBe(true)
-
-        // 點得到日期即代表未被遮擋
-        await dayCell.click()
-        await expect(popup).not.toBeVisible()
+        const popupBox = (await popup.boundingBox())!
+        expectWithinViewport(popupBox, await viewport(page))
+        expect(await isOnTop(page, popup.locator('.vdp-range-body'), '.vdp-range-popup')).toBe(true)
     })
 })

@@ -1,6 +1,6 @@
 {
   "name": "@tiaohsun/vue-datepicker",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A Vue 3 datepicker with multi-calendar support and a self-contained theme (no Tailwind required)",
   "license": "MIT",
   "author": {

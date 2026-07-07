@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1] - 2026-07-07
+
+### 🐛 Fixed / 修正
+
+- 🐛 **DatePicker 彈出層在受限寬度容器內被壓扁。** `.vdp-popup` 原為 `position:absolute` 且 `width:auto`，寬度採 shrink-to-fit、受限於「靜態位置到 containing block 右緣的剩餘空間」；當 DatePicker 位於很窄的容器（兩欄表單右欄、Modal 邊緣）時，日曆格 `minmax(0,1fr)` 會塌陷、星期標題逐字換行。改為 `width:max-content` + `min-width:275px` + `max-width:95vw`（與 `.vdp-range-popup` 一致）。/ The DatePicker popup could collapse (squish) inside narrow containers because `.vdp-popup` used `position:absolute` with `width:auto` (shrink-to-fit). Now uses `width:max-content` with a `min-width`/`max-width` clamp, matching `.vdp-range-popup`.
+
 ## [2.0.0] - 2026-06-19
 
 A major rewrite focused on a **self-contained theme** (no Tailwind required), a declarative theming model, and an opt-in calendar registry. / 以**自包含主題**（免裝 Tailwind）、宣告式主題模型、按需註冊的曆法 registry 為核心的重大改版。

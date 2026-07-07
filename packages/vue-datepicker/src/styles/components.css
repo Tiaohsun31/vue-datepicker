@@ -88,6 +88,15 @@
 /* ===== 日曆彈出層（DatePicker 單一） ===== */
 .vdp-popup {
     position: absolute;
+    /*
+     * width 為 auto 的 absolute 元素採 shrink-to-fit，其寬度受「靜態位置到 containing block
+     * 右緣的剩餘空間」限制；當 DatePicker 位於容器右側（如兩欄表單的右欄、Modal 邊緣）時，
+     * 剩餘空間不足會讓日曆塌陷、星期標題逐字換行（壓扁）。改用 max-content 讓寬度取決於
+     * 內容而非剩餘空間，並以 min/max-width 設下限與視窗上限。與 .vdp-range-popup 一致。
+     */
+    width: max-content;
+    min-width: 275px;
+    max-width: 95vw;
     margin-top: var(--vdp-space-1);
     background-color: var(--color-vdp-surface-elevated);
     border: 1px solid var(--color-vdp-outline);

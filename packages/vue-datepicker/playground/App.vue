@@ -127,6 +127,33 @@
             <DateRange v-model="time12Range" :showTime="true" :use24Hour="false" :enableSeconds="false" />
         </div>
     </div>
+
+    <!-- ============================================================= -->
+    <!-- 定位回歸測試區（勿移到上方，避免打亂既有 .nth()/.first() 索引） -->
+    <!-- ============================================================= -->
+
+    <!-- 受限容器：DatePicker 位於很窄的 relative 容器內，驗證彈出層不會被壓扁 -->
+    <h3>受限容器壓扁回歸測試</h3>
+    <div data-testid="edge-container"
+        style="position: relative; width: 140px; margin-left: auto; margin-right: 0; border: 1px dashed #ccc;">
+        <DatePicker v-model="edgeDate" />
+    </div>
+
+    <!-- Modal 內：驗證日曆彈出層不會壓在 Modal 底下（z-index / 堆疊） -->
+    <h3>Modal 內彈出層堆疊測試</h3>
+    <button data-testid="open-modal" type="button"
+        class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md" @click="modalOpen = true">
+        開啟 Modal
+    </button>
+    <div v-if="modalOpen" data-testid="modal-backdrop"
+        style="position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);"
+        @click.self="modalOpen = false">
+        <div data-testid="modal-panel"
+            style="position: relative; z-index: 51; width: 420px; max-width: 90vw; padding: 24px; background: #fff; border-radius: 8px;">
+            <h4 class="font-semibold" style="margin-bottom: 12px;">Modal 內的 DatePicker</h4>
+            <DatePicker v-model="modalDate" />
+        </div>
+    </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
@@ -341,4 +368,9 @@ const time12Range = ref({
     start: '',
     end: '',
 });
+
+// 定位回歸測試用
+const edgeDate = ref('');
+const modalOpen = ref(false);
+const modalDate = ref('');
 </script>
